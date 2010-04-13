@@ -160,6 +160,8 @@
 					AppKit,
 					"-framework",
 					SDL,
+					"-framework",
+					OpenGL,
 				);
 				PREBINDING = NO;
 				PRODUCT_NAME = Game;
@@ -184,6 +186,8 @@
 					AppKit,
 					"-framework",
 					SDL,
+					"-framework",
+					OpenGL,
 				);
 				PREBINDING = NO;
 				PRODUCT_NAME = Game;
