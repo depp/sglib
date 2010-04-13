@@ -1,8 +1,6 @@
 #include "SDL.h"
 #include "SDL_opengl.h"
 
-SDL_Surface *screen = NULL;
-
 void drawScene(void)
 {
     glClear(GL_COLOR_BUFFER_BIT);
@@ -31,6 +29,7 @@ void handleKey(SDL_keysym *key)
 
 int main(int argc, char *argv[])
 {
+    SDL_Surface *screen = NULL;
     bool done = false;
     SDL_Event event;
     int flags;
