@@ -1,15 +1,28 @@
 #include "SDL.h"
 #include "SDL_opengl.h"
+#include <cmath>
 
 void drawScene(void)
 {
+    int x, y;
     glClear(GL_COLOR_BUFFER_BIT);
+
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    glFrustum(-0.1f, 0.1f, -0.075f, 0.075f, 0.1f, 100.0f);
+    glRotatef(90.0f, 1.0f, 0.0f, 0.0f);
+    glTranslatef(0.0f, 0.0f, 1.0f);
+    glMatrixMode(GL_MODELVIEW);
 
     glColor3f(1.0f, 0.0f, 0.0f);
     glBegin(GL_TRIANGLES);
-    glVertex3f(-0.5f, -0.7f, 0.0f);
-    glVertex3f( 0.5f, -0.7f, 0.0f);
-    glVertex3f( 0.0f,  0.7f, 0.0f);
+    for (x = -5; x <= 5; ++x) {
+        for (y = -5; y <= 5; ++y) {
+            glVertex3f(2*x - 0.5f, 2*y - 0.7f, 0.0f);
+            glVertex3f(2*x + 0.5f, 2*y - 0.7f, 0.0f);
+            glVertex3f(2*x + 0.0f, 2*y + 0.7f, 0.0f);
+        }
+    }
     glEnd();
 
     SDL_GL_SwapBuffers();
