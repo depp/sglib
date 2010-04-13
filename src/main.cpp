@@ -1,5 +1,5 @@
 #include <SDL/SDL.h>
-#include <GL/gl.h>
+#include <SDL/SDL_opengl.h>
 
 SDL_Surface *screen = NULL;
 
