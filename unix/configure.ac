@@ -14,6 +14,8 @@ AM_PATH_SDL(
   [],
   AC_MSG_ERROR([LibSDL 1.2.10 or greater is required]))
 
+AC_SEARCH_LIBS([glVertex3f], [GL])
+
 ENABLE_WARNINGS
 
 AC_OUTPUT
