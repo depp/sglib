@@ -153,6 +153,7 @@ void drawGround(void)
 {
     float px = std::floor(playerX / kGridSpacing + 0.5f) * kGridSpacing;
     float py = std::floor(playerY / kGridSpacing + 0.5f) * kGridSpacing;
+    glPushAttrib(GL_CURRENT_BIT);
     glPushMatrix();
     glTranslatef(px, py, 0.0f);
     glScalef(kGridSpacing, kGridSpacing, 1.0f);
