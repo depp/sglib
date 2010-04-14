@@ -3,27 +3,18 @@
 #include <cmath>
 
 const float kPi = 4.0f * std::atan(1.0f);
-const float kPlayerForwardSpeed = 0.4f;
-const float kPlayerTurnSpeed = 10.0f;
-float playerX = 0.0f, playerY = 0.0f, playerFace = 0.0f;
+const Uint32 kLagThreshold = 1000;
+const Uint32 kFrameTime = 10;
+
+const float kPlayerForwardSpeed = 10.0f * (kFrameTime * 0.001f);
+const float kPlayerTurnSpeed = 100.0f * (kFrameTime * 0.001f);
 
 const float kGridSpacing = 2.0f;
 const int kGridSize = 8;
 
-float playerMove(float d)
-{
-    playerX += d * cos(playerFace * (kPi / 180.0f));
-    playerY += d * sin(playerFace * (kPi / 180.0f));
-}
-
-float playerTurn(float a)
-{
-    playerFace += a;
-    if (playerFace >= 360.0f)
-        playerFace -= 360.0f;
-    else if (playerFace < 0.0f)
-        playerFace += 360.0f;
-}
+bool buttonLeft = false, buttonRight = false,
+    buttonUp = false, buttonDown = false;
+float playerX = 0.0f, playerY = 0.0f, playerFace = 0.0f;
 
 struct gradient_point {
     float pos;
@@ -87,32 +78,51 @@ void drawScene(void)
     SDL_GL_SwapBuffers();
 }
 
-void handleKey(SDL_keysym *key)
+void handleKey(SDL_keysym *key, bool state)
 {
     switch (key->sym) {
     case SDLK_ESCAPE:
-        SDL_Quit();
-        exit(0);
+        if (state) {
+            SDL_Quit();
+            exit(0);
+        }
         break;
     case SDLK_UP:
     case SDLK_w:
-        playerMove(kPlayerForwardSpeed);
+        buttonUp = state;
         break;
     case SDLK_DOWN:
     case SDLK_s:
-        playerMove(-kPlayerForwardSpeed);
+        buttonDown = state;
         break;
     case SDLK_LEFT:
     case SDLK_a:
-        playerTurn(kPlayerTurnSpeed);
+        buttonLeft = state;
         break;
     case SDLK_RIGHT:
     case SDLK_d:
-        playerTurn(-kPlayerTurnSpeed);
+        buttonRight = state;
         break;
     default:
         break;
     }
+}
+
+void advanceFrame(void)
+{
+    float forward = 0.0f, turn = 0.0f, face;
+    if (buttonLeft)
+        turn += kPlayerTurnSpeed;
+    if (buttonRight)
+        turn -= kPlayerTurnSpeed;
+    if (buttonUp)
+        forward += kPlayerForwardSpeed;
+    if (buttonDown)
+        forward -= kPlayerForwardSpeed;
+    playerFace += turn;
+    face = playerFace * (kPi / 180.0f);
+    playerX += forward * std::cos(face);
+    playerY += forward * std::sin(face);
 }
 
 int main(int argc, char *argv[])
@@ -121,8 +131,9 @@ int main(int argc, char *argv[])
     bool done = false;
     SDL_Event event;
     int flags;
+    Uint32 tickref = 0, tick;
 
-    if (SDL_Init(SDL_INIT_VIDEO) < 0) {
+    if (SDL_Init(SDL_INIT_TIMER | SDL_INIT_VIDEO) < 0) {
         fprintf(stderr, "Could not initialize SDL: %s\n",
                 SDL_GetError());
         exit(1);
@@ -147,11 +158,22 @@ int main(int argc, char *argv[])
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 
     while (!done) {
+        tick = SDL_GetTicks();
+        if (tick > tickref + kFrameTime) {
+            do {
+                advanceFrame();
+                tickref += kFrameTime;
+            } while (tick > tickref + kFrameTime);
+        } else if (tick < tickref)
+            tickref = tick;
         drawScene();
         while (SDL_PollEvent(&event)) {
             switch (event.type) {
             case SDL_KEYDOWN:
-                handleKey(&event.key.keysym);
+                handleKey(&event.key.keysym, true);
+                break;
+            case SDL_KEYUP:
+                handleKey(&event.key.keysym, false);
                 break;
             case SDL_QUIT:
                 done = true;
