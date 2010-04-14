@@ -7,6 +7,9 @@ const float kPlayerForwardSpeed = 0.4f;
 const float kPlayerTurnSpeed = 10.0f;
 float playerX = 0.0f, playerY = 0.0f, playerFace = 0.0f;
 
+const float kGridSpacing = 2.0f;
+const int kGridSize = 8;
+
 float playerMove(float d)
 {
     playerX += d * cos(playerFace * (kPi / 180.0f));
@@ -22,33 +25,65 @@ float playerTurn(float a)
         playerFace += 360.0f;
 }
 
+struct gradient_point {
+    float pos;
+    unsigned char color[3];
+};
+
+const gradient_point sky[] = {
+    { -0.50f, {   0,   0,  51 } },
+    { -0.02f, {   0,   0,   0 } },
+    {  0.00f, { 102, 204, 255 } },
+    {  0.20f, {  51,   0, 255 } },
+    {  0.70f, {   0,   0,   0 } }
+};
+
+void drawSky(void)
+{
+	int i;
+    glPushAttrib(GL_CURRENT_BIT);
+    glBegin(GL_TRIANGLE_STRIP);
+    glColor3ubv(sky[0].color);
+    glVertex3f(-2.0f, 1.0f, -1.0f);
+    glVertex3f( 2.0f, 1.0f, -1.0f);
+    for (i = 0; i < sizeof(sky) / sizeof(*sky); ++i) {
+        glColor3ubv(sky[i].color);
+        glVertex3f(-2.0f, 1.0f, sky[i].pos);
+        glVertex3f( 2.0f, 1.0f, sky[i].pos);
+    }
+    glVertex3f(-2.0f, 0.0f, 1.0f);
+    glVertex3f( 2.0f, 0.0f, 1.0f);
+    glEnd();
+    glPopAttrib();
+}
+
+void drawGround(void)
+{
+    int i;
+    glColor3ub(51, 0, 255);
+    glBegin(GL_LINES);
+    for (i = -kGridSize; i <= kGridSize; ++i) {
+        glVertex3f(i * kGridSpacing, -kGridSize * kGridSpacing, 0.0f);
+        glVertex3f(i * kGridSpacing,  kGridSize * kGridSpacing, 0.0f);
+        glVertex3f(-kGridSize * kGridSpacing, i * kGridSpacing, 0.0f);
+        glVertex3f( kGridSize * kGridSpacing, i * kGridSpacing, 0.0f);
+    }
+    glEnd();
+}
+
 void drawScene(void)
 {
-    int x, y;
     glClear(GL_COLOR_BUFFER_BIT);
 
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     glFrustum(-0.1f, 0.1f, -0.075f, 0.075f, 0.1f, 100.0f);
     glRotatef(-90.0f, 1.0f, 0.0f, 0.0f);
+    drawSky();
     glRotatef(90.0f - playerFace, 0.0f, 0.0f, 1.0f);
     glTranslatef(-playerX, -playerY, -1.0f);
     glMatrixMode(GL_MODELVIEW);
-
-    glBegin(GL_TRIANGLES);
-    for (x = -5; x <= 5; ++x) {
-        for (y = -5; y <= 5; ++y) {
-            if (x == 1 && y == 0)
-                glColor3f(0.0f, 1.0f, 0.0f);
-            else
-                glColor3f(1.0f, 0.0f, 0.0f);
-            glVertex3f(2*x - 0.5f, 2*y - 0.7f, 0.0f);
-            glVertex3f(2*x + 0.5f, 2*y - 0.7f, 0.0f);
-            glVertex3f(2*x + 0.0f, 2*y + 0.7f, 0.0f);
-        }
-    }
-    glEnd();
-
+    drawGround();
     SDL_GL_SwapBuffers();
 }
 
@@ -100,6 +135,14 @@ int main(int argc, char *argv[])
         SDL_Quit();
         exit(1);
     }
+
+    printf(
+        "Vendor: %s\n"
+        "Renderer: %s\n"
+        "Version: %s\n"
+        "Extensions: %s\n",
+        glGetString(GL_VENDOR), glGetString(GL_RENDERER),
+        glGetString(GL_VERSION), glGetString(GL_EXTENSIONS));
 
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 
