@@ -17,6 +17,26 @@ bool buttonLeft = false, buttonRight = false,
 float playerX = 0.0f, playerY = 0.0f, playerFace = 0.0f;
 Uint32 tickref = 0;
 
+void init(void)
+{
+    SDL_Surface *screen = NULL;
+    int flags;
+
+    if (SDL_Init(SDL_INIT_TIMER | SDL_INIT_VIDEO) < 0) {
+        fprintf(stderr, "Could not initialize SDL: %s\n",
+                SDL_GetError());
+        exit(1);
+    }
+    flags = SDL_OPENGL | SDL_GL_DOUBLEBUFFER;
+    screen = SDL_SetVideoMode(640, 480, 32, flags);
+    if (!screen) {
+        fprintf(stderr, "Could not initialize video: %s\n",
+                SDL_GetError());
+        SDL_Quit();
+        exit(1);
+    }
+}
+
 void handleKey(SDL_keysym *key, bool state)
 {
     switch (key->sym) {
@@ -151,44 +171,30 @@ void drawGround(void)
 
 void drawScene(void)
 {
-    glLoadIdentity();
-    drawSky();
-    glRotatef(90.0f - playerFace, 0.0f, 0.0f, 1.0f);
-    glTranslatef(-playerX, -playerY, -1.0f);
-    drawGround();
-    SDL_GL_SwapBuffers();
-}
-
-int main(int argc, char *argv[])
-{
-    SDL_Surface *screen = NULL;
-    int flags;
-
-    if (SDL_Init(SDL_INIT_TIMER | SDL_INIT_VIDEO) < 0) {
-        fprintf(stderr, "Could not initialize SDL: %s\n",
-                SDL_GetError());
-        exit(1);
-    }
-    flags = SDL_OPENGL | SDL_GL_DOUBLEBUFFER;
-    screen = SDL_SetVideoMode(640, 480, 32, flags);
-    if (!screen) {
-        fprintf(stderr, "Could not initialize video: %s\n",
-                SDL_GetError());
-        SDL_Quit();
-        exit(1);
-    }
-
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     glFrustum(-0.1f, 0.1f, -0.075f, 0.075f, 0.1f, 100.0f);
     glRotatef(-90.0f, 1.0f, 0.0f, 0.0f);
     glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
 
+    drawSky();
+
+    glRotatef(90.0f - playerFace, 0.0f, 0.0f, 1.0f);
+    glTranslatef(-playerX, -playerY, -1.0f);
+
+    drawGround();
+
+    SDL_GL_SwapBuffers();
+}
+
+int main(int argc, char *argv[])
+{
+    init();
     while (1) {
         handleEvents();
         updateState();
         drawScene();
     }
-
     return 0;
 }
