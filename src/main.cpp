@@ -55,13 +55,14 @@ void drawGround(void)
     float py = std::floor(playerY / kGridSpacing + 0.5f) * kGridSpacing;
     glPushMatrix();
     glTranslatef(px, py, 0.0f);
+    glScalef(kGridSpacing, kGridSpacing, 1.0f);
     glColor3ub(51, 0, 255);
     glBegin(GL_LINES);
     for (i = -kGridSize; i <= kGridSize; ++i) {
-        glVertex3f(i * kGridSpacing, -kGridSize * kGridSpacing, 0.0f);
-        glVertex3f(i * kGridSpacing,  kGridSize * kGridSpacing, 0.0f);
-        glVertex3f(-kGridSize * kGridSpacing, i * kGridSpacing, 0.0f);
-        glVertex3f( kGridSize * kGridSpacing, i * kGridSpacing, 0.0f);
+        glVertex3f(i, -kGridSize, 0.0f);
+        glVertex3f(i,  kGridSize, 0.0f);
+        glVertex3f(-kGridSize, i, 0.0f);
+        glVertex3f( kGridSize, i, 0.0f);
     }
     glEnd();
     glPopAttrib();
