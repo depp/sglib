@@ -51,6 +51,10 @@ void drawSky(void)
 void drawGround(void)
 {
     int i;
+    float px = std::floor(playerX / kGridSpacing + 0.5f) * kGridSpacing;
+    float py = std::floor(playerY / kGridSpacing + 0.5f) * kGridSpacing;
+    glPushMatrix();
+    glTranslatef(px, py, 0.0f);
     glColor3ub(51, 0, 255);
     glBegin(GL_LINES);
     for (i = -kGridSize; i <= kGridSize; ++i) {
@@ -60,6 +64,8 @@ void drawGround(void)
         glVertex3f( kGridSize * kGridSpacing, i * kGridSpacing, 0.0f);
     }
     glEnd();
+    glPopAttrib();
+    glPopMatrix();
 }
 
 void drawScene(void)
