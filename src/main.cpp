@@ -153,17 +153,11 @@ void drawGround(void)
 
 void drawScene(void)
 {
-    glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    glFrustum(-0.1f, 0.1f, -0.075f, 0.075f, 0.1f, 100.0f);
-    glRotatef(-90.0f, 1.0f, 0.0f, 0.0f);
     drawSky();
     glRotatef(90.0f - playerFace, 0.0f, 0.0f, 1.0f);
     glTranslatef(-playerX, -playerY, -1.0f);
-    glMatrixMode(GL_MODELVIEW);
-
     drawGround();
-
     SDL_GL_SwapBuffers();
 }
 
@@ -185,6 +179,12 @@ int main(int argc, char *argv[])
         SDL_Quit();
         exit(1);
     }
+
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    glFrustum(-0.1f, 0.1f, -0.075f, 0.075f, 0.1f, 100.0f);
+    glRotatef(-90.0f, 1.0f, 0.0f, 0.0f);
+    glMatrixMode(GL_MODELVIEW);
 
     while (1) {
         handleEvents();
