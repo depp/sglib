@@ -113,13 +113,12 @@ const gradient_point sky[] = {
 
 void drawSky(void)
 {
-	int i;
     glPushAttrib(GL_CURRENT_BIT);
     glBegin(GL_TRIANGLE_STRIP);
     glColor3ubv(sky[0].color);
     glVertex3f(-2.0f, 1.0f, -1.0f);
     glVertex3f( 2.0f, 1.0f, -1.0f);
-    for (i = 0; i < sizeof(sky) / sizeof(*sky); ++i) {
+    for (int i = 0; i < sizeof(sky) / sizeof(*sky); ++i) {
         glColor3ubv(sky[i].color);
         glVertex3f(-2.0f, 1.0f, sky[i].pos);
         glVertex3f( 2.0f, 1.0f, sky[i].pos);
@@ -132,7 +131,6 @@ void drawSky(void)
 
 void drawGround(void)
 {
-    int i;
     float px = std::floor(playerX / kGridSpacing + 0.5f) * kGridSpacing;
     float py = std::floor(playerY / kGridSpacing + 0.5f) * kGridSpacing;
     glPushMatrix();
@@ -140,7 +138,7 @@ void drawGround(void)
     glScalef(kGridSpacing, kGridSpacing, 1.0f);
     glColor3ub(51, 0, 255);
     glBegin(GL_LINES);
-    for (i = -kGridSize; i <= kGridSize; ++i) {
+    for (int i = -kGridSize; i <= kGridSize; ++i) {
         glVertex3f(i, -kGridSize, 0.0f);
         glVertex3f(i,  kGridSize, 0.0f);
         glVertex3f(-kGridSize, i, 0.0f);
