@@ -15,6 +15,88 @@ const int kGridSize = 8;
 bool buttonLeft = false, buttonRight = false,
     buttonUp = false, buttonDown = false;
 float playerX = 0.0f, playerY = 0.0f, playerFace = 0.0f;
+Uint32 tickref = 0;
+
+void handleKey(SDL_keysym *key, bool state)
+{
+    switch (key->sym) {
+    case SDLK_ESCAPE:
+        if (state) {
+            SDL_Quit();
+            exit(0);
+        }
+        break;
+    case SDLK_UP:
+    case SDLK_w:
+        buttonUp = state;
+        break;
+    case SDLK_DOWN:
+    case SDLK_s:
+        buttonDown = state;
+        break;
+    case SDLK_LEFT:
+    case SDLK_a:
+        buttonLeft = state;
+        break;
+    case SDLK_RIGHT:
+    case SDLK_d:
+        buttonRight = state;
+        break;
+    default:
+        break;
+    }
+}
+
+void handleEvents(void)
+{
+    SDL_Event event;
+    while (SDL_PollEvent(&event)) {
+        switch (event.type) {
+        case SDL_KEYDOWN:
+            handleKey(&event.key.keysym, true);
+            break;
+        case SDL_KEYUP:
+            handleKey(&event.key.keysym, false);
+            break;
+        case SDL_QUIT:
+            SDL_Quit();
+            exit(0);
+            break;
+        }
+    }
+}
+
+void advanceFrame(void)
+{
+    float forward = 0.0f, turn = 0.0f, face;
+    if (buttonLeft)
+        turn += kPlayerTurnSpeed;
+    if (buttonRight)
+        turn -= kPlayerTurnSpeed;
+    if (buttonUp)
+        forward += kPlayerForwardSpeed;
+    if (buttonDown)
+        forward -= kPlayerForwardSpeed;
+    playerFace += turn;
+    face = playerFace * (kPi / 180.0f);
+    playerX += forward * std::cos(face);
+    playerY += forward * std::sin(face);
+}
+
+void updateState(void)
+{
+    Uint32 tick = SDL_GetTicks();
+    if (tick > tickref + kLagThreshold) {
+        advanceFrame();
+        tickref = tick;
+    } else if (tick > tickref + kFrameTime) {
+        do {
+            advanceFrame();
+            tickref += kFrameTime;
+        } while (tick > tickref + kFrameTime);
+    } else if (tick < tickref)
+        tickref = tick;
+}
 
 struct gradient_point {
     float pos;
@@ -85,60 +167,10 @@ void drawScene(void)
     SDL_GL_SwapBuffers();
 }
 
-void handleKey(SDL_keysym *key, bool state)
-{
-    switch (key->sym) {
-    case SDLK_ESCAPE:
-        if (state) {
-            SDL_Quit();
-            exit(0);
-        }
-        break;
-    case SDLK_UP:
-    case SDLK_w:
-        buttonUp = state;
-        break;
-    case SDLK_DOWN:
-    case SDLK_s:
-        buttonDown = state;
-        break;
-    case SDLK_LEFT:
-    case SDLK_a:
-        buttonLeft = state;
-        break;
-    case SDLK_RIGHT:
-    case SDLK_d:
-        buttonRight = state;
-        break;
-    default:
-        break;
-    }
-}
-
-void advanceFrame(void)
-{
-    float forward = 0.0f, turn = 0.0f, face;
-    if (buttonLeft)
-        turn += kPlayerTurnSpeed;
-    if (buttonRight)
-        turn -= kPlayerTurnSpeed;
-    if (buttonUp)
-        forward += kPlayerForwardSpeed;
-    if (buttonDown)
-        forward -= kPlayerForwardSpeed;
-    playerFace += turn;
-    face = playerFace * (kPi / 180.0f);
-    playerX += forward * std::cos(face);
-    playerY += forward * std::sin(face);
-}
-
 int main(int argc, char *argv[])
 {
     SDL_Surface *screen = NULL;
-    bool done = false;
-    SDL_Event event;
     int flags;
-    Uint32 tickref = 0, tick;
 
     if (SDL_Init(SDL_INIT_TIMER | SDL_INIT_VIDEO) < 0) {
         fprintf(stderr, "Could not initialize SDL: %s\n",
@@ -154,40 +186,11 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
-    printf(
-        "Vendor: %s\n"
-        "Renderer: %s\n"
-        "Version: %s\n"
-        "Extensions: %s\n",
-        glGetString(GL_VENDOR), glGetString(GL_RENDERER),
-        glGetString(GL_VERSION), glGetString(GL_EXTENSIONS));
-
-    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-
-    while (!done) {
-        tick = SDL_GetTicks();
-        if (tick > tickref + kFrameTime) {
-            do {
-                advanceFrame();
-                tickref += kFrameTime;
-            } while (tick > tickref + kFrameTime);
-        } else if (tick < tickref)
-            tickref = tick;
+    while (1) {
+        handleEvents();
+        updateState();
         drawScene();
-        while (SDL_PollEvent(&event)) {
-            switch (event.type) {
-            case SDL_KEYDOWN:
-                handleKey(&event.key.keysym, true);
-                break;
-            case SDL_KEYUP:
-                handleKey(&event.key.keysym, false);
-                break;
-            case SDL_QUIT:
-                done = true;
-                break;
-            }
-        }
     }
-    SDL_Quit();
+
     return 0;
 }
