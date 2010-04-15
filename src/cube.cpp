@@ -18,17 +18,18 @@ void Cube::draw()
     glPushAttrib(GL_CURRENT_BIT);
     glPushMatrix();
     setupMatrix();
-    glTranslatef(0.0f, 0.0f, d);
+    glScalef(d, d, d);
+    glTranslatef(0.0f, 0.0f, 1.0f);
     glColor3ubv(color_);
     glBegin(GL_LINES);
     for (int u = 0; u < 2; ++u) {
         for (int v = 0; v < 2; ++v) {
-            glVertex3f( d, u ? d : -d, v ? d : -d);
-            glVertex3f(-d, u ? d : -d, v ? d : -d);
-            glVertex3f(u ? d : -d,  d, v ? d : -d);
-            glVertex3f(u ? d : -d, -d, v ? d : -d);
-            glVertex3f(u ? d : -d, v ? d : -d,  d);
-            glVertex3f(u ? d : -d, v ? d : -d, -d);
+            glVertex3f( 1, u ? 1 : -1, v ? 1 : -1);
+            glVertex3f(-1, u ? 1 : -1, v ? 1 : -1);
+            glVertex3f(u ? 1 : -1,  1, v ? 1 : -1);
+            glVertex3f(u ? 1 : -1, -1, v ? 1 : -1);
+            glVertex3f(u ? 1 : -1, v ? 1 : -1,  1);
+            glVertex3f(u ? 1 : -1, v ? 1 : -1, -1);
         }
     }
     glEnd();
