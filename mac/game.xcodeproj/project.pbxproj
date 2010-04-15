@@ -11,6 +11,7 @@
 		382A9B241176B235007B06CC /* world.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 382A9B201176B235007B06CC /* world.cpp */; };
 		382A9B381176B583007B06CC /* cube.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 382A9B371176B583007B06CC /* cube.cpp */; };
 		382A9B481176C882007B06CC /* pyramid.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 382A9B471176C882007B06CC /* pyramid.cpp */; };
+		382A9B5B1176DCE6007B06CC /* color.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 382A9B5A1176DCE6007B06CC /* color.cpp */; };
 		3834EBFC117441BB0070CBE5 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3834EBFB117441BB0070CBE5 /* main.cpp */; };
 		385208A81174351800640971 /* SDLMain.m in Sources */ = {isa = PBXBuildFile; fileRef = 385208A71174351800640971 /* SDLMain.m */; };
 /* End PBXBuildFile section */
@@ -24,6 +25,8 @@
 		382A9B371176B583007B06CC /* cube.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = cube.cpp; sourceTree = "<group>"; };
 		382A9B461176C882007B06CC /* pyramid.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = pyramid.hpp; sourceTree = "<group>"; };
 		382A9B471176C882007B06CC /* pyramid.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = pyramid.cpp; sourceTree = "<group>"; };
+		382A9B541176DC20007B06CC /* color.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = color.hpp; sourceTree = "<group>"; };
+		382A9B5A1176DCE6007B06CC /* color.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = color.cpp; sourceTree = "<group>"; };
 		3834EBFB117441BB0070CBE5 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		3852089E117434FD00640971 /* Game.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Game.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		385208A1117434FD00640971 /* Game-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Game-Info.plist"; sourceTree = "<group>"; };
@@ -62,6 +65,8 @@
 		385208A911743F4100640971 /* src */ = {
 			isa = PBXGroup;
 			children = (
+				382A9B5A1176DCE6007B06CC /* color.cpp */,
+				382A9B541176DC20007B06CC /* color.hpp */,
 				382A9B371176B583007B06CC /* cube.cpp */,
 				382A9B361176B583007B06CC /* cube.hpp */,
 				3834EBFB117441BB0070CBE5 /* main.cpp */,
@@ -145,6 +150,7 @@
 				382A9B241176B235007B06CC /* world.cpp in Sources */,
 				382A9B381176B583007B06CC /* cube.cpp in Sources */,
 				382A9B481176C882007B06CC /* pyramid.cpp in Sources */,
+				382A9B5B1176DCE6007B06CC /* color.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -202,10 +202,10 @@ const unsigned char red[3] = { 255, 51, 0 };
 int main(int argc, char *argv[])
 {
     init();
-    world.addObject(new Cube( 5.0f,  5.0f, 2.0f, yellow));
-    world.addObject(new Pyramid( 5.0f, -5.0f, 3.0f, red));
-    world.addObject(new Cube(-5.0f,  5.0f, 0.5f, yellow));
-    world.addObject(new Pyramid(-5.0f, -5.0f, 1.5f, red));
+    world.addObject(new Cube( 5.0f,  5.0f, 2.0f, Color::yellow));
+    world.addObject(new Pyramid( 5.0f, -5.0f, 3.0f, Color::red));
+    world.addObject(new Cube(-5.0f,  5.0f, 0.5f, Color::yellow));
+    world.addObject(new Pyramid(-5.0f, -5.0f, 1.5f, Color::red));
     while (1) {
         handleEvents();
         updateState();

@@ -1,13 +1,9 @@
 #include "pyramid.hpp"
 #include "SDL_opengl.h"
 
-Pyramid::Pyramid(float x, float y, float size, const unsigned char color[3])
-    : Object(x, y), size_(size)
-{
-    color_[0] = color[0];
-    color_[1] = color[1];
-    color_[2] = color[2];
-}
+Pyramid::Pyramid(float x, float y, float size, Color color)
+    : Object(x, y), size_(size), color_(color)
+{ }
 
 Pyramid::~Pyramid()
 { }
@@ -19,7 +15,7 @@ void Pyramid::draw()
     glPushMatrix();
     setupMatrix();
     glTranslatef(0.0f, 0.0f, d);
-    glColor3ubv(color_);
+    glColor3ubv(color_.c);
     glBegin(GL_LINES);
     for (int u = 0; u < 2; ++u) {
         glVertex3f( d, u ? d : -d, -d);

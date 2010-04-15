@@ -1,13 +1,9 @@
 #include "cube.hpp"
 #include "SDL_opengl.h"
 
-Cube::Cube(float x, float y, float size, const unsigned char color[3])
-    : Object(x, y), size_(size)
-{
-    color_[0] = color[0];
-    color_[1] = color[1];
-    color_[2] = color[2];
-}
+Cube::Cube(float x, float y, float size, Color color)
+    : Object(x, y), size_(size), color_(color)
+{ }
 
 Cube::~Cube()
 { }
@@ -36,7 +32,7 @@ void Cube::draw()
     setupMatrix();
     glScalef(d, d, d);
     glTranslatef(0.0f, 0.0f, 1.0f);
-    glColor3ubv(color_);
+    glColor3ubv(color_.c);
     glVertexPointer(3, GL_SHORT, 0, kCubeVertices);
     glDrawElements(GL_LINES, 24, GL_UNSIGNED_BYTE, kCubeElements);
 
