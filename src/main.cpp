@@ -3,6 +3,7 @@
 #include <cmath>
 #include "world.hpp"
 #include "cube.hpp"
+#include "pyramid.hpp"
 
 const float kPi = 4.0f * std::atan(1.0f);
 const Uint32 kLagThreshold = 1000;
@@ -202,9 +203,9 @@ int main(int argc, char *argv[])
 {
     init();
     world.addObject(new Cube( 5.0f,  5.0f, 2.0f, yellow));
-    world.addObject(new Cube( 5.0f, -5.0f, 3.0f, red));
+    world.addObject(new Pyramid( 5.0f, -5.0f, 3.0f, red));
     world.addObject(new Cube(-5.0f,  5.0f, 0.5f, yellow));
-    world.addObject(new Cube(-5.0f, -5.0f, 1.5f, red));
+    world.addObject(new Pyramid(-5.0f, -5.0f, 1.5f, red));
     while (1) {
         handleEvents();
         updateState();
