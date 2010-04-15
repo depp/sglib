@@ -1,6 +1,8 @@
 #include "SDL.h"
 #include "SDL_opengl.h"
 #include <cmath>
+#include "world.hpp"
+#include "cube.hpp"
 
 const float kPi = 4.0f * std::atan(1.0f);
 const Uint32 kLagThreshold = 1000;
@@ -170,6 +172,8 @@ void drawGround(void)
     glPopMatrix();
 }
 
+World world;
+
 void drawScene(void)
 {
     glMatrixMode(GL_PROJECTION);
@@ -186,12 +190,21 @@ void drawScene(void)
 
     drawGround();
 
+    world.draw();
+
     SDL_GL_SwapBuffers();
 }
+
+const unsigned char yellow[3] = { 255, 255, 0 };
+const unsigned char red[3] = { 255, 51, 0 };
 
 int main(int argc, char *argv[])
 {
     init();
+    world.addObject(new Cube( 5.0f,  5.0f, 2.0f, yellow));
+    world.addObject(new Cube( 5.0f, -5.0f, 3.0f, red));
+    world.addObject(new Cube(-5.0f,  5.0f, 0.5f, yellow));
+    world.addObject(new Cube(-5.0f, -5.0f, 1.5f, red));
     while (1) {
         handleEvents();
         updateState();
