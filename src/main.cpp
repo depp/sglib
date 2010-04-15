@@ -2,8 +2,7 @@
 #include "SDL_opengl.h"
 #include <cmath>
 #include "world.hpp"
-#include "cube.hpp"
-#include "pyramid.hpp"
+#include "wireframe.hpp"
 
 const float kPi = 4.0f * std::atan(1.0f);
 const Uint32 kLagThreshold = 1000;
@@ -19,6 +18,8 @@ bool buttonLeft = false, buttonRight = false,
     buttonUp = false, buttonDown = false;
 float playerX = 0.0f, playerY = 0.0f, playerFace = 0.0f;
 Uint32 tickref = 0;
+
+World world;
 
 void init(void)
 {
@@ -38,6 +39,15 @@ void init(void)
         SDL_Quit();
         exit(1);
     }
+    Object *obj;
+    obj = new Wireframe( 5.0f,  5.0f, 2.0f, Wireframe::kCube, Color::yellow);
+    world.addObject(obj);
+    obj = new Wireframe( 5.0f, -5.0f, 3.0f, Wireframe::kPyramid, Color::red);
+    world.addObject(obj);
+    obj = new Wireframe(-5.0f,  5.0f, 0.5f, Wireframe::kCube, Color::yellow);
+    world.addObject(obj);
+    obj = new Wireframe(-5.0f, -5.0f, 1.5f, Wireframe::kPyramid, Color::red);
+    world.addObject(obj);
 }
 
 void handleKey(SDL_keysym *key, bool state)
@@ -173,8 +183,6 @@ void drawGround(void)
     glPopMatrix();
 }
 
-World world;
-
 void drawScene(void)
 {
     glMatrixMode(GL_PROJECTION);
@@ -202,10 +210,6 @@ const unsigned char red[3] = { 255, 51, 0 };
 int main(int argc, char *argv[])
 {
     init();
-    world.addObject(new Cube( 5.0f,  5.0f, 2.0f, Color::yellow));
-    world.addObject(new Pyramid( 5.0f, -5.0f, 3.0f, Color::red));
-    world.addObject(new Cube(-5.0f,  5.0f, 0.5f, Color::yellow));
-    world.addObject(new Pyramid(-5.0f, -5.0f, 1.5f, Color::red));
     while (1) {
         handleEvents();
         updateState();
