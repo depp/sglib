@@ -12,7 +12,6 @@ public:
     virtual void draw();
 
 private:
-    float size_;
     const Model &model_;
     Color tcolor_, lcolor_;
 };

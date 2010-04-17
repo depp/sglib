@@ -3,7 +3,7 @@
 
 Obstacle::Obstacle(float x, float y, float face, float size,
                    const Model &model, Color tcolor, Color lcolor)
-    : Object(x, y, face), size_(size), model_(model),
+    : Object(x, y, face, size), model_(model),
       tcolor_(tcolor), lcolor_(lcolor)
 { }
 
@@ -14,7 +14,7 @@ void Obstacle::draw()
 {
     glPushMatrix();
     setupMatrix();
-    float d = size_ * 0.5f;
+    float d = getSize() * 0.5f;
     glScalef(d, d, d);
     glTranslatef(0.0f, 0.0f, 1.0f);
     model_.draw(tcolor_, lcolor_);

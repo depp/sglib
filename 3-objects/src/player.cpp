@@ -4,9 +4,10 @@
 
 const float kPlayerForwardSpeed = 10.0f;
 const float kPlayerTurnSpeed = 100.0f;
+const float kPlayerSize = 1.0f;
 
 Player::Player(float x, float y, float face, Input &input)
-    : Object(x, y, face), input_(input)
+    : Object(x, y, face, kPlayerSize), input_(input)
 { }
 
 Player::~Player()

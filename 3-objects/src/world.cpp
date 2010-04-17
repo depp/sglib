@@ -1,7 +1,10 @@
 #include "world.hpp"
 #include "object.hpp"
 #include <cmath>
+#include <limits>
 #include "SDL_opengl.h"
+
+#include <stdio.h>
 
 const float kPi = 4.0f * std::atan(1.0f);
 const float World::kFrameTime = World::kFrameTicks * 0.001f;
@@ -123,9 +126,24 @@ void World::update()
 {
     for (Object *p = first_; p; p = p->next_) {
         float d = kFrameTime * p->speed_;
-        float r = p->face_ * (kPi / 180.0f);
-        p->x_ += d * std::cos(r);
-        p->y_ += d * std::sin(r);
+        float a = p->face_ * (kPi / 180.0f);
+        float x = p->x_ + d * std::cos(a);
+        float y = p->y_ + d * std::sin(a);
+        float r2 = p->size_ * p->size_;
+        Object *q = first_;
+        for (; q; q = q->next_) {
+            if (p == q)
+                continue;
+            float dx = q->x_ - x, dy = q->y_ - y, dr2 = dx * dx + dy * dy;
+            if (dr2 < r2 + q->size_ * q->size_)
+                break;
+        }
+        if (q) {
+            // collision
+        } else {
+            p->x_ = x;
+            p->y_ = y;
+        }
         p->update();
     }
 }
