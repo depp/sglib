@@ -1,5 +1,9 @@
 #include "world.hpp"
 #include "object.hpp"
+#include <cmath>
+
+const float kPi = 4.0f * std::atan(1.0f);
+const float World::kFrameTime = World::kFrameTicks * 0.001f;
 
 World::World()
     : first_(0)
@@ -29,6 +33,11 @@ void World::draw()
 
 void World::update()
 {
-    for (Object *p = first_; p; p = p->next_)
+    for (Object *p = first_; p; p = p->next_) {
+        float d = kFrameTime * p->speed_;
+        float r = p->face_ * (kPi / 180.0f);
+        p->x_ += d * std::cos(r);
+        p->y_ += d * std::sin(r);
         p->update();
+    }
 }

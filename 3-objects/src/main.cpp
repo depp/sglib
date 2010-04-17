@@ -6,10 +6,9 @@
 
 const float kPi = 4.0f * std::atan(1.0f);
 const Uint32 kLagThreshold = 1000;
-const Uint32 kFrameTime = 10;
 
-const float kPlayerForwardSpeed = 10.0f * (kFrameTime * 0.001f);
-const float kPlayerTurnSpeed = 100.0f * (kFrameTime * 0.001f);
+const float kPlayerForwardSpeed = 10.0f;
+const float kPlayerTurnSpeed = 100.0f;
 
 const float kGridSpacing = 2.0f;
 const int kGridSize = 8;
@@ -114,11 +113,12 @@ void advanceFrame(void)
         forward += kPlayerForwardSpeed;
     if (buttonDown)
         forward -= kPlayerForwardSpeed;
+    turn *= World::kFrameTime;
+    forward *= World::kFrameTime;
     playerFace += turn;
     face = playerFace * (kPi / 180.0f);
     playerX += forward * std::cos(face);
     playerY += forward * std::sin(face);
-
     world.update();
 }
 
@@ -128,11 +128,11 @@ void updateState(void)
     if (tick > tickref + kLagThreshold) {
         advanceFrame();
         tickref = tick;
-    } else if (tick > tickref + kFrameTime) {
+    } else if (tick > tickref + World::kFrameTicks) {
         do {
             advanceFrame();
-            tickref += kFrameTime;
-        } while (tick > tickref + kFrameTime);
+            tickref += World::kFrameTicks;
+        } while (tick > tickref + World::kFrameTicks);
     } else if (tick < tickref)
         tickref = tick;
 }

@@ -12,6 +12,7 @@ public:
               const Model &model, Color color);
     virtual ~Wireframe();
     virtual void draw();
+    virtual void update();
 
 private:
     float size_;

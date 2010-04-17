@@ -4,6 +4,9 @@ class Object;
 
 class World {
 public:
+    static const unsigned int kFrameTicks = 10;
+    static const float kFrameTime;
+
     World();
     ~World();
 

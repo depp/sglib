@@ -64,3 +64,9 @@ void Wireframe::draw()
     glPopClientAttrib();
     glPopAttrib();
 }
+
+void Wireframe::update()
+{
+    setSpeed(10.0f);
+    setFace(getFace() + 1.0f);
+}
