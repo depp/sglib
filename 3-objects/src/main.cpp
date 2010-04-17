@@ -210,9 +210,6 @@ void drawScene(void)
     SDL_GL_SwapBuffers();
 }
 
-const unsigned char yellow[3] = { 255, 255, 0 };
-const unsigned char red[3] = { 255, 51, 0 };
-
 int main(int argc, char *argv[])
 {
     init();
