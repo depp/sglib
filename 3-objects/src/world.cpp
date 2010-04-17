@@ -1,6 +1,7 @@
 #include "world.hpp"
 #include "object.hpp"
 #include <cmath>
+#include "SDL_opengl.h"
 
 const float kPi = 4.0f * std::atan(1.0f);
 const float World::kFrameTime = World::kFrameTicks * 0.001f;
@@ -27,8 +28,11 @@ void World::addObject(Object *obj)
 
 void World::draw()
 {
+    glClear(GL_DEPTH_BUFFER_BIT);
+    glEnable(GL_DEPTH_TEST);
     for (Object *p = first_; p; p = p->next_)
         p->draw();
+    glDisable(GL_DEPTH_TEST);
 }
 
 void World::update()

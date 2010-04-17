@@ -47,9 +47,11 @@ const Model Model::kPyramid = {
 
 void Model::draw(const Color &tcolor, const Color &lcolor) const
 {
-    glPushAttrib(GL_CURRENT_BIT);
+    glPushAttrib(GL_CURRENT_BIT | GL_ENABLE_BIT);
     glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT);
 
+    glEnable(GL_POLYGON_OFFSET_FILL);
+    glPolygonOffset(1.0f, 1.0f);
     glEnableClientState(GL_VERTEX_ARRAY);
     glVertexPointer(3, GL_SHORT, 0, vertex);
     glColor3ubv(tcolor.c);
