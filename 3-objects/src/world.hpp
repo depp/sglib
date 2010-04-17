@@ -15,6 +15,8 @@ public:
     void draw();
     void update();
 
+    float gameTime() const { return kFrameTime * frameNum_; }
+
 private:
     void drawSky();
     void drawGround();
@@ -25,6 +27,7 @@ private:
     Object *first_;
     Object *player_;
     float playerX_, playerY_, playerFace_;
+    unsigned int frameNum_;
 };
 
 #endif

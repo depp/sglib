@@ -14,7 +14,8 @@ const int kGridSize = 8;
 
 World::World()
     : first_(0), player_(0),
-      playerX_(0.0f), playerY_(0.0f), playerFace_(0.0f)
+      playerX_(0.0f), playerY_(0.0f), playerFace_(0.0f),
+      frameNum_(0)
 { }
 
 World::~World()
@@ -125,6 +126,7 @@ void World::draw()
 
 void World::update()
 {
+    frameNum_ += 1;
     for (Object *p = first_; p; p = p->next_) {
         float d = kFrameTime * p->speed_;
         float a = p->face_ * (kPi / 180.0f);

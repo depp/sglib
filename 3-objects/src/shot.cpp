@@ -1,7 +1,10 @@
 #include "shot.hpp"
 #include "model.hpp"
 #include "color.hpp"
+#include "world.hpp"
 #include "SDL_opengl.h"
+
+static const float kShotTwist = 720.0f;
 
 Shot::Shot(float x, float y, float face)
     : Object(x, y, face, 0.25)
@@ -18,6 +21,7 @@ void Shot::draw()
     setupMatrix();
     glTranslatef(0.0f, 0.0f, 0.5f);
     glRotatef(90.0f, 0.0f, 1.0f, 0.0f);
+    glRotatef(kShotTwist * getWorld().gameTime(), 0.0f, 0.0f, 1.0f);
     glScalef(0.125f, 0.125f, 0.5f);
     Model::kPyramid.draw(Color::green, Color::lime);
     glPopMatrix();
