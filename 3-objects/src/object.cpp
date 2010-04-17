@@ -12,3 +12,6 @@ void Object::setupMatrix()
 {
     glTranslatef(x_, y_, 0.0f);
 }
+
+void Object::update()
+{ }

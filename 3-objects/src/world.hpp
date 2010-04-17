@@ -9,6 +9,7 @@ public:
 
     void addObject(Object *obj);
     void draw();
+    void update();
 
 private:
     World(const World &);

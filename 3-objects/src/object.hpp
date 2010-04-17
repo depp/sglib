@@ -9,6 +9,7 @@ public:
     virtual ~Object();
     virtual void draw() = 0;
     void setupMatrix();
+    virtual void update();
 
     float getX() { return x_; }
     float getY() { return y_; }

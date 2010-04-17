@@ -26,3 +26,9 @@ void World::draw()
     for (Object *p = first_; p; p = p->next_)
         p->draw();
 }
+
+void World::update()
+{
+    for (Object *p = first_; p; p = p->next_)
+        p->update();
+}

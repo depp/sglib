@@ -114,6 +114,8 @@ void advanceFrame(void)
     face = playerFace * (kPi / 180.0f);
     playerX += forward * std::cos(face);
     playerY += forward * std::sin(face);
+
+    world.update();
 }
 
 void updateState(void)
