@@ -39,6 +39,11 @@ void init(void)
         SDL_Quit();
         exit(1);
     }
+
+    printf("Vendor: %s\nRenderer: %s\nVersion: %s\n",
+           glGetString(GL_VENDOR), glGetString(GL_RENDERER),
+           glGetString(GL_VERSION));
+
     Object *obj;
     obj = new Obstacle(5.0f, 5.0f, 0.0f, 2.0f,
                        Model::kCube, Color::olive, Color::yellow);
