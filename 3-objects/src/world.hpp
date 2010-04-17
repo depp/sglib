@@ -11,14 +11,20 @@ public:
     ~World();
 
     void addObject(Object *obj);
+    void setPlayer(Object *obj);
     void draw();
     void update();
 
 private:
+    void drawSky();
+    void drawGround();
+
     World(const World &);
     World &operator=(const World &);
 
     Object *first_;
+    Object *player_;
+    float playerX_, playerY_, playerFace_;
 };
 
 #endif
