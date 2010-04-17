@@ -15,6 +15,7 @@
 		38C4612E1179796600E239D6 /* obstacle.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 38C4612D1179796600E239D6 /* obstacle.cpp */; };
 		38C4615311797A1A00E239D6 /* model.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 38C4615111797A1A00E239D6 /* model.cpp */; };
 		38C4DE2B117A44E200AA242C /* player.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 38C4DE29117A44E200AA242C /* player.cpp */; };
+		38C4DE45117A676600AA242C /* shot.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 38C4DE43117A676600AA242C /* shot.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -35,6 +36,8 @@
 		38C4615211797A1A00E239D6 /* model.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = model.hpp; sourceTree = "<group>"; };
 		38C4DE29117A44E200AA242C /* player.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = player.cpp; sourceTree = "<group>"; };
 		38C4DE2A117A44E200AA242C /* player.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = player.hpp; sourceTree = "<group>"; };
+		38C4DE43117A676600AA242C /* shot.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = shot.cpp; sourceTree = "<group>"; };
+		38C4DE44117A676600AA242C /* shot.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = shot.hpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -79,6 +82,8 @@
 				38C4612F1179796900E239D6 /* obstacle.hpp */,
 				38C4DE29117A44E200AA242C /* player.cpp */,
 				38C4DE2A117A44E200AA242C /* player.hpp */,
+				38C4DE43117A676600AA242C /* shot.cpp */,
+				38C4DE44117A676600AA242C /* shot.hpp */,
 				382A9B201176B235007B06CC /* world.cpp */,
 				382A9B211176B235007B06CC /* world.hpp */,
 			);
@@ -157,6 +162,7 @@
 				38C4612E1179796600E239D6 /* obstacle.cpp in Sources */,
 				38C4615311797A1A00E239D6 /* model.cpp in Sources */,
 				38C4DE2B117A44E200AA242C /* player.cpp in Sources */,
+				38C4DE45117A676600AA242C /* shot.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -16,6 +16,7 @@ public:
     float getFace() const { return face_; }
     float getSpeed() const { return speed_; }
     float getSize() const { return size_; }
+    World &getWorld() { return *world_; }
     void setFace(float f) { face_ = f; }
     void setSpeed(float s) { speed_ = s; }
 
@@ -25,6 +26,7 @@ private:
 
     float x_, y_, face_, size_, speed_;
     Object *next_, *prev_;
+    World *world_;
 };
 
 #endif

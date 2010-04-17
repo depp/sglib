@@ -77,6 +77,9 @@ void handleKey(SDL_keysym *key, bool state)
     case SDLK_d:
         input.right = state;
         break;
+    case SDLK_SPACE:
+        input.fire = state;
+        break;
     default:
         break;
     }

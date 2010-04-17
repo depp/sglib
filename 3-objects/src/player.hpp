@@ -9,6 +9,7 @@ public:
         bool right;
         bool up;
         bool down;
+        bool fire;
     };
 
     Player(float x, float y, float face, Input &input);

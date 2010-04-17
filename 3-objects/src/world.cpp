@@ -29,6 +29,7 @@ World::~World()
 
 void World::addObject(Object *obj)
 {
+    obj->world_ = this;
     obj->next_ = first_;
     first_ = obj;
 }

@@ -3,7 +3,7 @@
 
 Object::Object(float x, float y, float face, float size)
     : x_(x), y_(y), face_(face), size_(size),
-      speed_(0.0f), next_(0), prev_(0)
+      speed_(0.0f), next_(0), prev_(0), world_(0)
 { }
 
 Object::~Object()

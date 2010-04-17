@@ -1,10 +1,12 @@
 #include "player.hpp"
 #include "world.hpp"
+#include "shot.hpp"
 #include <cmath>
 
 const float kPlayerForwardSpeed = 10.0f;
 const float kPlayerTurnSpeed = 100.0f;
 const float kPlayerSize = 1.0f;
+const float kShotDistance = 1.3f;
 
 Player::Player(float x, float y, float face, Input &input)
     : Object(x, y, face, kPlayerSize), input_(input)
@@ -30,4 +32,14 @@ void Player::update()
     turn *= World::kFrameTime;
     setFace(getFace() + turn);
     setSpeed(forward);
+
+    if (input_.fire) {
+        float a;
+        a = getFace() * (4.0 * std::atan(1.0) / 180.0f);
+        input_.fire = false;
+        Object *obj = new Shot(getX() + std::cos(a) * kShotDistance,
+                               getY() + std::sin(a) * kShotDistance,
+                               getFace());
+        getWorld().addObject(obj);
+    }
 }
