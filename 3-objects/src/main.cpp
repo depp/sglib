@@ -40,13 +40,17 @@ void init(void)
         exit(1);
     }
     Object *obj;
-    obj = new Wireframe( 5.0f,  5.0f, 2.0f, Wireframe::kCube, Color::yellow);
+    obj = new Wireframe(5.0f, 5.0f, 0.0f, 2.0f,
+                        Wireframe::kCube, Color::yellow);
     world.addObject(obj);
-    obj = new Wireframe( 5.0f, -5.0f, 3.0f, Wireframe::kPyramid, Color::red);
+    obj = new Wireframe(5.0f, -5.0f, 22.5f, 3.0f,
+                        Wireframe::kPyramid, Color::red);
     world.addObject(obj);
-    obj = new Wireframe(-5.0f,  5.0f, 0.5f, Wireframe::kCube, Color::yellow);
+    obj = new Wireframe(-5.0f, 5.0f, 67.5f, 0.5f,
+                        Wireframe::kCube, Color::yellow);
     world.addObject(obj);
-    obj = new Wireframe(-5.0f, -5.0f, 1.5f, Wireframe::kPyramid, Color::red);
+    obj = new Wireframe(-5.0f, -5.0f, 45.0f, 1.5f,
+                        Wireframe::kPyramid, Color::red);
     world.addObject(obj);
 }
 

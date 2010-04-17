@@ -36,9 +36,9 @@ const Wireframe::Model Wireframe::kPyramid = {
     kPyramidVertices, 5, kPyramidElements, 16
 };
 
-Wireframe::Wireframe(float x, float y, float size,
+Wireframe::Wireframe(float x, float y, float face, float size,
                      const Model &model, Color color)
-    : Object(x, y), size_(size), model_(model), color_(color)
+    : Object(x, y, face), size_(size), model_(model), color_(color)
 { }
 
 Wireframe::~Wireframe()

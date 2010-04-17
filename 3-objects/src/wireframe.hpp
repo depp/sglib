@@ -8,7 +8,8 @@ public:
     struct Model;
     static const Model kPyramid, kCube;
 
-    Wireframe(float x, float y, float size, const Model &model, Color color);
+    Wireframe(float x, float y, float face, float size,
+              const Model &model, Color color);
     virtual ~Wireframe();
     virtual void draw();
 
