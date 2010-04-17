@@ -34,9 +34,8 @@ void Player::update()
     setSpeed(forward);
 
     if (input_.fire) {
-        float a;
-        a = getFace() * (4.0 * std::atan(1.0) / 180.0f);
         input_.fire = false;
+        float a = getFace() * (4.0 * std::atan(1.0) / 180.0f);
         Object *obj = new Shot(getX() + std::cos(a) * kShotDistance,
                                getY() + std::sin(a) * kShotDistance,
                                getFace());
