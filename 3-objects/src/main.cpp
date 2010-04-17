@@ -2,7 +2,8 @@
 #include "SDL_opengl.h"
 #include <cmath>
 #include "world.hpp"
-#include "wireframe.hpp"
+#include "obstacle.hpp"
+#include "model.hpp"
 
 const float kPi = 4.0f * std::atan(1.0f);
 const Uint32 kLagThreshold = 1000;
@@ -39,17 +40,17 @@ void init(void)
         exit(1);
     }
     Object *obj;
-    obj = new Wireframe(5.0f, 5.0f, 0.0f, 2.0f,
-                        Wireframe::kCube, Color::yellow);
+    obj = new Obstacle(5.0f, 5.0f, 0.0f, 2.0f,
+                       Model::kCube, Color::olive, Color::yellow);
     world.addObject(obj);
-    obj = new Wireframe(5.0f, -5.0f, 22.5f, 3.0f,
-                        Wireframe::kPyramid, Color::red);
+    obj = new Obstacle(5.0f, -5.0f, 22.5f, 3.0f,
+                       Model::kPyramid, Color::maroon, Color::red);
     world.addObject(obj);
-    obj = new Wireframe(-5.0f, 5.0f, 67.5f, 0.5f,
-                        Wireframe::kCube, Color::yellow);
+    obj = new Obstacle(-5.0f, 5.0f, 67.5f, 0.5f,
+                       Model::kCube, Color::olive, Color::yellow);
     world.addObject(obj);
-    obj = new Wireframe(-5.0f, -5.0f, 45.0f, 1.5f,
-                        Wireframe::kPyramid, Color::red);
+    obj = new Obstacle(-5.0f, -5.0f, 45.0f, 1.5f,
+                       Model::kPyramid, Color::maroon, Color::red);
     world.addObject(obj);
 }
 

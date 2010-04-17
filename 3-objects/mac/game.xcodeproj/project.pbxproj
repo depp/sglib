@@ -10,9 +10,10 @@
 		382A9B231176B235007B06CC /* object.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 382A9B1E1176B235007B06CC /* object.cpp */; };
 		382A9B241176B235007B06CC /* world.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 382A9B201176B235007B06CC /* world.cpp */; };
 		382A9B5B1176DCE6007B06CC /* color.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 382A9B5A1176DCE6007B06CC /* color.cpp */; };
-		382A9B601176E37D007B06CC /* wireframe.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 382A9B5F1176E37D007B06CC /* wireframe.cpp */; };
 		3834EBFC117441BB0070CBE5 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3834EBFB117441BB0070CBE5 /* main.cpp */; };
 		385208A81174351800640971 /* SDLMain.m in Sources */ = {isa = PBXBuildFile; fileRef = 385208A71174351800640971 /* SDLMain.m */; };
+		38C4612E1179796600E239D6 /* obstacle.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 38C4612D1179796600E239D6 /* obstacle.cpp */; };
+		38C4615311797A1A00E239D6 /* model.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 38C4615111797A1A00E239D6 /* model.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -22,13 +23,15 @@
 		382A9B211176B235007B06CC /* world.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = world.hpp; sourceTree = "<group>"; };
 		382A9B541176DC20007B06CC /* color.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = color.hpp; sourceTree = "<group>"; };
 		382A9B5A1176DCE6007B06CC /* color.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = color.cpp; sourceTree = "<group>"; };
-		382A9B5E1176E37D007B06CC /* wireframe.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = wireframe.hpp; sourceTree = "<group>"; };
-		382A9B5F1176E37D007B06CC /* wireframe.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = wireframe.cpp; sourceTree = "<group>"; };
 		3834EBFB117441BB0070CBE5 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		3852089E117434FD00640971 /* Game.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Game.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		385208A1117434FD00640971 /* Game-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Game-Info.plist"; sourceTree = "<group>"; };
 		385208A61174351800640971 /* SDLMain.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SDLMain.h; sourceTree = "<group>"; };
 		385208A71174351800640971 /* SDLMain.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SDLMain.m; sourceTree = "<group>"; };
+		38C4612D1179796600E239D6 /* obstacle.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = obstacle.cpp; sourceTree = "<group>"; };
+		38C4612F1179796900E239D6 /* obstacle.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = obstacle.hpp; sourceTree = "<group>"; };
+		38C4615111797A1A00E239D6 /* model.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = model.cpp; sourceTree = "<group>"; };
+		38C4615211797A1A00E239D6 /* model.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = model.hpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -65,12 +68,14 @@
 				382A9B5A1176DCE6007B06CC /* color.cpp */,
 				382A9B541176DC20007B06CC /* color.hpp */,
 				3834EBFB117441BB0070CBE5 /* main.cpp */,
+				38C4615111797A1A00E239D6 /* model.cpp */,
+				38C4615211797A1A00E239D6 /* model.hpp */,
 				382A9B1E1176B235007B06CC /* object.cpp */,
 				382A9B1F1176B235007B06CC /* object.hpp */,
+				38C4612D1179796600E239D6 /* obstacle.cpp */,
+				38C4612F1179796900E239D6 /* obstacle.hpp */,
 				382A9B201176B235007B06CC /* world.cpp */,
 				382A9B211176B235007B06CC /* world.hpp */,
-				382A9B5F1176E37D007B06CC /* wireframe.cpp */,
-				382A9B5E1176E37D007B06CC /* wireframe.hpp */,
 			);
 			name = src;
 			path = ../src;
@@ -144,7 +149,8 @@
 				382A9B231176B235007B06CC /* object.cpp in Sources */,
 				382A9B241176B235007B06CC /* world.cpp in Sources */,
 				382A9B5B1176DCE6007B06CC /* color.cpp in Sources */,
-				382A9B601176E37D007B06CC /* wireframe.cpp in Sources */,
+				38C4612E1179796600E239D6 /* obstacle.cpp in Sources */,
+				38C4615311797A1A00E239D6 /* model.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
