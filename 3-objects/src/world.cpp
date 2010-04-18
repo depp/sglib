@@ -171,6 +171,8 @@ void World::update()
             continue;
         objects_[i - 1] = objects_[c - 1];
         objects_[c - 1]->index_ = i - 1;
+        if (player_ == p)
+            player_ = NULL;
         delete p;
         c -= 1;
     }
