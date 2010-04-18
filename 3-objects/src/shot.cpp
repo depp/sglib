@@ -9,7 +9,7 @@ static const float kShotTwist = 720.0f;
 static const float kShotSpan = 1.0f;
 
 Shot::Shot(float x, float y, float face)
-    : Object(x, y, face, 0.25), time_(0.0f)
+    : Object(0, kClassSolid, x, y, face, 0.25), time_(0.0f)
 {
     setSpeed(25.0f);
 }

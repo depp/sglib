@@ -17,7 +17,8 @@ const Explosion::Type Explosion::kShot = {
 };
 
 Explosion::Explosion(float x, float y, const Type &type)
-    : Object(x, y, 0.0f, 0.0f), type_(type), time_(0.0f), vertex_(0)
+    : Object(0, 0, x, y, 0.0f, 0.0f),
+      type_(type), time_(0.0f), vertex_(0)
 { }
 
 Explosion::~Explosion()

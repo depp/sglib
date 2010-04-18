@@ -5,7 +5,10 @@ class World;
 class Object {
     friend class World;
 public:
-    Object(float x, float y, float face, float size);
+    static const unsigned int kClassSolid = 1 << 0;
+
+    Object(unsigned int colGen, unsigned int colRcv,
+           float x, float y, float face, float size);
     virtual ~Object();
     virtual void init();
     virtual void draw();
@@ -27,6 +30,7 @@ private:
     Object(const Object &);
     Object &operator=(const Object &);
 
+    unsigned int colGen_, colRcv_;
     float x_, y_, face_, size_, speed_;
     int index_;
     World *world_;

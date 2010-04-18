@@ -3,7 +3,7 @@
 
 Obstacle::Obstacle(float x, float y, float face, float size,
                    const Model &model, Color tcolor, Color lcolor)
-    : Object(x, y, face, size), model_(model),
+    : Object(kClassSolid, 0, x, y, face, size), model_(model),
       tcolor_(tcolor), lcolor_(lcolor)
 { }
 

@@ -140,28 +140,30 @@ void World::update()
         float x = p->x_ + d * std::cos(a);
         float y = p->y_ + d * std::sin(a);
         float r2 = p->size_ * p->size_;
-        Object *q = NULL;
-        unsigned int j;
-        for (j = 0; j < c; ++j) {
+        bool move = true;
+        for (unsigned int j = 0; j < c; ++j) {
             if (i == j)
                 continue;
-            q = objects_[j];
+            Object *q = objects_[j];
             if (q->index_ < 0)
                 continue;
             float dx = q->x_ - x, dy = q->y_ - y, dr2 = dx * dx + dy * dy;
-            if (dr2 < r2 + q->size_ * q->size_)
-                break;
-        }
-        if (j < c) {
-            update = p->collide(*q);
-            if (p->index_ >= 0 && q->index_ >= 0) {
-                q->collide(*p);
-                if (p->index_ < 0 || q->index_ < 0)
-                    update = false;
+            if (dr2 > r2 + q->size_ * q->size_)
+                continue;
+            if (p->colRcv_ & q->colGen_) {
+                move = p->collide(*q) && move;
+                if (p->index_ < 0)
+                    break;
+                if (q->index_ < 0)
+                    continue;
             }
-        } else
-            update = true;
-        if (update) {
+            if (q->colRcv_ & p->colGen_) {
+                q->collide(*p);
+                if (p->index_ < 0)
+                    break;
+            }
+        }
+        if (move) {
             p->x_ = x;
             p->y_ = y;
         }

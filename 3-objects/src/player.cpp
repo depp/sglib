@@ -9,7 +9,8 @@ const float kPlayerSize = 1.0f;
 const float kShotDistance = 1.3f;
 
 Player::Player(float x, float y, float face, Input &input)
-    : Object(x, y, face, kPlayerSize), input_(input)
+    : Object(kClassSolid, kClassSolid, x, y, face, kPlayerSize),
+      input_(input)
 { }
 
 Player::~Player()

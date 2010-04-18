@@ -1,8 +1,10 @@
 #include "object.hpp"
 #include "SDL_opengl.h"
 
-Object::Object(float x, float y, float face, float size)
-    : x_(x), y_(y), face_(face), size_(size), speed_(0.0f),
+Object::Object(unsigned int colGen, unsigned int colRcv,
+               float x, float y, float face, float size)
+    : colGen_(colGen), colRcv_(colRcv),
+      x_(x), y_(y), face_(face), size_(size), speed_(0.0f),
       index_(0), world_(0)
 { }
 
