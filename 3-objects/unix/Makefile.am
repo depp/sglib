@@ -3,11 +3,13 @@ AUTOMAKE_OPTIONS = 1.5 foreign subdir-objects
 bin_PROGRAMS = game
 
 AM_LDFLAGS = @SDL_LIBS@
-AM_CPPFLAGS = @warning_cflags@ @SDL_CFLAGS@
+AM_CPPFLAGS = @warning_cppflags@ @SDL_CFLAGS@
 
 game_SOURCES = \
 	../src/color.cpp \
 	../src/color.hpp \
+	../src/explosion.cpp \
+	../src/explosion.hpp \
 	../src/main.cpp \
 	../src/model.cpp \
 	../src/model.hpp \
@@ -15,5 +17,11 @@ game_SOURCES = \
 	../src/object.hpp \
 	../src/obstacle.cpp \
 	../src/obstacle.hpp \
+	../src/player.cpp \
+	../src/player.hpp \
+	../src/rand.cpp \
+	../src/rand.hpp \
+	../src/shot.cpp \
+	../src/shot.hpp \
 	../src/world.cpp \
 	../src/world.hpp
