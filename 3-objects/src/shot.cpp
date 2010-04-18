@@ -5,15 +5,21 @@
 #include "SDL_opengl.h"
 
 static const float kShotTwist = 720.0f;
+static const float kShotSpan = 1.0f;
 
 Shot::Shot(float x, float y, float face)
-    : Object(x, y, face, 0.25)
+    : Object(x, y, face, 0.25), time_(0.0f)
 {
     setSpeed(25.0f);
 }
 
 Shot::~Shot()
 { }
+
+void Shot::init()
+{
+    time_ = getWorld().gameTime() + kShotSpan;
+}
 
 void Shot::draw()
 {
@@ -28,4 +34,7 @@ void Shot::draw()
 }
 
 void Shot::update()
-{ }
+{
+    if (getWorld().gameTime() > time_)
+        remove();
+}

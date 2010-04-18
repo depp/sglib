@@ -6,8 +6,12 @@ class Shot : public Object {
 public:
     Shot(float x, float y, float face);
     virtual ~Shot();
+    virtual void init();
     virtual void draw();
     virtual void update();
+
+private:
+    float time_;
 };
 
 #endif
