@@ -2,6 +2,7 @@
 #include "model.hpp"
 #include "color.hpp"
 #include "world.hpp"
+#include "explosion.hpp"
 #include "SDL_opengl.h"
 
 static const float kShotTwist = 720.0f;
@@ -37,4 +38,12 @@ void Shot::update()
 {
     if (getWorld().gameTime() > time_)
         remove();
+}
+
+bool Shot::collide(Object &other)
+{
+    remove();
+    Object *obj = new Explosion(getX(), getY(), Explosion::kShot);
+    getWorld().addObject(obj);
+    return false;
 }

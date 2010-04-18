@@ -9,6 +9,7 @@ public:
     virtual void init();
     virtual void draw();
     virtual void update();
+    virtual bool collide(Object &other);
 
 private:
     float time_;

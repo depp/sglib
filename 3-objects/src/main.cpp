@@ -5,6 +5,7 @@
 #include "obstacle.hpp"
 #include "model.hpp"
 #include "player.hpp"
+#include "rand.hpp"
 
 const Uint32 kLagThreshold = 1000;
 Uint32 tickref = 0;
@@ -50,6 +51,8 @@ void init(void)
     obj = new Player(0.0f, 0.0f, 0.0f, input);
     world.addObject(obj);
     world.setPlayer(obj);
+
+    Rand::global.seed();
 }
 
 void handleKey(SDL_keysym *key, bool state)

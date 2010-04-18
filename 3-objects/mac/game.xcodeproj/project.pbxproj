@@ -12,6 +12,8 @@
 		382A9B5B1176DCE6007B06CC /* color.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 382A9B5A1176DCE6007B06CC /* color.cpp */; };
 		3834EBFC117441BB0070CBE5 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3834EBFB117441BB0070CBE5 /* main.cpp */; };
 		385208A81174351800640971 /* SDLMain.m in Sources */ = {isa = PBXBuildFile; fileRef = 385208A71174351800640971 /* SDLMain.m */; };
+		38B2409A117BADFE00903838 /* explosion.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 38B24098117BADFE00903838 /* explosion.cpp */; };
+		38B2409D117BAE0800903838 /* rand.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 38B2409B117BAE0800903838 /* rand.cpp */; };
 		38C4612E1179796600E239D6 /* obstacle.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 38C4612D1179796600E239D6 /* obstacle.cpp */; };
 		38C4615311797A1A00E239D6 /* model.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 38C4615111797A1A00E239D6 /* model.cpp */; };
 		38C4DE2B117A44E200AA242C /* player.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 38C4DE29117A44E200AA242C /* player.cpp */; };
@@ -30,6 +32,10 @@
 		385208A1117434FD00640971 /* Game-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Game-Info.plist"; sourceTree = "<group>"; };
 		385208A61174351800640971 /* SDLMain.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SDLMain.h; sourceTree = "<group>"; };
 		385208A71174351800640971 /* SDLMain.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SDLMain.m; sourceTree = "<group>"; };
+		38B24098117BADFE00903838 /* explosion.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = explosion.cpp; sourceTree = "<group>"; };
+		38B24099117BADFE00903838 /* explosion.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = explosion.hpp; sourceTree = "<group>"; };
+		38B2409B117BAE0800903838 /* rand.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = rand.cpp; sourceTree = "<group>"; };
+		38B2409C117BAE0800903838 /* rand.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = rand.hpp; sourceTree = "<group>"; };
 		38C4612D1179796600E239D6 /* obstacle.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = obstacle.cpp; sourceTree = "<group>"; };
 		38C4612F1179796900E239D6 /* obstacle.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = obstacle.hpp; sourceTree = "<group>"; };
 		38C4615111797A1A00E239D6 /* model.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = model.cpp; sourceTree = "<group>"; };
@@ -73,6 +79,8 @@
 			children = (
 				382A9B5A1176DCE6007B06CC /* color.cpp */,
 				382A9B541176DC20007B06CC /* color.hpp */,
+				38B24098117BADFE00903838 /* explosion.cpp */,
+				38B24099117BADFE00903838 /* explosion.hpp */,
 				3834EBFB117441BB0070CBE5 /* main.cpp */,
 				38C4615111797A1A00E239D6 /* model.cpp */,
 				38C4615211797A1A00E239D6 /* model.hpp */,
@@ -82,6 +90,8 @@
 				38C4612F1179796900E239D6 /* obstacle.hpp */,
 				38C4DE29117A44E200AA242C /* player.cpp */,
 				38C4DE2A117A44E200AA242C /* player.hpp */,
+				38B2409B117BAE0800903838 /* rand.cpp */,
+				38B2409C117BAE0800903838 /* rand.hpp */,
 				38C4DE43117A676600AA242C /* shot.cpp */,
 				38C4DE44117A676600AA242C /* shot.hpp */,
 				382A9B201176B235007B06CC /* world.cpp */,
@@ -163,6 +173,8 @@
 				38C4615311797A1A00E239D6 /* model.cpp in Sources */,
 				38C4DE2B117A44E200AA242C /* player.cpp in Sources */,
 				38C4DE45117A676600AA242C /* shot.cpp in Sources */,
+				38B2409A117BADFE00903838 /* explosion.cpp in Sources */,
+				38B2409D117BAE0800903838 /* rand.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
