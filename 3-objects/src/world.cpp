@@ -57,7 +57,7 @@ void World::drawSky(void)
     glColor3ubv(sky[0].color);
     glVertex3f(-2.0f, 1.0f, -1.0f);
     glVertex3f( 2.0f, 1.0f, -1.0f);
-    for (int i = 0; i < sizeof(sky) / sizeof(*sky); ++i) {
+    for (unsigned int i = 0; i < sizeof(sky) / sizeof(*sky); ++i) {
         glColor3ubv(sky[i].color);
         glVertex3f(-2.0f, 1.0f, sky[i].pos);
         glVertex3f( 2.0f, 1.0f, sky[i].pos);
@@ -128,7 +128,6 @@ void World::update()
     frameNum_ += 1;
     unsigned int c = objCount_;
     for (unsigned int i = 0; i < c; ++i) {
-        bool update;
         Object *p = objects_[i];
         if (p->index_ < 0)
             continue;

@@ -21,7 +21,7 @@ void Player::draw()
 
 void Player::update()
 {
-    float forward = 0.0f, turn = 0.0f, face;
+    float forward = 0.0f, turn = 0.0f;
     if (input_.left)
         turn += kPlayerTurnSpeed;
     if (input_.right)

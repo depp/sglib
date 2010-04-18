@@ -9,7 +9,7 @@
 
 const Uint32 kLagThreshold = 1000;
 Uint32 tickref = 0;
-Player::Input input = { false, false, false, false };
+Player::Input input = { false, false, false, false, false };
 World world;
 
 void init(void)
