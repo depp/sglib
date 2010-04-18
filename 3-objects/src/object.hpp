@@ -7,9 +7,11 @@ class Object {
 public:
     Object(float x, float y, float face, float size);
     virtual ~Object();
-    virtual void draw() = 0;
+    virtual void init();
+    virtual void draw();
     void setupMatrix();
     virtual void update();
+    void remove() { index_ = -1; }
 
     float getX() const { return x_; }
     float getY() const { return y_; }
@@ -25,7 +27,7 @@ private:
     Object &operator=(const Object &);
 
     float x_, y_, face_, size_, speed_;
-    Object *next_, *prev_;
+    int index_;
     World *world_;
 };
 

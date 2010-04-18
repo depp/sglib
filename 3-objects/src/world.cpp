@@ -2,9 +2,8 @@
 #include "object.hpp"
 #include <cmath>
 #include <limits>
+#include <assert.h>
 #include "SDL_opengl.h"
-
-#include <stdio.h>
 
 const float kPi = 4.0f * std::atan(1.0f);
 const float World::kFrameTime = World::kFrameTicks * 0.001f;
@@ -13,26 +12,24 @@ const float kGridSpacing = 2.0f;
 const int kGridSize = 8;
 
 World::World()
-    : first_(0), player_(0),
-      playerX_(0.0f), playerY_(0.0f), playerFace_(0.0f),
-      frameNum_(0)
+    : frameNum_(0), objCount_(0), player_(0),
+      playerX_(0.0f), playerY_(0.0f), playerFace_(0.0f)
 { }
 
 World::~World()
 {
-    Object *p = first_, *n;
-    while (p) {
-        n = p->next_;
-        delete p;
-        p = n;
-    }
+    for (unsigned int i = objCount_; i > 0; --i)
+        delete objects_[i - 1];
 }
 
 void World::addObject(Object *obj)
 {
+    assert(objCount_ < kMaxObjects);
     obj->world_ = this;
-    obj->next_ = first_;
-    first_ = obj;
+    obj->index_ = objCount_;
+    objects_[objCount_] = obj;
+    objCount_ += 1;
+    obj->init();
 }
 
 void World::setPlayer(Object *obj)
@@ -119,34 +116,55 @@ void World::draw()
     drawGround();
 
     glEnable(GL_DEPTH_TEST);
-    for (Object *p = first_; p; p = p->next_)
-        p->draw();
+    for (unsigned int i = 0, c = objCount_; i < c; ++i)
+        objects_[i]->draw();
     glDisable(GL_DEPTH_TEST);
 }
 
 void World::update()
 {
     frameNum_ += 1;
-    for (Object *p = first_; p; p = p->next_) {
+    unsigned int c = objCount_;
+    for (unsigned int i = 0; i < c; ++i) {
+        Object *p = objects_[i];
+        if (p->index_ < 0)
+            continue;
+        p->update();
+        if (p->index_ < 0)
+            continue;
         float d = kFrameTime * p->speed_;
         float a = p->face_ * (kPi / 180.0f);
         float x = p->x_ + d * std::cos(a);
         float y = p->y_ + d * std::sin(a);
         float r2 = p->size_ * p->size_;
-        Object *q = first_;
-        for (; q; q = q->next_) {
-            if (p == q)
+        Object *q = NULL;
+        unsigned int j;
+        for (j = 0; j < c; ++j) {
+            if (i == j)
+                continue;
+            q = objects_[j];
+            if (q->index_ < 0)
                 continue;
             float dx = q->x_ - x, dy = q->y_ - y, dr2 = dx * dx + dy * dy;
             if (dr2 < r2 + q->size_ * q->size_)
                 break;
         }
-        if (q) {
+        if (j < c) {
             // collision
         } else {
             p->x_ = x;
             p->y_ = y;
         }
-        p->update();
     }
+    c = objCount_;
+    for (unsigned int i = c; i > 0; --i) {
+        Object *p = objects_[i - 1];
+        if (p->index_ >= 0)
+            continue;
+        objects_[i - 1] = objects_[c - 1];
+        objects_[c - 1]->index_ = i - 1;
+        delete p;
+        c -= 1;
+    }
+    objCount_ = c;
 }

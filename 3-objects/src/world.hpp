@@ -6,6 +6,7 @@ class World {
 public:
     static const unsigned int kFrameTicks = 10;
     static const float kFrameTime;
+    static const unsigned int kMaxObjects = 256;
 
     World();
     ~World();
@@ -24,10 +25,9 @@ private:
     World(const World &);
     World &operator=(const World &);
 
-    Object *first_;
-    Object *player_;
+    unsigned int frameNum_, objCount_;
+    Object *objects_[kMaxObjects], *player_;
     float playerX_, playerY_, playerFace_;
-    unsigned int frameNum_;
 };
 
 #endif
