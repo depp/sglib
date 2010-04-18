@@ -126,6 +126,7 @@ void World::update()
     frameNum_ += 1;
     unsigned int c = objCount_;
     for (unsigned int i = 0; i < c; ++i) {
+        bool update;
         Object *p = objects_[i];
         if (p->index_ < 0)
             continue;
@@ -150,8 +151,15 @@ void World::update()
                 break;
         }
         if (j < c) {
-            // collision
-        } else {
+            update = p->collide(*q);
+            if (p->index_ >= 0 && q->index_ >= 0) {
+                q->collide(*p);
+                if (p->index_ < 0 || q->index_ < 0)
+                    update = false;
+            }
+        } else
+            update = true;
+        if (update) {
             p->x_ = x;
             p->y_ = y;
         }

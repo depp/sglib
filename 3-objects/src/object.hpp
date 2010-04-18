@@ -11,6 +11,7 @@ public:
     virtual void draw();
     void setupMatrix();
     virtual void update();
+    virtual bool collide(Object &other);
     void remove() { index_ = -1; }
 
     float getX() const { return x_; }

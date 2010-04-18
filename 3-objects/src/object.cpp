@@ -23,3 +23,8 @@ void Object::setupMatrix()
 
 void Object::update()
 { }
+
+bool Object::collide(Object &other)
+{
+    return false;
+}
