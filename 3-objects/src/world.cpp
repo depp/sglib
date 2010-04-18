@@ -115,10 +115,12 @@ void World::draw()
 
     drawGround();
 
+    glEnable(GL_CULL_FACE);
     glEnable(GL_DEPTH_TEST);
     for (unsigned int i = 0, c = objCount_; i < c; ++i)
         objects_[i]->draw();
     glDisable(GL_DEPTH_TEST);
+    glDisable(GL_CULL_FACE);
 }
 
 void World::update()
