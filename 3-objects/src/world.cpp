@@ -89,7 +89,6 @@ void World::drawGround(void)
     glPopMatrix();
 }
 
-
 void World::draw()
 {
     if (player_) {
