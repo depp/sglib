@@ -12,8 +12,7 @@ struct Explosion::Type {
 
 const Explosion::Type Explosion::kShot = {
     0.25f, 0.5f, 15.0f, 9.8f, 0.15f, 2.0f,
-    128,
-    Color::lime
+    128, Color(0, 255, 0)
 };
 
 Explosion::Explosion(float x, float y, const Type &type)
