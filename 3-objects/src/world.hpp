@@ -17,6 +17,7 @@ public:
     void update();
 
     float gameTime() const { return kFrameTime * frameNum_; }
+    void getCamera(float camera[3]);
 
 private:
     void drawSky();

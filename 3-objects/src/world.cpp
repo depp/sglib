@@ -180,3 +180,10 @@ void World::update()
     }
     objCount_ = c;
 }
+
+void World::getCamera(float camera[3])
+{
+    camera[0] = playerX_;
+    camera[1] = playerY_;
+    camera[2] = 1.0f;
+}
