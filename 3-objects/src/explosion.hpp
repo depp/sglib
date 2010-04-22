@@ -14,12 +14,14 @@ public:
     virtual void update();
 
 private:
+    struct Particle;
+
     Explosion(const Explosion &);
     Explosion &operator=(const Explosion &);
 
     const Type &type_;
     float time_;
-    short (*vertex_)[3];
+    Particle *particle_;
 };
 
 #endif
