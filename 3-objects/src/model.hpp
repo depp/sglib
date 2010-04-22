@@ -9,7 +9,7 @@ struct Model {
     void draw(const Color &tcolor, const Color &lcolor) const;
 
     GLint vertexCount;
-    const GLshort (*vertex)[3];
+    const GLfloat (*vertex)[3];
     GLsizei triCount;
     const GLubyte (*tri)[3];
     GLsizei lineCount;

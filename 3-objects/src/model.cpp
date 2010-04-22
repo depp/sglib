@@ -1,7 +1,7 @@
 #include "model.hpp"
 #include "color.hpp"
 
-static const GLshort kCubeVertices[8][3] = {
+static const GLfloat kCubeVertices[8][3] = {
     { -1, -1, -1 }, { -1, -1,  1 }, { -1,  1, -1 }, { -1,  1,  1 },
     {  1, -1, -1 }, {  1, -1,  1 }, {  1,  1, -1 }, {  1,  1,  1 }
 };
@@ -25,7 +25,7 @@ const Model Model::kCube = {
     8, kCubeVertices, 12, kCubeTris, 12, kCubeLines
 };
 
-static const GLshort kPyramidVertices[8][3] = {
+static const GLfloat kPyramidVertices[8][3] = {
     { -1, -1, -1 }, { -1,  1, -1 }, {  1, -1, -1 }, {  1,  1, -1 },
     {  0,  0,  1 }
 };
@@ -53,7 +53,7 @@ void Model::draw(const Color &tcolor, const Color &lcolor) const
     glEnable(GL_POLYGON_OFFSET_FILL);
     glPolygonOffset(1.0f, 1.0f);
     glEnableClientState(GL_VERTEX_ARRAY);
-    glVertexPointer(3, GL_SHORT, 0, vertex);
+    glVertexPointer(3, GL_FLOAT, 0, vertex);
     glColor3ubv(tcolor.c);
     glDrawElements(GL_TRIANGLES, triCount * 3, GL_UNSIGNED_BYTE, tri);
     glColor3ubv(lcolor.c);
