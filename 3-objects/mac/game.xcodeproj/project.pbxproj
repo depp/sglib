@@ -11,7 +11,6 @@
 		382A9B241176B235007B06CC /* world.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 382A9B201176B235007B06CC /* world.cpp */; };
 		382A9B5B1176DCE6007B06CC /* color.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 382A9B5A1176DCE6007B06CC /* color.cpp */; };
 		3834EBFC117441BB0070CBE5 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3834EBFB117441BB0070CBE5 /* main.cpp */; };
-		385208A81174351800640971 /* SDLMain.m in Sources */ = {isa = PBXBuildFile; fileRef = 385208A71174351800640971 /* SDLMain.m */; };
 		38B2409A117BADFE00903838 /* explosion.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 38B24098117BADFE00903838 /* explosion.cpp */; };
 		38B2409D117BAE0800903838 /* rand.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 38B2409B117BAE0800903838 /* rand.cpp */; };
 		38C4612E1179796600E239D6 /* obstacle.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 38C4612D1179796600E239D6 /* obstacle.cpp */; };
@@ -30,8 +29,6 @@
 		3834EBFB117441BB0070CBE5 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		3852089E117434FD00640971 /* Game.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Game.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		385208A1117434FD00640971 /* Game-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Game-Info.plist"; sourceTree = "<group>"; };
-		385208A61174351800640971 /* SDLMain.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SDLMain.h; sourceTree = "<group>"; };
-		385208A71174351800640971 /* SDLMain.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SDLMain.m; sourceTree = "<group>"; };
 		38B24098117BADFE00903838 /* explosion.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = explosion.cpp; sourceTree = "<group>"; };
 		38B24099117BADFE00903838 /* explosion.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = explosion.hpp; sourceTree = "<group>"; };
 		38B2409B117BAE0800903838 /* rand.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = rand.cpp; sourceTree = "<group>"; };
@@ -104,8 +101,6 @@
 		385208AC11743F5000640971 /* mac */ = {
 			isa = PBXGroup;
 			children = (
-				385208A61174351800640971 /* SDLMain.h */,
-				385208A71174351800640971 /* SDLMain.m */,
 				385208A1117434FD00640971 /* Game-Info.plist */,
 			);
 			name = mac;
@@ -164,7 +159,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				385208A81174351800640971 /* SDLMain.m in Sources */,
 				3834EBFC117441BB0070CBE5 /* main.cpp in Sources */,
 				382A9B231176B235007B06CC /* object.cpp in Sources */,
 				382A9B241176B235007B06CC /* world.cpp in Sources */,
