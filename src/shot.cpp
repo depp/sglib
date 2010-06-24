@@ -30,7 +30,7 @@ void Shot::draw()
     glRotatef(90.0f, 0.0f, 1.0f, 0.0f);
     glRotatef(kShotTwist * getWorld().gameTime(), 0.0f, 0.0f, 1.0f);
     glScalef(0.125f, 0.125f, 0.5f);
-    Model::kPyramid.draw(Color::green, Color::lime);
+    Model::kPyramid.draw(Color::green(), Color::lime());
     glPopMatrix();
 }
 

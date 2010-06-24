@@ -6,7 +6,7 @@ struct Color;
 struct Model {
     static const Model kCube, kPyramid;
 
-    void draw(const Color &tcolor, const Color &lcolor) const;
+    void draw(const Color tcolor, const Color lcolor) const;
 
     GLint vertexCount;
     const GLfloat (*vertex)[3];

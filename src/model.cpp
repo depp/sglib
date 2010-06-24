@@ -45,7 +45,7 @@ const Model Model::kPyramid = {
     5, kPyramidVertices, 6, kPyramidTris, 8, kPyramidLines
 };
 
-void Model::draw(const Color &tcolor, const Color &lcolor) const
+void Model::draw(const Color tcolor, const Color lcolor) const
 {
     glPushAttrib(GL_CURRENT_BIT | GL_ENABLE_BIT);
     glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT);

@@ -9,7 +9,6 @@
 /* Begin PBXBuildFile section */
 		382A9B231176B235007B06CC /* object.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 382A9B1E1176B235007B06CC /* object.cpp */; };
 		382A9B241176B235007B06CC /* world.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 382A9B201176B235007B06CC /* world.cpp */; };
-		382A9B5B1176DCE6007B06CC /* color.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 382A9B5A1176DCE6007B06CC /* color.cpp */; };
 		3834EBFC117441BB0070CBE5 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3834EBFB117441BB0070CBE5 /* main.cpp */; };
 		38B2409A117BADFE00903838 /* explosion.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 38B24098117BADFE00903838 /* explosion.cpp */; };
 		38B2409D117BAE0800903838 /* rand.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 38B2409B117BAE0800903838 /* rand.cpp */; };
@@ -25,7 +24,6 @@
 		382A9B201176B235007B06CC /* world.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = world.cpp; sourceTree = "<group>"; };
 		382A9B211176B235007B06CC /* world.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = world.hpp; sourceTree = "<group>"; };
 		382A9B541176DC20007B06CC /* color.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = color.hpp; sourceTree = "<group>"; };
-		382A9B5A1176DCE6007B06CC /* color.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = color.cpp; sourceTree = "<group>"; };
 		3834EBFB117441BB0070CBE5 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		3852089E117434FD00640971 /* Game.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Game.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		385208A1117434FD00640971 /* Game-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Game-Info.plist"; sourceTree = "<group>"; };
@@ -74,7 +72,6 @@
 		385208A911743F4100640971 /* src */ = {
 			isa = PBXGroup;
 			children = (
-				382A9B5A1176DCE6007B06CC /* color.cpp */,
 				382A9B541176DC20007B06CC /* color.hpp */,
 				38B24098117BADFE00903838 /* explosion.cpp */,
 				38B24099117BADFE00903838 /* explosion.hpp */,
@@ -162,7 +159,6 @@
 				3834EBFC117441BB0070CBE5 /* main.cpp in Sources */,
 				382A9B231176B235007B06CC /* object.cpp in Sources */,
 				382A9B241176B235007B06CC /* world.cpp in Sources */,
-				382A9B5B1176DCE6007B06CC /* color.cpp in Sources */,
 				38C4612E1179796600E239D6 /* obstacle.cpp in Sources */,
 				38C4615311797A1A00E239D6 /* model.cpp in Sources */,
 				38C4DE2B117A44E200AA242C /* player.cpp in Sources */,

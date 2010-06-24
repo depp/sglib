@@ -16,10 +16,23 @@ struct Color {
         c[2] = b;
     }
 
-    // Taken from HTML 4
-    static const Color black, silver, gray, white, maroon, red,
-        purple, fuchsia, green, lime, olive, yellow, navy, blue,
-        teal, aqua;
+    // These are the standard colors defined in HTML 4.
+    static Color black()   { return Color(  0,   0,   0); }
+    static Color silver()  { return Color(192, 192, 192); }
+    static Color gray()    { return Color(128, 128, 128); }
+    static Color white()   { return Color(255, 255, 255); }
+    static Color maroon()  { return Color(128,   0,   0); }
+    static Color red()     { return Color(255,   0,   0); }
+    static Color purple()  { return Color(128,   0, 128); }
+    static Color fuchsia() { return Color(255,   0, 255); }
+    static Color green()   { return Color(  0, 128,   0); }
+    static Color lime()    { return Color(  0, 255,   0); }
+    static Color olive()   { return Color(128, 128,   0); }
+    static Color yellow()  { return Color(255, 255,   0); }
+    static Color navy()    { return Color(  0,   0, 128); }
+    static Color blue()    { return Color(  0,   0, 255); }
+    static Color teal()    { return Color(  0, 128, 128); }
+    static Color aqua()    { return Color(  0, 255, 255); }
 
     unsigned char c[3];
 };

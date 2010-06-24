@@ -37,16 +37,16 @@ void init(void)
 
     Object *obj;
     obj = new Obstacle(5.0f, 5.0f, 0.0f, 2.0f,
-                       Model::kCube, Color::olive, Color::yellow);
+                       Model::kCube, Color::olive(), Color::yellow());
     world.addObject(obj);
     obj = new Obstacle(5.0f, -5.0f, 22.5f, 3.0f,
-                       Model::kPyramid, Color::maroon, Color::red);
+                       Model::kPyramid, Color::maroon(), Color::red());
     world.addObject(obj);
     obj = new Obstacle(-5.0f, 5.0f, 67.5f, 0.5f,
-                       Model::kCube, Color::olive, Color::yellow);
+                       Model::kCube, Color::olive(), Color::yellow());
     world.addObject(obj);
     obj = new Obstacle(-5.0f, -5.0f, 45.0f, 1.5f,
-                       Model::kPyramid, Color::maroon, Color::red);
+                       Model::kPyramid, Color::maroon(), Color::red());
     world.addObject(obj);
     obj = new Player(0.0f, 0.0f, 0.0f, input);
     world.addObject(obj);
