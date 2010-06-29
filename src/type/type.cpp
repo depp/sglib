@@ -29,7 +29,6 @@ void Type::draw()
     load();
     if (texture_) {
         glBindTexture(GL_TEXTURE_2D, texture_);
-        // glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
         glBegin(GL_TRIANGLE_STRIP);
         glTexCoord2f(tx1_, ty1_); glVertex2f(vx1_, vy1_);
         glTexCoord2f(tx2_, ty1_); glVertex2f(vx2_, vy1_);
@@ -123,7 +122,6 @@ void Type::load()
     CGContextFillRect(context, crect);
     CGContextSetTextPosition(context, xoff - vx1_, yoff - vy1_);
     CTLineDraw(line, context);
-    // CGContextFlush(context);
     CFRelease(line);
     CFRelease(context);
     CFRelease(white);
@@ -139,10 +137,6 @@ void Type::load()
         glBindTexture(GL_TEXTURE_2D, texture_);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_ALPHA, twidth, theight, 0,
                  GL_ALPHA, GL_UNSIGNED_BYTE, data);
-    /*
-    gluBuild2DMipmaps( GL_TEXTURE_2D, GL_LUMINANCE, twidth, theight,
-                       GL_LUMINANCE, GL_UNSIGNED_BYTE, data );
-    */
     free(data);
     textureLoaded_ = true;
 }
