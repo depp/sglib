@@ -23,7 +23,6 @@ void Type::setText(std::string const &text)
 
 void Type::draw()
 {
-
     glPushAttrib(GL_ENABLE_BIT);
     glEnable(GL_TEXTURE_2D);
     load();
