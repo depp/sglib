@@ -4,6 +4,7 @@
 #include <limits>
 #include <assert.h>
 #include "SDL_opengl.h"
+#include "type/type.hpp"
 
 const float kPi = 4.0f * std::atan(1.0f);
 const float World::kFrameTime = World::kFrameTicks * 0.001f;
@@ -120,6 +121,26 @@ void World::draw()
         objects_[i]->draw();
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
+
+    static Type *t = NULL;
+    if (!t) t = new Type();
+    {
+        char buf[32];
+        snprintf(buf, sizeof(buf), "Frame %u", frameNum_);
+        t->setText(buf);
+    }
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    glOrtho(0.0, 640.0, 0.0, 480.0, -1.0, 1.0);
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    glPushAttrib(GL_COLOR_BUFFER_BIT | GL_CURRENT_BIT);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glColor3ub(128, 255, 128);
+    glTranslatef(10.0f, 10.0f, 0.0f);
+    t->draw();
+    glPopAttrib();
 }
 
 void World::update()
