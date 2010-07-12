@@ -34,24 +34,42 @@ static PangoContext *getSharedContext()
     return context;
 }
 
+#include <stdio.h>
+static PangoFontDescription *getFontDescription()
+{
+    static PangoFontDescription *desc = NULL;
+    if (!desc) {
+        PangoContext *context = getSharedContext();
+        PangoFontMap *fonts = pango_context_get_font_map(context);
+        PangoFontFamily **families;
+        int nfamilies;
+        pango_font_map_list_families(fonts, &families, &nfamilies);
+        printf("Fonts:\n");
+        for (int i = 0; i < nfamilies; ++i)
+            printf("  %s\n", pango_font_family_get_name(families[i]));
+        g_free(families);
+        desc = pango_font_description_new();
+        pango_font_description_set_family_static(desc, "URW Chancery L");
+        pango_font_description_set_size(desc, 24 * PANGO_SCALE);
+    }
+    return desc;
+}
+
 void Type::loadImage(void **data, unsigned int *width,
                      unsigned int *height)
 {
     PangoContext *context = getSharedContext();
     PangoLayout *layout = pango_layout_new(context);
-    /*
-    PangoFontDescription *desc =
-        pango_font_description_from_string("Monospace 12");
+    PangoFontDescription *desc = getFontDescription();
     pango_layout_set_font_description(layout, desc);
-    pango_font_description_free(desc);
-    */
     pango_layout_set_text(layout, text_.data(), text_.size());
+    int baseline = pango_layout_get_baseline(layout) / PANGO_SCALE;
     PangoRectangle bounds;
     pango_layout_get_pixel_extents(layout, &bounds, NULL);
     vx1_ = bounds.x;
     vx2_ = bounds.x + bounds.width;
-    vy1_ = -bounds.y + bounds.height;
-    vy2_ = -bounds.y;
+    vy1_ = baseline - bounds.y - bounds.height;
+    vy2_ = baseline - bounds.y;
     unsigned int twidth = round_up_pow2(bounds.width);
     unsigned int theight = round_up_pow2(bounds.height);
     float xscale = 1.0f / twidth, yscale = 1.0f / theight;
@@ -59,8 +77,8 @@ void Type::loadImage(void **data, unsigned int *width,
     int yoff = (theight - bounds.height) / 2;
     tx1_ = xoff * xscale;
     tx2_ = (xoff + bounds.width) * xscale;
-    ty1_ = yoff * yscale;
-    ty2_ = (yoff + bounds.height) * yscale;
+    ty1_ = (yoff + bounds.height) * yscale;
+    ty2_ = yoff * yscale;
     unsigned int stride =
         cairo_format_stride_for_width(CAIRO_FORMAT_A8, twidth);
     void *ptr = calloc(stride, theight);
