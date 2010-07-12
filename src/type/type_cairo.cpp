@@ -34,23 +34,13 @@ static PangoContext *getSharedContext()
     return context;
 }
 
-#include <stdio.h>
 static PangoFontDescription *getFontDescription()
 {
     static PangoFontDescription *desc = NULL;
     if (!desc) {
-        PangoContext *context = getSharedContext();
-        PangoFontMap *fonts = pango_context_get_font_map(context);
-        PangoFontFamily **families;
-        int nfamilies;
-        pango_font_map_list_families(fonts, &families, &nfamilies);
-        printf("Fonts:\n");
-        for (int i = 0; i < nfamilies; ++i)
-            printf("  %s\n", pango_font_family_get_name(families[i]));
-        g_free(families);
         desc = pango_font_description_new();
-        pango_font_description_set_family_static(desc, "URW Chancery L");
-        pango_font_description_set_size(desc, 24 * PANGO_SCALE);
+        pango_font_description_set_family_static(desc, "Nimbus Mono L");
+        pango_font_description_set_size(desc, 12 * PANGO_SCALE);
     }
     return desc;
 }
