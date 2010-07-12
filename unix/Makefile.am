@@ -2,11 +2,10 @@ AUTOMAKE_OPTIONS = 1.5 foreign subdir-objects
 
 bin_PROGRAMS = game
 
-AM_LDFLAGS = @SDL_LIBS@
-AM_CPPFLAGS = @warning_cppflags@ @SDL_CFLAGS@
+AM_LDFLAGS = @SDL_LIBS@ @PANGOCAIRO_LIBS@
+AM_CPPFLAGS = @warning_cppflags@ @SDL_CFLAGS@ @PANGOCAIRO_CFLAGS@
 
 game_SOURCES = \
-	../src/color.cpp \
 	../src/color.hpp \
 	../src/explosion.cpp \
 	../src/explosion.hpp \
@@ -24,4 +23,7 @@ game_SOURCES = \
 	../src/shot.cpp \
 	../src/shot.hpp \
 	../src/world.cpp \
-	../src/world.hpp
+	../src/world.hpp \
+	../src/type/type.cpp \
+	../src/type/type.hpp \
+	../src/type/type_cairo.cpp
