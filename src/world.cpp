@@ -3,6 +3,7 @@
 #include <cmath>
 #include <limits>
 #include <assert.h>
+#include <stdio.h>
 #include "SDL_opengl.h"
 #include "type/type.hpp"
 
