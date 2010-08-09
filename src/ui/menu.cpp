@@ -3,7 +3,7 @@
 #include "SDL_opengl.h"
 
 Menu::Menu()
-    : title_(NULL)
+    : UILayer(), title_(NULL)
 { }
 
 Menu::~Menu()

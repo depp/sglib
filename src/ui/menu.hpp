@@ -1,14 +1,14 @@
 #ifndef UI_MENU_HPP
 #define UI_MENU_HPP
-#include "SDL.h"
+#include "uilayer.hpp"
 class Type;
 
-class Menu {
+class Menu : public UILayer {
 public:
     Menu();
-    ~Menu();
-    void handleEvent(SDL_Event const &evt);
-    void draw();
+    virtual ~Menu();
+    virtual void handleEvent(SDL_Event const &evt);
+    virtual void draw();
 
 private:
     Type *title_;
