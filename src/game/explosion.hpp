@@ -1,5 +1,5 @@
-#ifndef EXPLOSION_HPP
-#define EXPLOSION_HPP
+#ifndef GAME_EXPLOSION_HPP
+#define GAME_EXPLOSION_HPP
 #include "object.hpp"
 
 class Explosion : public Object {

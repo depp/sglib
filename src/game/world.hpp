@@ -1,5 +1,5 @@
-#ifndef WORLD_HPP
-#define WORLD_HPP
+#ifndef GAME_WORLD_HPP
+#define GAME_WORLD_HPP
 class Object;
 
 class World {
