@@ -7,6 +7,7 @@
 #include "player.hpp"
 #include "rand.hpp"
 #include "ui/menu.hpp"
+#include "video.hpp"
 
 const Uint32 kLagThreshold = 1000;
 Uint32 tickref = 0;
@@ -15,26 +16,12 @@ World world;
 
 void init(void)
 {
-    SDL_Surface *screen = NULL;
-    int flags;
-
-    if (SDL_Init(SDL_INIT_TIMER | SDL_INIT_VIDEO) < 0) {
-        fprintf(stderr, "Could not initialize SDL: %s\n",
+    if (SDL_Init(SDL_INIT_TIMER) < 0) {
+        fprintf(stderr, "Could not initialize SDL Timer: %s\n",
                 SDL_GetError());
         exit(1);
     }
-    flags = SDL_OPENGL | SDL_GL_DOUBLEBUFFER;
-    screen = SDL_SetVideoMode(640, 480, 32, flags);
-    if (!screen) {
-        fprintf(stderr, "Could not initialize video: %s\n",
-                SDL_GetError());
-        SDL_Quit();
-        exit(1);
-    }
-
-    printf("Vendor: %s\nRenderer: %s\nVersion: %s\n",
-           glGetString(GL_VENDOR), glGetString(GL_RENDERER),
-           glGetString(GL_VERSION));
+    Video::init();
 
     Object *obj;
     obj = new Obstacle(5.0f, 5.0f, 0.0f, 2.0f,
@@ -117,8 +104,7 @@ int main(int argc, char *argv[])
             } else
                 UILayer::front->handleEvent(event);
         }
-        UILayer::front->draw();
-        SDL_GL_SwapBuffers();
+        Video::draw();
     }
     return 0;
 }
