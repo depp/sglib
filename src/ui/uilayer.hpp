@@ -4,6 +4,8 @@
 
 class UILayer {
 public:
+    static UILayer *front;
+
     virtual ~UILayer();
     virtual void handleEvent(SDL_Event const &evt);
     virtual void draw();

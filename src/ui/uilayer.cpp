@@ -1,5 +1,7 @@
 #include "uilayer.hpp"
 
+UILayer *UILayer::front = NULL;
+
 UILayer::~UILayer()
 { }
 

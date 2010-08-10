@@ -89,30 +89,6 @@ void handleKey(SDL_keysym *key, bool state)
     }
 }
 
-static Menu *menu = NULL;
-
-void handleEvents(void)
-{
-    SDL_Event event;
-    while (SDL_PollEvent(&event)) {
-        menu->handleEvent(event);
-        switch (event.type) {
-            /*
-        case SDL_KEYDOWN:
-            handleKey(&event.key.keysym, true);
-            break;
-        case SDL_KEYUP:
-            handleKey(&event.key.keysym, false);
-            break;
-            */
-        case SDL_QUIT:
-            SDL_Quit();
-            exit(0);
-            break;
-        }
-    }
-}
-
 void updateState(void)
 {
     Uint32 tick = SDL_GetTicks();
@@ -130,15 +106,18 @@ void updateState(void)
 
 int main(int argc, char *argv[])
 {
-    menu = new Menu();
     init();
+    UILayer::front = new Menu();
     while (1) {
-        handleEvents();
-        menu->draw();
-        /*
-        updateState();
-        world.draw();
-        */
+        SDL_Event event;
+        while (SDL_PollEvent(&event)) {
+            if (event.type == SDL_QUIT) {
+                SDL_Quit();
+                return 0;
+            } else
+                UILayer::front->handleEvent(event);
+        }
+        UILayer::front->draw();
         SDL_GL_SwapBuffers();
     }
     return 0;
