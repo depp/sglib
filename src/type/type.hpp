@@ -1,5 +1,5 @@
-#ifndef TYPE_HPP
-#define TYPE_HPP
+#ifndef TYPE_TYPE_HPP
+#define TYPE_TYPE_HPP
 #include <string>
 #include "SDL_opengl.h"
 
