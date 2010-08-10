@@ -15,6 +15,7 @@
 		382C271E12119CA10048F4BF /* shot.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 382C271612119CA10048F4BF /* shot.cpp */; };
 		382C271F12119CA10048F4BF /* world.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 382C271812119CA10048F4BF /* world.cpp */; };
 		382C272312119E6D0048F4BF /* video.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 382C272212119E6D0048F4BF /* video.cpp */; };
+		382C273B1211E28B0048F4BF /* layer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 382C27391211E28B0048F4BF /* layer.cpp */; };
 		382D217211D98DF9009C8EF5 /* type.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 382D217011D98DF9009C8EF5 /* type.cpp */; };
 		382D217C11D98E5C009C8EF5 /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 382D217B11D98E5C009C8EF5 /* OpenGL.framework */; };
 		382D219011D98E62009C8EF5 /* AppKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 382D218F11D98E62009C8EF5 /* AppKit.framework */; };
@@ -24,7 +25,6 @@
 		3834EBFC117441BB0070CBE5 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3834EBFB117441BB0070CBE5 /* main.cpp */; };
 		3868F87211EADA780079CF10 /* type_osx.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3868F87111EADA780079CF10 /* type_osx.cpp */; };
 		389F06701210A46A00E6AA2A /* menu.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 389F066E1210A46A00E6AA2A /* menu.cpp */; };
-		389F06861210AEFF00E6AA2A /* uilayer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 389F06851210AEFF00E6AA2A /* uilayer.cpp */; };
 		38B2409D117BAE0800903838 /* rand.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 38B2409B117BAE0800903838 /* rand.cpp */; };
 /* End PBXBuildFile section */
 
@@ -46,6 +46,8 @@
 		382C271912119CA10048F4BF /* world.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = world.hpp; sourceTree = "<group>"; };
 		382C272112119E6D0048F4BF /* video.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = video.hpp; sourceTree = "<group>"; };
 		382C272212119E6D0048F4BF /* video.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = video.cpp; sourceTree = "<group>"; };
+		382C27391211E28B0048F4BF /* layer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = layer.cpp; sourceTree = "<group>"; };
+		382C273A1211E28B0048F4BF /* layer.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = layer.hpp; sourceTree = "<group>"; };
 		382D217011D98DF9009C8EF5 /* type.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = type.cpp; sourceTree = "<group>"; };
 		382D217111D98DF9009C8EF5 /* type.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = type.hpp; sourceTree = "<group>"; };
 		382D217B11D98E5C009C8EF5 /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = /System/Library/Frameworks/OpenGL.framework; sourceTree = "<absolute>"; };
@@ -59,8 +61,6 @@
 		3868F87111EADA780079CF10 /* type_osx.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = type_osx.cpp; sourceTree = "<group>"; };
 		389F066E1210A46A00E6AA2A /* menu.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = menu.cpp; sourceTree = "<group>"; };
 		389F066F1210A46A00E6AA2A /* menu.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = menu.hpp; sourceTree = "<group>"; };
-		389F06841210AEFF00E6AA2A /* uilayer.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = uilayer.hpp; sourceTree = "<group>"; };
-		389F06851210AEFF00E6AA2A /* uilayer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = uilayer.cpp; sourceTree = "<group>"; };
 		38B2409B117BAE0800903838 /* rand.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = rand.cpp; sourceTree = "<group>"; };
 		38B2409C117BAE0800903838 /* rand.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = rand.hpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -178,10 +178,10 @@
 		389F066D1210A46A00E6AA2A /* ui */ = {
 			isa = PBXGroup;
 			children = (
+				382C27391211E28B0048F4BF /* layer.cpp */,
+				382C273A1211E28B0048F4BF /* layer.hpp */,
 				389F066E1210A46A00E6AA2A /* menu.cpp */,
 				389F066F1210A46A00E6AA2A /* menu.hpp */,
-				389F06851210AEFF00E6AA2A /* uilayer.cpp */,
-				389F06841210AEFF00E6AA2A /* uilayer.hpp */,
 			);
 			path = ui;
 			sourceTree = "<group>";
@@ -244,7 +244,6 @@
 				382D217211D98DF9009C8EF5 /* type.cpp in Sources */,
 				3868F87211EADA780079CF10 /* type_osx.cpp in Sources */,
 				389F06701210A46A00E6AA2A /* menu.cpp in Sources */,
-				389F06861210AEFF00E6AA2A /* uilayer.cpp in Sources */,
 				382C270712119C2E0048F4BF /* model.cpp in Sources */,
 				382C271A12119CA10048F4BF /* explosion.cpp in Sources */,
 				382C271B12119CA10048F4BF /* object.cpp in Sources */,
@@ -253,6 +252,7 @@
 				382C271E12119CA10048F4BF /* shot.cpp in Sources */,
 				382C271F12119CA10048F4BF /* world.cpp in Sources */,
 				382C272312119E6D0048F4BF /* video.cpp in Sources */,
+				382C273B1211E28B0048F4BF /* layer.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

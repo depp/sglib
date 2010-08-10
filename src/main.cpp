@@ -94,7 +94,7 @@ void updateState(void)
 int main(int argc, char *argv[])
 {
     init();
-    UILayer::front = new Menu();
+    UI::Layer::front = new UI::Menu();
     while (1) {
         SDL_Event event;
         while (SDL_PollEvent(&event)) {
@@ -102,7 +102,7 @@ int main(int argc, char *argv[])
                 SDL_Quit();
                 return 0;
             } else
-                UILayer::front->handleEvent(event);
+                UI::Layer::front->handleEvent(event);
         }
         Video::draw();
     }

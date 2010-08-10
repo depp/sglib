@@ -1,14 +1,16 @@
 #ifndef UI_UILAYER_HPP
 #define UI_UILAYER_HPP
 #include "SDL.h"
+namespace UI {
 
-class UILayer {
+class Layer {
 public:
-    static UILayer *front;
+    static Layer *front;
 
-    virtual ~UILayer();
+    virtual ~Layer();
     virtual void handleEvent(SDL_Event const &evt);
     virtual void draw();
 };
 
+}
 #endif

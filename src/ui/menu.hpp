@@ -1,9 +1,12 @@
 #ifndef UI_MENU_HPP
 #define UI_MENU_HPP
-#include "uilayer.hpp"
+#include "layer.hpp"
+#include <string>
+#include <vector>
 class Type;
+namespace UI {
 
-class Menu : public UILayer {
+class Menu : public Layer {
 public:
     Menu();
     virtual ~Menu();
@@ -17,4 +20,5 @@ private:
     Menu &operator=(Menu const &);
 };
 
+}
 #endif

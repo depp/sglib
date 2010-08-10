@@ -2,21 +2,21 @@
 #include "type/type.hpp"
 #include "SDL_opengl.h"
 
-Menu::Menu()
-    : UILayer(), title_(NULL)
+UI::Menu::Menu()
+    : UI::Layer(), title_(NULL)
 { }
 
-Menu::~Menu()
+UI::Menu::~Menu()
 {
     if (title_) delete title_;
 }
 
-void Menu::handleEvent(SDL_Event const &evt)
+void UI::Menu::handleEvent(SDL_Event const &evt)
 {
     
 }
 
-void Menu::draw()
+void UI::Menu::draw()
 {
     if (!title_) {
         title_ = new Type();
