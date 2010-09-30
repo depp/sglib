@@ -1,14 +1,14 @@
-#ifndef TYPE_HPP
-#define TYPE_HPP
+#ifndef TYPE_RASTERTEXT_HPP
+#define TYPE_RASTERTEXT_HPP
 #include <string>
 #include "SDL_opengl.h"
 
-class Type {
+class RasterText {
 public:
-    Type();
-    ~Type();
+    RasterText();
+    ~RasterText();
 
-    /* Set the text drawn by the Type object.  */
+    /* Set the text drawn by the RasterText object.  */
     void setText(std::string const &text);
 
     /* Loads or reloads the texture if necessary and draws the text at

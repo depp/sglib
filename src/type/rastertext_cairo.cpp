@@ -1,4 +1,4 @@
-#include "type.hpp"
+#include "rastertext.hpp"
 #include <cairo/cairo.h>
 #include <pango/pangocairo.h>
 #include <assert.h>
@@ -45,8 +45,8 @@ static PangoFontDescription *getFontDescription()
     return desc;
 }
 
-void Type::loadImage(void **data, unsigned int *width,
-                     unsigned int *height)
+void RasterText::loadImage(void **data, unsigned int *width,
+                           unsigned int *height)
 {
     PangoContext *context = getSharedContext();
     PangoLayout *layout = pango_layout_new(context);

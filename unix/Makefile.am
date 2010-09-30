@@ -24,6 +24,6 @@ game_SOURCES = \
 	../src/shot.hpp \
 	../src/world.cpp \
 	../src/world.hpp \
-	../src/type/type.cpp \
-	../src/type/type.hpp \
-	../src/type/type_cairo.cpp
+	../src/type/rastertext.cpp \
+	../src/type/rastertext.hpp \
+	../src/type/rastertext_cairo.cpp
