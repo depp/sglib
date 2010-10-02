@@ -2,14 +2,15 @@
 #define TYPE_RASTERTEXT_HPP
 #include <string>
 #include "SDL_opengl.h"
+#include "font.hpp"
 
 class RasterText {
 public:
     RasterText();
     ~RasterText();
 
-    /* Set the text drawn by the RasterText object.  */
     void setText(std::string const &text);
+    void setFont(Font const &font);
 
     /* Loads or reloads the texture if necessary and draws the text at
        the coordinates (0,0).  */
@@ -31,6 +32,7 @@ private:
     void loadImage(void **data, unsigned int *width, unsigned int *height);
 
     std::string text_;
+    Font font_;
     bool textureLoaded_;
     GLuint texture_;
     float vx1_, vx2_, vy1_, vy2_, tx1_, tx2_, ty1_, ty2_;

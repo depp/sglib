@@ -19,6 +19,12 @@ void RasterText::setText(std::string const &text)
     textureLoaded_ = false;
 }
 
+void RasterText::setFont(Font const &font)
+{
+    font_ = font;
+    textureLoaded_ = false;
+}
+
 void RasterText::draw()
 {
     glPushAttrib(GL_ENABLE_BIT);

@@ -26,6 +26,7 @@ game_SOURCES = \
 	../src/world.hpp \
 	../src/type/font.cpp \
 	../src/type/font.hpp \
+	../src/type/font_pango.hpp \
 	../src/type/rastertext.cpp \
 	../src/type/rastertext.hpp \
 	../src/type/rastertext_cairo.cpp

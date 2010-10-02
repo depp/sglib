@@ -124,7 +124,20 @@ void World::draw()
     glDisable(GL_CULL_FACE);
 
     static RasterText *t = NULL;
-    if (!t) t = new RasterText();
+    if (!t) {
+        t = new RasterText();
+        Font f;
+        static char const *const family[] = {
+            "Helvetica",
+            "Arial",
+            "DejaVu Sans",
+            "Sans",
+            NULL
+        };
+        f.setFamily(family);
+        f.setSize(12.0f);
+        t->setFont(f);
+    }
     {
         char buf[32];
         snprintf(buf, sizeof(buf), "Frame %u", frameNum_);

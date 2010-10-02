@@ -1,7 +1,9 @@
 #ifndef TYPE_FONT_HPP
 #define TYPE_FONT_HPP
+class RasterText;
 
 class Font {
+    friend class RasterText;
 public:
     Font() : info_(0) { }
     Font(Font const &f);

@@ -1,34 +1,6 @@
-#include "font.hpp"
-#include <pango/pango.h>
+#include "font_pango.hpp"
 #include <math.h>
 #include <assert.h>
-
-struct Font::Info {
-    PangoFontDescription *desc;
-    unsigned int refcount;
-
-    Info()
-        : desc(NULL), refcount(1)
-    { }
-
-    ~Info()
-    {
-        if (desc)
-            pango_font_description_free(desc);
-    }
-
-    void retain()
-    {
-        if (this)
-            refcount++;
-    }
-
-    void release()
-    {
-        if (this && !--refcount)
-            delete this;
-    }
-};
 
 Font::Font(Font const &f)
     : info_(f.info_)
