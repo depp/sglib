@@ -5,7 +5,7 @@
 #include <assert.h>
 #include <stdio.h>
 #include "SDL_opengl.h"
-#include "type/type.hpp"
+#include "type/rastertext.hpp"
 
 const float kPi = 4.0f * std::atan(1.0f);
 const float World::kFrameTime = World::kFrameTicks * 0.001f;
@@ -123,8 +123,21 @@ void World::draw()
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
 
-    static Type *t = NULL;
-    if (!t) t = new Type();
+    static RasterText *t = NULL;
+    if (!t) {
+        t = new RasterText();
+        Font f;
+        static char const *const family[] = {
+            "Helvetica",
+            "Arial",
+            "DejaVu Sans",
+            "Sans",
+            NULL
+        };
+        f.setFamily(family);
+        f.setSize(12.0f);
+        t->setFont(f);
+    }
     {
         char buf[32];
         snprintf(buf, sizeof(buf), "Frame %u", frameNum_);

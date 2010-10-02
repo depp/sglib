@@ -1,4 +1,5 @@
-#include "type.hpp"
+#include "rastertext.hpp"
+#include "font_pango.hpp"
 #include <cairo/cairo.h>
 #include <pango/pangocairo.h>
 #include <assert.h>
@@ -34,24 +35,16 @@ static PangoContext *getSharedContext()
     return context;
 }
 
-static PangoFontDescription *getFontDescription()
-{
-    static PangoFontDescription *desc = NULL;
-    if (!desc) {
-        desc = pango_font_description_new();
-        pango_font_description_set_family_static(desc, "Nimbus Mono L");
-        pango_font_description_set_size(desc, 12 * PANGO_SCALE);
-    }
-    return desc;
-}
-
-void Type::loadImage(void **data, unsigned int *width,
-                     unsigned int *height)
+void RasterText::loadImage(void **data, unsigned int *width,
+                           unsigned int *height)
 {
     PangoContext *context = getSharedContext();
     PangoLayout *layout = pango_layout_new(context);
-    PangoFontDescription *desc = getFontDescription();
-    pango_layout_set_font_description(layout, desc);
+    if (font_.info_) {
+        PangoFontDescription *desc = font_.info_->desc;
+        if (desc)
+            pango_layout_set_font_description(layout, desc);
+    }
     pango_layout_set_text(layout, text_.data(), text_.size());
     int baseline = pango_layout_get_baseline(layout) / PANGO_SCALE;
     PangoRectangle bounds;

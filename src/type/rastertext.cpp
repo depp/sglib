@@ -1,17 +1,17 @@
-#include "type.hpp"
+#include "rastertext.hpp"
 #include "SDL_opengl.h"
 #include <stdlib.h>
 
-Type::Type()
+RasterText::RasterText()
     : text_(), textureLoaded_(false), texture_(0),
       vx1_(0), vx2_(0), vy1_(0), vy2_(0),
       tx1_(0), tx2_(0), ty1_(0), ty2_(0)
 { }
 
-Type::~Type()
+RasterText::~RasterText()
 { }
 
-void Type::setText(std::string const &text)
+void RasterText::setText(std::string const &text)
 {
     if (text == text_)
         return;
@@ -19,7 +19,13 @@ void Type::setText(std::string const &text)
     textureLoaded_ = false;
 }
 
-void Type::draw()
+void RasterText::setFont(Font const &font)
+{
+    font_ = font;
+    textureLoaded_ = false;
+}
+
+void RasterText::draw()
 {
     glPushAttrib(GL_ENABLE_BIT);
     glEnable(GL_TEXTURE_2D);
@@ -36,7 +42,7 @@ void Type::draw()
     glPopAttrib();
 }
 
-void Type::load()
+void RasterText::load()
 {
     if (textureLoaded_)
         return;
@@ -66,7 +72,7 @@ void Type::load()
     textureLoaded_ = true;
 }
 
-void Type::unload()
+void RasterText::unload()
 {
     if (texture_)
         glDeleteTextures(1, &texture_);
