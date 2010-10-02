@@ -24,8 +24,8 @@ game_SOURCES = \
 	../src/shot.hpp \
 	../src/world.cpp \
 	../src/world.hpp \
-	../src/type/font.cpp \
 	../src/type/font.hpp \
+	../src/type/font_pango.cpp \
 	../src/type/font_pango.hpp \
 	../src/type/rastertext.cpp \
 	../src/type/rastertext.hpp \
