@@ -1,0 +1,6 @@
+TODO List
+=========
+
+- User interface (menus, HUD)
+- Resource manager (textures, sounds, etc)
+- Audio support
