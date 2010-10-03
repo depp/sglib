@@ -1,6 +1,7 @@
 #ifndef UI_MENU_HPP
 #define UI_MENU_HPP
 #include "layer.hpp"
+#include "type/rastertext.hpp"
 #include <string>
 #include <vector>
 class RasterText;
@@ -14,7 +15,9 @@ public:
     virtual void draw();
 
 private:
-    RasterText *title_;
+    bool initted_;
+    RasterText title_;
+    RasterText menu_[4];
 
     Menu(Menu const &);
     Menu &operator=(Menu const &);

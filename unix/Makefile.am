@@ -34,8 +34,6 @@ game_SOURCES = \
 	../src/type/rastertext.hpp \
 	../src/ui/layer.cpp \
 	../src/ui/layer.hpp \
-	../src/ui/mainmenu.cpp \
-	../src/ui/mainmenu.hpp \
 	../src/ui/menu.cpp \
 	../src/ui/menu.hpp \
 	../src/ui/widget.cpp \
