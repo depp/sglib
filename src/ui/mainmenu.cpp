@@ -26,6 +26,7 @@ void MainMenu::render()
         itemfont.setStyle(Font::Italic);
         title_.setText("Cyber Zone");
         title_.setFont(titlefont);
+        title_.setAlignment(RasterText::Center);
         for (int i = 0; i < 4; ++i)
             menu_[i].setFont(itemfont);
         menu_[0].setText("Single Player");
@@ -50,7 +51,7 @@ void MainMenu::render()
 
     glColor3ub(255, 0, 0);
     glPushMatrix();
-    glTranslatef(100.0f, 400.0f, 0.0f);
+    glTranslatef(320.0f, 400.0f, 0.0f);
     title_.draw();
     glPopMatrix();
     glColor3ub(255, 255, 0);

@@ -6,11 +6,18 @@
 
 class RasterText {
 public:
+    enum Alignment {
+        Left,
+        Center,
+        Right
+    };
+
     RasterText();
     ~RasterText();
 
     void setText(std::string const &text);
     void setFont(Font const &font);
+    void setAlignment(Alignment alignment);
 
     /* Loads or reloads the texture if necessary and draws the text at
        the coordinates (0,0).  */
@@ -33,6 +40,7 @@ private:
 
     std::string text_;
     Font font_;
+    Alignment alignment_;
     bool textureLoaded_;
     GLuint texture_;
     float vx1_, vx2_, vy1_, vy2_, tx1_, tx2_, ty1_, ty2_;

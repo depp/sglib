@@ -45,6 +45,13 @@ void RasterText::loadImage(void **data, unsigned int *width,
         if (desc)
             pango_layout_set_font_description(layout, desc);
     }
+    PangoAlignment alignment = PANGO_ALIGN_LEFT;
+    switch (alignment_) {
+    case Left: alignment = PANGO_ALIGN_LEFT; break;
+    case Center: alignment = PANGO_ALIGN_CENTER; break;
+    case Right: alignment = PANGO_ALIGN_RIGHT; break;
+    }
+    pango_layout_set_alignment(layout, alignment);
     pango_layout_set_text(layout, text_.data(), text_.size());
     int baseline = pango_layout_get_baseline(layout) / PANGO_SCALE;
     PangoRectangle bounds;

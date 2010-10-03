@@ -3,7 +3,8 @@
 #include <stdlib.h>
 
 RasterText::RasterText()
-    : text_(), textureLoaded_(false), texture_(0),
+    : text_(), font_(), alignment_(Left),
+      textureLoaded_(false), texture_(0),
       vx1_(0), vx2_(0), vy1_(0), vy2_(0),
       tx1_(0), tx2_(0), ty1_(0), ty2_(0)
 { }
@@ -22,6 +23,14 @@ void RasterText::setText(std::string const &text)
 void RasterText::setFont(Font const &font)
 {
     font_ = font;
+    textureLoaded_ = false;
+}
+
+void RasterText::setAlignment(RasterText::Alignment alignment)
+{
+    if (alignment_ == alignment)
+        return;
+    alignment_ = alignment;
     textureLoaded_ = false;
 }
 
