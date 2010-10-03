@@ -1,12 +1,13 @@
 #include "SDL.h"
 #include "SDL_opengl.h"
 #include <cmath>
-#include "world.hpp"
-#include "obstacle.hpp"
-#include "model.hpp"
-#include "player.hpp"
+#include "game/world.hpp"
+#include "game/obstacle.hpp"
+#include "graphics/model.hpp"
+#include "game/player.hpp"
 #include "rand.hpp"
-#include "ui/mainmenu.hpp"
+#include "ui/menu.hpp"
+#include "graphics/video.hpp"
 
 const Uint32 kLagThreshold = 1000;
 Uint32 tickref = 0;
@@ -15,26 +16,12 @@ World world;
 
 void init(void)
 {
-    SDL_Surface *screen = NULL;
-    int flags;
-
-    if (SDL_Init(SDL_INIT_TIMER | SDL_INIT_VIDEO) < 0) {
-        fprintf(stderr, "Could not initialize SDL: %s\n",
+    if (SDL_Init(SDL_INIT_TIMER) < 0) {
+        fprintf(stderr, "Could not initialize SDL Timer: %s\n",
                 SDL_GetError());
         exit(1);
     }
-    flags = SDL_OPENGL | SDL_GL_DOUBLEBUFFER;
-    screen = SDL_SetVideoMode(640, 480, 32, flags);
-    if (!screen) {
-        fprintf(stderr, "Could not initialize video: %s\n",
-                SDL_GetError());
-        SDL_Quit();
-        exit(1);
-    }
-
-    printf("Vendor: %s\nRenderer: %s\nVersion: %s\n",
-           glGetString(GL_VENDOR), glGetString(GL_RENDERER),
-           glGetString(GL_VERSION));
+    Video::init();
 
     Object *obj;
     obj = new Obstacle(5.0f, 5.0f, 0.0f, 2.0f,
@@ -89,25 +76,6 @@ void handleKey(SDL_keysym *key, bool state)
     }
 }
 
-void handleEvents(void)
-{
-    SDL_Event event;
-    while (SDL_PollEvent(&event)) {
-        switch (event.type) {
-        case SDL_KEYDOWN:
-            handleKey(&event.key.keysym, true);
-            break;
-        case SDL_KEYUP:
-            handleKey(&event.key.keysym, false);
-            break;
-        case SDL_QUIT:
-            SDL_Quit();
-            exit(0);
-            break;
-        }
-    }
-}
-
 void updateState(void)
 {
     Uint32 tick = SDL_GetTicks();
@@ -125,14 +93,19 @@ void updateState(void)
 
 int main(int argc, char *argv[])
 {
-    MainMenu menu;
+    // MainMenu menu;
     init();
+    UI::Layer::front = new UI::Menu();
     while (1) {
-        handleEvents();
-        updateState();
-        // world.draw();
-        menu.render();
-        SDL_GL_SwapBuffers();
+        SDL_Event event;
+        while (SDL_PollEvent(&event)) {
+            if (event.type == SDL_QUIT) {
+                SDL_Quit();
+                return 0;
+            } else
+                UI::Layer::front->handleEvent(event);
+        }
+        Video::draw();
     }
     return 0;
 }

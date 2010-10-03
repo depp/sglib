@@ -1,5 +1,5 @@
-#ifndef PLAYER_HPP
-#define PLAYER_HPP
+#ifndef GAME_PLAYER_HPP
+#define GAME_PLAYER_HPP
 #include "object.hpp"
 
 class Player : public Object {

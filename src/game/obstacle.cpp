@@ -1,5 +1,5 @@
 #include "obstacle.hpp"
-#include "model.hpp"
+#include "graphics/model.hpp"
 
 Obstacle::Obstacle(float x, float y, float face, float size,
                    const Model &model, Color tcolor, Color lcolor)

@@ -1,6 +1,6 @@
 #include "explosion.hpp"
 #include "rand.hpp"
-#include "color.hpp"
+#include "graphics/color.hpp"
 #include "world.hpp"
 #include "SDL_opengl.h"
 #include <stdlib.h>
