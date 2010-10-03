@@ -1,9 +1,9 @@
-AUTOMAKE_OPTIONS = 1.5 foreign subdir-objects
+AUTOMAKE_OPTIONS = 1.5 foreign subdir-objects nostdinc
 
 bin_PROGRAMS = game
 
 AM_LDFLAGS = @SDL_LIBS@ @PANGOCAIRO_LIBS@
-AM_CPPFLAGS = @warning_cppflags@ @SDL_CFLAGS@ @PANGOCAIRO_CFLAGS@
+AM_CPPFLAGS = @warning_cppflags@ -I@srcdir@/../src @SDL_CFLAGS@ @PANGOCAIRO_CFLAGS@
 
 game_SOURCES = \
 	../src/color.hpp \
@@ -29,4 +29,5 @@ game_SOURCES = \
 	../src/type/font_pango.hpp \
 	../src/type/rastertext.cpp \
 	../src/type/rastertext.hpp \
-	../src/type/rastertext_cairo.cpp
+	../src/type/rastertext_cairo.cpp \
+	../src/ui/mainmenu.cpp

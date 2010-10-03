@@ -6,6 +6,7 @@
 #include "model.hpp"
 #include "player.hpp"
 #include "rand.hpp"
+#include "ui/mainmenu.hpp"
 
 const Uint32 kLagThreshold = 1000;
 Uint32 tickref = 0;
@@ -124,11 +125,13 @@ void updateState(void)
 
 int main(int argc, char *argv[])
 {
+    MainMenu menu;
     init();
     while (1) {
         handleEvents();
         updateState();
-        world.draw();
+        // world.draw();
+        menu.render();
         SDL_GL_SwapBuffers();
     }
     return 0;
