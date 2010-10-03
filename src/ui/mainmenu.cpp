@@ -10,7 +10,6 @@ MainMenu::~MainMenu()
 void MainMenu::render()
 {
     if (!initted_) {
-        Font f;
         char const *const FAMILY[] = {
             "Helvetica",
             "Arial",
@@ -18,13 +17,17 @@ void MainMenu::render()
             "Bitstream Vera Sans",
             NULL
         };
-        f.setFamily(FAMILY);
-        f.setSize(36.0f);
+        Font font;
+        font.setFamily(FAMILY);
+        Font titlefont(font), itemfont(font);
+        titlefont.setSize(36.0f);
+        titlefont.setWeight(Font::WeightBold);
+        itemfont.setSize(18.0f);
+        itemfont.setStyle(Font::Italic);
         title_.setText("Cyber Zone");
-        title_.setFont(f);
-        f.setSize(18.0f);
+        title_.setFont(titlefont);
         for (int i = 0; i < 4; ++i)
-            menu_[i].setFont(f);
+            menu_[i].setFont(itemfont);
         menu_[0].setText("Single Player");
         menu_[1].setText("Multiplayer");
         menu_[2].setText("Options");
