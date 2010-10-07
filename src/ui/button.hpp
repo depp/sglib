@@ -15,9 +15,14 @@ public:
 
     virtual void draw();
 
+    virtual void mouseDown(MouseEvent const &evt);
+    virtual void mouseUp(MouseEvent const &evt);
+    virtual void mouseDragged(MouseEvent const &evt);
+
 private:
     RasterText title_;
     float x_, y_;
+    bool state_;
 };
 
 }
