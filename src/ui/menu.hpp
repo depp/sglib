@@ -6,6 +6,7 @@
 #include <vector>
 class RasterText;
 namespace UI {
+class Button;
 
 class Menu : public Layer {
 public:
@@ -17,7 +18,7 @@ public:
 private:
     bool initted_;
     RasterText title_;
-    RasterText menu_[4];
+    Button *menu_[4];
 
     Menu(Menu const &);
     Menu &operator=(Menu const &);
