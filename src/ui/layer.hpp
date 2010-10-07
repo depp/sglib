@@ -1,5 +1,5 @@
-#ifndef UI_UILAYER_HPP
-#define UI_UILAYER_HPP
+#ifndef UI_LAYER_HPP
+#define UI_LAYER_HPP
 #include "SDL.h"
 namespace UI {
 
