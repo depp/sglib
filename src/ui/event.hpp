@@ -10,22 +10,66 @@ enum EventType {
     KeyUp
 };
 
-struct KeyEvent {
+enum {
+    ButtonLeft,
+    ButtonRight,
+    ButtonMiddle,
+    ButtonOther
+};
+
+struct MouseEvent;
+struct KeyEvent;
+
+struct Event {
+    Event()
+    { }
+
+    Event(EventType type_)
+        : type(type_)
+    { }
+
     EventType type;
+
+    MouseEvent &mouseEvent();
+    MouseEvent const &mouseEvent() const;
+    KeyEvent &keyEvent();
+    KeyEvent const &keyEvent() const;
+};
+
+struct KeyEvent : Event {
+    KeyEvent()
+    { }
+
+    KeyEvent(EventType type_, int key_)
+        : Event(type_), key(key_)
+    { }
+
     int key;
 };
 
-struct MouseEvent {
-    EventType type;
+struct MouseEvent : Event {
+    MouseEvent()
+    { }
+
+    MouseEvent(EventType type_, int button_, int x_, int y_)
+        : Event(type_), button(button_), x(x_), y(y_)
+    { }
+
     int button;
     int x, y;
 };
 
-union Event {
-    EventType type;
-    KeyEvent key;
-    MouseEvent mouse;
-};
+inline MouseEvent &Event::mouseEvent()
+{ return static_cast<MouseEvent &>(*this); }
+
+inline MouseEvent const &Event::mouseEvent() const
+{ return static_cast<MouseEvent const &>(*this); }
+
+inline KeyEvent &Event::keyEvent()
+{ return static_cast<KeyEvent &>(*this); }
+
+inline KeyEvent const &Event::keyEvent() const
+{ return static_cast<KeyEvent const &>(*this); }
 
 }
 #endif

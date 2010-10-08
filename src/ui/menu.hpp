@@ -1,24 +1,22 @@
 #ifndef UI_MENU_HPP
 #define UI_MENU_HPP
-#include "layer.hpp"
-#include "type/rastertext.hpp"
-#include <string>
-#include <vector>
-class RasterText;
+#include "container.hpp"
+#include "screen.hpp"
+#include "button.hpp"
 namespace UI {
-class Button;
 
-class Menu : public Layer {
+class Menu : public Screen {
 public:
     Menu();
     virtual ~Menu();
-    virtual void handleEvent(SDL_Event const &evt);
+
+    virtual void handleEvent(Event const &evt);
     virtual void draw();
 
 private:
     bool initted_;
-    RasterText title_;
-    Button *menu_[4];
+    Container ui_;
+    Button menu_[4];
 
     Menu(Menu const &);
     Menu &operator=(Menu const &);

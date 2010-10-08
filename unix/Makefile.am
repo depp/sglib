@@ -34,11 +34,16 @@ game_SOURCES = \
 	../src/type/rastertext.hpp \
 	../src/ui/button.cpp \
 	../src/ui/button.hpp \
+	../src/ui/container.cpp \
+	../src/ui/container.hpp \
 	../src/ui/event.hpp \
-	../src/ui/layer.cpp \
-	../src/ui/layer.hpp \
 	../src/ui/menu.cpp \
 	../src/ui/menu.hpp \
+	../src/ui/object.cpp \
+	../src/ui/object.hpp \
+	../src/ui/rect.hpp \
+	../src/ui/screen.cpp \
+	../src/ui/screen.hpp \
 	../src/ui/widget.cpp \
 	../src/ui/widget.hpp
 

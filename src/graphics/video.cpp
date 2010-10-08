@@ -1,5 +1,6 @@
 #include "video.hpp"
-#include "ui/layer.hpp"
+#include "ui/screen.hpp"
+#include "SDL.h"
 #include "SDL_opengl.h"
 
 unsigned int Video::width = 0, Video::height = 0;
@@ -33,6 +34,6 @@ void Video::init()
 
 void Video::draw()
 {
-    UI::Layer::front->draw();
+    UI::Screen::active->draw();
     SDL_GL_SwapBuffers();
 }

@@ -7,6 +7,7 @@
 #include "game/player.hpp"
 #include "rand.hpp"
 #include "ui/menu.hpp"
+#include "ui/event.hpp"
 #include "graphics/video.hpp"
 
 const Uint32 kLagThreshold = 1000;
@@ -93,17 +94,51 @@ void updateState(void)
 
 int main(int argc, char *argv[])
 {
-    // MainMenu menu;
     init();
-    UI::Layer::front = new UI::Menu();
+    UI::Screen::active = new UI::Menu();
     while (1) {
-        SDL_Event event;
-        while (SDL_PollEvent(&event)) {
-            if (event.type == SDL_QUIT) {
+        SDL_Event e;
+        while (SDL_PollEvent(&e)) {
+            UI::Screen *s = UI::Screen::active;
+            switch (e.type) {
+            case SDL_QUIT:
                 SDL_Quit();
                 return 0;
-            } else
-                UI::Layer::front->handleEvent(event);
+            case SDL_MOUSEMOTION:
+            {
+                SDL_MouseMotionEvent &m = e.motion;
+                int x = m.x, y = Video::height - 1 - m.y;
+                s->handleEvent(UI::MouseEvent(UI::MouseMove, -1, x, y));
+                break;
+            }
+            case SDL_MOUSEBUTTONDOWN:
+            case SDL_MOUSEBUTTONUP:
+            {
+                SDL_MouseButtonEvent &m = e.button;
+                UI::EventType t = e.type == SDL_MOUSEBUTTONDOWN ?
+                    UI::MouseDown : UI::MouseUp;
+                int button;
+                switch (m.button) {
+                case SDL_BUTTON_LEFT:
+                    button = UI::ButtonLeft;
+                    break;
+                case SDL_BUTTON_MIDDLE:
+                    button = UI::ButtonMiddle;
+                    break;
+                case SDL_BUTTON_RIGHT:
+                    button = UI::ButtonRight;
+                    break;
+                default:
+                    button = UI::ButtonOther + m.button - 4;
+                    break;
+                }
+                int x = m.x, y = Video::height - 1 - m.y;
+                s->handleEvent(UI::MouseEvent(t, button, x, y));
+                break;
+            }
+            default:
+                break;
+            }
         }
         Video::draw();
     }

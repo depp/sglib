@@ -10,19 +10,20 @@ public:
     Button();
     virtual ~Button();
 
-    void setLoc(float x, float y);
+    void setLoc(int x, int y);
     void setText(std::string const &text);
 
     virtual void draw();
 
+    virtual void mouseEntered(MouseEvent const &evt);
+    virtual void mouseExited(MouseEvent const &evt);
     virtual void mouseDown(MouseEvent const &evt);
     virtual void mouseUp(MouseEvent const &evt);
-    virtual void mouseDragged(MouseEvent const &evt);
 
 private:
     RasterText title_;
-    float x_, y_;
     bool state_;
+    int button_;
 };
 
 }

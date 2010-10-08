@@ -1,16 +1,20 @@
 #include "button.hpp"
+#include "event.hpp"
 
 UI::Button::Button()
-    : title_(), x_(0.0f), y_(0.0f), state_(false)
-{ }
+    : title_(), state_(false), button_(-1)
+{
+    bounds_.width = 150;
+    bounds_.height = 30;
+}
 
 UI::Button::~Button()
 { }
 
-void UI::Button::setLoc(float x, float y)
+void UI::Button::setLoc(int x, int y)
 {
-    x_ = x;
-    y_ = y;
+    bounds_.x = x;
+    bounds_.y = y;
 }
 
 void UI::Button::setText(std::string const &text)
@@ -21,10 +25,9 @@ void UI::Button::setText(std::string const &text)
 void UI::Button::draw()
 {
     glPushAttrib(GL_COLOR_BUFFER_BIT | GL_CURRENT_BIT);
-    glPushMatrix();
-    glTranslatef(x_, y_, 0.0f);
 
-    float x1 = -5.0f, x2 = 150.0f, y1 = -10.0f, y2 = 20.0f;
+    float x1 = bounds_.x, x2 = bounds_.x + bounds_.width;
+    float y1 = bounds_.y, y2 = bounds_.y + bounds_.height;
 
     if (!state_)
         glColor3ub(32, 0, 0);
@@ -52,23 +55,41 @@ void UI::Button::draw()
         glColor3ub(255, 64, 64);
     else
         glColor3ub(64, 0, 0);
+    glPushMatrix();
+    glTranslatef(x1 + 5.0f, y1 + 10.0f, 0.0f);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     title_.draw();
+    glPopMatrix();
 
     glPopAttrib();
-    glPopMatrix();
+}
+
+void UI::Button::mouseEntered(UI::MouseEvent const &evt)
+{
+    if (button_ == ButtonLeft)
+        state_ = true;
+}
+
+void UI::Button::mouseExited(UI::MouseEvent const &evt)
+{
+    if (button_ == ButtonLeft)
+        state_ = false;
 }
 
 void UI::Button::mouseDown(UI::MouseEvent const &evt)
 {
-    state_ = true;
+    if (button_ < 0) {
+        button_ = evt.button;
+        if (button_ == ButtonLeft)
+            state_ = bounds().contains(evt.x, evt.y);
+    }
 }
 
 void UI::Button::mouseUp(UI::MouseEvent const &evt)
 {
-    state_ = false;
+    if (button_ == evt.button) {
+        button_ = -1;
+        state_ = false;
+    }
 }
-
-void UI::Button::mouseDragged(UI::MouseEvent const &evt)
-{ }
