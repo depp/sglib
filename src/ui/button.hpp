@@ -22,7 +22,7 @@ public:
 
 private:
     RasterText title_;
-    bool state_;
+    bool state_, hover_;
     int button_;
 };
 

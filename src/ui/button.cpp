@@ -2,7 +2,7 @@
 #include "event.hpp"
 
 UI::Button::Button()
-    : title_(), state_(false), button_(-1)
+    : title_(), state_(false), hover_(false), button_(-1)
 {
     bounds_.width = 150;
     bounds_.height = 30;
@@ -51,6 +51,16 @@ void UI::Button::draw()
     glVertex2f(x2, y1);
     glEnd();
 
+    if (hover_ || button_ == ButtonLeft) {
+        glColor3ub(255, 255, 255);
+        glBegin(GL_LINE_LOOP);
+        glVertex2f(x1 - 2.0f, y1 - 2.0f);
+        glVertex2f(x1 - 2.0f, y2 + 2.0f);
+        glVertex2f(x2 + 2.0f, y2 + 2.0f);
+        glVertex2f(x2 + 2.0f, y1 - 2.0f);
+        glEnd();
+    }
+
     if (!state_)
         glColor3ub(255, 64, 64);
     else
@@ -69,12 +79,14 @@ void UI::Button::mouseEntered(UI::MouseEvent const &evt)
 {
     if (button_ == ButtonLeft)
         state_ = true;
+    hover_ = true;
 }
 
 void UI::Button::mouseExited(UI::MouseEvent const &evt)
 {
     if (button_ == ButtonLeft)
         state_ = false;
+    hover_ = false;
 }
 
 void UI::Button::mouseDown(UI::MouseEvent const &evt)

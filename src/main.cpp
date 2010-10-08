@@ -134,6 +134,10 @@ int main(int argc, char *argv[])
                 }
                 int x = m.x, y = Video::height - 1 - m.y;
                 s->handleEvent(UI::MouseEvent(t, button, x, y));
+                if (t == UI::MouseUp) {
+                    s = UI::Screen::active;
+                    s->handleEvent(UI::MouseEvent(UI::MouseMove, -1, x, y));
+                }
                 break;
             }
             default:

@@ -19,6 +19,7 @@ void UI::Container::mouseMoved(UI::MouseEvent const &evt)
             activeChild_->mouseMoved(evt);
     } else {
         Widget *w1 = activeChild_, *w2 = childAtPoint(evt.x, evt.y);
+        activeChild_ = w2;
         if (w1)
             w1->mouseMoved(evt);
         if (w2 && w2 != w1)
@@ -46,18 +47,8 @@ void UI::Container::mouseUp(UI::MouseEvent const &evt)
     if (button_ >= 0) {
         if (activeChild_)
             activeChild_->mouseUp(evt);
-        if (button_ == evt.button) {
+        if (button_ == evt.button)
             button_ = -1;
-            if (bounds().contains(evt.x, evt.y)) {
-                Widget *w1 = activeChild_, *w2 = childAtPoint(evt.x, evt.y);
-                if (w1 != w2) {
-                    if (w2)
-                        w2->mouseMoved(evt);
-                    activeChild_ = w2;
-                }
-            } else
-                activeChild_ = NULL;
-        }
     }
 }
 
