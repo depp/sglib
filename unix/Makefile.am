@@ -32,6 +32,7 @@ game_SOURCES = \
 	../src/type/rastertext_cairo.cpp \
 	../src/type/rastertext.cpp \
 	../src/type/rastertext.hpp \
+	../src/ui/action.hpp \
 	../src/ui/button.cpp \
 	../src/ui/button.hpp \
 	../src/ui/container.cpp \

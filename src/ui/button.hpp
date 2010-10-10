@@ -1,6 +1,7 @@
 #ifndef UI_BUTTON_HPP
 #define UI_BUTTON_HPP
 #include "widget.hpp"
+#include "action.hpp"
 #include "type/rastertext.hpp"
 #include <string>
 namespace UI {
@@ -20,10 +21,13 @@ public:
     virtual void mouseDown(MouseEvent const &evt);
     virtual void mouseUp(MouseEvent const &evt);
 
+    void setAction(Action const &action);
+
 private:
     RasterText title_;
     bool state_, hover_;
     int button_;
+    Action action_;
 };
 
 }

@@ -100,8 +100,17 @@ void UI::Button::mouseDown(UI::MouseEvent const &evt)
 
 void UI::Button::mouseUp(UI::MouseEvent const &evt)
 {
+    bool doAction;
     if (button_ == evt.button) {
+        doAction = state_ && button_ == ButtonLeft;
         button_ = -1;
         state_ = false;
+        if (doAction)
+            action_();
     }
+}
+
+void UI::Button::setAction(UI::Action const &action)
+{
+    action_ = action;
 }

@@ -14,6 +14,11 @@ public:
     virtual void draw(unsigned int ticks);
 
 private:
+    void newGame();
+    void multiplayer();
+    void options();
+    void quit();
+
     bool initted_;
     Container ui_;
     Button menu_[4];
