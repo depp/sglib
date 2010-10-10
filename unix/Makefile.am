@@ -39,8 +39,6 @@ game_SOURCES = \
 	../src/ui/event.hpp \
 	../src/ui/menu.cpp \
 	../src/ui/menu.hpp \
-	../src/ui/object.cpp \
-	../src/ui/object.hpp \
 	../src/ui/rect.hpp \
 	../src/ui/screen.cpp \
 	../src/ui/screen.hpp \

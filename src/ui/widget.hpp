@@ -1,16 +1,16 @@
 #ifndef UI_WIDGET_HPP
 #define UI_WIDGET_HPP
 #include "rect.hpp"
-#include "object.hpp"
 namespace UI {
 struct MouseEvent;
 struct Event;
 
-class Widget : public Object {
+class Widget {
 public:
     Widget();
     virtual ~Widget();
 
+    virtual void draw(unsigned int ticks) = 0;
     virtual void handleEvent(Event const &evt);
 
     virtual void mouseMoved(MouseEvent const &evt);
