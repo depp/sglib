@@ -4,12 +4,12 @@
 UI::Container::~Container()
 { }
 
-void UI::Container::draw()
+void UI::Container::draw(unsigned int ticks)
 {
     std::vector<Widget *>::iterator
         i = children_.begin(), e = children_.end();
     for (; i != e; ++i)
-        (*i)->draw();
+        (*i)->draw(ticks);
 }
 
 void UI::Container::mouseMoved(UI::MouseEvent const &evt)

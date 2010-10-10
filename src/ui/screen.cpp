@@ -8,5 +8,5 @@ UI::Screen::~Screen()
 void UI::Screen::handleEvent(Event const &evt)
 { }
 
-void UI::Screen::draw()
+void UI::Screen::draw(unsigned int ticks)
 { }

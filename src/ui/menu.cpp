@@ -14,7 +14,7 @@ void UI::Menu::handleEvent(Event const &evt)
     ui_.handleEvent(evt);
 }
 
-void UI::Menu::draw()
+void UI::Menu::draw(unsigned int ticks)
 {
     if (!initted_) {
         static char const *const MENU_ITEMS[4] = {
@@ -39,5 +39,5 @@ void UI::Menu::draw()
     glOrtho(0.0, 640.0, 0.0, 480.0, -1.0, 1.0);
     glMatrixMode(GL_MODELVIEW);
 
-    ui_.draw();
+    ui_.draw(ticks);
 }

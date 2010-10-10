@@ -13,7 +13,7 @@ public:
     void setLoc(int x, int y);
     void setText(std::string const &text);
 
-    virtual void draw();
+    virtual void draw(unsigned int ticks);
 
     virtual void mouseEntered(MouseEvent const &evt);
     virtual void mouseExited(MouseEvent const &evt);

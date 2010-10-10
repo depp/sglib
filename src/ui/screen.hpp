@@ -9,7 +9,7 @@ public:
 
     virtual ~Screen();
     virtual void handleEvent(Event const &evt) = 0;
-    virtual void draw() = 0;
+    virtual void draw(unsigned int ticks) = 0;
 };
 
 }

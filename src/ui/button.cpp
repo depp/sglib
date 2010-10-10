@@ -22,7 +22,7 @@ void UI::Button::setText(std::string const &text)
     title_.setText(text);
 }
 
-void UI::Button::draw()
+void UI::Button::draw(unsigned int ticks)
 {
     glPushAttrib(GL_COLOR_BUFFER_BIT | GL_CURRENT_BIT);
 

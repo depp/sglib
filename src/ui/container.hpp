@@ -13,7 +13,7 @@ public:
 
     virtual ~Container();
 
-    virtual void draw();
+    virtual void draw(unsigned int ticks);
 
     virtual void mouseMoved(MouseEvent const &evt);
     virtual void mouseDown(MouseEvent const &evt);

@@ -7,7 +7,7 @@ class Object {
 public:
     virtual ~Object();
 
-    virtual void draw();
+    virtual void draw(unsigned int ticks);
     virtual void handleEvent(Event const &evt);
 };
 

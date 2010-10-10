@@ -11,7 +11,7 @@ public:
     virtual ~Menu();
 
     virtual void handleEvent(Event const &evt);
-    virtual void draw();
+    virtual void draw(unsigned int ticks);
 
 private:
     bool initted_;
