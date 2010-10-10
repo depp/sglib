@@ -45,10 +45,10 @@ void UI::Container::mouseDown(UI::MouseEvent const &evt)
 void UI::Container::mouseUp(UI::MouseEvent const &evt)
 {
     if (button_ >= 0) {
-        if (activeChild_)
-            activeChild_->mouseUp(evt);
         if (button_ == evt.button)
             button_ = -1;
+        if (activeChild_)
+            activeChild_->mouseUp(evt);
     }
 }
 
