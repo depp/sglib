@@ -1,5 +1,5 @@
-#ifndef UI_LAYER_HPP
-#define UI_LAYER_HPP
+#ifndef UI_SCREEN_HPP
+#define UI_SCREEN_HPP
 namespace UI {
 struct Event;
 
