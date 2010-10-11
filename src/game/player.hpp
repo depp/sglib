@@ -5,6 +5,11 @@
 class Player : public Object {
 public:
     struct Input {
+        Input()
+            : left(false), right(false),
+              up(false), down(false), fire(false)
+        { }
+
         bool left;
         bool right;
         bool up;

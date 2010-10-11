@@ -1,5 +1,6 @@
 #include "menu.hpp"
 #include "button.hpp"
+#include "game.hpp"
 #include "SDL_opengl.h"
 #include <stdio.h>
 
@@ -54,6 +55,7 @@ void UI::Menu::draw(unsigned int ticks)
 void UI::Menu::newGame()
 {
     fputs("Menu: New Game\n", stdout);
+    setActive(new Game);
 }
 
 void UI::Menu::multiplayer()

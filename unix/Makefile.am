@@ -38,6 +38,8 @@ game_SOURCES = \
 	../src/ui/container.cpp \
 	../src/ui/container.hpp \
 	../src/ui/event.hpp \
+	../src/ui/game.cpp \
+	../src/ui/game.hpp \
 	../src/ui/menu.cpp \
 	../src/ui/menu.hpp \
 	../src/ui/rect.hpp \
