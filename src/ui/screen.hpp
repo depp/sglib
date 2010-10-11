@@ -6,6 +6,7 @@ struct Event;
 class Screen {
 public:
     static Screen *active;
+    static void setActive(Screen *screen);
 
     virtual ~Screen();
     virtual void handleEvent(Event const &evt) = 0;

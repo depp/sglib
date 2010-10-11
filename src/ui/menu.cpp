@@ -69,6 +69,5 @@ void UI::Menu::options()
 void UI::Menu::quit()
 {
     fputs("Menu: Quit\n", stdout);
-    delete this;
-    UI::Screen::active = 0;
+    setActive(NULL);
 }
