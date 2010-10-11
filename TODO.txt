@@ -1,0 +1,7 @@
+TODO List
+=========
+
+- User interface (menus, HUD)
+- Resource manager (textures, sounds, etc)
+- Audio support
+- Config files (are they like Git? are they JSON?)

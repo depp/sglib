@@ -1,10 +1,15 @@
-#ifndef PLAYER_HPP
-#define PLAYER_HPP
+#ifndef GAME_PLAYER_HPP
+#define GAME_PLAYER_HPP
 #include "object.hpp"
 
 class Player : public Object {
 public:
     struct Input {
+        Input()
+            : left(false), right(false),
+              up(false), down(false), fire(false)
+        { }
+
         bool left;
         bool right;
         bool up;

@@ -1,7 +1,7 @@
-#ifndef OBSTACLE_HPP
-#define OBSTACLE_HPP
+#ifndef GAME_OBSTACLE_HPP
+#define GAME_OBSTACLE_HPP
 #include "object.hpp"
-#include "color.hpp"
+#include "graphics/color.hpp"
 struct Model;
 
 class Obstacle : public Object {

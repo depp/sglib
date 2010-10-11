@@ -1,5 +1,5 @@
-#ifndef SHOT_HPP
-#define SHOT_HPP
+#ifndef GAME_SHOT_HPP
+#define GAME_SHOT_HPP
 #include "object.hpp"
 
 class Shot : public Object {

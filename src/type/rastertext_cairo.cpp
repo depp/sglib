@@ -4,6 +4,7 @@
 #include <pango/pangocairo.h>
 #include <assert.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 static unsigned int round_up_pow2(unsigned int x)
 {
@@ -45,12 +46,27 @@ void RasterText::loadImage(void **data, unsigned int *width,
         if (desc)
             pango_layout_set_font_description(layout, desc);
     }
+    PangoAlignment alignment = PANGO_ALIGN_LEFT;
+    pango_layout_set_alignment(layout, alignment);
     pango_layout_set_text(layout, text_.data(), text_.size());
     int baseline = pango_layout_get_baseline(layout) / PANGO_SCALE;
-    PangoRectangle bounds;
-    pango_layout_get_pixel_extents(layout, &bounds, NULL);
-    vx1_ = bounds.x;
-    vx2_ = bounds.x + bounds.width;
+    PangoRectangle bounds, lbounds;
+    pango_layout_get_pixel_extents(layout, &bounds, &lbounds);
+    float lxoff;
+    switch (alignment_) {
+    default:
+    case Left:
+        lxoff = bounds.x - lbounds.x;
+        break;
+    case Center:
+        lxoff = bounds.x - (lbounds.x + lbounds.width / 2);
+        break;
+    case Right:
+        lxoff = bounds.x - (lbounds.x + lbounds.width);
+        break;
+    }
+    vx1_ = bounds.x + lxoff;
+    vx2_ = bounds.x + bounds.width + lxoff;
     vy1_ = baseline - bounds.y - bounds.height;
     vy2_ = baseline - bounds.y;
     unsigned int twidth = round_up_pow2(bounds.width);

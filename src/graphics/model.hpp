@@ -1,5 +1,5 @@
-#ifndef MODEL_HPP
-#define MODEL_HPP
+#ifndef GRAPHICS_MODEL_HPP
+#define GRAPHICS_MODEL_HPP
 #include "SDL_opengl.h"
 struct Color;
 
