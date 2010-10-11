@@ -99,16 +99,17 @@ int main(int argc, char *argv[])
     while (1) {
         SDL_Event e;
         while (SDL_PollEvent(&e)) {
-            UI::Screen *s = UI::Screen::active;
+            if (!UI::Screen::active)
+                goto quit;
             switch (e.type) {
             case SDL_QUIT:
-                SDL_Quit();
-                return 0;
+                goto quit;
             case SDL_MOUSEMOTION:
             {
                 SDL_MouseMotionEvent &m = e.motion;
                 int x = m.x, y = Video::height - 1 - m.y;
-                s->handleEvent(UI::MouseEvent(UI::MouseMove, -1, x, y));
+                UI::Screen::active->
+                    handleEvent(UI::MouseEvent(UI::MouseMove, -1, x, y));
                 break;
             }
             case SDL_MOUSEBUTTONDOWN:
@@ -133,13 +134,16 @@ int main(int argc, char *argv[])
                     break;
                 }
                 int x = m.x, y = Video::height - 1 - m.y;
-                s->handleEvent(UI::MouseEvent(t, button, x, y));
+                UI::Screen::active->
+                    handleEvent(UI::MouseEvent(t, button, x, y));
                 if (t == UI::MouseUp) {
                     /* Deliver a mouse movement event, this ensures
                        that highlighting will work correctly if a
                        widget has been capturing mouse events.  */
-                    s = UI::Screen::active;
-                    s->handleEvent(UI::MouseEvent(UI::MouseMove, -1, x, y));
+                    if (!UI::Screen::active)
+                        goto quit;
+                    UI::Screen::active->
+                        handleEvent(UI::MouseEvent(UI::MouseMove, -1, x, y));
                 }
                 break;
             }
@@ -147,7 +151,11 @@ int main(int argc, char *argv[])
                 break;
             }
         }
+        if (!UI::Screen::active)
+            goto quit;
         Video::draw();
     }
+quit:
+    SDL_Quit();
     return 0;
 }
