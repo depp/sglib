@@ -11,7 +11,7 @@ Font::Font(Font const &f)
 
 Font::~Font()
 {
-    if (!--info_->refcount)
+    if (info_ && !--info_->refcount)
         delete info_;
 }
 
