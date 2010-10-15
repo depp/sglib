@@ -19,12 +19,12 @@ int main(int argc, char *argv[])
     }
     Video::init();
     Rand::global.seed();
-    UI::Screen::active = new UI::Menu();
+    UI::Screen::setActive(new UI::Menu);
 
     while (1) {
         SDL_Event e;
         while (SDL_PollEvent(&e)) {
-            if (!UI::Screen::active)
+            if (!UI::Screen::getActive())
                 goto quit;
             switch (e.type) {
             case SDL_QUIT:
@@ -33,7 +33,7 @@ int main(int argc, char *argv[])
             {
                 SDL_MouseMotionEvent &m = e.motion;
                 int x = m.x, y = Video::height - 1 - m.y;
-                UI::Screen::active->
+                UI::Screen::getActive()->
                     handleEvent(UI::MouseEvent(UI::MouseMove, -1, x, y));
                 break;
             }
@@ -59,15 +59,15 @@ int main(int argc, char *argv[])
                     break;
                 }
                 int x = m.x, y = Video::height - 1 - m.y;
-                UI::Screen::active->
+                UI::Screen::getActive()->
                     handleEvent(UI::MouseEvent(t, button, x, y));
                 if (t == UI::MouseUp) {
                     /* Deliver a mouse movement event, this ensures
                        that highlighting will work correctly if a
                        widget has been capturing mouse events.  */
-                    if (!UI::Screen::active)
+                    if (!UI::Screen::getActive())
                         goto quit;
-                    UI::Screen::active->
+                    UI::Screen::getActive()->
                         handleEvent(UI::MouseEvent(UI::MouseMove, -1, x, y));
                 }
                 break;
@@ -78,7 +78,7 @@ int main(int argc, char *argv[])
                 SDL_KeyboardEvent &k = e.key;
                 UI::EventType t = e.type == SDL_KEYDOWN ?
                     UI::KeyDown : UI::KeyUp;
-                UI::Screen::active->
+                UI::Screen::getActive()->
                     handleEvent(UI::KeyEvent(t, k.keysym.sym));
                 break;
             }
@@ -86,7 +86,7 @@ int main(int argc, char *argv[])
                 break;
             }
         }
-        if (!UI::Screen::active)
+        if (!UI::Screen::getActive())
             goto quit;
         Video::draw();
     }

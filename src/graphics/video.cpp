@@ -35,6 +35,6 @@ void Video::init()
 void Video::draw()
 {
     unsigned int ticks = SDL_GetTicks();
-    UI::Screen::active->draw(ticks);
+    UI::Screen::getActive()->draw(ticks);
     SDL_GL_SwapBuffers();
 }

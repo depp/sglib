@@ -4,9 +4,12 @@ namespace UI {
 struct Event;
 
 class Screen {
-public:
+private:
     static Screen *active;
+
+public:
     static void setActive(Screen *screen);
+    static Screen *getActive() { return active; }
 
     virtual ~Screen();
     virtual void handleEvent(Event const &evt) = 0;
