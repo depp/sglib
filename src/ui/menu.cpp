@@ -54,22 +54,16 @@ void UI::Menu::draw(unsigned int ticks)
 
 void UI::Menu::newGame()
 {
-    fputs("Menu: New Game\n", stdout);
     setActive(new Game);
 }
 
 void UI::Menu::multiplayer()
-{
-    fputs("Menu: Multiplayer\n", stdout);
-}
+{ }
 
 void UI::Menu::options()
-{
-    fputs("Menu: Options\n", stdout);
-}
+{ }
 
 void UI::Menu::quit()
 {
-    fputs("Menu: Quit\n", stdout);
     setActive(NULL);
 }
