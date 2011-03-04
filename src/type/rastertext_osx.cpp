@@ -1,4 +1,4 @@
-#include "type.hpp"
+#include "rastertext.hpp"
 #include <CoreGraphics/CoreGraphics.h>
 #include <CoreText/CoreText.h>
 #include <stdlib.h>
@@ -28,7 +28,7 @@ static unsigned int round_up_pow2(unsigned int x)
     return x + 1;
 }
 
-void Type::loadImage(void **data, unsigned int *width,
+void RasterText::loadImage(void **data, unsigned int *width,
                      unsigned int *height)
 {
     CFStringRef string = CFStringCreateWithBytes(
