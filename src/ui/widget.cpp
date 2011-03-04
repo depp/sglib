@@ -2,7 +2,6 @@
 #include "event.hpp"
 
 UI::Widget::Widget()
-    : mouseWithinBounds_(false)
 {
     bounds_.x = 0;
     bounds_.y = 0;

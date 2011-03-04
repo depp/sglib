@@ -22,13 +22,9 @@ public:
     virtual void mouseUp(MouseEvent const &evt);
 
     Rect const &bounds() const { return bounds_; }
-    bool mouseWithinBounds() const { return mouseWithinBounds_; }
 
 protected:
     Rect bounds_;
-
-private:
-    bool mouseWithinBounds_;
 };
 
 }
