@@ -16,6 +16,7 @@ public:
 
     virtual void draw(unsigned int ticks);
 
+    // virtual void mouseMoved(MouseEvent const &evt);
     virtual void mouseEntered(MouseEvent const &evt);
     virtual void mouseExited(MouseEvent const &evt);
     virtual void mouseDown(MouseEvent const &evt);

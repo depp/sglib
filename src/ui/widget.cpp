@@ -13,46 +13,22 @@ UI::Widget::Widget()
 UI::Widget::~Widget()
 { }
 
-void UI::Widget::handleEvent(UI::Event const &evt)
+bool UI::Widget::hitTest(Point pt)
 {
-    switch (evt.type) {
-    case MouseDown:
-        mouseDown(evt.mouseEvent());
-        break;
-    case MouseUp:
-        mouseUp(evt.mouseEvent());
-        break;
-    case MouseMove:
-        mouseMoved(evt.mouseEvent());
-        break;
-    default:
-        break;
-    }
+    return bounds_.contains(pt.x, pt.y);
 }
 
-void UI::Widget::mouseMoved(UI::MouseEvent const &evt)
-{
-    if (mouseWithinBounds_) {
-        if (!bounds().contains(evt.x, evt.y)) {
-            mouseExited(evt);
-            mouseWithinBounds_ = false;
-        }
-    } else {
-        if (bounds().contains(evt.x, evt.y)) {
-            mouseEntered(evt);
-            mouseWithinBounds_ = true;
-        }
-    }
-}
-
-void UI::Widget::mouseEntered(UI::MouseEvent const &evt)
+void UI::Widget::mouseMoved(MouseEvent const &evt)
 { }
 
-void UI::Widget::mouseExited(UI::MouseEvent const &evt)
+void UI::Widget::mouseEntered(MouseEvent const &evt)
 { }
 
-void UI::Widget::mouseDown(UI::MouseEvent const &evt)
+void UI::Widget::mouseExited(MouseEvent const &evt)
 { }
 
-void UI::Widget::mouseUp(UI::MouseEvent const &evt)
+void UI::Widget::mouseDown(MouseEvent const &evt)
+{ }
+
+void UI::Widget::mouseUp(MouseEvent const &evt)
 { }

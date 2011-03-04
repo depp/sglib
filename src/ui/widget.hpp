@@ -1,17 +1,19 @@
 #ifndef UI_WIDGET_HPP
 #define UI_WIDGET_HPP
-#include "rect.hpp"
+#include "geometry.hpp"
+#include "scene/leafobject.hpp"
 namespace UI {
 struct MouseEvent;
+struct KeyEvent;
 struct Event;
+class Screen;
 
-class Widget {
+class Widget : public Scene::LeafObject {
 public:
     Widget();
     virtual ~Widget();
 
-    virtual void draw(unsigned int ticks) = 0;
-    virtual void handleEvent(Event const &evt);
+    virtual bool hitTest(Point pt);
 
     virtual void mouseMoved(MouseEvent const &evt);
     virtual void mouseEntered(MouseEvent const &evt);
@@ -20,6 +22,7 @@ public:
     virtual void mouseUp(MouseEvent const &evt);
 
     Rect const &bounds() const { return bounds_; }
+    bool mouseWithinBounds() const { return mouseWithinBounds_; }
 
 protected:
     Rect bounds_;

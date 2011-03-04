@@ -26,6 +26,12 @@ game_SOURCES = \
 	../src/main.cpp \
 	../src/rand.cpp \
 	../src/rand.hpp \
+	../src/scene/group.cpp \
+	../src/scene/group.hpp \
+	../src/scene/leafobject.cpp \
+	../src/scene/leafobject.hpp \
+	../src/scene/object.cpp \
+	../src/scene/object.hpp \
 	../src/type/font.hpp \
 	../src/type/font_pango.cpp \
 	../src/type/font_pango.hpp \
@@ -35,14 +41,14 @@ game_SOURCES = \
 	../src/ui/action.hpp \
 	../src/ui/button.cpp \
 	../src/ui/button.hpp \
-	../src/ui/container.cpp \
-	../src/ui/container.hpp \
 	../src/ui/event.hpp \
 	../src/ui/game.cpp \
 	../src/ui/game.hpp \
+	../src/ui/geometry.hpp \
 	../src/ui/menu.cpp \
 	../src/ui/menu.hpp \
-	../src/ui/rect.hpp \
+	../src/ui/mousemanager.cpp \
+	../src/ui/mousemanager.hpp \
 	../src/ui/screen.cpp \
 	../src/ui/screen.hpp \
 	../src/ui/widget.cpp \

@@ -1,6 +1,7 @@
 #include "menu.hpp"
 #include "button.hpp"
 #include "game.hpp"
+#include "event.hpp"
 #include "SDL_opengl.h"
 #include <stdio.h>
 
@@ -13,12 +14,21 @@ UI::Menu::~Menu()
 
 void UI::Menu::handleEvent(Event const &evt)
 {
-    ui_.handleEvent(evt);
+    switch (evt.type) {
+    case MouseDown:
+    case MouseUp:
+    case MouseMove:
+        handleMouseEvent(evt.mouseEvent());
+        break;
+    default:
+        break;
+    }
 }
 
 void UI::Menu::draw(unsigned int ticks)
 {
     if (!initted_) {
+        initted_ = true;
         static char const *const MENU_ITEMS[4] = {
             "Single Player",
             "Multiplayer",
@@ -28,7 +38,7 @@ void UI::Menu::draw(unsigned int ticks)
         for (int i = 0; i < 4; ++i) {
             menu_[i].setText(MENU_ITEMS[i]);
             menu_[i].setLoc(145, 345 - 50 * i);
-            ui_.addChild(&menu_[i]);
+            scene_.addObject(&menu_[i]);
         }
         menu_[0].setAction(Action(this, static_cast<Action::Method>
                                   (&Menu::newGame)));
@@ -38,7 +48,6 @@ void UI::Menu::draw(unsigned int ticks)
                                   (&Menu::options)));
         menu_[3].setAction(Action(this, static_cast<Action::Method>
                                   (&Menu::quit)));
-        initted_ = true;
     }
 
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
@@ -49,7 +58,21 @@ void UI::Menu::draw(unsigned int ticks)
     glOrtho(0.0, 640.0, 0.0, 480.0, -1.0, 1.0);
     glMatrixMode(GL_MODELVIEW);
 
-    ui_.draw(ticks);
+    scene_.draw(ticks);
+}
+
+UI::Widget *UI::Menu::traceMouse(UI::Point pt)
+{
+    std::vector<Scene::LeafObject *> t;
+    scene_.trace(t, pt);
+    std::vector<Scene::LeafObject *>::iterator
+        i = t.begin(), e = t.end();
+    for (; i != e; ++i) {
+        Widget *w = dynamic_cast<Widget *>(*i);
+        if (w)
+            return w;
+    }
+    return 0;
 }
 
 void UI::Menu::newGame()

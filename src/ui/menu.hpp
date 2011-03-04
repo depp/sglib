@@ -1,11 +1,12 @@
 #ifndef UI_MENU_HPP
 #define UI_MENU_HPP
-#include "container.hpp"
 #include "screen.hpp"
 #include "button.hpp"
+#include "mousemanager.hpp"
+#include "scene/group.hpp"
 namespace UI {
 
-class Menu : public Screen {
+class Menu : public Screen, private MouseManager {
 public:
     Menu();
     virtual ~Menu();
@@ -14,17 +15,16 @@ public:
     virtual void draw(unsigned int ticks);
 
 private:
+    virtual Widget *traceMouse(Point pt);
+
     void newGame();
     void multiplayer();
     void options();
     void quit();
 
     bool initted_;
-    Container ui_;
+    Scene::Group scene_;
     Button menu_[4];
-
-    Menu(Menu const &);
-    Menu &operator=(Menu const &);
 };
 
 }
