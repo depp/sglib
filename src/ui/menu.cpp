@@ -61,6 +61,18 @@ void UI::Menu::draw(unsigned int ticks)
     glLoadIdentity();
 
     scene_.draw(ticks);
+
+    texture_.load();
+    glPushAttrib(GL_ENABLE_BIT);
+    glEnable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, texture_.get());
+    glBegin(GL_TRIANGLE_STRIP);
+    glTexCoord2f(0.0f, 0.0f); glVertex2f(100.0f, 100.0f);
+    glTexCoord2f(1.0f, 0.0f); glVertex2f(200.0f, 100.0f);
+    glTexCoord2f(0.0f, 1.0f); glVertex2f(200.0f, 200.0f);
+    glTexCoord2f(1.0f, 1.0f); glVertex2f(300.0f, 200.0f);
+    glEnd();
+    glPopAttrib();
 }
 
 UI::Widget *UI::Menu::traceMouse(UI::Point pt)

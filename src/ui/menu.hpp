@@ -4,6 +4,7 @@
 #include "button.hpp"
 #include "mousemanager.hpp"
 #include "scene/group.hpp"
+#include "graphics/texture.hpp"
 namespace UI {
 
 class Menu : public Screen, private MouseManager {
@@ -25,6 +26,7 @@ private:
     bool initted_;
     Scene::Group scene_;
     Button menu_[4];
+    Texture texture_;
 };
 
 }
