@@ -57,6 +57,7 @@ void UI::Menu::draw(unsigned int ticks)
     glLoadIdentity();
     glOrtho(0.0, 640.0, 0.0, 480.0, -1.0, 1.0);
     glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
 
     scene_.draw(ticks);
 }
