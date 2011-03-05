@@ -3,13 +3,15 @@
 #include "screen.hpp"
 #include "game/player.hpp"
 class World;
+class RasterText;
 namespace UI {
 struct KeyEvent;
 
 class Game : public Screen {
 public:
     Game()
-        : tickref_(0), world_(0)
+        : tickref_(0), world_(0),
+          havefps_(false), framecount_(0), framerate_(0)
     { }
     virtual ~Game();
 
@@ -23,6 +25,10 @@ private:
     unsigned int tickref_;
     World *world_;
     Player::Input input_;
+    bool havefps_;
+    unsigned int frametick_[64];
+    unsigned int framecount_;
+    RasterText *framerate_;
 };
 
 }

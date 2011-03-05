@@ -59,6 +59,7 @@ void UI::Game::handleKey(UI::KeyEvent const &evt)
 
 void UI::Game::draw(unsigned int ticks)
 {
+    unsigned int curfr, oldref;
     if (!world_) {
         tickref_ = ticks;
         initWorld();
@@ -75,6 +76,43 @@ void UI::Game::draw(unsigned int ticks)
         }
     }
     world_->draw();
+    curfr = framecount_;
+    if (curfr == 64) {
+        curfr = 0;
+        havefps_ = true;
+    }
+    framecount_ = curfr + 1;
+    if (havefps_) {
+        oldref = frametick_[curfr];
+        frametick_[curfr] = ticks;
+        float rate = 64.0e3f / (ticks - oldref);
+        float ms = (ticks - oldref) / 64.0f;
+        char buf[32];
+        snprintf(buf, sizeof(buf), "%.1f FPS (%.1f ms)", rate, ms);
+        if (!framerate_) {
+            framerate_ = new RasterText;
+            Font f;
+            static char const *const family[] = {
+                "Helvetica",
+                "Arial",
+                "DejaVu Sans",
+                "Sans",
+                NULL
+            };
+            f.setFamily(family);
+            f.setSize(12.0f);
+            framerate_->setFont(f);
+        }
+        framerate_->setText(buf);
+
+        glPushAttrib(GL_COLOR_BUFFER_BIT | GL_CURRENT_BIT);
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glColor3ub(128, 255, 128);
+        glTranslatef(10.0f, 30.0f, 0.0f);
+        framerate_->draw();
+        glPopAttrib();
+    }
 }
 
 void UI::Game::initWorld()
