@@ -10,6 +10,9 @@
 #include "ui/event.hpp"
 #include "graphics/video.hpp"
 
+static const int MAX_FPS = 100;
+static const int MIN_FRAMETIME = 1000 / MAX_FPS;
+
 int main(int argc, char *argv[])
 {
     if (SDL_Init(SDL_INIT_TIMER) < 0) {
@@ -21,6 +24,7 @@ int main(int argc, char *argv[])
     Rand::global.seed();
     UI::Screen::setActive(new UI::Menu);
 
+    unsigned int lastticks = SDL_GetTicks();
     while (1) {
         SDL_Event e;
         while (SDL_PollEvent(&e)) {
@@ -88,7 +92,15 @@ int main(int argc, char *argv[])
         }
         if (!UI::Screen::getActive())
             goto quit;
-        Video::draw();
+        unsigned int ticks = SDL_GetTicks(), delta = ticks - lastticks;
+        if (delta < MIN_FRAMETIME) {
+            SDL_Delay(MIN_FRAMETIME - delta);
+            lastticks += MIN_FRAMETIME;
+            ticks = SDL_GetTicks();
+        } else
+            lastticks = ticks;
+        UI::Screen::getActive()->draw(ticks);
+        Video::update();
     }
 
 quit:

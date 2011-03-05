@@ -32,9 +32,7 @@ void Video::init()
     Video::height = 480;
 }
 
-void Video::draw()
+void Video::update()
 {
-    unsigned int ticks = SDL_GetTicks();
-    UI::Screen::getActive()->draw(ticks);
     SDL_GL_SwapBuffers();
 }

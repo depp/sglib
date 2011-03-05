@@ -3,7 +3,7 @@
 
 namespace Video {
     void init();
-    void draw();
+    void update();
     extern unsigned int width, height;
 };
 
