@@ -16,7 +16,7 @@ void Video::init()
         exit(1);
     }
     flags = SDL_OPENGL | SDL_GL_DOUBLEBUFFER;
-    screen = SDL_SetVideoMode(640, 480, 32, flags);
+    screen = SDL_SetVideoMode(768, 480, 32, flags);
     if (!screen) {
         fprintf(stderr, "Could not initialize video: %s\n",
                 SDL_GetError());
@@ -28,7 +28,7 @@ void Video::init()
            glGetString(GL_VENDOR), glGetString(GL_RENDERER),
            glGetString(GL_VERSION));
 
-    Video::width = 640;
+    Video::width = 768;
     Video::height = 480;
 }
 

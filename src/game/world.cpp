@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include "SDL_opengl.h"
 #include "type/rastertext.hpp"
+#include "graphics/video.hpp"
 
 const float kPi = 4.0f * std::atan(1.0f);
 const float World::kFrameTime = World::kFrameTicks * 0.001f;
@@ -103,7 +104,16 @@ void World::draw()
 
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    glFrustum(-0.1f, 0.1f, -0.075f, 0.075f, 0.1f, 100.0f);
+    /* Calculate the perspective matrix based on 35mm equivalent focal
+       length.  Different aspect ratios are scaled to match area.  */
+    double f, znear, zfar, w, h, a;
+    a = (double)Video::width / (double)Video::height;
+    znear = 0.1;
+    zfar = 100.0;
+    f = 16.0;
+    h = znear / f * sqrt(24.0 * 36.0 / a);
+    w = h * a;
+    glFrustum(-0.5*w, 0.5*w, -0.5*h, 0.5*h, znear, zfar);
     glRotatef(-90.0f, 1.0f, 0.0f, 0.0f);
 
     glMatrixMode(GL_MODELVIEW);
@@ -145,7 +155,7 @@ void World::draw()
     }
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    glOrtho(0.0, 640.0, 0.0, 480.0, -1.0, 1.0);
+    glOrtho(0.0, Video::width, 0.0, Video::height, -1.0, 1.0);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     glPushAttrib(GL_COLOR_BUFFER_BIT | GL_CURRENT_BIT);

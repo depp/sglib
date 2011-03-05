@@ -2,6 +2,7 @@
 #include "button.hpp"
 #include "game.hpp"
 #include "event.hpp"
+#include "graphics/video.hpp"
 #include "SDL_opengl.h"
 #include <stdio.h>
 
@@ -55,7 +56,7 @@ void UI::Menu::draw(unsigned int ticks)
 
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    glOrtho(0.0, 640.0, 0.0, 480.0, -1.0, 1.0);
+    glOrtho(0.0, Video::width, 0.0, Video::height, -1.0, 1.0);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 
