@@ -2,6 +2,7 @@
 #include "ui/screen.hpp"
 #include "SDL.h"
 #include "SDL_opengl.h"
+#include <stdio.h>
 
 unsigned int Video::width = 0, Video::height = 0;
 
@@ -35,4 +36,9 @@ void Video::init()
 void Video::update()
 {
     SDL_GL_SwapBuffers();
+    GLenum err = glGetError();
+    if (err != GL_NO_ERROR) {
+        const GLubyte *s = gluErrorString(err);
+        fprintf(stderr, "GL Error: %s", s);
+    }
 }
