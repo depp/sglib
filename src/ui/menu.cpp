@@ -42,10 +42,9 @@ void UI::Menu::draw(unsigned int ticks)
             menu_[i].setLoc(145, 345 - 50 * i);
             scene_.addObject(&menu_[i]);
         }
-        texture_ = Texture(TextureFile::textureFile("cp437.png"));
-        texture_.load();
-        texture2_ = Texture(TextureFile::textureFile("cp437.png"));
-        texture2_.load();
+        texture_ = TextureFile::open("cp437.png");
+        texture2_ = TextureFile::open("cp437.png");
+        Texture::updateAll();
         menu_[0].setAction(Action(this, static_cast<Action::Method>
                                   (&Menu::newGame)));
         menu_[1].setAction(Action(this, static_cast<Action::Method>
@@ -69,7 +68,7 @@ void UI::Menu::draw(unsigned int ticks)
 
     glPushAttrib(GL_ENABLE_BIT);
     glEnable(GL_TEXTURE_2D);
-    glBindTexture(GL_TEXTURE_2D, texture_.get());
+    glBindTexture(GL_TEXTURE_2D, texture_->tex());
     glBegin(GL_TRIANGLE_STRIP);
     glTexCoord2f(0.0f, 0.0f); glVertex2f(100.0f, 100.0f);
     glTexCoord2f(1.0f, 0.0f); glVertex2f(228.0f, 100.0f);
