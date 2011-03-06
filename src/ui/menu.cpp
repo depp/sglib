@@ -44,6 +44,8 @@ void UI::Menu::draw(unsigned int ticks)
         }
         texture_ = Texture(TextureFile::textureFile("cp437.png"));
         texture_.load();
+        texture2_ = Texture(TextureFile::textureFile("cp437.png"));
+        texture2_.load();
         menu_[0].setAction(Action(this, static_cast<Action::Method>
                                   (&Menu::newGame)));
         menu_[1].setAction(Action(this, static_cast<Action::Method>

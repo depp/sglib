@@ -26,7 +26,7 @@ private:
     bool initted_;
     Scene::Group scene_;
     Button menu_[4];
-    Texture texture_;
+    Texture texture_, texture2_;
 };
 
 }

@@ -151,6 +151,7 @@ void TextureFile::load()
     else
         success = false;
     if (success) {
+        fprintf(stderr, "Loaded image %s\n", path_.c_str());
         GLuint tex = 0;
         glGenTextures(1, &tex);
         glBindTexture(GL_TEXTURE_2D, tex);
