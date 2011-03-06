@@ -10,8 +10,8 @@
 #include "ui/event.hpp"
 #include "graphics/video.hpp"
 
-static const int MAX_FPS = 100;
-static const int MIN_FRAMETIME = 1000 / MAX_FPS;
+static const unsigned int MAX_FPS = 100;
+static const unsigned int MIN_FRAMETIME = 1000 / MAX_FPS;
 
 int main(int argc, char *argv[])
 {
