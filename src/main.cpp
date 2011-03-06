@@ -1,10 +1,4 @@
 #include "SDL.h"
-// #include "SDL_opengl.h"
-// #include <cmath>
-// #include "game/world.hpp"
-// #include "game/obstacle.hpp"
-// #include "graphics/model.hpp"
-// #include "game/player.hpp"
 #include "rand.hpp"
 #include "ui/menu.hpp"
 #include "ui/event.hpp"
