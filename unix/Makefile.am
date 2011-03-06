@@ -23,6 +23,8 @@ game_SOURCES = \
 	../src/graphics/model.hpp \
 	../src/graphics/texture.cpp \
 	../src/graphics/texture.hpp \
+	../src/graphics/texturefile.cpp \
+	../src/graphics/texturefile.hpp \
 	../src/graphics/video.cpp \
 	../src/graphics/video.hpp \
 	../src/main.cpp \

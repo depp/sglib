@@ -19,7 +19,7 @@ public:
         src_->retain();
     }
 
-    Texture(Source *s)
+    explicit Texture(Source *s)
         : src_(s)
     {
         src_->retain();
