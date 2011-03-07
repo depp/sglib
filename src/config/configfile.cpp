@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
+#include <err.h>
 
 ConfigFile::ConfigFile()
     : vars_(), data_(0), datasz_(0), dataalloc_(0), sorted_(true)
@@ -13,6 +14,33 @@ ConfigFile::ConfigFile()
 ConfigFile::~ConfigFile()
 {
     free(data_);
+}
+
+void ConfigFile::write(char const *path)
+{
+    if (!sorted_)
+        sort();
+    FILE *f = fopen(path, "wb");
+    if (!f) goto error;
+    try {
+        char const *sec = "";
+        std::vector<Var>::const_iterator i = vars_.begin(), e = vars_.end();
+        for (; i != e; ++i) {
+            Var v = *i;
+            if (strcmp(v.sec, sec)) {
+                fprintf(f, "[%s]\n", v.sec);
+                sec = v.sec;
+            }
+            fprintf(f, "%s = %s\n", v.key, v.val);
+        }
+    } catch (...) {
+        fclose(f);
+        throw;
+    }
+    return;
+error:
+    warn("Could not write config file '%s'", path);
+    return;
 }
 
 void ConfigFile::dump()
@@ -284,21 +312,14 @@ void ConfigFile::sort()
     }
     std::vector<Var>::iterator b = vars_.begin(), e = vars_.end(), i, o;
     std::stable_sort(b, e, ConfigVarCmp());
-    for (i = b + 1; i != e; ++i) {
-        if (varEq(*i, *(i - 1)))
-            break;
-    }
-    if (i != e) {
-        o = i - 1;
-        while (i != e) {
-            do ++i;
-            while (i != e && varEq(*i, *(i - 1)));
-            if ((i - 1)->val) {
-                *o = *(i - 1);
-                ++o;
-            }
+    for (o = b, i = b; i != e; ) {
+        do ++i;
+        while (i != e && varEq(*i, *(i - 1)));
+        if ((i - 1)->val) {
+            *o = *(i - 1);
+            ++o;
         }
-        vars_.resize(o - b);
     }
+    vars_.resize(o - b);
     sorted_ = true;
 };
