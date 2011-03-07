@@ -5,17 +5,17 @@
 #include <assert.h>
 #include <stdio.h>
 #include "SDL_opengl.h"
-#include "type/rastertext.hpp"
 #include "graphics/video.hpp"
 
-const float kPi = 4.0f * std::atan(1.0f);
-const float World::kFrameTime = World::kFrameTicks * 0.001f;
-
-const float kGridSpacing = 2.0f;
-const int kGridSize = 8;
+static const unsigned int LAG_THRESHOLD = 1000;
+static const unsigned int FRAME_TICKS = 10;
+const float World::kFrameTime = FRAME_TICKS * 0.001f;
+static const float kPi = 4.0f * std::atan(1.0f);
+static const float kGridSpacing = 2.0f;
+static const int kGridSize = 8;
 
 World::World()
-    : frameNum_(0), objCount_(0), player_(0),
+    : initted_(false), frameNum_(0), objCount_(0), player_(0),
       playerX_(0.0f), playerY_(0.0f), playerFace_(0.0f)
 { }
 
@@ -133,6 +133,7 @@ void World::draw()
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
 
+/*
     static RasterText *t = NULL;
     if (!t) {
         t = new RasterText();
@@ -165,9 +166,29 @@ void World::draw()
     glTranslatef(10.0f, 10.0f, 0.0f);
     t->draw();
     glPopAttrib();
+*/
 }
 
-void World::update()
+void World::update(unsigned int ticks)
+{
+    if (!initted_) {
+        initted_ = true;
+        tickref_ = ticks;
+    } else {
+        unsigned int delta = ticks - tickref_, frames;
+        if (delta > LAG_THRESHOLD) {
+            tickref_ = ticks;
+            advanceFrame();
+        } else if (delta >= FRAME_TICKS) {
+            frames = delta / FRAME_TICKS;
+            tickref_ += frames * FRAME_TICKS;
+            while (frames--)
+                advanceFrame();
+        }
+    }
+}
+
+void World::advanceFrame()
 {
     frameNum_ += 1;
     unsigned int c = objCount_;

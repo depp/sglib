@@ -7,7 +7,7 @@
 class Texture {
     template<class T> friend class RefT;
 public:
-    template<class T=Texture>
+    template<class T>
     class RefT {
         template<class TO> friend class RefT;
     public:
@@ -22,9 +22,21 @@ public:
             : ptr_(t)
         { if (ptr_) ptr_->refcount_++; }
 
+        RefT(RefT const &r) : ptr_(r.ptr_)
+        { if (ptr_) ptr_->refcount_++; }
+
         template<class TO>
         RefT(RefT<TO> const &r) : ptr_(r.ptr_)
         { if (ptr_) ptr_->refcount_++; }
+
+        RefT &operator=(RefT const &r) {
+            if (ptr_)
+                ptr_->refcount_--;
+            ptr_ = r.ptr_;
+            if (ptr_)
+                ptr_->refcount_++;
+            return *this;
+        }
 
         template<class TO>
         RefT &operator=(RefT<TO> const &r) {
@@ -36,7 +48,7 @@ public:
             return *this;
         }
 
-        T const *operator->() const
+        T *operator->() const
         { return ptr_; }
 
         operator bool() const
@@ -67,6 +79,8 @@ public:
     { return (iscolor_ ? 3 : 1) + (hasalpha_ ? 1 : 0); }
     unsigned int rowbytes()
     { return (twidth_ * channels() + 3) & ~3; }
+    void markDirty()
+    { loaded_ = false; }
 
     /* Const functions: callable through a Texture::Ref.  */
     virtual std::string name() const = 0;
