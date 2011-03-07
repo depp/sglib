@@ -5,6 +5,7 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 
 static PangoContext *getSharedContext()
 {
@@ -64,6 +65,7 @@ bool RasterText::load()
     unsigned int twidth = this->twidth(), theight = this->theight();
     unsigned int stride = rowbytes();
     void *ptr = buf();
+    memset(ptr, 0, theight * stride);
     float xscale = 1.0f / twidth, yscale = 1.0f / theight;
     int xoff = (twidth - bounds.width) / 2;
     int yoff = (theight - bounds.height) / 2;
