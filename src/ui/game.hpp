@@ -10,25 +10,19 @@ struct KeyEvent;
 class Game : public Screen {
 public:
     Game()
-        : tickref_(0), world_(0),
-          havefps_(false), framecount_(0), framerate_(0)
+        : world_(0)
     { }
     virtual ~Game();
 
     virtual void handleEvent(Event const &evt);
-    virtual void draw(unsigned int ticks);
+    virtual void update(unsigned int ticks);
+    virtual void draw();
 
 private:
     void handleKey(KeyEvent const &evt);
-    void initWorld();
 
-    unsigned int tickref_;
     World *world_;
     Player::Input input_;
-    bool havefps_;
-    unsigned int frametick_[64];
-    unsigned int framecount_;
-    RasterText *framerate_;
 };
 
 }

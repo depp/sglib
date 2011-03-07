@@ -9,7 +9,7 @@ class Object {
 public:
     virtual ~Object();
     virtual void trace(std::vector<LeafObject *> &hits, UI::Point pt) = 0;
-    virtual void draw(unsigned int ticks) = 0;
+    virtual void draw() = 0;
 };
 
 }

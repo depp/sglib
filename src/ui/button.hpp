@@ -14,7 +14,7 @@ public:
     void setLoc(int x, int y);
     void setText(std::string const &text);
 
-    virtual void draw(unsigned int ticks);
+    virtual void draw();
 
     // virtual void mouseMoved(MouseEvent const &evt);
     virtual void mouseEntered(MouseEvent const &evt);
@@ -25,7 +25,7 @@ public:
     void setAction(Action const &action);
 
 private:
-    RasterText title_;
+    RasterText::Ref title_;
     bool state_, hover_;
     int button_;
     Action action_;

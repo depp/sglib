@@ -4,9 +4,7 @@ class Object;
 
 class World {
 public:
-    static const unsigned int kFrameTicks = 10;
     static const float kFrameTime;
-    static const unsigned int kMaxObjects = 256;
 
     World();
     ~World();
@@ -14,19 +12,23 @@ public:
     void addObject(Object *obj);
     void setPlayer(Object *obj);
     void draw();
-    void update();
+    void update(unsigned int ticks);
 
     float gameTime() const { return kFrameTime * frameNum_; }
     void getCamera(float camera[3]);
 
 private:
+    static const unsigned int kMaxObjects = 256;
+
+    void advanceFrame();
     void drawSky();
     void drawGround();
 
     World(const World &);
     World &operator=(const World &);
 
-    unsigned int frameNum_, objCount_;
+    bool initted_;
+    unsigned int tickref_, frameNum_, objCount_;
     Object *objects_[kMaxObjects], *player_;
     float playerX_, playerY_, playerFace_;
 };

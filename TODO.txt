@@ -4,23 +4,38 @@ TODO List
 - User interface (menus, HUD)
     - Implement a yes/no dialog for quitting in the middle of a game
     - Access the menu and still return to the game afterwards
+    - Rewrite menu using console fonts
+    - Widget can't subclass scene object if embedded in console (probably)
 - Graphics improvements
-    - Limit framerate
     - Make the hit testing use 3D
-    - Texture support
     - Refine hit testing, use collision models
     - Fullscreen mode, resolution changes
+    - Write bitmap character (console font) drawing class
 - Resource manager
-    - Load textures from PNG
-    - Load textures from JPEG
+    - Load files from correct locations
+    - Sanitize file paths
     - Load files from ZIP archives
-    - Run in separate thread
 - Audio support
     - Play WAV sound effects
     - Play Vorbis background music
-    - Play MIDI background music, Fluidsynth?
 - Config files
     - Format: like Git? JSON?
     - Change key bindings
+- Testing
+    - Make a sample "test image" PNG file
+    - Make a sample WAV file
+    - Make a sample Vorbis file
 
 Note a conspicuous lack of actual GAME PROGRAMMING on this list.
+
+Future improvements
+-------------------
+
+- Graphics improvements
+    - Mip mapping
+    - Control mag / min filters
+- Resource manager
+    - Run in separate thread
+    - Load JPEG
+- Audio support
+    - Play MIDI background music, Fluidsynth?

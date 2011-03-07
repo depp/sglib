@@ -4,6 +4,7 @@
 UI::Button::Button()
     : title_(), state_(false), hover_(false), button_(-1)
 {
+    title_ = RasterText::create();
     bounds_.width = 150;
     bounds_.height = 30;
 }
@@ -19,10 +20,10 @@ void UI::Button::setLoc(int x, int y)
 
 void UI::Button::setText(std::string const &text)
 {
-    title_.setText(text);
+    title_->setText(text);
 }
 
-void UI::Button::draw(unsigned int ticks)
+void UI::Button::draw()
 {
     glPushAttrib(GL_COLOR_BUFFER_BIT | GL_CURRENT_BIT);
 
@@ -68,8 +69,8 @@ void UI::Button::draw(unsigned int ticks)
     glPushMatrix();
     glTranslatef(x1 + 5.0f, y1 + 10.0f, 0.0f);
     glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    title_.draw();
+    glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_COLOR);
+    title_->draw();
     glPopMatrix();
 
     glPopAttrib();

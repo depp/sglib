@@ -5,17 +5,7 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <stdio.h>
-
-static unsigned int round_up_pow2(unsigned int x)
-{
-    x -= 1;
-    x |= x >> 16;
-    x |= x >> 8;
-    x |= x >> 4;
-    x |= x >> 2;
-    x |= x >> 1;
-    return x + 1;
-}
+#include <string.h>
 
 static PangoContext *getSharedContext()
 {
@@ -35,9 +25,11 @@ static PangoContext *getSharedContext()
     }
     return context;
 }
-
+/*
 void RasterText::loadImage(void **data, unsigned int *width,
                            unsigned int *height)
+*/
+bool RasterText::load()
 {
     PangoContext *context = getSharedContext();
     PangoLayout *layout = pango_layout_new(context);
@@ -69,8 +61,11 @@ void RasterText::loadImage(void **data, unsigned int *width,
     vx2_ = bounds.x + bounds.width + lxoff;
     vy1_ = baseline - bounds.y - bounds.height;
     vy2_ = baseline - bounds.y;
-    unsigned int twidth = round_up_pow2(bounds.width);
-    unsigned int theight = round_up_pow2(bounds.height);
+    alloc(bounds.width, bounds.height, false, false);
+    unsigned int twidth = this->twidth(), theight = this->theight();
+    unsigned int stride = rowbytes();
+    void *ptr = buf();
+    memset(ptr, 0, theight * stride);
     float xscale = 1.0f / twidth, yscale = 1.0f / theight;
     int xoff = (twidth - bounds.width) / 2;
     int yoff = (theight - bounds.height) / 2;
@@ -78,11 +73,6 @@ void RasterText::loadImage(void **data, unsigned int *width,
     tx2_ = (xoff + bounds.width) * xscale;
     ty1_ = (yoff + bounds.height) * yscale;
     ty2_ = yoff * yscale;
-    unsigned int stride =
-        cairo_format_stride_for_width(CAIRO_FORMAT_A8, twidth);
-    void *ptr = calloc(stride, theight);
-    if (!ptr)
-        return;
     cairo_surface_t *surf = cairo_image_surface_create_for_data(
         static_cast<unsigned char *>(ptr), CAIRO_FORMAT_A8,
         twidth, theight, stride);
@@ -94,7 +84,5 @@ void RasterText::loadImage(void **data, unsigned int *width,
     g_object_unref(layout);
     cairo_destroy(cr);
     cairo_surface_destroy(surf);
-    *data = ptr;
-    *width = twidth;
-    *height = theight;
+    return true;
 }

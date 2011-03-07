@@ -3,6 +3,7 @@
 #include "game.hpp"
 #include "event.hpp"
 #include "graphics/video.hpp"
+#include "graphics/texturefile.hpp"
 #include "SDL_opengl.h"
 #include <stdio.h>
 
@@ -26,7 +27,7 @@ void UI::Menu::handleEvent(Event const &evt)
     }
 }
 
-void UI::Menu::draw(unsigned int ticks)
+void UI::Menu::update(unsigned int ticks)
 {
     if (!initted_) {
         initted_ = true;
@@ -41,6 +42,8 @@ void UI::Menu::draw(unsigned int ticks)
             menu_[i].setLoc(145, 345 - 50 * i);
             scene_.addObject(&menu_[i]);
         }
+        texture_ = TextureFile::open("cp437.png");
+        texture2_ = TextureFile::open("cp437.png");
         menu_[0].setAction(Action(this, static_cast<Action::Method>
                                   (&Menu::newGame)));
         menu_[1].setAction(Action(this, static_cast<Action::Method>
@@ -50,7 +53,10 @@ void UI::Menu::draw(unsigned int ticks)
         menu_[3].setAction(Action(this, static_cast<Action::Method>
                                   (&Menu::quit)));
     }
+}
 
+void UI::Menu::draw()
+{
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 
@@ -60,7 +66,18 @@ void UI::Menu::draw(unsigned int ticks)
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 
-    scene_.draw(ticks);
+    scene_.draw();
+
+    glPushAttrib(GL_ENABLE_BIT);
+    glEnable(GL_TEXTURE_2D);
+    texture_->bind();
+    glBegin(GL_TRIANGLE_STRIP);
+    glTexCoord2f(0.0f, 1.0f); glVertex2f(100.0f, 100.0f);
+    glTexCoord2f(1.0f, 1.0f); glVertex2f(228.0f, 100.0f);
+    glTexCoord2f(0.0f, 0.0f); glVertex2f(100.0f, 228.0f);
+    glTexCoord2f(1.0f, 0.0f); glVertex2f(228.0f, 228.0f);
+    glEnd();
+    glPopAttrib();
 }
 
 UI::Widget *UI::Menu::traceMouse(UI::Point pt)

@@ -4,6 +4,7 @@
 #include "button.hpp"
 #include "mousemanager.hpp"
 #include "scene/group.hpp"
+#include "graphics/texture.hpp"
 namespace UI {
 
 class Menu : public Screen, private MouseManager {
@@ -12,7 +13,8 @@ public:
     virtual ~Menu();
 
     virtual void handleEvent(Event const &evt);
-    virtual void draw(unsigned int ticks);
+    virtual void update(unsigned int ticks);
+    virtual void draw();
 
 private:
     virtual Widget *traceMouse(Point pt);
@@ -25,6 +27,7 @@ private:
     bool initted_;
     Scene::Group scene_;
     Button menu_[4];
+    Texture::Ref texture_, texture2_;
 };
 
 }

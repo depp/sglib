@@ -1,17 +1,12 @@
 #include "SDL.h"
-// #include "SDL_opengl.h"
-// #include <cmath>
-// #include "game/world.hpp"
-// #include "game/obstacle.hpp"
-// #include "graphics/model.hpp"
-// #include "game/player.hpp"
 #include "rand.hpp"
 #include "ui/menu.hpp"
 #include "ui/event.hpp"
 #include "graphics/video.hpp"
+#include "graphics/texture.hpp"
 
-static const int MAX_FPS = 100;
-static const int MIN_FRAMETIME = 1000 / MAX_FPS;
+static const unsigned int MAX_FPS = 100;
+static const unsigned int MIN_FRAMETIME = 1000 / MAX_FPS;
 
 int main(int argc, char *argv[])
 {
@@ -90,7 +85,10 @@ int main(int argc, char *argv[])
             ticks = SDL_GetTicks();
         } else
             lastticks = ticks;
-        UI::Screen::getActive()->draw(ticks);
+        UI::Screen *s = UI::Screen::getActive();
+        s->update(ticks);
+        Texture::updateAll();
+        s->draw();
         Video::update();
     }
 

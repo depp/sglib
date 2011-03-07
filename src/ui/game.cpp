@@ -6,8 +6,6 @@
 #include "event.hpp"
 #include "SDL.h"
 
-const unsigned int LAG_THRESHOLD = 1000;
-
 UI::Game::~Game()
 {
     if (world_)
@@ -57,25 +55,36 @@ void UI::Game::handleKey(UI::KeyEvent const &evt)
     }
 }
 
-void UI::Game::draw(unsigned int ticks)
+void UI::Game::update(unsigned int ticks)
 {
-    unsigned int curfr, oldref;
     if (!world_) {
-        tickref_ = ticks;
-        initWorld();
-    } else {
-        unsigned int delta = ticks - tickref_, frames;
-        if (delta > LAG_THRESHOLD) {
-            world_->update();
-            tickref_ = ticks;
-        } else if (delta >= World::kFrameTicks) {
-            frames = delta / World::kFrameTicks;
-            tickref_ += frames * World::kFrameTicks;
-            while (frames--)
-                world_->update();
-        }
+        world_ = new World;
+        World &w = *world_;
+
+        Object *obj;
+        obj = new Obstacle(5.0f, 5.0f, 0.0f, 2.0f,
+                           Model::kCube, Color::olive(), Color::yellow());
+        w.addObject(obj);
+        obj = new Obstacle(5.0f, -5.0f, 22.5f, 3.0f,
+                           Model::kPyramid, Color::maroon(), Color::red());
+        w.addObject(obj);
+        obj = new Obstacle(-5.0f, 5.0f, 67.5f, 0.5f,
+                           Model::kCube, Color::olive(), Color::yellow());
+        w.addObject(obj);
+        obj = new Obstacle(-5.0f, -5.0f, 45.0f, 1.5f,
+                           Model::kPyramid, Color::maroon(), Color::red());
+        w.addObject(obj);
+        obj = new Player(0.0f, 0.0f, 0.0f, input_);
+        w.addObject(obj);
+        w.setPlayer(obj);
     }
+    world_->update(ticks);
+}
+
+void UI::Game::draw()
+{
     world_->draw();
+    /*
     curfr = framecount_;
     if (curfr == 64) {
         curfr = 0;
@@ -84,9 +93,9 @@ void UI::Game::draw(unsigned int ticks)
     framecount_ = curfr + 1;
     if (havefps_) {
         oldref = frametick_[curfr];
-        frametick_[curfr] = ticks;
-        float rate = 64.0e3f / (ticks - oldref);
-        float ms = (ticks - oldref) / 64.0f;
+        frametick_[curfr] = framecur_;
+        float rate = 64.0e3f / (framecur_ - oldref);
+        float ms = (framecur_ - oldref) / 64.0f;
         char buf[32];
         snprintf(buf, sizeof(buf), "%.1f FPS (%.1f ms)", rate, ms);
         if (!framerate_) {
@@ -113,27 +122,5 @@ void UI::Game::draw(unsigned int ticks)
         framerate_->draw();
         glPopAttrib();
     }
-}
-
-void UI::Game::initWorld()
-{
-    world_ = new World;
-    World &w = *world_;
-
-    Object *obj;
-    obj = new Obstacle(5.0f, 5.0f, 0.0f, 2.0f,
-                       Model::kCube, Color::olive(), Color::yellow());
-    w.addObject(obj);
-    obj = new Obstacle(5.0f, -5.0f, 22.5f, 3.0f,
-                       Model::kPyramid, Color::maroon(), Color::red());
-    w.addObject(obj);
-    obj = new Obstacle(-5.0f, 5.0f, 67.5f, 0.5f,
-                       Model::kCube, Color::olive(), Color::yellow());
-    w.addObject(obj);
-    obj = new Obstacle(-5.0f, -5.0f, 45.0f, 1.5f,
-                       Model::kPyramid, Color::maroon(), Color::red());
-    w.addObject(obj);
-    obj = new Player(0.0f, 0.0f, 0.0f, input_);
-    w.addObject(obj);
-    w.setPlayer(obj);
+    */
 }
