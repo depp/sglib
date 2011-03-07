@@ -130,7 +130,7 @@ void Texture::alloc(unsigned int width, unsigned int height,
         twidth = round_up_pow2(width), theight = round_up_pow2(height),
         chan = (iscolor ? 3 : 1) + (hasalpha ? 1 : 0),
         rb = (twidth * chan + 3) & ~3;
-    size_t sz = (size_t)rb * height;
+    size_t sz = (size_t)rb * theight;
     if (bufsz_ != sz) {
         void *buf = malloc(sz);
         if (!buf) throw std::bad_alloc();
