@@ -59,6 +59,9 @@ private:
     char *data_;
     size_t datasz_, dataalloc_;
     bool sorted_;
+
+    ConfigFile(ConfigFile const &);
+    ConfigFile &operator=(ConfigFile const &);
 };
 
 #endif
