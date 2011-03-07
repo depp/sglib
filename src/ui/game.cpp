@@ -84,7 +84,6 @@ void UI::Game::update(unsigned int ticks)
 void UI::Game::draw()
 {
     world_->draw();
-    world_->draw();
     /*
     curfr = framecount_;
     if (curfr == 64) {
