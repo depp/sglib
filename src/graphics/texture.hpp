@@ -76,6 +76,9 @@ public:
     unsigned int tex() const { return tex_; }
     bool loaded() const { return loaded_; }
 
+    /* This is safe to call even on NULL textures.  */
+    void bind() const;
+
 protected:
     /* Register texture to be loaded and unloaded in updateAll.  The
        texture may be deleted by updateAll.  */
