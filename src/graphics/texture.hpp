@@ -66,6 +66,7 @@ private:
     Texture &operator=(Texture const &);
 
     void *buf_;
+    size_t bufsz_;
     unsigned int width_, height_;
     unsigned int twidth_, theight_;
     bool iscolor_, hasalpha_;

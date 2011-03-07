@@ -7,7 +7,8 @@
 #include <vector>
 
 Texture::Texture()
-    : buf_(0), width_(0), height_(0), twidth_(0), theight_(0),
+    : buf_(0), bufsz_(0),
+      width_(0), height_(0), twidth_(0), theight_(0),
       iscolor_(false), hasalpha_(false),
       refcount_(0), tex_(0), loaded_(false), registered_(false)
 { }
@@ -129,10 +130,14 @@ void Texture::alloc(unsigned int width, unsigned int height,
         twidth = round_up_pow2(width), theight = round_up_pow2(height),
         chan = (iscolor ? 3 : 1) + (hasalpha ? 1 : 0),
         rb = (width * chan + 3) & ~3;
-    void *buf = malloc(rb * height);
-    if (!buf) throw std::bad_alloc();
-    if (buf_) free(buf);
-    buf_ = buf;
+    size_t sz = (size_t)rb * height;
+    if (bufsz_ != sz) {
+        void *buf = malloc(sz);
+        if (!buf) throw std::bad_alloc();
+        if (buf_) free(buf);
+        buf_ = buf;
+        bufsz_ = sz;
+    }
     width_ = width;
     height_ = height;
     twidth_ = twidth;
