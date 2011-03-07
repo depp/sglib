@@ -41,6 +41,9 @@ public:
         operator bool() const
         { return ptr_; }
 
+        void clear()
+        { ptr_ = 0; }
+
     private:
         T *ptr_;
     };
