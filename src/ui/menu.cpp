@@ -72,10 +72,10 @@ void UI::Menu::draw()
     glEnable(GL_TEXTURE_2D);
     glBindTexture(GL_TEXTURE_2D, texture_->tex());
     glBegin(GL_TRIANGLE_STRIP);
-    glTexCoord2f(0.0f, 0.0f); glVertex2f(100.0f, 100.0f);
-    glTexCoord2f(1.0f, 0.0f); glVertex2f(228.0f, 100.0f);
-    glTexCoord2f(0.0f, 1.0f); glVertex2f(100.0f, 228.0f);
-    glTexCoord2f(1.0f, 1.0f); glVertex2f(228.0f, 228.0f);
+    glTexCoord2f(0.0f, 1.0f); glVertex2f(100.0f, 100.0f);
+    glTexCoord2f(1.0f, 1.0f); glVertex2f(228.0f, 100.0f);
+    glTexCoord2f(0.0f, 0.0f); glVertex2f(100.0f, 228.0f);
+    glTexCoord2f(1.0f, 0.0f); glVertex2f(228.0f, 228.0f);
     glEnd();
     glPopAttrib();
 }
