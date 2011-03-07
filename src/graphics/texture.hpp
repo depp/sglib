@@ -6,37 +6,9 @@
 class Texture {
     friend class Ref;
 public:
-    class Source {
-    public:
-        /* The name for each source should be unique.  Two sources
-           with the same name will be combined into one.  */
-        Source(std::string const &name) : name_(name) { }
-        virtual ~Source();
-        /* Load data into the given texture.  Return false if there is
-           an error.  */
-        virtual bool load(Texture &tex) = 0;
-        std::string const &name() const { return name_; }
-    private:
-        std::string name_;
-        Source(Source const &);
-        Source &operator=(Source const &);
-    };
-
-    class DummySource : public Source {
-    public:
-        DummySource(std::string const &name, Color c1, Color c2)
-            : Source(name), c1_(c1), c2_(c2)
-        { }
-        virtual ~DummySource();
-        virtual bool load(Texture &tex);
-    private:
-        Color c1_, c2_;
-    };
-        
-
     class Ref {
     public:
-        Ref() : ptr_(&nullTexture) { ptr_->refcount_++; }
+        Ref();
         ~Ref() { ptr_->refcount_--; }
         explicit Ref(Texture *t) : ptr_(t) { ptr_->refcount_++; }
         Ref(Ref const &r) : ptr_(r.ptr_) { ptr_->refcount_++; }
@@ -51,11 +23,15 @@ public:
         Texture *ptr_;
     };
 
-    static Ref open(Source *src);
+    Texture();
+    virtual ~Texture();
+
+    /* Load all textures with active references, unload all textures
+       without active references.  */
     static void updateAll();
 
-    /* Non-const functions: used by subclasses of Texture::Source to
-       fill the texture buffer in the "load" method.  */
+    /* Non-const functions: used by subclasses of Texture to fill the
+       texture buffer in the "load" method.  */
     void *buf() { return buf_; }
     void alloc(unsigned int width, unsigned int height,
                bool iscolor, bool hasalpha);
@@ -65,7 +41,7 @@ public:
     { return (twidth_ * channels() + 3) & ~3; }
 
     /* Const functions: callable through a Texture::Ref.  */
-    std::string const &name() const { return src_->name(); }
+    virtual std::string name() const = 0;
     bool width() const { return width_; }
     bool height() const { return height_; }
     bool twidth() const { return twidth_; }
@@ -76,24 +52,26 @@ public:
     unsigned int tex() const { return tex_; }
     bool loaded() const { return loaded_; }
 
+protected:
+    /* Register texture to be loaded and unloaded in updateAll.  The
+       texture may be deleted by updateAll.  */
+    void registerTexture();
+    /* Return false on failure.  */
+    virtual bool load() = 0;
+
 private:
-    void load();
-    void unload();
-    Texture(Source *src);
-    ~Texture();
+    void loadTex();
+    void unloadTex();
     Texture(Texture const &);
     Texture &operator=(Texture const &);
 
-    static Texture nullTexture;
-
-    Source *src_;
     void *buf_;
     unsigned int width_, height_;
     unsigned int twidth_, theight_;
     bool iscolor_, hasalpha_;
     unsigned int refcount_;
-    unsigned int tex_; // set nonzero on success or failure
-    bool loaded_; // set true only on success
+    unsigned int tex_;
+    bool loaded_, isnull_, registered_;
 };
 
 #endif

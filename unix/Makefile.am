@@ -19,6 +19,8 @@ game_SOURCES = \
 	../src/game/world.cpp \
 	../src/game/world.hpp \
 	../src/graphics/color.hpp \
+	../src/graphics/dummytexture.cpp \
+	../src/graphics/dummytexture.hpp \
 	../src/graphics/model.cpp \
 	../src/graphics/model.hpp \
 	../src/graphics/texture.cpp \

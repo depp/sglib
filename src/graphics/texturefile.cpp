@@ -4,18 +4,51 @@
 #include <err.h>
 #include <stdint.h>
 #include <png.h>
+#include <set>
+#include <memory>
 #include "SDL_opengl.h"
 
 static const std::string filePrefix("file:");
 
+struct TextureFileCompare {
+    bool operator()(TextureFile *x, TextureFile *y)
+    { return x->path() < y->path(); }
+};
+
+typedef std::set<TextureFile *, TextureFileCompare> TextureFileSet;
+static TextureFileSet textureFiles;
+
+Texture::Ref TextureFile::open(std::string const &path)
+{
+    TextureFile *tp;
+    std::auto_ptr<TextureFile> t(new TextureFile(path));
+    std::pair<TextureFileSet::iterator, bool> r =
+        textureFiles.insert(t.get());
+    if (r.second) {
+        tp = t.release();
+        tp->registerTexture();
+    } else
+        tp = *r.first;
+    return Ref(tp);
+}
+
 TextureFile::TextureFile(std::string const &path)
-    : Source(filePrefix + path), path_(path)
+    : path_(path)
 { }
 
 TextureFile::~TextureFile()
-{ }
+{
+    TextureFileSet::iterator i = textureFiles.find(this);
+    if (i != textureFiles.end() && *i == this)
+        textureFiles.erase(i);
+}
 
-bool TextureFile::load(Texture &tex)
+std::string TextureFile::name() const
+{
+    return filePrefix + path_;
+}
+
+bool TextureFile::load()
 {
     std::string::const_iterator
         b = path_.begin(), p = path_.end(), d = p, e = p;
@@ -28,12 +61,12 @@ bool TextureFile::load(Texture &tex)
     }
     std::string suffix(d, e);
     if (suffix == "png")
-        return loadPNG(tex);
+        return loadPNG();
     return false;
 }
 
 // FIXME error handling
-bool TextureFile::loadPNG(Texture &tex)
+bool TextureFile::loadPNG()
 {
     png_structp pngp = NULL;
     png_infop infop = NULL;
@@ -84,12 +117,12 @@ bool TextureFile::loadPNG(Texture &tex)
     if (depth > 8)
         png_set_strip_16(pngp);
 
-    tex.alloc(width, height, color, alpha);
-    twidth = tex.twidth();
-    theight = tex.theight();
-    chan = tex.channels();
-    rowbytes = tex.rowbytes();
-    data = reinterpret_cast<unsigned char *>(tex.buf());
+    alloc(width, height, color, alpha);
+    twidth = this->twidth();
+    theight = this->theight();
+    chan = channels();
+    rowbytes = this->rowbytes();
+    data = reinterpret_cast<unsigned char *>(buf());
     if (width * chan < rowbytes) {
         for (i = 0; i < height; ++i)
             memset(data + rowbytes * i + width * chan, 0,

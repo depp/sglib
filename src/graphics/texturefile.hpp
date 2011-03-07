@@ -2,16 +2,19 @@
 #define GRAPHICS_TEXTUREFILE_HPP
 #include "texture.hpp"
 
-class TextureFile : public Texture::Source {
+class TextureFile : public Texture {
 public:
-    static Texture::Ref open(std::string const &path)
-    { return Texture::open(new TextureFile(path)); }
+    static Texture::Ref open(std::string const &path);
     virtual ~TextureFile();
-    virtual bool load(Texture &tex);
+    virtual std::string name() const;
+    std::string const &path() const { return path_; }
+
+protected:
+    virtual bool load();
 
 private:
     TextureFile(std::string const &path);
-    bool loadPNG(Texture &tex);
+    bool loadPNG();
     std::string path_;
 };
 

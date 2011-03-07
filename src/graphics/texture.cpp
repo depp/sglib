@@ -1,91 +1,71 @@
 #include "texture.hpp"
+#include "dummytexture.hpp"
 #include "SDL_opengl.h"
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <set>
+#include <vector>
 
-Texture::Source::~Source() { }
-
-Texture::DummySource::~DummySource()
+Texture::Texture()
+    : buf_(0), width_(0), height_(0), twidth_(0), theight_(0),
+      iscolor_(false), hasalpha_(false),
+      refcount_(0), tex_(0), loaded_(false), registered_(false)
 { }
 
-bool Texture::DummySource::load(Texture &tex)
+Texture::~Texture()
 {
-    unsigned char *buf, *p, c1[3], c2[3];
-    unsigned int w = 16, h = 16, rowbytes, x, y;
-    memcpy(c1, c1_.c, sizeof(c1));
-    memcpy(c2, c2_.c, sizeof(c2));
-    tex.alloc(w, h, true, false);
-    buf = reinterpret_cast<unsigned char *>(tex.buf());
-    rowbytes = tex.rowbytes();
-    for (y = 0; y < h / 2; ++y) {
-        p = buf + y * rowbytes;
-        for (x = 0; x < w / 2; ++x) {
-            p[x*3+0] = c1[0];
-            p[x*3+1] = c1[1];
-            p[x*3+2] = c1[2];
-        }
-        for (; x < w; ++x) {
-            p[x*3+0] = c2[0];
-            p[x*3+1] = c2[1];
-            p[x*3+2] = c2[2];
-        }
-    }
-    for (; y < h; ++y) {
-        p = buf + y * rowbytes;
-        for (x = 0; x < w / 2; ++x) {
-            p[x*3+0] = c2[0];
-            p[x*3+1] = c2[1];
-            p[x*3+2] = c2[2];
-        }
-        for (; x < w; ++x) {
-            p[x*3+0] = c1[0];
-            p[x*3+1] = c1[1];
-            p[x*3+2] = c1[2];
-        }
-    }
-    return true;
+    free(buf_);
 }
 
-struct TextureCompare {
-    bool operator()(Texture *x, Texture *y)
-    { return x->name() < y->name(); }
-};
+static std::vector<Texture *> textures;
 
-typedef std::set<Texture *, TextureCompare> TextureSet; 
-static TextureSet textures;
-
-Texture::Ref Texture::open(Texture::Source *src)
+void Texture::updateAll()
 {
-    Texture *t = 0;
+    std::vector<Texture *>::iterator
+        b = textures.begin(), i = b, e = textures.end();
     try {
-        t = new Texture(src);
-        std::pair<TextureSet::iterator, bool> r = textures.insert(t);
-        if (!r.second)
-            delete src;
-        src = 0;
-        return Ref(*r.first);
+        while (i != e) {
+            Texture *t = *i;
+            if (t->refcount_ > 0) {
+                if (!t->tex_)
+                    t->loadTex();
+                ++i;
+            } else {
+                t->unloadTex();
+                delete t;
+                --e;
+                if (i != e)
+                    *i = *e;
+            }
+        }
     } catch (...) {
-        if (t)
-            delete t;
-        if (src)
-            delete src;
+        textures.resize(e - b);
         throw;
     }
+    textures.resize(e - b);
 }
 
-void Texture::load()
+void Texture::registerTexture()
+{
+    if (registered_)
+        return;
+    textures.push_back(this);
+    registered_ = true;
+}
+
+void Texture::loadTex()
 {
     if (loaded_)
+        return;
+    if (tex_)
         fprintf(stderr, "Reloading texture %s\n", name().c_str());
     else
         fprintf(stderr, "Loading texture %s\n", name().c_str());
     bool success = false;
-    success = src_->load(*this);
+    success = load();
     if (success) {
         GLuint tex = 0;
-        if (loaded_)
+        if (tex_ && !isnull_)
             tex = tex_;
         else
             glGenTextures(1, &tex);
@@ -101,48 +81,31 @@ void Texture::load()
                      fmt, GL_UNSIGNED_BYTE, buf_);
         tex_ = tex;
         loaded_ = true;
+        isnull_ = false;
     } else {
         fprintf(stderr, "    failed\n");
-        unload();
-        tex_ = nullTexture.tex_;
+        unloadTex();
+        // Make sure to set loaded_ true before checking if the dummy
+        // texture is loaded, because this might be the dummy texture.
+        loaded_ = true;
+        isnull_ = true;
+        Texture &t = DummyTexture::nullTexture;
+        if (!t.loaded_)
+            t.loadTex();
+        tex_ = t.tex_;
     }
 }
 
-void Texture::unload()
+void Texture::unloadTex()
 {
-    if (!loaded_)
-        return;
-    fprintf(stderr, "Unloading texture %s\n", name().c_str());
-    GLuint tex = tex_;
-    glDeleteTextures(1, &tex);
+    if (tex_ != 0 && !isnull_) {
+        fprintf(stderr, "Unloading texture %s\n", name().c_str());
+        GLuint tex = tex_;
+        glDeleteTextures(1, &tex);
+    }
     tex_ = 0;
     loaded_ = false;
-}
-
-void Texture::updateAll()
-{
-    if (!nullTexture.loaded_) {
-        nullTexture.load();
-        if (!nullTexture.loaded_) {
-            fprintf(stderr, "Could not load null texture!");
-            nullTexture.loaded_ = true;
-        }
-    }
-    TextureSet::iterator i = textures.begin(), e = textures.end(), c;
-    while (i != e) {
-        c = i;
-        ++i;
-        Texture *t = *c;
-        if (t->refcount_ > 0) {
-            if (!t->tex_)
-                t->load();
-        } else {
-            t->unload();
-            textures.erase(c);
-            delete t->src_;
-            delete t;
-        }
-    }
+    isnull_ = false;
 }
 
 unsigned int
@@ -178,18 +141,6 @@ void Texture::alloc(unsigned int width, unsigned int height,
     hasalpha_ = hasalpha;
 }
 
-Texture::Texture(Source *src)
-    : src_(src), buf_(0), width_(0), height_(0),
-      twidth_(0), theight_(0), iscolor_(false), hasalpha_(false),
-      refcount_(0), tex_(0), loaded_(false)
-{ }
-
-Texture::~Texture()
-{
-    free(buf_);
-}
-
-static Texture::DummySource nullSource
-("<null>", Color(255, 0, 255), Color(32, 32, 32));
-
-Texture Texture::nullTexture(&nullSource);
+Texture::Ref::Ref()
+  : ptr_(&DummyTexture::nullTexture)
+{ ptr_->refcount_++; }
