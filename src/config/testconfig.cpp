@@ -1,4 +1,4 @@
-#include "config.hpp"
+#include "configfile.hpp"
 #include <assert.h>
 #include <err.h>
 #include <stdlib.h>

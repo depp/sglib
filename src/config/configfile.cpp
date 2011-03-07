@@ -1,4 +1,4 @@
-#include "config.hpp"
+#include "configfile.hpp"
 #include <algorithm>
 #include <limits>
 #include <stdlib.h>

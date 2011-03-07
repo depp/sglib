@@ -19,13 +19,13 @@ config.ini : config.ini.in Makefile
 	mv $@.tmp $@
 
 testconfig_SOURCES = \
-	../src/testconfig.cpp \
-	../src/config.cpp \
-	../src/config.hpp
+	../src/config/testconfig.cpp \
+	../src/config/configfile.cpp \
+	../src/config/configfile.hpp
 
 game_SOURCES = \
-	../src/config.cpp \
-	../src/config.hpp \
+	../src/config/configfile.cpp \
+	../src/config/configfile.hpp \
 	../src/game/explosion.cpp \
 	../src/game/explosion.hpp \
 	../src/game/object.cpp \
