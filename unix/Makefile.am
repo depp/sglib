@@ -5,6 +5,10 @@ bin_PROGRAMS = game
 AM_LDFLAGS = @SDL_LIBS@ @PANGOCAIRO_LIBS@
 AM_CPPFLAGS = @warning_cppflags@ -I@srcdir@/../src @SDL_CFLAGS@ @PANGOCAIRO_CFLAGS@
 
+TESTS = testconfig
+
+check_PROGRAMS = testconfig
+
 noinst_SCRIPTS = config.ini
 
 config.ini : config.ini.in Makefile
@@ -14,7 +18,14 @@ config.ini : config.ini.in Makefile
 		$(srcdir)/config.ini.in > $@.tmp
 	mv $@.tmp $@
 
+testconfig_SOURCES = \
+	../src/testconfig.cpp \
+	../src/config.cpp \
+	../src/config.hpp
+
 game_SOURCES = \
+	../src/config.cpp \
+	../src/config.hpp \
 	../src/game/explosion.cpp \
 	../src/game/explosion.hpp \
 	../src/game/object.cpp \
