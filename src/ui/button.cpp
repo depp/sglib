@@ -69,7 +69,7 @@ void UI::Button::draw()
     glPushMatrix();
     glTranslatef(x1 + 5.0f, y1 + 10.0f, 0.0f);
     glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_COLOR);
     title_->draw();
     glPopMatrix();
 
