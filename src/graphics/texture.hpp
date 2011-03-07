@@ -84,10 +84,10 @@ public:
 
     /* Const functions: callable through a Texture::Ref.  */
     virtual std::string name() const = 0;
-    bool width() const { return width_; }
-    bool height() const { return height_; }
-    bool twidth() const { return twidth_; }
-    bool theight() const { return theight_; }
+    unsigned int width() const { return width_; }
+    unsigned int height() const { return height_; }
+    unsigned int twidth() const { return twidth_; }
+    unsigned int theight() const { return theight_; }
     bool iscolor() const { return iscolor_; }
     bool hasalpha() const { return hasalpha_; }
     unsigned int refcount() const { return refcount_; }
