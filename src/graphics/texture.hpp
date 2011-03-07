@@ -4,24 +4,48 @@
 #include "color.hpp"
 
 class Texture {
-    friend class Ref;
+    template<class T> friend class RefT;
 public:
-    class Ref {
+    template<class T=Texture>
+    class RefT {
+        template<class TO> friend class RefT;
     public:
-        Ref();
-        ~Ref() { ptr_->refcount_--; }
-        explicit Ref(Texture *t) : ptr_(t) { ptr_->refcount_++; }
-        Ref(Ref const &r) : ptr_(r.ptr_) { ptr_->refcount_++; }
-        Ref &operator=(Ref const &r) {
-            ptr_->refcount_--;
-            (ptr_ = r.ptr_)->refcount_++;
+        RefT()
+            : ptr_(0)
+        { }
+
+        ~RefT()
+        { if (ptr_) ptr_->refcount_--; }
+
+        explicit RefT(T *t)
+            : ptr_(t)
+        { if (ptr_) ptr_->refcount_++; }
+
+        template<class TO>
+        RefT(RefT<TO> const &r) : ptr_(r.ptr_)
+        { if (ptr_) ptr_->refcount_++; }
+
+        template<class TO>
+        RefT &operator=(RefT<TO> const &r) {
+            if (ptr_)
+                ptr_->refcount_--;
+            ptr_ = r.ptr_;
+            if (ptr_)
+                ptr_->refcount_++;
             return *this;
         }
-        Texture const *operator->() const { return ptr_; }
+
+        T const *operator->() const
+        { return ptr_; }
+
+        operator bool() const
+        { return ptr_; }
 
     private:
-        Texture *ptr_;
+        T *ptr_;
     };
+
+    typedef RefT<Texture> Ref;
 
     Texture();
     virtual ~Texture();

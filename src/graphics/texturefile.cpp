@@ -18,7 +18,7 @@ struct TextureFileCompare {
 typedef std::set<TextureFile *, TextureFileCompare> TextureFileSet;
 static TextureFileSet textureFiles;
 
-Texture::Ref TextureFile::open(std::string const &path)
+TextureFile::Ref TextureFile::open(std::string const &path)
 {
     TextureFile *tp;
     std::auto_ptr<TextureFile> t(new TextureFile(path));

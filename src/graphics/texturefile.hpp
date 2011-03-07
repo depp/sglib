@@ -4,7 +4,9 @@
 
 class TextureFile : public Texture {
 public:
-    static Texture::Ref open(std::string const &path);
+    typedef Texture::RefT<TextureFile> Ref;
+
+    static Ref open(std::string const &path);
     virtual ~TextureFile();
     virtual std::string name() const;
     std::string const &path() const { return path_; }

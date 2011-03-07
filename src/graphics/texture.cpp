@@ -145,7 +145,3 @@ void Texture::alloc(unsigned int width, unsigned int height,
     iscolor_ = iscolor;
     hasalpha_ = hasalpha;
 }
-
-Texture::Ref::Ref()
-  : ptr_(&DummyTexture::nullTexture)
-{ ptr_->refcount_++; }
