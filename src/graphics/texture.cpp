@@ -134,7 +134,7 @@ void Texture::alloc(unsigned int width, unsigned int height,
     if (bufsz_ != sz) {
         void *buf = malloc(sz);
         if (!buf) throw std::bad_alloc();
-        if (buf_) free(buf);
+        if (buf_) free(buf_);
         buf_ = buf;
         bufsz_ = sz;
     }
