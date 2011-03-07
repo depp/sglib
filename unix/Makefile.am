@@ -5,6 +5,15 @@ bin_PROGRAMS = game
 AM_LDFLAGS = @SDL_LIBS@ @PANGOCAIRO_LIBS@
 AM_CPPFLAGS = @warning_cppflags@ -I@srcdir@/../src @SDL_CFLAGS@ @PANGOCAIRO_CFLAGS@
 
+noinst_SCRIPTS = config.ini
+
+config.ini : config.ini.in Makefile
+	sed \
+		-e 's,@''builddir@,@abs_top_builddir@,g' \
+		-e 's,@''srcdir@,@abs_top_srcdir@,g' \
+		$(srcdir)/config.ini.in > $@.tmp
+	mv $@.tmp $@
+
 game_SOURCES = \
 	../src/game/explosion.cpp \
 	../src/game/explosion.hpp \

@@ -1,0 +1,2 @@
+[dirs]
+data = "@builddir@:@srcdir@"
