@@ -145,9 +145,3 @@ void Texture::alloc(unsigned int width, unsigned int height,
     iscolor_ = iscolor;
     hasalpha_ = hasalpha;
 }
-
-void Texture::bind() const
-{
-    if (this)
-        glBindTexture(GL_TEXTURE_2D, tex_);
-}

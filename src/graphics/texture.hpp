@@ -2,6 +2,7 @@
 #define GRAPHICS_TEXTURE_HPP
 #include <string>
 #include "color.hpp"
+#include "SDL_opengl.h"
 
 class Texture {
     template<class T> friend class RefT;
@@ -80,7 +81,11 @@ public:
     bool loaded() const { return loaded_; }
 
     /* This is safe to call even on NULL textures.  */
-    void bind() const;
+    void bind() const
+    {
+        if (this)
+            glBindTexture(GL_TEXTURE_2D, tex_);
+    }
 
 protected:
     /* Register texture to be loaded and unloaded in updateAll.  The
