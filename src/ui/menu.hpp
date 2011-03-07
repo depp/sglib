@@ -13,7 +13,8 @@ public:
     virtual ~Menu();
 
     virtual void handleEvent(Event const &evt);
-    virtual void draw(unsigned int ticks);
+    virtual void update(unsigned int ticks);
+    virtual void draw();
 
 private:
     virtual Widget *traceMouse(Point pt);

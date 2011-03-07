@@ -16,7 +16,8 @@ public:
     virtual ~Game();
 
     virtual void handleEvent(Event const &evt);
-    virtual void draw(unsigned int ticks);
+    virtual void update(unsigned int ticks);
+    virtual void draw();
 
 private:
     void handleKey(KeyEvent const &evt);
@@ -28,6 +29,7 @@ private:
     bool havefps_;
     unsigned int frametick_[64];
     unsigned int framecount_;
+    unsigned int framecur_;
     RasterText *framerate_;
 };
 

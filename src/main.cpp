@@ -3,6 +3,7 @@
 #include "ui/menu.hpp"
 #include "ui/event.hpp"
 #include "graphics/video.hpp"
+#include "graphics/texture.hpp"
 
 static const unsigned int MAX_FPS = 100;
 static const unsigned int MIN_FRAMETIME = 1000 / MAX_FPS;
@@ -84,7 +85,10 @@ int main(int argc, char *argv[])
             ticks = SDL_GetTicks();
         } else
             lastticks = ticks;
-        UI::Screen::getActive()->draw(ticks);
+        UI::Screen *s = UI::Screen::getActive();
+        s->update(ticks);
+        Texture::updateAll();
+        s->draw();
         Video::update();
     }
 

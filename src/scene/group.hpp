@@ -7,7 +7,7 @@ class Group : public Object {
 public:
     virtual ~Group();
     virtual void trace(std::vector<LeafObject *> &hits, UI::Point pt);
-    virtual void draw(unsigned int ticks);
+    virtual void draw();
     void addObject(Object *obj);
 
 private:

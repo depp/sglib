@@ -57,9 +57,8 @@ void UI::Game::handleKey(UI::KeyEvent const &evt)
     }
 }
 
-void UI::Game::draw(unsigned int ticks)
+void UI::Game::update(unsigned int ticks)
 {
-    unsigned int curfr, oldref;
     if (!world_) {
         tickref_ = ticks;
         initWorld();
@@ -75,6 +74,12 @@ void UI::Game::draw(unsigned int ticks)
                 world_->update();
         }
     }
+    framecur_ = ticks;
+}
+
+void UI::Game::draw()
+{
+    unsigned int curfr, oldref;
     world_->draw();
     curfr = framecount_;
     if (curfr == 64) {
@@ -84,9 +89,9 @@ void UI::Game::draw(unsigned int ticks)
     framecount_ = curfr + 1;
     if (havefps_) {
         oldref = frametick_[curfr];
-        frametick_[curfr] = ticks;
-        float rate = 64.0e3f / (ticks - oldref);
-        float ms = (ticks - oldref) / 64.0f;
+        frametick_[curfr] = framecur_;
+        float rate = 64.0e3f / (framecur_ - oldref);
+        float ms = (framecur_ - oldref) / 64.0f;
         char buf[32];
         snprintf(buf, sizeof(buf), "%.1f FPS (%.1f ms)", rate, ms);
         if (!framerate_) {
