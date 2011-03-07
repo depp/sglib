@@ -28,7 +28,7 @@ void Texture::updateAll()
         while (i != e) {
             Texture *t = *i;
             if (t->refcount_ > 0) {
-                if (!t->tex_)
+                if (!t->loaded_)
                     t->loadTex();
                 ++i;
             } else {
