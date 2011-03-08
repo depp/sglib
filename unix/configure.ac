@@ -18,6 +18,7 @@ AC_SEARCH_LIBS([glVertex3f], [GL])
 AC_SEARCH_LIBS([gluErrorString], [GLU])
 PKG_PROG_PKG_CONFIG(0.16)
 PKG_CHECK_MODULES([PANGOCAIRO], [pangocairo])
+CHECK_RAGEL_AM([../src/config/configfileread.cpp])
 
 ENABLE_WARNINGS
 

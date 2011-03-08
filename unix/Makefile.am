@@ -1,4 +1,5 @@
 AUTOMAKE_OPTIONS = 1.5 foreign subdir-objects nostdinc
+ACLOCAL_AMFLAGS = -I m4
 
 bin_PROGRAMS = game
 
@@ -10,6 +11,13 @@ TESTS = testconfig
 check_PROGRAMS = testconfig
 
 noinst_SCRIPTS = config.ini
+noinst_PROGRAMS = parseconfig
+
+parseconfig_SOURCES = \
+	../src/config/parseconfig.cpp \
+	../src/config/configfile.cpp \
+	../src/config/configfile.hpp \
+	../src/config/configfileread.cpp
 
 config.ini : config.ini.in Makefile
 	sed \
@@ -26,6 +34,7 @@ testconfig_SOURCES = \
 game_SOURCES = \
 	../src/config/configfile.cpp \
 	../src/config/configfile.hpp \
+	../src/config/configfileread.cpp \
 	../src/game/explosion.cpp \
 	../src/game/explosion.hpp \
 	../src/game/object.cpp \
@@ -81,3 +90,8 @@ game_SOURCES = \
 	../src/ui/widget.hpp
 
 #	../src/type/rastertext_osx.cpp
+
+SUFFIXES = .rl
+
+.rl.cpp:
+	$(RAGEL) $(RAGELFLAGS) -C $< -o $@
