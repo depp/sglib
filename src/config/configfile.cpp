@@ -1,4 +1,5 @@
 #include "configfile.hpp"
+#include "stringarray.hpp"
 #include <algorithm>
 #include <limits>
 #include <stdlib.h>
@@ -233,17 +234,9 @@ bool ConfigFile::getString(char const *sec, char const *key,
 bool ConfigFile::getStringArray(char const *sec, char const *key,
                                 std::vector<std::string> &val)
 {
-    char const *v = getKey(sec, key), *s = v, *p;
+    char const *v = getKey(sec, key);
     if (!v) return false;
-    while (1) {
-        for (p = s; *p && *p != ':'; ++p);
-        if (s != p)
-            val.push_back(std::string(s, p));
-        if (*p == ':')
-            s = p + 1;
-        else
-            break;
-    }
+    parseStringArray(val, v);
     return true;
 }
 

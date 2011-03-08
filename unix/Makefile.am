@@ -17,7 +17,9 @@ parseconfig_SOURCES = \
 	../src/config/parseconfig.cpp \
 	../src/config/configfile.cpp \
 	../src/config/configfile.hpp \
-	../src/config/configfileread.cpp
+	../src/config/configfileread.cpp \
+	../src/config/stringarray.cpp \
+	../src/config/stringarray.hpp
 
 config.ini : config.ini.in Makefile
 	sed \
@@ -29,12 +31,20 @@ config.ini : config.ini.in Makefile
 testconfig_SOURCES = \
 	../src/config/testconfig.cpp \
 	../src/config/configfile.cpp \
-	../src/config/configfile.hpp
+	../src/config/configfile.hpp \
+	../src/config/stringarray.cpp \
+	../src/config/stringarray.hpp
 
 game_SOURCES = \
+	../src/config/config.cpp \
+	../src/config/config.hpp \
 	../src/config/configfile.cpp \
 	../src/config/configfile.hpp \
 	../src/config/configfileread.cpp \
+	../src/config/path.cpp \
+	../src/config/path.hpp \
+	../src/config/stringarray.cpp \
+	../src/config/stringarray.hpp \
 	../src/game/explosion.cpp \
 	../src/game/explosion.hpp \
 	../src/game/object.cpp \
