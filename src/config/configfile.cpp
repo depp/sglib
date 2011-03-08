@@ -16,6 +16,68 @@ ConfigFile::~ConfigFile()
     free(data_);
 }
 
+/*
+elems $ listArray ('\0','\255') (repeat 0) //
+    [(c, 1) | c <- ['\32'..'\126']] //
+    [(c, 0) | c <- "\"\\#;"]
+*/
+static unsigned char const CONFIG_CHAR[256] = {
+    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+    1,1,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,1,1,1,1,
+    1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,1,1,1,
+    1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,
+    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+};
+
+static void writeConfigStr(FILE *f, char const *str)
+{
+    size_t nc = 0, nuq = 0;
+    unsigned char const *s
+        = reinterpret_cast<unsigned char const *>(str), *p;
+    if (!*s)
+        return;
+    for (p = s; *p; ++p) {
+        nc += 1;
+        nuq += CONFIG_CHAR[*p];
+    }
+    if (nuq == nc && s[0] != ' ' && s[nc-1] != ' ') {
+        fwrite(str, 1, nc, f);
+        return;
+    }
+    unsigned char buf[256], c;
+    size_t bufp = 1;
+    buf[0] = '"';
+    for (p = s; (c = *p); ++p) {
+        if (bufp >= sizeof(buf) - 11) {
+            fwrite(buf, 1, bufp, f);
+            bufp = 0;
+        }
+        if (c >= 0x20 && c <= 0x7e) {
+            if (c == '"' || c == '\\') {
+                buf[bufp + 0] = '\\';
+                buf[bufp + 1] = c;
+                bufp += 2;
+            } else {
+                buf[bufp] = c;
+                bufp++;
+            }
+        } else {
+            if (c == '\n') {
+                buf[bufp + 0] = '\\';
+                buf[bufp + 1] = 'n';
+                bufp += 2;
+            }
+            // Other characters silently dropped
+        }
+    }
+    buf[bufp] = '"';
+    bufp += 1;
+    fwrite(buf, 1, bufp, f);
+}
+
 void ConfigFile::write(char const *path)
 {
     if (!sorted_)
@@ -31,7 +93,9 @@ void ConfigFile::write(char const *path)
                 fprintf(f, "[%s]\n", v.sec);
                 sec = v.sec;
             }
-            fprintf(f, "%s = %s\n", v.key, v.val);
+            fprintf(f, v.val ? "%s = " : "%s =", v.key);
+            writeConfigStr(f, v.val);
+            putc('\n', f);
         }
     } catch (...) {
         fclose(f);
