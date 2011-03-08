@@ -5,8 +5,6 @@
 #include <limits.h>
 #include <stdlib.h>
 
-#include <stdio.h>
-
 #ifdef PACKAGE_NAME
 #define SUBDIR ("/" PACKAGE_NAME)
 #else
@@ -53,35 +51,6 @@ static void loadDevConfig()
     config.getString("path", "data.user", userData);
     config.getStringArray("path", "config.global", globalConfig);
     config.getStringArray("path", "data.global", globalData);
-}
-
-static void printPaths(std::vector<std::string> &x)
-{
-    std::vector<std::string>::iterator i = x.begin(), e = x.end();
-    if (i == e)
-        return;
-    while (1) {
-        fputs(i->c_str(), stdout);
-        ++i;
-        if (i == e) break;
-        putc(':', stdout);
-    }
-}
-
-static void dump()
-{
-    fputs("config.user: ", stdout);
-    fputs(userConfig.c_str(), stdout);
-    putc('\n', stdout);
-    fputs("config.global: ", stdout);
-    printPaths(globalConfig);
-    putc('\n', stdout);
-    fputs("data.user: ", stdout);
-    fputs(userData.c_str(), stdout);
-    putc('\n', stdout);
-    fputs("data.global: ", stdout);
-    printPaths(globalData);
-    putc('\n', stdout);
 }
 
 void init()
@@ -150,8 +119,6 @@ void init()
         e = globalData.end();
         for (; i != e; ++i) *i += SUBDIR;
     }
-
-    dump();
 }
 
 }
