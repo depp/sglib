@@ -1,5 +1,5 @@
-#ifndef CONFIG_PATH_HPP
-#define CONFIG_PATH_HPP
+#ifndef SYS_PATH_HPP
+#define SYS_PATH_HPP
 #include <string>
 #include <vector>
 namespace Path {

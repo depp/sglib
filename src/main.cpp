@@ -4,8 +4,8 @@
 #include "ui/event.hpp"
 #include "graphics/video.hpp"
 #include "graphics/texture.hpp"
-#include "config/config.hpp"
-#include "config/path.hpp"
+#include "sys/config.hpp"
+#include "sys/path.hpp"
 
 static const unsigned int MAX_FPS = 100;
 static const unsigned int MIN_FRAMETIME = 1000 / MAX_FPS;

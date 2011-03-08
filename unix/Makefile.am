@@ -14,12 +14,12 @@ noinst_SCRIPTS = config.ini
 noinst_PROGRAMS = parseconfig
 
 parseconfig_SOURCES = \
-	../src/config/parseconfig.cpp \
-	../src/config/configfile.cpp \
-	../src/config/configfile.hpp \
-	../src/config/configfileread.cpp \
-	../src/config/stringarray.cpp \
-	../src/config/stringarray.hpp
+	../src/sys/parseconfig.cpp \
+	../src/sys/configfile.cpp \
+	../src/sys/configfile.hpp \
+	../src/sys/configfileread.cpp \
+	../src/sys/stringarray.cpp \
+	../src/sys/stringarray.hpp
 
 config.ini : config.ini.in Makefile
 	sed \
@@ -29,22 +29,22 @@ config.ini : config.ini.in Makefile
 	mv $@.tmp $@
 
 testconfig_SOURCES = \
-	../src/config/testconfig.cpp \
-	../src/config/configfile.cpp \
-	../src/config/configfile.hpp \
-	../src/config/stringarray.cpp \
-	../src/config/stringarray.hpp
+	../src/sys/testconfig.cpp \
+	../src/sys/configfile.cpp \
+	../src/sys/configfile.hpp \
+	../src/sys/stringarray.cpp \
+	../src/sys/stringarray.hpp
 
 game_SOURCES = \
-	../src/config/config.cpp \
-	../src/config/config.hpp \
-	../src/config/configfile.cpp \
-	../src/config/configfile.hpp \
-	../src/config/configfileread.cpp \
-	../src/config/path.cpp \
-	../src/config/path.hpp \
-	../src/config/stringarray.cpp \
-	../src/config/stringarray.hpp \
+	../src/sys/config.cpp \
+	../src/sys/config.hpp \
+	../src/sys/configfile.cpp \
+	../src/sys/configfile.hpp \
+	../src/sys/configfileread.cpp \
+	../src/sys/path.cpp \
+	../src/sys/path.hpp \
+	../src/sys/stringarray.cpp \
+	../src/sys/stringarray.hpp \
 	../src/game/explosion.cpp \
 	../src/game/explosion.hpp \
 	../src/game/object.cpp \

@@ -1,5 +1,5 @@
-#ifndef CONFIG_STRINGARRAY_HPP
-#define CONFIG_STRINGARRAY_HPP
+#ifndef SYS_STRINGARRAY_HPP
+#define SYS_STRINGARRAY_HPP
 #include <string>
 #include <vector>
 

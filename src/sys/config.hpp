@@ -1,5 +1,5 @@
-#ifndef CONFIG_CONFIG_HPP
-#define CONFIG_CONFIG_HPP
+#ifndef SYS_CONFIG_HPP
+#define SYS_CONFIG_HPP
 #include <string>
 #include <vector>
 namespace Config {
