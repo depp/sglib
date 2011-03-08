@@ -94,6 +94,7 @@ static void configFileWarn(char const *path, unsigned int lineno,
             val[valend - keyend] = '\0';
             Var v = { sec, key, val };
             vars_.push_back(v);
+            sorted_ = false;
         }
     }
     action error {
