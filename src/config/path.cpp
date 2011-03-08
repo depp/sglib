@@ -76,7 +76,7 @@ void init()
         env = getenv("XDG_CONFIG_HOME");
         if (env)
             userConfig = env;
-        else if (!home.empty())
+        if (userConfig.empty() && !home.empty())
             userConfig = home + "/.config";
         if (!userConfig.empty())
             userConfig += SUBDIR;
@@ -87,7 +87,7 @@ void init()
         env = getenv("XDG_CONFIG_DIRS");
         if (env)
             parseStringArray(globalConfig, env);
-        else
+        if (globalConfig.empty())
             globalConfig.push_back("/etc/xdg");
         i = globalConfig.begin();
         e = globalConfig.end();
@@ -99,7 +99,7 @@ void init()
         env = getenv("XDG_DATA_HOME");
         if (env)
             userData = env;
-        else if (!home.empty())
+        if (userData.empty() && !home.empty())
             userData = home + "/.local/share";
         if (!userData.empty())
             userData += SUBDIR;
@@ -111,7 +111,7 @@ void init()
         env = getenv("XDG_DATA_DIRS");
         if (env)
             parseStringArray(globalData, env);
-        else {
+        if (globalData.empty()) {
             globalData.push_back("/usr/local/share");
             globalData.push_back("/usr/share");
         }
