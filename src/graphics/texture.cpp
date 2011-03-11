@@ -62,8 +62,13 @@ void Texture::loadTex()
         fprintf(stderr, "Reloading texture %s\n", name().c_str());
     else
         fprintf(stderr, "Loading texture %s\n", name().c_str());
-    bool success = false;
-    success = load();
+    bool success;
+    try {
+        success = load();
+    } catch (std::exception const &e) {
+        fprintf(stderr, "Error: %s\n", e.what());
+        success = false;
+    }
     if (success) {
         GLuint tex = 0;
         if (tex_ && !isnull_)
