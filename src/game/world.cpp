@@ -75,17 +75,32 @@ void World::drawGround(void)
 {
     float px = std::floor(playerX_ / kGridSpacing + 0.5f) * kGridSpacing;
     float py = std::floor(playerY_ / kGridSpacing + 0.5f) * kGridSpacing;
-    glPushAttrib(GL_CURRENT_BIT);
+    glPushAttrib(GL_CURRENT_BIT | GL_COLOR_BUFFER_BIT);
     glPushMatrix();
     glTranslatef(px, py, 0.0f);
     glScalef(kGridSpacing, kGridSpacing, 1.0f);
-    glColor3ub(51, 0, 255);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glBegin(GL_LINES);
-    for (int i = -kGridSize; i <= kGridSize; ++i) {
-        glVertex3f(i, -kGridSize, 0.0f);
-        glVertex3f(i,  kGridSize, 0.0f);
-        glVertex3f(-kGridSize, i, 0.0f);
-        glVertex3f( kGridSize, i, 0.0f);
+    for (int i = 0; i <= kGridSize; ++i) {
+        unsigned char alpha = (kGridSize + 1 - i) * 255 / (kGridSize + 1);
+        glColor4ub(51, 0, 255, alpha); glVertex2s( i,          0);
+        glColor4ub(51, 0, 255,     0); glVertex2s( i, -kGridSize);
+        glColor4ub(51, 0, 255, alpha); glVertex2s( i,          0);
+        glColor4ub(51, 0, 255,     0); glVertex2s( i,  kGridSize);
+        glColor4ub(51, 0, 255, alpha); glVertex2s(-i,          0);
+        glColor4ub(51, 0, 255,     0); glVertex2s(-i, -kGridSize);
+        glColor4ub(51, 0, 255, alpha); glVertex2s(-i,          0);
+        glColor4ub(51, 0, 255,     0); glVertex2s(-i,  kGridSize);
+
+        glColor4ub(51, 0, 255, alpha); glVertex2s(         0,  i);
+        glColor4ub(51, 0, 255,     0); glVertex2s(-kGridSize,  i);
+        glColor4ub(51, 0, 255, alpha); glVertex2s(         0,  i);
+        glColor4ub(51, 0, 255,     0); glVertex2s( kGridSize,  i);
+        glColor4ub(51, 0, 255, alpha); glVertex2s(         0, -i);
+        glColor4ub(51, 0, 255,     0); glVertex2s(-kGridSize, -i);
+        glColor4ub(51, 0, 255, alpha); glVertex2s(         0, -i);
+        glColor4ub(51, 0, 255,     0); glVertex2s( kGridSize, -i);
     }
     glEnd();
     glPopAttrib();
