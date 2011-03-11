@@ -2,6 +2,7 @@
 #define SYS_PATH_HPP
 #include <string>
 #include <vector>
+class IFile;
 namespace Path {
 
 extern std::string userConfig;
@@ -14,6 +15,8 @@ void init();
 
 // Get the directory containing the executable
 std::string getExeDir();
+
+IFile *openIFile(std::string const &path);
 
 }
 #endif

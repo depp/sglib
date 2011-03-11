@@ -1,4 +1,5 @@
 #include "path.hpp"
+#include "ifilereg.hpp"
 #include "configfile.hpp"
 #include "stringarray.hpp"
 #include <unistd.h>
@@ -119,6 +120,11 @@ void init()
         e = globalData.end();
         for (; i != e; ++i) *i += SUBDIR;
     }
+}
+
+IFile *openIFile(std::string const &path)
+{
+    return IFileReg::open(path);
 }
 
 }
