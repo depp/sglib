@@ -30,9 +30,17 @@ IFileReg::~IFileReg()
 
 size_t IFileReg::read(void *buf, size_t amt)
 {
-    ssize_t r = ::read(fdes_, buf, amt);
-    if (r < 0)
-        throw system_error(errno);
+    ssize_t r;
+    while (1) {
+        r = ::read(fdes_, buf, amt);
+        if (r < 0) {
+            int e = errno;
+            if (e == EINTR)
+                continue;
+            throw system_error(e);
+        } else
+            break;
+    }
     off_ += r;
     return r;
 }
