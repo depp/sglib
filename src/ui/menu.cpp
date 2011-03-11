@@ -42,8 +42,8 @@ void UI::Menu::update(unsigned int ticks)
             menu_[i].setLoc(145, 345 - 50 * i);
             scene_.addObject(&menu_[i]);
         }
-        texture_ = TextureFile::open("cp437.png");
-        texture2_ = TextureFile::open("cp437.png");
+        texture_ = TextureFile::open("font/cp437-8x8.png");
+        texture2_ = TextureFile::open("font/cp437-8x8.png");
         menu_[0].setAction(Action(this, static_cast<Action::Method>
                                   (&Menu::newGame)));
         menu_[1].setAction(Action(this, static_cast<Action::Method>

@@ -2,9 +2,11 @@
 #include "ifilereg.hpp"
 #include "configfile.hpp"
 #include "stringarray.hpp"
+#include "system_error.hpp"
 #include <unistd.h>
 #include <limits.h>
 #include <stdlib.h>
+#include <errno.h>
 
 #ifdef PACKAGE_NAME
 #define SUBDIR ("/" PACKAGE_NAME)
@@ -124,7 +126,23 @@ void init()
 
 IFile *openIFile(std::string const &path)
 {
-    return IFileReg::open(path);
+    std::string abspath;
+    if (!userData.empty()) {
+        abspath = userData + '/' + path;
+        try {
+            return IFileReg::open(abspath);
+        } catch (system_error const &e) { }
+    }
+    std::vector<std::string>::const_iterator
+        i = globalData.begin(), e = globalData.end();
+    for (; i != e; ++i) {
+        if (i->empty()) continue;
+        abspath = *i + '/' + path;
+        try {
+            return IFileReg::open(abspath);
+        } catch (system_error const &e) { }
+    }
+    throw system_error(ENOENT);
 }
 
 }
