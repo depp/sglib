@@ -36,15 +36,22 @@ testconfig_SOURCES = \
 	../src/sys/stringarray.hpp
 
 game_SOURCES = \
+	../src/sys/buffer.hpp \
 	../src/sys/config.cpp \
 	../src/sys/config.hpp \
 	../src/sys/configfile.cpp \
 	../src/sys/configfile.hpp \
 	../src/sys/configfileread.cpp \
+	../src/sys/ifile.cpp \
+	../src/sys/ifile.hpp \
+	../src/sys/ifilereg.cpp \
+	../src/sys/ifilereg.hpp \
 	../src/sys/path.cpp \
 	../src/sys/path.hpp \
 	../src/sys/stringarray.cpp \
 	../src/sys/stringarray.hpp \
+	../src/sys/system_error.cpp \
+	../src/sys/system_error.hpp \
 	../src/game/explosion.cpp \
 	../src/game/explosion.hpp \
 	../src/game/object.cpp \
