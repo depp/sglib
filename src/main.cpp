@@ -4,12 +4,15 @@
 #include "ui/event.hpp"
 #include "graphics/video.hpp"
 #include "graphics/texture.hpp"
+#include "sys/config.hpp"
+#include "sys/path.hpp"
 
 static const unsigned int MAX_FPS = 100;
 static const unsigned int MIN_FRAMETIME = 1000 / MAX_FPS;
 
 int main(int argc, char *argv[])
 {
+    Path::init();
     if (SDL_Init(SDL_INIT_TIMER) < 0) {
         fprintf(stderr, "Could not initialize SDL Timer: %s\n",
                 SDL_GetError());

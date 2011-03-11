@@ -1,11 +1,57 @@
 AUTOMAKE_OPTIONS = 1.5 foreign subdir-objects nostdinc
+ACLOCAL_AMFLAGS = -I m4
 
 bin_PROGRAMS = game
 
 AM_LDFLAGS = @SDL_LIBS@ @PANGOCAIRO_LIBS@
 AM_CPPFLAGS = @warning_cppflags@ -I@srcdir@/../src @SDL_CFLAGS@ @PANGOCAIRO_CFLAGS@
 
+TESTS = testconfig
+
+check_PROGRAMS = testconfig
+
+noinst_SCRIPTS = config.ini
+noinst_PROGRAMS = parseconfig
+
+parseconfig_SOURCES = \
+	../src/sys/parseconfig.cpp \
+	../src/sys/configfile.cpp \
+	../src/sys/configfile.hpp \
+	../src/sys/configfileread.cpp \
+	../src/sys/stringarray.cpp \
+	../src/sys/stringarray.hpp
+
+config.ini : config.ini.in Makefile
+	sed \
+		-e 's,@''builddir@,@abs_top_builddir@,g' \
+		-e 's,@''srcdir@,@abs_top_srcdir@,g' \
+		$(srcdir)/config.ini.in > $@.tmp
+	mv $@.tmp $@
+
+testconfig_SOURCES = \
+	../src/sys/testconfig.cpp \
+	../src/sys/configfile.cpp \
+	../src/sys/configfile.hpp \
+	../src/sys/stringarray.cpp \
+	../src/sys/stringarray.hpp
+
 game_SOURCES = \
+	../src/sys/buffer.hpp \
+	../src/sys/config.cpp \
+	../src/sys/config.hpp \
+	../src/sys/configfile.cpp \
+	../src/sys/configfile.hpp \
+	../src/sys/configfileread.cpp \
+	../src/sys/ifile.cpp \
+	../src/sys/ifile.hpp \
+	../src/sys/ifilereg.cpp \
+	../src/sys/ifilereg.hpp \
+	../src/sys/path.cpp \
+	../src/sys/path.hpp \
+	../src/sys/stringarray.cpp \
+	../src/sys/stringarray.hpp \
+	../src/sys/system_error.cpp \
+	../src/sys/system_error.hpp \
 	../src/game/explosion.cpp \
 	../src/game/explosion.hpp \
 	../src/game/object.cpp \
@@ -61,3 +107,8 @@ game_SOURCES = \
 	../src/ui/widget.hpp
 
 #	../src/type/rastertext_osx.cpp
+
+SUFFIXES = .rl
+
+.rl.cpp:
+	$(RAGEL) $(RAGELFLAGS) -C $< -o $@
