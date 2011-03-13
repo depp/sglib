@@ -12,7 +12,7 @@ public:
     std::string const &path() const { return path_; }
 
 protected:
-    virtual bool load();
+    virtual bool loadTexture();
 
 private:
     TextureFile(std::string const &path);

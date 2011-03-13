@@ -31,6 +31,9 @@ void Resource::loadAll()
     resources.resize(e - b);
 }
 
+Resource::~Resource()
+{ }
+
 void Resource::registerResource()
 {
     if (registered_)

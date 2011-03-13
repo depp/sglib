@@ -29,7 +29,7 @@ public:
     void draw();
 
 protected:
-    virtual bool load();
+    virtual bool loadTexture();
 
 private:
     RasterText();

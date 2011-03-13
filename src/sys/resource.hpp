@@ -10,7 +10,7 @@ public:
 
     unsigned int refcount() const { return refcount_; }
     bool loaded() const { return loaded_; }
-    void markDirty() { loaded_ = false; }
+    void setLoaded(bool v) { loaded_ = v; }
     void incref() { refcount_++; }
     void decref() { refcount_--; }
 

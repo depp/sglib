@@ -3,18 +3,15 @@
 #include <string>
 #include "color.hpp"
 #include "sys/sharedref.hpp"
+#include "sys/resource.hpp"
 #include "SDL_opengl.h"
 
-class Texture {
+class Texture : private Resource {
 public:
     typedef SharedRef<Texture> Ref;
 
     Texture();
     virtual ~Texture();
-
-    /* Load all textures with active references, unload all textures
-       without active references.  */
-    static void updateAll();
 
     /* Non-const functions: used by subclasses of Texture to fill the
        texture buffer in the "load" method.  */
@@ -26,7 +23,7 @@ public:
     unsigned int rowbytes()
     { return (twidth_ * channels() + 3) & ~3; }
     void markDirty()
-    { loaded_ = false; }
+    { Resource::setLoaded(false); }
 
     /* Const functions: callable through a Texture::Ref.  */
     virtual std::string name() const = 0;
@@ -36,9 +33,9 @@ public:
     unsigned int theight() const { return theight_; }
     bool iscolor() const { return iscolor_; }
     bool hasalpha() const { return hasalpha_; }
-    unsigned int refcount() const { return refcount_; }
+    unsigned int refcount() const { return Resource::refcount(); }
     unsigned int tex() const { return tex_; }
-    bool loaded() const { return loaded_; }
+    bool loaded() const { return Resource::loaded(); }
 
     /* This is safe to call even on NULL textures.  */
     void bind() const
@@ -47,37 +44,25 @@ public:
             glBindTexture(GL_TEXTURE_2D, tex_);
     }
 
-    void incref()
-    {
-        refcount_++;
-    }
-
-    void decref()
-    {
-        refcount_--;
-    }
+    void incref() { Resource::incref(); }
+    void decref() { Resource::decref(); }
 
 protected:
-    /* Register texture to be loaded and unloaded in updateAll.  The
-       texture may be deleted by updateAll.  */
-    void registerTexture();
+    void registerTexture() { registerResource(); }
     /* Return false on failure.  */
-    virtual bool load() = 0;
+    virtual bool loadTexture() = 0;
 
 private:
-    void loadTex();
-    void unloadTex();
-    Texture(Texture const &);
-    Texture &operator=(Texture const &);
+    virtual void loadResource();
+    virtual void unloadResource();
 
     void *buf_;
     size_t bufsz_;
     unsigned int width_, height_;
     unsigned int twidth_, theight_;
     bool iscolor_, hasalpha_;
-    unsigned int refcount_;
     unsigned int tex_;
-    bool loaded_, isnull_, registered_;
+    bool isnull_;
 };
 
 #endif

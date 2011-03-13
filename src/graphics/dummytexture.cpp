@@ -7,7 +7,7 @@ DummyTexture DummyTexture::nullTexture
 DummyTexture::~DummyTexture()
 { }
 
-bool DummyTexture::load()
+bool DummyTexture::loadTexture()
 {
     unsigned char *buf, *p, c1[3], c2[3];
     unsigned int w = 16, h = 16, rowbytes, x, y;

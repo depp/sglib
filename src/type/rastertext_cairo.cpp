@@ -29,7 +29,7 @@ static PangoContext *getSharedContext()
 void RasterText::loadImage(void **data, unsigned int *width,
                            unsigned int *height)
 */
-bool RasterText::load()
+bool RasterText::loadTexture()
 {
     PangoContext *context = getSharedContext();
     PangoLayout *layout = pango_layout_new(context);
