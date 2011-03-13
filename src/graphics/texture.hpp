@@ -2,66 +2,12 @@
 #define GRAPHICS_TEXTURE_HPP
 #include <string>
 #include "color.hpp"
+#include "sys/sharedref.hpp"
 #include "SDL_opengl.h"
 
 class Texture {
-    template<class T> friend class RefT;
 public:
-    template<class T>
-    class RefT {
-        template<class TO> friend class RefT;
-    public:
-        RefT()
-            : ptr_(0)
-        { }
-
-        ~RefT()
-        { if (ptr_) ptr_->refcount_--; }
-
-        explicit RefT(T *t)
-            : ptr_(t)
-        { if (ptr_) ptr_->refcount_++; }
-
-        RefT(RefT const &r) : ptr_(r.ptr_)
-        { if (ptr_) ptr_->refcount_++; }
-
-        template<class TO>
-        RefT(RefT<TO> const &r) : ptr_(r.ptr_)
-        { if (ptr_) ptr_->refcount_++; }
-
-        RefT &operator=(RefT const &r) {
-            if (ptr_)
-                ptr_->refcount_--;
-            ptr_ = r.ptr_;
-            if (ptr_)
-                ptr_->refcount_++;
-            return *this;
-        }
-
-        template<class TO>
-        RefT &operator=(RefT<TO> const &r) {
-            if (ptr_)
-                ptr_->refcount_--;
-            ptr_ = r.ptr_;
-            if (ptr_)
-                ptr_->refcount_++;
-            return *this;
-        }
-
-        T *operator->() const
-        { return ptr_; }
-
-        operator bool() const
-        { return ptr_; }
-
-        void clear()
-        { ptr_ = 0; }
-
-    private:
-        T *ptr_;
-    };
-
-    typedef RefT<Texture> Ref;
+    typedef SharedRef<Texture> Ref;
 
     Texture();
     virtual ~Texture();
@@ -99,6 +45,16 @@ public:
     {
         if (this)
             glBindTexture(GL_TEXTURE_2D, tex_);
+    }
+
+    void incref()
+    {
+        refcount_++;
+    }
+
+    void decref()
+    {
+        refcount_--;
     }
 
 protected:

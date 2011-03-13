@@ -4,7 +4,7 @@
 
 class TextureFile : public Texture {
 public:
-    typedef Texture::RefT<TextureFile> Ref;
+    typedef SharedRef<TextureFile> Ref;
 
     static Ref open(std::string const &path);
     virtual ~TextureFile();
