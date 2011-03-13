@@ -5,28 +5,45 @@ TODO List
     - Implement a yes/no dialog for quitting in the middle of a game
     - Access the menu and still return to the game afterwards
     - Rewrite menu using console fonts
+    - Navigate menus with keyboard
     - Widget can't subclass scene object if embedded in console (probably)
+    - Joystick / gamepad controls
 - Graphics improvements
     - Make the hit testing use 3D
     - Refine hit testing, use collision models
     - Fullscreen mode, resolution changes
     - Write bitmap character (console font) drawing class
 - Resource manager
-    - Load files from correct locations
     - Sanitize file paths
     - Load files from ZIP archives
 - Audio support
     - Play WAV sound effects
     - Play Vorbis background music
 - Config files
-    - Format: like Git? JSON?
+    - Sanitize configuration keys and values
     - Change key bindings
 - Testing
     - Make a sample "test image" PNG file
     - Make a sample WAV file
     - Make a sample Vorbis file
-
-Note a conspicuous lack of actual GAME PROGRAMMING on this list.
+- Models
+    - Model loading
+    - Powerups
+    - Tanks
+    - Flags
+    - Powerups
+    - Obstacles
+- Game
+    - HUD / points / ammo
+    - Radar
+    - Capture flags / grab powerups
+    - Win the level
+    - Generate levels
+- Combat
+    - Destructible objects
+    - Movers (tanks)
+    - Shooters (turrets / tanks)
+    - Losing (you can blow up)
 
 Future improvements
 -------------------
@@ -39,3 +56,6 @@ Future improvements
     - Load JPEG
 - Audio support
     - Play MIDI background music, Fluidsynth?
+- Other
+    - Screenshot / video recording
+    - Quake-style console
