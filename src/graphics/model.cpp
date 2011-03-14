@@ -226,5 +226,8 @@ Model::Model(std::string const &path)
 
 Model::~Model()
 {
+    ModelSet::iterator i = modelFiles.find(this);
+    if (i != modelFiles.end() && *i == this)
+        modelFiles.erase(i);
     free(data_);
 }
