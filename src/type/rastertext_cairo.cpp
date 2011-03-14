@@ -25,10 +25,7 @@ static PangoContext *getSharedContext()
     }
     return context;
 }
-/*
-void RasterText::loadImage(void **data, unsigned int *width,
-                           unsigned int *height)
-*/
+
 bool RasterText::loadTexture()
 {
     PangoContext *context = getSharedContext();
