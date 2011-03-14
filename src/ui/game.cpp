@@ -64,7 +64,7 @@ void UI::Game::update(unsigned int ticks)
         Object *obj;
         obj = new Obstacle(
             5.0f, 5.0f, 0.0f, 2.0f,
-            Model::open("models/house.egg3d"),
+            Model::open("model/house.egg3d"),
             Color::olive(), Color::yellow());
         w.addObject(obj);
         obj = new Obstacle(5.0f, -5.0f, 22.5f, 3.0f,
