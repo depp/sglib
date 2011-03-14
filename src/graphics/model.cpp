@@ -1,8 +1,14 @@
 #include "model.hpp"
 #include "color.hpp"
+#include "sys/path.hpp"
+#include "sys/ifile.hpp"
 #include <set>
+#include <vector>
 #include <memory>
+#include <stdint.h>
 #include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
 
 static const short kCubeVertices[8][3] = {
     { -1, -1, -1 }, { -1, -1,  1 }, { -1,  1, -1 }, { -1,  1,  1 },
@@ -77,6 +83,8 @@ void Model::draw(const Color tcolor, const Color lcolor) const
 
     glPushAttrib(GL_CURRENT_BIT | GL_ENABLE_BIT);
     glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT);
+    glPushMatrix();
+    glScaled(scale_, scale_, scale_);
 
     glEnableClientState(GL_VERTEX_ARRAY);
     glVertexPointer(3, GL_SHORT, 0, vdata_);
@@ -91,6 +99,7 @@ void Model::draw(const Color tcolor, const Color lcolor) const
         glDrawElements(GL_LINES, lcount_ * 2, ltype_, ldata_);
     }
 
+    glPopMatrix();
     glPopClientAttrib();
     glPopAttrib();
 }
@@ -100,8 +109,101 @@ std::string Model::name() const
     return path_;
 }
 
+static unsigned char const MODEL_HDR[16] = "Egg3D Model\0\4\3\2\1";
+
+struct ModelChunk {
+    unsigned char name[4];
+    uint32_t length;
+    void *data;
+};
+
+std::vector<ModelChunk> readChunks(void *ptr, size_t len)
+{
+    unsigned char *data = reinterpret_cast<unsigned char *>(ptr);
+    size_t pos = 0;
+    std::vector<ModelChunk> chunks;
+    while (1) {
+        if (len - pos < 4)
+            break;
+        if (!memcmp(data + pos, "END ", 4))
+            return chunks;
+        if (len - pos < 8)
+            break;
+        chunks.resize(chunks.size() + 1);
+        ModelChunk &c = chunks.back();
+        memcpy(&c.name, data + pos, 4);
+        memcpy(&c.length, data + pos + 4, 4);
+        pos += 8;
+        c.data = data + pos;
+        if (len - pos < c.length)
+            break;
+        pos = (pos + c.length + 3) & ~3;
+    }
+    chunks.clear();
+    return chunks;
+}
+
 void Model::loadResource()
 {
+    try {
+        if (data_) {
+            free(data_);
+            data_ = 0;
+            datalen_ = 0;
+        }
+        {
+            unsigned char hdr[16];
+            std::auto_ptr<IFile> f(Path::openIFile(path_));
+            size_t amt = f->read(hdr, 16);
+            if (amt < 16 || memcmp(hdr, MODEL_HDR, 16))
+                goto invalid;
+            Buffer b = f->readall();
+            data_ = b.get();
+            datalen_ = b.size();
+            b.release();
+        }
+        std::vector<ModelChunk> chunks = readChunks(data_, datalen_);
+        if (chunks.empty())
+            goto invalid;
+        std::vector<ModelChunk>::iterator
+            i = chunks.begin(), e = chunks.end();
+        for (; i != e; ++i) {
+            if (!memcmp(i->name, "SclF", 4)) {
+                if (i->length != 4)
+                    goto invalid;
+                scale_ = *reinterpret_cast<float *>(i->data);
+            } else if (!memcmp(i->name, "VrtS", 4)) {
+                if (i->length % 6)
+                    goto invalid;
+                vtype_ = GL_SHORT;
+                vcount_ = i->length / 6;
+                vdata_ = i->data;
+            } else if (!memcmp(i->name, "LinS", 4)) {
+                // FIXME easy to do buffer overflow
+                // with indices out of range
+                if (i->length % 4)
+                    goto invalid;
+                ltype_ = GL_UNSIGNED_SHORT;
+                lcount_ = i->length / 4;
+                ldata_ = i->data;
+            } else if (!memcmp(i->name, "TriS", 4)) {
+                if (i->length % 6)
+                    goto invalid;
+                ttype_ = GL_UNSIGNED_SHORT;
+                tcount_ = i->length / 6;
+                tdata_ = i->data;
+            } else
+                goto invalid;
+        }
+        fprintf(stderr, "Loaded model %s\n", path_.c_str());
+    } catch (std::exception const &exc) {
+        fprintf(stderr, "Failed to load model %s: %s\n",
+                path_.c_str(), exc.what());
+    }
+    setLoaded(true);
+    return;
+invalid:
+    fprintf(stderr, "Invalid model file %s\n", path_.c_str());
     setLoaded(true);
 }
 
@@ -112,6 +214,7 @@ void Model::unloadResource()
     free(data_);
     data_ = 0;
     setLoaded(false);
+    fprintf(stderr, "Unloaded model %s\n", path_.c_str());
 }
 
 Model::Model(std::string const &path)
