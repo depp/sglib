@@ -15,7 +15,7 @@ public:
             ptr_->decref();
     }
 
-    explicit SharedRef(T *p) throw()
+    SharedRef(T *p) throw()
         : ptr_(p)
     {
         if (ptr_)

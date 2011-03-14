@@ -1,19 +1,59 @@
 #ifndef GRAPHICS_MODEL_HPP
 #define GRAPHICS_MODEL_HPP
 #include "SDL_opengl.h"
+#include "sys/resource.hpp"
+#include "sys/sharedref.hpp"
+#include <string>
 struct Color;
 
-struct Model {
-    static const Model kCube, kPyramid;
+class Model : private Resource {
+public:
+    template<class T> friend class SharedRef;
+    typedef SharedRef<Model> Ref;
+
+    static Model kCube, kPyramid;
+
+    static Ref open(std::string const &path);
 
     void draw(const Color tcolor, const Color lcolor) const;
+    virtual std::string name() const;
+    std::string const &path() const { return path_; }
 
-    GLint vertexCount;
-    const GLfloat (*vertex)[3];
-    GLsizei triCount;
-    const GLubyte (*tri)[3];
-    GLsizei lineCount;
-    const GLubyte (*line)[2];
+private:
+    virtual void loadResource();
+    virtual void unloadResource();
+
+    Model(std::string const &path);
+    Model(double scale,
+          unsigned int vcount, short const vdata[][3],
+          unsigned int tcount, unsigned short const tdata[][3],
+          unsigned int lcount, unsigned short const ldata[][2])
+        : path_(), data_(0), datalen_(0), scale_(scale),
+          vtype_(GL_SHORT), vcount_(vcount), vdata_(vdata),
+          ttype_(GL_UNSIGNED_SHORT), tcount_(tcount), tdata_(tdata),
+          ltype_(GL_UNSIGNED_SHORT), lcount_(lcount), ldata_(ldata)
+    {
+        setLoaded(true);
+    }
+    virtual ~Model();
+
+    std::string path_;
+    void *data_;
+    unsigned int datalen_;
+
+    double scale_;
+
+    unsigned int vtype_;
+    unsigned int vcount_;
+    void const *vdata_;
+
+    unsigned int ttype_;
+    unsigned int tcount_;
+    void const *tdata_;
+
+    unsigned int ltype_;
+    unsigned int lcount_;
+    void const *ldata_;
 };
 
 #endif

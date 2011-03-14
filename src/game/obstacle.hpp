@@ -2,17 +2,17 @@
 #define GAME_OBSTACLE_HPP
 #include "object.hpp"
 #include "graphics/color.hpp"
-struct Model;
+#include "graphics/model.hpp"
 
 class Obstacle : public Object {
 public:
     Obstacle(float x, float y, float face, float size,
-             const Model &model, Color tcolor, Color lcolor);
+             Model::Ref model, Color tcolor, Color lcolor);
     virtual ~Obstacle();
     virtual void draw();
 
 private:
-    const Model &model_;
+    Model::Ref model_;
     Color tcolor_, lcolor_;
 };
 
