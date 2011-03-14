@@ -34,5 +34,6 @@ Buffer IFile::readall_static(int64_t size)
         if (p == sz)
             break;
     }
+    buf.resize(p);
     return buf;
 }
