@@ -15,7 +15,7 @@ public:
     static DummyTexture nullTexture;
 
 protected:
-    virtual bool load();
+    virtual bool loadTexture();
 
 private:
     std::string name_;

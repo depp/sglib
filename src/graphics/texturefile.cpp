@@ -51,7 +51,7 @@ std::string TextureFile::name() const
     return filePrefix + path_;
 }
 
-bool TextureFile::load()
+bool TextureFile::loadTexture()
 {
     std::string::const_iterator
         b = path_.begin(), p = path_.end(), d = p, e = p;

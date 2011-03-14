@@ -8,7 +8,7 @@ class Buffer;
 /* Ignore the "BufferRef" class.  */
 class BufferRef {
 public:
-    BufferRef(Buffer *b) throw() : p_(b) { }
+    explicit BufferRef(Buffer *b) throw() : p_(b) { }
     Buffer &ref() throw() { return *p_; }
 private:
     Buffer *p_;
@@ -32,13 +32,26 @@ public:
     }
     ~Buffer() throw() { if (ptr_) free(ptr_); }
 
-    Buffer& operator=(Buffer &b) throw()
+    Buffer &operator=(Buffer &b) throw()
     {
         if (this != &b) {
             clear();
             ptr_ = b.ptr_;
             len_ = b.len_;
             b.release();
+        }
+        return *this;
+    }
+
+    Buffer &operator=(BufferRef r) throw()
+    {
+        if (this != &r.ref()) {
+            void *p = r.ref().ptr_;
+            size_t l = r.ref().len_;
+            r.ref().release();
+            clear();
+            ptr_ = p;
+            len_ = l;
         }
         return *this;
     }
@@ -70,7 +83,7 @@ public:
     void *get() const throw() { return ptr_; }
     unsigned char *getUC() const throw()
     { return reinterpret_cast<unsigned char *>(ptr_); }
-    size_t size() { return len_; }
+    size_t size() const { return len_; }
 
     operator BufferRef() throw() { return BufferRef(this); }
 

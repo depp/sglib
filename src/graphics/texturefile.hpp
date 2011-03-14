@@ -4,7 +4,7 @@
 
 class TextureFile : public Texture {
 public:
-    typedef Texture::RefT<TextureFile> Ref;
+    typedef SharedRef<TextureFile> Ref;
 
     static Ref open(std::string const &path);
     virtual ~TextureFile();
@@ -12,7 +12,7 @@ public:
     std::string const &path() const { return path_; }
 
 protected:
-    virtual bool load();
+    virtual bool loadTexture();
 
 private:
     TextureFile(std::string const &path);

@@ -4,13 +4,10 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <vector>
 
 Texture::Texture()
-    : buf_(0), bufsz_(0),
-      width_(0), height_(0), twidth_(0), theight_(0),
-      iscolor_(false), hasalpha_(false),
-      refcount_(0), tex_(0), loaded_(false), registered_(false)
+    : buf_(0), bufsz_(0), width_(0), height_(0), twidth_(0), theight_(0),
+      iscolor_(false), hasalpha_(false), tex_(0), isnull_(false)
 { }
 
 Texture::~Texture()
@@ -18,45 +15,9 @@ Texture::~Texture()
     free(buf_);
 }
 
-static std::vector<Texture *> textures;
-
-void Texture::updateAll()
+void Texture::loadResource()
 {
-    std::vector<Texture *>::iterator
-        b = textures.begin(), i = b, e = textures.end();
-    try {
-        while (i != e) {
-            Texture *t = *i;
-            if (t->refcount_ > 0) {
-                if (!t->loaded_)
-                    t->loadTex();
-                ++i;
-            } else {
-                t->unloadTex();
-                delete t;
-                --e;
-                if (i != e)
-                    *i = *e;
-            }
-        }
-    } catch (...) {
-        textures.resize(e - b);
-        throw;
-    }
-    textures.resize(e - b);
-}
-
-void Texture::registerTexture()
-{
-    if (registered_)
-        return;
-    textures.push_back(this);
-    registered_ = true;
-}
-
-void Texture::loadTex()
-{
-    if (loaded_)
+    if (loaded())
         return;
     if (tex_)
         fprintf(stderr, "Reloading texture %s\n", name().c_str());
@@ -64,9 +25,9 @@ void Texture::loadTex()
         fprintf(stderr, "Loading texture %s\n", name().c_str());
     bool success;
     try {
-        success = load();
-    } catch (std::exception const &e) {
-        fprintf(stderr, "Error: %s\n", e.what());
+        success = loadTexture();
+    } catch (std::exception const &exc) {
+        fprintf(stderr, "Error: %s\n", exc.what());
         success = false;
     }
     if (success) {
@@ -86,23 +47,23 @@ void Texture::loadTex()
         glTexImage2D(GL_TEXTURE_2D, 0, fmt, twidth_, theight_, 0,
                      fmt, GL_UNSIGNED_BYTE, buf_);
         tex_ = tex;
-        loaded_ = true;
+        setLoaded(true);
         isnull_ = false;
     } else {
         fprintf(stderr, "    failed\n");
-        unloadTex();
+        unloadResource();
         // Make sure to set loaded_ true before checking if the dummy
         // texture is loaded, because this might be the dummy texture.
-        loaded_ = true;
+        setLoaded(true);
         isnull_ = true;
         Texture &t = DummyTexture::nullTexture;
-        if (!t.loaded_)
-            t.loadTex();
+        if (!t.loaded())
+            t.loadResource();
         tex_ = t.tex_;
     }
 }
 
-void Texture::unloadTex()
+void Texture::unloadResource()
 {
     if (tex_ != 0 && !isnull_) {
         fprintf(stderr, "Unloading texture %s\n", name().c_str());
@@ -110,7 +71,7 @@ void Texture::unloadTex()
         glDeleteTextures(1, &tex);
     }
     tex_ = 0;
-    loaded_ = false;
+    setLoaded(false);
     isnull_ = false;
 }
 

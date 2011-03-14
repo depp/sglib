@@ -48,6 +48,9 @@ game_SOURCES = \
 	../src/sys/ifilereg.hpp \
 	../src/sys/path.cpp \
 	../src/sys/path.hpp \
+	../src/sys/resource.cpp \
+	../src/sys/resource.hpp \
+	../src/sys/sharedref.hpp \
 	../src/sys/stringarray.cpp \
 	../src/sys/stringarray.hpp \
 	../src/sys/system_error.cpp \

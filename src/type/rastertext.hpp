@@ -9,7 +9,7 @@
    alpha.  */
 class RasterText : public Texture {
 public:
-    typedef Texture::RefT<RasterText> Ref;
+    typedef SharedRef<RasterText> Ref;
     static Ref create();
 
     enum Alignment {
@@ -29,7 +29,7 @@ public:
     void draw();
 
 protected:
-    virtual bool load();
+    virtual bool loadTexture();
 
 private:
     RasterText();

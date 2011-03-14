@@ -62,17 +62,19 @@ void UI::Game::update(unsigned int ticks)
         World &w = *world_;
 
         Object *obj;
-        obj = new Obstacle(5.0f, 5.0f, 0.0f, 2.0f,
-                           Model::kCube, Color::olive(), Color::yellow());
+        obj = new Obstacle(
+            5.0f, 5.0f, 0.0f, 2.0f,
+            Model::open("model/house.egg3d"),
+            Color::olive(), Color::yellow());
         w.addObject(obj);
         obj = new Obstacle(5.0f, -5.0f, 22.5f, 3.0f,
-                           Model::kPyramid, Color::maroon(), Color::red());
+                           &Model::kPyramid, Color::maroon(), Color::red());
         w.addObject(obj);
         obj = new Obstacle(-5.0f, 5.0f, 67.5f, 0.5f,
-                           Model::kCube, Color::olive(), Color::yellow());
+                           &Model::kCube, Color::olive(), Color::yellow());
         w.addObject(obj);
         obj = new Obstacle(-5.0f, -5.0f, 45.0f, 1.5f,
-                           Model::kPyramid, Color::maroon(), Color::red());
+                           &Model::kPyramid, Color::maroon(), Color::red());
         w.addObject(obj);
         obj = new Player(0.0f, 0.0f, 0.0f, input_);
         w.addObject(obj);

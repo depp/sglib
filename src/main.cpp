@@ -3,7 +3,7 @@
 #include "ui/menu.hpp"
 #include "ui/event.hpp"
 #include "graphics/video.hpp"
-#include "graphics/texture.hpp"
+#include "sys/resource.hpp"
 #include "sys/config.hpp"
 #include "sys/path.hpp"
 
@@ -90,7 +90,7 @@ int main(int argc, char *argv[])
             lastticks = ticks;
         UI::Screen *s = UI::Screen::getActive();
         s->update(ticks);
-        Texture::updateAll();
+        Resource::loadAll();
         s->draw();
         Video::update();
     }
