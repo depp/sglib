@@ -8,6 +8,8 @@ TODO List
     - Navigate menus with keyboard
     - Widget can't subclass scene object if embedded in console (probably)
     - Joystick / gamepad controls
+    - Write a decent logging system, where different game subsystems
+        can be set to different logging levels.
 - Graphics improvements
     - Make the hit testing use 3D
     - Refine hit testing, use collision models
