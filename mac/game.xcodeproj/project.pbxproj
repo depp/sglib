@@ -43,6 +43,8 @@
 		38709EE41330A5A200DA858D /* stringarray.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 38709ED61330A5A200DA858D /* stringarray.cpp */; };
 		38709EE51330A5A200DA858D /* system_error.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 38709ED81330A5A200DA858D /* system_error.cpp */; };
 		38709EE81330A5D000DA858D /* configfileread.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 38709EE71330A5D000DA858D /* configfileread.cpp */; };
+		38709F181330B45C00DA858D /* data in Resources */ = {isa = PBXBuildFile; fileRef = 38709F0D1330B45C00DA858D /* data */; };
+		38709F4C1330B7CA00DA858D /* path_osx.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 38709F261330B6FD00DA858D /* path_osx.cpp */; };
 		389F06701210A46A00E6AA2A /* menu.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 389F066E1210A46A00E6AA2A /* menu.cpp */; };
 		38B2409D117BAE0800903838 /* rand.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 38B2409B117BAE0800903838 /* rand.cpp */; };
 		38F7832A121317550080545B /* widget.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 38F78329121317550080545B /* widget.cpp */; };
@@ -127,6 +129,11 @@
 		38709ED91330A5A200DA858D /* system_error.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = system_error.hpp; sourceTree = "<group>"; };
 		38709EDA1330A5A200DA858D /* testconfig.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = testconfig.cpp; sourceTree = "<group>"; };
 		38709EE71330A5D000DA858D /* configfileread.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = configfileread.cpp; sourceTree = "<group>"; };
+		38709F0D1330B45C00DA858D /* data */ = {isa = PBXFileReference; lastKnownFileType = folder; name = data; path = ../data; sourceTree = SOURCE_ROOT; };
+		38709F1F1330B66D00DA858D /* path_linux.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = path_linux.cpp; sourceTree = "<group>"; };
+		38709F221330B6A600DA858D /* path_xdg.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = path_xdg.cpp; sourceTree = "<group>"; };
+		38709F261330B6FD00DA858D /* path_osx.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = path_osx.cpp; sourceTree = "<group>"; };
+		38709F701330BF5900DA858D /* autocf_osx.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = autocf_osx.hpp; sourceTree = "<group>"; };
 		389F066E1210A46A00E6AA2A /* menu.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = menu.cpp; sourceTree = "<group>"; };
 		389F066F1210A46A00E6AA2A /* menu.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = menu.hpp; sourceTree = "<group>"; };
 		38B2409B117BAE0800903838 /* rand.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = rand.cpp; sourceTree = "<group>"; };
@@ -222,6 +229,7 @@
 				382D217911D98E4C009C8EF5 /* frameworks */,
 				385208AC11743F5000640971 /* mac */,
 				385208A911743F4100640971 /* src */,
+				38709F0D1330B45C00DA858D /* data */,
 				3852089F117434FD00640971 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -287,6 +295,9 @@
 				38709ECF1330A5A200DA858D /* ifilereg.hpp */,
 				38709ED01330A5A200DA858D /* parseconfig.cpp */,
 				38709ED11330A5A200DA858D /* path.cpp */,
+				38709F1F1330B66D00DA858D /* path_linux.cpp */,
+				38709F261330B6FD00DA858D /* path_osx.cpp */,
+				38709F221330B6A600DA858D /* path_xdg.cpp */,
 				38709ED21330A5A200DA858D /* path.hpp */,
 				38709ED31330A5A200DA858D /* resource.cpp */,
 				38709ED41330A5A200DA858D /* resource.hpp */,
@@ -296,6 +307,7 @@
 				38709ED81330A5A200DA858D /* system_error.cpp */,
 				38709ED91330A5A200DA858D /* system_error.hpp */,
 				38709EDA1330A5A200DA858D /* testconfig.cpp */,
+				38709F701330BF5900DA858D /* autocf_osx.hpp */,
 			);
 			path = sys;
 			sourceTree = "<group>";
@@ -365,6 +377,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				38709F181330B45C00DA858D /* data in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -409,6 +422,7 @@
 				38709EE41330A5A200DA858D /* stringarray.cpp in Sources */,
 				38709EE51330A5A200DA858D /* system_error.cpp in Sources */,
 				38709EE81330A5D000DA858D /* configfileread.cpp in Sources */,
+				38709F4C1330B7CA00DA858D /* path_osx.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

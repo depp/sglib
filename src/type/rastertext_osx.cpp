@@ -1,4 +1,5 @@
 #include "rastertext.hpp"
+#include "sys/autocf_osx.hpp"
 #include <CoreGraphics/CoreGraphics.h>
 #include <CoreText/CoreText.h>
 #include <stdlib.h>
@@ -16,17 +17,6 @@ static CGContextRef getDummyContext()
     }
     return dummyContext;
 }
-
-template<typename T>
-struct AutoCF {
-	T ptr_;
-	AutoCF() : ptr_(0) { }
-	AutoCF(T p) : ptr_(p) { }
-	~AutoCF() { if (ptr_) CFRelease(ptr_); }
-	AutoCF &operator=(T p) { if (ptr_) CFRelease(ptr_); ptr_ = p; }
-	// T operator*() { return ptr_; }
-	operator T() { return ptr_; }
-};
 
 bool RasterText::loadTexture()
 {
