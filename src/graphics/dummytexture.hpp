@@ -21,5 +21,5 @@ private:
     std::string name_;
     Color c1_, c2_;
 };
-        
+
 #endif

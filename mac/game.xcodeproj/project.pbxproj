@@ -258,6 +258,7 @@
 			name = src;
 			path = ../src;
 			sourceTree = SOURCE_ROOT;
+			usesTabs = 0;
 		};
 		385208AC11743F5000640971 /* mac */ = {
 			isa = PBXGroup;
@@ -266,6 +267,7 @@
 			);
 			name = mac;
 			sourceTree = "<group>";
+			usesTabs = 0;
 		};
 		3857BE7F1321790100F81D56 /* scene */ = {
 			isa = PBXGroup;
