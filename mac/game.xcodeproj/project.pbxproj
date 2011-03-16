@@ -31,6 +31,9 @@
 		3857BE871321790100F81D56 /* leafobject.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3857BE821321790100F81D56 /* leafobject.cpp */; };
 		3857BE881321790100F81D56 /* object.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3857BE841321790100F81D56 /* object.cpp */; };
 		3857BE8D13217A3F00F81D56 /* font_osx.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3857BE8C13217A3F00F81D56 /* font_osx.cpp */; };
+		38709E7B13309B5600DA858D /* dummytexture.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 38709E7913309B5600DA858D /* dummytexture.cpp */; };
+		38709E8013309B5D00DA858D /* texture.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 38709E7C13309B5D00DA858D /* texture.cpp */; };
+		38709E8113309B5D00DA858D /* texturefile.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 38709E7E13309B5D00DA858D /* texturefile.cpp */; };
 		389F06701210A46A00E6AA2A /* menu.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 389F066E1210A46A00E6AA2A /* menu.cpp */; };
 		38B2409D117BAE0800903838 /* rand.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 38B2409B117BAE0800903838 /* rand.cpp */; };
 		38F7832A121317550080545B /* widget.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 38F78329121317550080545B /* widget.cpp */; };
@@ -88,6 +91,12 @@
 		3857BE851321790100F81D56 /* object.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = object.hpp; sourceTree = "<group>"; };
 		3857BE8C13217A3F00F81D56 /* font_osx.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = font_osx.cpp; sourceTree = "<group>"; };
 		3857BE9213217A7E00F81D56 /* font_osx.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = font_osx.hpp; sourceTree = "<group>"; };
+		38709E7913309B5600DA858D /* dummytexture.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = dummytexture.cpp; sourceTree = "<group>"; };
+		38709E7A13309B5600DA858D /* dummytexture.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = dummytexture.hpp; sourceTree = "<group>"; };
+		38709E7C13309B5D00DA858D /* texture.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = texture.cpp; sourceTree = "<group>"; };
+		38709E7D13309B5D00DA858D /* texture.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = texture.hpp; sourceTree = "<group>"; };
+		38709E7E13309B5D00DA858D /* texturefile.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = texturefile.cpp; sourceTree = "<group>"; };
+		38709E7F13309B5D00DA858D /* texturefile.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = texturefile.hpp; sourceTree = "<group>"; };
 		389F066E1210A46A00E6AA2A /* menu.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = menu.cpp; sourceTree = "<group>"; };
 		389F066F1210A46A00E6AA2A /* menu.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = menu.hpp; sourceTree = "<group>"; };
 		38B2409B117BAE0800903838 /* rand.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = rand.cpp; sourceTree = "<group>"; };
@@ -116,8 +125,14 @@
 			isa = PBXGroup;
 			children = (
 				382C270412119C2E0048F4BF /* color.hpp */,
+				38709E7913309B5600DA858D /* dummytexture.cpp */,
+				38709E7A13309B5600DA858D /* dummytexture.hpp */,
 				382C270512119C2E0048F4BF /* model.cpp */,
 				382C270612119C2E0048F4BF /* model.hpp */,
+				38709E7C13309B5D00DA858D /* texture.cpp */,
+				38709E7D13309B5D00DA858D /* texture.hpp */,
+				38709E7E13309B5D00DA858D /* texturefile.cpp */,
+				38709E7F13309B5D00DA858D /* texturefile.hpp */,
 				382C272112119E6D0048F4BF /* video.hpp */,
 				382C272212119E6D0048F4BF /* video.cpp */,
 			);
@@ -323,6 +338,9 @@
 				3857BE871321790100F81D56 /* leafobject.cpp in Sources */,
 				3857BE881321790100F81D56 /* object.cpp in Sources */,
 				3857BE8D13217A3F00F81D56 /* font_osx.cpp in Sources */,
+				38709E7B13309B5600DA858D /* dummytexture.cpp in Sources */,
+				38709E8013309B5D00DA858D /* texture.cpp in Sources */,
+				38709E8113309B5D00DA858D /* texturefile.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -333,7 +351,8 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				COPY_PHASE_STRIP = NO;
-				GCC_WARN_EFFECTIVE_CPLUSPLUS_VIOLATIONS = YES;
+				GCC_VERSION = 4.2;
+				GCC_WARN_EFFECTIVE_CPLUSPLUS_VIOLATIONS = NO;
 			};
 			name = Debug;
 		};
@@ -341,7 +360,8 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				COPY_PHASE_STRIP = YES;
-				GCC_WARN_EFFECTIVE_CPLUSPLUS_VIOLATIONS = YES;
+				GCC_VERSION = 4.2;
+				GCC_WARN_EFFECTIVE_CPLUSPLUS_VIOLATIONS = NO;
 			};
 			name = Release;
 		};

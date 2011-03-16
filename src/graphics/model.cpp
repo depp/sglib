@@ -109,7 +109,7 @@ std::string Model::name() const
     return path_;
 }
 
-static unsigned char const MODEL_HDR[16] = "Egg3D Model\0\4\3\2\1";
+static unsigned char const MODEL_HDR[17] = "Egg3D Model\0\4\3\2\1";
 
 struct ModelChunk {
     unsigned char name[4];
