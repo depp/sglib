@@ -39,6 +39,7 @@ struct AutoCF {
     }
 
     // Assignment, retains new pointer and releases old one.
+    // "x = x" is safe.
     AutoCF &operator=(AutoCF const &o) throw()
     {
         T po = ptr_, pn = o.ptr_;
@@ -53,6 +54,39 @@ struct AutoCF {
     operator T() throw()
     {
         return ptr_;
+    }
+
+    // Relinquish ownership of the pointer and return it.
+    T release() throw()
+    {
+        T p = ptr_;
+        ptr_ = 0;
+        return p;
+    }
+
+    // Release the contained pointer.
+    void clear() throw()
+    {
+        if (ptr_) {
+            CFRelease(ptr_);
+            ptr_ = 0;
+        }
+    }
+
+    // Move (not copy) a pointer from one ref to another.
+    // "x.moveFrom(x)" is not safe.
+    void moveFrom(AutoCF &o) throw()
+    {
+        T pn = o.ptr_, po = ptr_;
+        o.ptr_ = 0;
+        if (po)
+            CFRelease(po);
+        ptr_ = pn;
+    }
+
+    operator bool() throw()
+    {
+        return ptr_ != 0;
     }
 };
 
