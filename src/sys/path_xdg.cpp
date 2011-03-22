@@ -1,6 +1,7 @@
 #include "path.hpp"
 #include "configfile.hpp"
 #include "stringarray.hpp"
+#include <stdlib.h>
 
 #ifdef PACKAGE_NAME
 #define SUBDIR ("/" PACKAGE_NAME)
