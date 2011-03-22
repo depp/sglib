@@ -1,4 +1,5 @@
 #include "rastertext.hpp"
+#include "font_osx.hpp"
 #include "sys/autocf_osx.hpp"
 #include <CoreGraphics/CoreGraphics.h>
 #include <CoreText/CoreText.h>
@@ -25,8 +26,14 @@ bool RasterText::loadTexture()
         kCFStringEncodingUTF8, false));
     AutoCF<CGColorRef> white(CGColorCreateGenericGray(1.0f, 1.0f));
     AutoCF<CGColorRef> black(CGColorCreateGenericGray(0.0f, 1.0f));
-    AutoCF<CTFontRef> font(
-        CTFontCreateWithName(CFSTR("Courier"), 12.0f, NULL));
+    AutoCF<CTFontRef> font;
+    if (font_.info_ && font_.info_->font) {
+        puts("Copying...");
+        font = font_.info_->font;
+    } else {
+        puts("Using default...");
+        font.set(CTFontCreateWithName(CFSTR("Helvetica"), 14.0f, NULL));
+    }
     CFStringRef keys[] = { kCTFontAttributeName,
                            kCTForegroundColorAttributeName };
     CFTypeRef values[] = { font, white };
