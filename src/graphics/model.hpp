@@ -13,6 +13,7 @@ public:
 
     static Model kCube, kPyramid;
 
+    virtual ~Model();
     static Ref open(std::string const &path);
 
     void draw(const Color tcolor, const Color lcolor) const;
@@ -35,7 +36,6 @@ private:
     {
         setLoaded(true);
     }
-    virtual ~Model();
 
     std::string path_;
     void *data_;

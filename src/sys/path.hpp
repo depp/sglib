@@ -8,13 +8,13 @@ namespace Path {
 extern std::string userConfig;
 extern std::vector<std::string> globalConfig;
 extern std::string userData;
-extern std::vector<std::string> gloabalData;
+extern std::vector<std::string> globalData;
 
 // Initialize all path variables
 void init();
 
 // Get the directory containing the executable
-std::string getExeDir();
+std::string exeDir();
 
 IFile *openIFile(std::string const &path);
 
