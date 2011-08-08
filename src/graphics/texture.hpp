@@ -4,7 +4,7 @@
 #include "color.hpp"
 #include "sys/sharedref.hpp"
 #include "sys/resource.hpp"
-#include "SDL_opengl.h"
+#include "opengl.hpp"
 
 class Texture : private Resource {
 public:

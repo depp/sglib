@@ -1,5 +1,5 @@
 #include "object.hpp"
-#include "SDL_opengl.h"
+#include "opengl.hpp"
 
 Object::Object(unsigned int colGen, unsigned int colRcv,
                float x, float y, float face, float size)

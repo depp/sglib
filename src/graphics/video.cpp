@@ -1,7 +1,7 @@
 #include "video.hpp"
 #include "ui/screen.hpp"
+#include "opengl.hpp"
 #include "SDL.h"
-#include "SDL_opengl.h"
 #include <stdio.h>
 
 unsigned int Video::width = 0, Video::height = 0;

@@ -3,7 +3,7 @@
 #include "graphics/color.hpp"
 #include "world.hpp"
 #include "explosion.hpp"
-#include "SDL_opengl.h"
+#include "opengl.hpp"
 
 static const float kShotTwist = 720.0f;
 static const float kShotSpan = 1.0f;

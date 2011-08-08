@@ -1,6 +1,6 @@
 #ifndef GRAPHICS_MODEL_HPP
 #define GRAPHICS_MODEL_HPP
-#include "SDL_opengl.h"
+#include "opengl.hpp"
 #include "sys/resource.hpp"
 #include "sys/sharedref.hpp"
 #include <string>

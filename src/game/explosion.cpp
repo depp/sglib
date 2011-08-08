@@ -2,7 +2,7 @@
 #include "rand.hpp"
 #include "graphics/color.hpp"
 #include "world.hpp"
-#include "SDL_opengl.h"
+#include "opengl.hpp"
 #include <stdlib.h>
 
 struct Explosion::Type {

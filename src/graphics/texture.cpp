@@ -1,6 +1,6 @@
 #include "texture.hpp"
 #include "dummytexture.hpp"
-#include "SDL_opengl.h"
+#include "opengl.hpp"
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>

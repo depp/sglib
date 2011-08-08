@@ -9,7 +9,7 @@
 #include <set>
 #include <memory>
 #include <vector>
-#include "SDL_opengl.h"
+#include "opengl.hpp"
 
 static const std::string filePrefix("file:");
 

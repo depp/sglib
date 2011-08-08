@@ -4,7 +4,7 @@
 #include "event.hpp"
 #include "graphics/video.hpp"
 #include "graphics/texturefile.hpp"
-#include "SDL_opengl.h"
+#include "opengl.hpp"
 #include <stdio.h>
 
 UI::Menu::Menu()

@@ -1,7 +1,7 @@
 #ifndef TYPE_RASTERTEXT_HPP
 #define TYPE_RASTERTEXT_HPP
 #include <string>
-#include "SDL_opengl.h"
+#include "opengl.hpp"
 #include "font.hpp"
 #include "graphics/texture.hpp"
 

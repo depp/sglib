@@ -4,7 +4,7 @@
 #include <limits>
 #include <assert.h>
 #include <stdio.h>
-#include "SDL_opengl.h"
+#include "opengl.hpp"
 #include "graphics/video.hpp"
 
 static const unsigned int LAG_THRESHOLD = 1000;
