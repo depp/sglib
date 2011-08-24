@@ -6,7 +6,9 @@
 #ifdef PACKAGE_NAME
 #define SUBDIR ("/" PACKAGE_NAME)
 #else
-#error "No PACKAGE_NAME defined"
+// #error "No PACKAGE_NAME defined"
+// FIXME: Get this defined properly
+#define SUBDIR "/game-fixme"
 #endif
 
 namespace Path {
