@@ -2,13 +2,53 @@
 #include "rand.hpp"
 #include "ui/menu.hpp"
 #include "ui/event.hpp"
+#include "ui/screen.hpp"
 #include "graphics/video.hpp"
+#include "opengl.hpp"
 #include "sys/resource.hpp"
 #include "sys/config.hpp"
 #include "sys/path.hpp"
+#include <stdio.h>
 
 static const unsigned int MAX_FPS = 100;
 static const unsigned int MIN_FRAMETIME = 1000 / MAX_FPS;
+
+static void videoInit()
+{
+    SDL_Surface *screen = NULL;
+    int flags;
+
+    if (SDL_Init(SDL_INIT_VIDEO) < 0) {
+        fprintf(stderr, "Could not initialize SDL Video: %s\n",
+                SDL_GetError());
+        exit(1);
+    }
+    flags = SDL_OPENGL | SDL_GL_DOUBLEBUFFER;
+    screen = SDL_SetVideoMode(768, 480, 32, flags);
+    if (!screen) {
+        fprintf(stderr, "Could not initialize video: %s\n",
+                SDL_GetError());
+        SDL_Quit();
+        exit(1);
+    }
+
+    printf("Vendor: %s\nRenderer: %s\nVersion: %s\n",
+           glGetString(GL_VENDOR), glGetString(GL_RENDERER),
+           glGetString(GL_VERSION));
+
+    Video::width = 768;
+    Video::height = 480;
+}
+
+static void videoUpdate()
+{
+    SDL_GL_SwapBuffers();
+    GLenum err = glGetError();
+    if (err != GL_NO_ERROR) {
+        const GLubyte *s = gluErrorString(err);
+        fprintf(stderr, "GL Error: %s", s);
+    }
+}
 
 static int mapKey(int key)
 {
@@ -55,7 +95,7 @@ int main(int, char *[])
                 SDL_GetError());
         exit(1);
     }
-    Video::init();
+    videoInit();
     Rand::global.seed();
     UI::Screen::setActive(new UI::Menu);
 
@@ -129,7 +169,7 @@ int main(int, char *[])
         s->update(ticks);
         Resource::loadAll();
         s->draw();
-        Video::update();
+        videoUpdate();
     }
 
 quit:
