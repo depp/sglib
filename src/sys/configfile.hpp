@@ -47,7 +47,7 @@ public:
     bool getStringArray(char const *sec, char const *key,
                         std::vector<std::string> &val);
     bool getBool(char const *sec, char const *key, bool &val);
-    bool getDouble(char const *sec, char const *key, double val);
+    bool getDouble(char const *sec, char const *key, double &val);
 
 private:
     Var *getVar(char const *sec, char const *key);

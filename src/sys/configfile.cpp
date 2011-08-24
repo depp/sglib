@@ -269,7 +269,7 @@ bool ConfigFile::getBool(char const *sec, char const *key, bool &val)
     return true;
 }
 
-bool ConfigFile::getDouble(char const *sec, char const *key, double val)
+bool ConfigFile::getDouble(char const *sec, char const *key, double &val)
 {
     // FIXME check for overflow?  Or do we even care?
     char const *v = getKey(sec, key);
