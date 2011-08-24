@@ -17,17 +17,17 @@ bool UI::Widget::hitTest(Point pt)
     return bounds_.contains(pt.x, pt.y);
 }
 
-void UI::Widget::mouseMoved(MouseEvent const &evt)
+void UI::Widget::mouseMoved(MouseEvent const &)
 { }
 
-void UI::Widget::mouseEntered(MouseEvent const &evt)
+void UI::Widget::mouseEntered(MouseEvent const &)
 { }
 
-void UI::Widget::mouseExited(MouseEvent const &evt)
+void UI::Widget::mouseExited(MouseEvent const &)
 { }
 
-void UI::Widget::mouseDown(MouseEvent const &evt)
+void UI::Widget::mouseDown(MouseEvent const &)
 { }
 
-void UI::Widget::mouseUp(MouseEvent const &evt)
+void UI::Widget::mouseUp(MouseEvent const &)
 { }

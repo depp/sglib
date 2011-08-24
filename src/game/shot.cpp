@@ -40,7 +40,7 @@ void Shot::update()
         remove();
 }
 
-bool Shot::collide(Object &other)
+bool Shot::collide(Object &)
 {
     remove();
     Object *obj = new Explosion(getX(), getY(), Explosion::kShot);

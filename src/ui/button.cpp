@@ -76,14 +76,14 @@ void UI::Button::draw()
     glPopAttrib();
 }
 
-void UI::Button::mouseEntered(UI::MouseEvent const &evt)
+void UI::Button::mouseEntered(UI::MouseEvent const &)
 {
     if (button_ == ButtonLeft)
         state_ = true;
     hover_ = true;
 }
 
-void UI::Button::mouseExited(UI::MouseEvent const &evt)
+void UI::Button::mouseExited(UI::MouseEvent const &)
 {
     if (button_ == ButtonLeft)
         state_ = false;

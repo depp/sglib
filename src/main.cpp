@@ -10,7 +10,7 @@
 static const unsigned int MAX_FPS = 100;
 static const unsigned int MIN_FRAMETIME = 1000 / MAX_FPS;
 
-int main(int argc, char *argv[])
+int main(int, char *[])
 {
     Path::init();
     if (SDL_Init(SDL_INIT_TIMER) < 0) {

@@ -27,7 +27,7 @@ void UI::Menu::handleEvent(Event const &evt)
     }
 }
 
-void UI::Menu::update(unsigned int ticks)
+void UI::Menu::update(unsigned int)
 {
     if (!initted_) {
         initted_ = true;
