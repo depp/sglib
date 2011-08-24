@@ -10,6 +10,43 @@
 static const unsigned int MAX_FPS = 100;
 static const unsigned int MIN_FRAMETIME = 1000 / MAX_FPS;
 
+static int mapKey(int key)
+{
+    switch (key) {
+    case SDLK_RETURN:
+    case SDLK_SPACE:
+    case SDLK_KP_ENTER:
+        return UI::KSelect;
+
+    case SDLK_ESCAPE:
+        return UI::KEscape;
+
+    case SDLK_KP4:
+    case SDLK_a:
+    case SDLK_LEFT:
+        return UI::KLeft;
+
+    case SDLK_KP8:
+    case SDLK_w:
+    case SDLK_UP:
+        return UI::KUp;
+
+    case SDLK_KP6:
+    case SDLK_d:
+    case SDLK_RIGHT:
+        return UI::KRight;
+
+    case SDLK_KP5:
+    case SDLK_KP2:
+    case SDLK_s:
+    case SDLK_DOWN:
+        return UI::KDown;
+
+    default:
+        return -1;
+    }
+}
+
 int main(int, char *[])
 {
     Path::init();
@@ -72,7 +109,7 @@ int main(int, char *[])
                 UI::EventType t = e.type == SDL_KEYDOWN ?
                     UI::KeyDown : UI::KeyUp;
                 UI::Screen::getActive()->
-                    handleEvent(UI::KeyEvent(t, k.keysym.sym));
+                    handleEvent(UI::KeyEvent(t, mapKey(k.keysym.sym)));
                 break;
             }
             default:

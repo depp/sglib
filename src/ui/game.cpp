@@ -4,7 +4,6 @@
 #include "game/obstacle.hpp"
 #include "graphics/model.hpp"
 #include "event.hpp"
-#include "SDL.h"
 
 UI::Game::~Game()
 {
@@ -28,26 +27,22 @@ void UI::Game::handleKey(UI::KeyEvent const &evt)
 {
     bool state = evt.type == KeyDown;
     switch (evt.key) {
-    case SDLK_ESCAPE:
+    case KEscape:
         setActive(new Menu);
         break;
-    case SDLK_UP:
-    case SDLK_w:
+    case KUp:
         input_.up = state;
         break;
-    case SDLK_DOWN:
-    case SDLK_s:
+    case KDown:
         input_.down = state;
         break;
-    case SDLK_LEFT:
-    case SDLK_a:
+    case KLeft:
         input_.left = state;
         break;
-    case SDLK_RIGHT:
-    case SDLK_d:
+    case KRight:
         input_.right = state;
         break;
-    case SDLK_SPACE:
+    case KSelect:
         input_.fire = state;
         break;
     default:

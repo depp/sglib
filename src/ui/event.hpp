@@ -17,6 +17,15 @@ enum {
     ButtonOther
 };
 
+enum {
+    KLeft,
+    KUp,
+    KRight,
+    KDown,
+    KEscape,
+    KSelect
+};
+
 struct MouseEvent;
 struct KeyEvent;
 
