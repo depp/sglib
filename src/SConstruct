@@ -1,0 +1,67 @@
+env = Environment(
+    CCFLAGS=['-Wall', '-Wextra'],
+    CPPPATH='.',
+    LIBS=['GL', 'GLU']
+    )
+
+flags = {
+    'debug': { 'CCFLAGS': ['-O0', '-ggdb', '-Werror'] },
+    'release': { 'CCFLAGS': ['-O2'] },
+}
+
+config = ARGUMENTS.get('config', 'debug')
+env.MergeFlags(flags[config])
+try:
+    env['CXX'] = ARGUMENTS['CXX']
+except KeyError:
+    pass
+
+sdlenv = env.Clone()
+sdlenv.ParseConfig('sdl-config --cflags')
+
+pcenv = env.Clone()
+pcenv.ParseConfig('pkg-config --cflags pangocairo')
+
+env.ParseConfig('pkg-config --libs pangocairo')
+env.ParseConfig('sdl-config --libs')
+
+env.Program('ld48-two72', [
+        'graphics/dummytexture.cpp',
+        'graphics/video.cpp',
+        'graphics/model.cpp',
+        'graphics/texturefile.cpp',
+        'graphics/texture.cpp',
+        'ui/button.cpp',
+        'ui/widget.cpp',
+        'ui/game.cpp',
+        'ui/screen.cpp',
+        'ui/mousemanager.cpp',
+        'ui/menu.cpp',
+        'ui/camera.cpp',
+        pcenv.Object('type/rastertext_cairo.cpp'),
+        # 'type/font_osx.cpp',
+        pcenv.Object('type/font_pango.cpp'),
+        # 'type/rastertext_osx.cpp',
+        'type/rastertext.cpp',
+        sdlenv.Object('main.cpp'),
+        # 'game/plane.cpp',
+        'game/world.cpp',
+        'scene/group.cpp',
+        'scene/leafobject.cpp',
+        'scene/object.cpp',
+        'sys/system_error.cpp',
+        'sys/resource.cpp',
+        'sys/path_xdg.cpp',
+        'sys/ifilereg.cpp',
+        'sys/path_linux.cpp',
+        'sys/config.cpp',
+        # 'sys/parseconfig.cpp',
+        'sys/path.cpp',
+        # 'sys/path_osx.cpp',
+        'sys/ifile.cpp',
+        'sys/stringarray.cpp',
+        'sys/configfile.cpp',
+        # 'sys/testconfig.cpp',
+        'sys/configfileread.cpp',
+        'rand.cpp',
+        ])
