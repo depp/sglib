@@ -1,21 +1,22 @@
-#include "game.hpp"
-#include "menu.hpp"
-#include "game/tank/world.hpp"
-#include "game/tank/obstacle.hpp"
+#include "gamescreen.hpp"
+#include "ui/menu.hpp"
+#include "world.hpp"
+#include "obstacle.hpp"
 #include "graphics/model.hpp"
-#include "event.hpp"
+#include "ui/event.hpp"
+namespace Tank {
 
-UI::Game::~Game()
+GameScreen::~GameScreen()
 {
     if (world_)
         delete world_;
 }
 
-void UI::Game::handleEvent(UI::Event const &evt)
+void GameScreen::handleEvent(UI::Event const &evt)
 {
     switch (evt.type) {
-    case KeyDown:
-    case KeyUp:
+    case UI::KeyDown:
+    case UI::KeyUp:
         handleKey(evt.keyEvent());
         break;
     default:
@@ -23,26 +24,26 @@ void UI::Game::handleEvent(UI::Event const &evt)
     }
 }
 
-void UI::Game::handleKey(UI::KeyEvent const &evt)
+void GameScreen::handleKey(UI::KeyEvent const &evt)
 {
-    bool state = evt.type == KeyDown;
+    bool state = evt.type == UI::KeyDown;
     switch (evt.key) {
-    case KEscape:
-        setActive(new Menu);
+    case UI::KEscape:
+        setActive(new UI::Menu);
         break;
-    case KUp:
+    case UI::KUp:
         input_.up = state;
         break;
-    case KDown:
+    case UI::KDown:
         input_.down = state;
         break;
-    case KLeft:
+    case UI::KLeft:
         input_.left = state;
         break;
-    case KRight:
+    case UI::KRight:
         input_.right = state;
         break;
-    case KSelect:
+    case UI::KSelect:
         input_.fire = state;
         break;
     default:
@@ -50,7 +51,7 @@ void UI::Game::handleKey(UI::KeyEvent const &evt)
     }
 }
 
-void UI::Game::update(unsigned int ticks)
+void GameScreen::update(unsigned int ticks)
 {
     if (!world_) {
         world_ = new Tank::World;
@@ -81,7 +82,7 @@ void UI::Game::update(unsigned int ticks)
     world_->update(ticks);
 }
 
-void UI::Game::draw()
+void GameScreen::draw()
 {
     world_->draw();
     /*
@@ -123,4 +124,6 @@ void UI::Game::draw()
         glPopAttrib();
     }
     */
+}
+
 }

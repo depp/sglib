@@ -1,6 +1,6 @@
 #include "menu.hpp"
 #include "button.hpp"
-#include "game.hpp"
+#include "game/tank/gamescreen.hpp"
 #include "event.hpp"
 #include "graphics/video.hpp"
 #include "graphics/texturefile.hpp"
@@ -96,7 +96,7 @@ UI::Widget *UI::Menu::traceMouse(UI::Point pt)
 
 void UI::Menu::newGame()
 {
-    setActive(new Game);
+    setActive(new Tank::GameScreen);
 }
 
 void UI::Menu::multiplayer()
