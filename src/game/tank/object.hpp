@@ -1,5 +1,6 @@
 #ifndef GAME_OBJECT_HPP
 #define GAME_OBJECT_HPP
+namespace Tank {
 class World;
 
 class Object {
@@ -36,4 +37,5 @@ private:
     World *world_;
 };
 
+}
 #endif

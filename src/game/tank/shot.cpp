@@ -4,6 +4,7 @@
 #include "world.hpp"
 #include "explosion.hpp"
 #include "opengl.hpp"
+namespace Tank {
 
 static const float kShotTwist = 720.0f;
 static const float kShotSpan = 1.0f;
@@ -46,4 +47,6 @@ bool Shot::collide(Object &)
     Object *obj = new Explosion(getX(), getY(), Explosion::kShot);
     getWorld().addObject(obj);
     return false;
+}
+
 }

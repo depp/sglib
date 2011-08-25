@@ -1,6 +1,7 @@
 #ifndef GAME_SHOT_HPP
 #define GAME_SHOT_HPP
 #include "object.hpp"
+namespace Tank {
 
 class Shot : public Object {
 public:
@@ -15,4 +16,5 @@ private:
     float time_;
 };
 
+}
 #endif

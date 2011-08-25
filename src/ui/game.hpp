@@ -2,7 +2,11 @@
 #define UI_GAME_HPP
 #include "screen.hpp"
 #include "game/tank/player.hpp"
+
+namespace Tank {
 class World;
+}
+
 class RasterText;
 namespace UI {
 struct KeyEvent;
@@ -21,8 +25,8 @@ public:
 private:
     void handleKey(KeyEvent const &evt);
 
-    World *world_;
-    Player::Input input_;
+    Tank::World *world_;
+    Tank::Player::Input input_;
 };
 
 }

@@ -3,6 +3,7 @@
 #include "object.hpp"
 #include "graphics/color.hpp"
 #include "graphics/model.hpp"
+namespace Tank {
 
 class Obstacle : public Object {
 public:
@@ -16,4 +17,5 @@ private:
     Color tcolor_, lcolor_;
 };
 
+}
 #endif

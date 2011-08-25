@@ -1,6 +1,7 @@
 #ifndef GAME_PLAYER_HPP
 #define GAME_PLAYER_HPP
 #include "object.hpp"
+namespace Tank {
 
 class Player : public Object {
 public:
@@ -26,4 +27,5 @@ private:
     Input &input_;
 };
 
+}
 #endif

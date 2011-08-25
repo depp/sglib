@@ -1,5 +1,6 @@
 #ifndef GAME_WORLD_HPP
 #define GAME_WORLD_HPP
+namespace Tank {
 class Object;
 
 class World {
@@ -33,4 +34,5 @@ private:
     float playerX_, playerY_, playerFace_;
 };
 
+}
 #endif

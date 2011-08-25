@@ -53,25 +53,28 @@ void UI::Game::handleKey(UI::KeyEvent const &evt)
 void UI::Game::update(unsigned int ticks)
 {
     if (!world_) {
-        world_ = new World;
-        World &w = *world_;
+        world_ = new Tank::World;
+        Tank::World &w = *world_;
 
-        Object *obj;
-        obj = new Obstacle(
+        Tank::Object *obj;
+        obj = new Tank::Obstacle(
             5.0f, 5.0f, 0.0f, 2.0f,
             Model::open("model/house.egg3d"),
             Color::olive(), Color::yellow());
         w.addObject(obj);
-        obj = new Obstacle(5.0f, -5.0f, 22.5f, 3.0f,
-                           &Model::kPyramid, Color::maroon(), Color::red());
+        obj = new Tank::Obstacle(
+            5.0f, -5.0f, 22.5f, 3.0f,
+            &Model::kPyramid, Color::maroon(), Color::red());
         w.addObject(obj);
-        obj = new Obstacle(-5.0f, 5.0f, 67.5f, 0.5f,
-                           &Model::kCube, Color::olive(), Color::yellow());
+        obj = new Tank::Obstacle(
+            -5.0f, 5.0f, 67.5f, 0.5f,
+            &Model::kCube, Color::olive(), Color::yellow());
         w.addObject(obj);
-        obj = new Obstacle(-5.0f, -5.0f, 45.0f, 1.5f,
-                           &Model::kPyramid, Color::maroon(), Color::red());
+        obj = new Tank::Obstacle(
+            -5.0f, -5.0f, 45.0f, 1.5f,
+            &Model::kPyramid, Color::maroon(), Color::red());
         w.addObject(obj);
-        obj = new Player(0.0f, 0.0f, 0.0f, input_);
+        obj = new Tank::Player(0.0f, 0.0f, 0.0f, input_);
         w.addObject(obj);
         w.setPlayer(obj);
     }

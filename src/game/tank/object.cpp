@@ -1,5 +1,6 @@
 #include "object.hpp"
 #include "opengl.hpp"
+namespace Tank {
 
 Object::Object(unsigned int colGen, unsigned int colRcv,
                float x, float y, float face, float size)
@@ -29,4 +30,6 @@ void Object::update()
 bool Object::collide(Object &)
 {
     return false;
+}
+
 }

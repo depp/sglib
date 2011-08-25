@@ -1,5 +1,6 @@
 #include "obstacle.hpp"
 #include "graphics/model.hpp"
+namespace Tank {
 
 Obstacle::Obstacle(float x, float y, float face, float size,
                    Model::Ref model, Color tcolor, Color lcolor)
@@ -19,4 +20,6 @@ void Obstacle::draw()
     glTranslatef(0.0f, 0.0f, 1.0f);
     model_->draw(tcolor_, lcolor_);
     glPopMatrix();
+}
+
 }

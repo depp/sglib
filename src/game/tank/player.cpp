@@ -2,6 +2,7 @@
 #include "world.hpp"
 #include "shot.hpp"
 #include <cmath>
+namespace Tank {
 
 const float kPlayerForwardSpeed = 10.0f;
 const float kPlayerTurnSpeed = 100.0f;
@@ -42,4 +43,6 @@ void Player::update()
                                getFace());
         getWorld().addObject(obj);
     }
+}
+
 }

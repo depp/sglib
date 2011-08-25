@@ -1,6 +1,7 @@
 #ifndef GAME_EXPLOSION_HPP
 #define GAME_EXPLOSION_HPP
 #include "object.hpp"
+namespace Tank {
 
 class Explosion : public Object {
 public:
@@ -24,4 +25,5 @@ private:
     Particle *particle_;
 };
 
+}
 #endif

@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include "opengl.hpp"
 #include "graphics/video.hpp"
+namespace Tank {
 
 static const unsigned int LAG_THRESHOLD = 1000;
 static const unsigned int FRAME_TICKS = 10;
@@ -267,4 +268,6 @@ void World::getCamera(float camera[3])
     camera[0] = playerX_;
     camera[1] = playerY_;
     camera[2] = 1.0f;
+}
+
 }

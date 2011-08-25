@@ -4,6 +4,7 @@
 #include "world.hpp"
 #include "opengl.hpp"
 #include <stdlib.h>
+namespace Tank {
 
 struct Explosion::Type {
     float radius, vel, randvel;
@@ -131,4 +132,6 @@ void Explosion::update()
     for (unsigned int i = 0; i < type_.count; ++i)
         for (unsigned int j = 0; j < 3; ++j)
             particle_[i].loc[j] += particle_[i].vel[j] * World::kFrameTime;
+}
+
 }
