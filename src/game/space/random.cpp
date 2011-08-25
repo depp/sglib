@@ -1,9 +1,7 @@
-// Copyright 2006 Dietrich Epp <depp@zdome.net>
-// $Id: random.cpp 51 2006-08-16 15:32:33Z depp $
 #include "random.hpp"
-namespace sparks {
+namespace Space {
 
-static const unsigned char k_byte_map[256] = {
+static const unsigned char ByteMap[256] = {
 	5, 183, 227, 141, 111, 189, 175, 202, 112, 252, 54, 158, 207, 218,
 	139, 126, 166, 53, 85, 196, 9, 30, 185, 69, 48, 242, 210, 159, 74,
 	197, 98, 25, 122, 201, 10, 99, 41, 162, 221, 174, 177, 67, 22, 153,
@@ -24,7 +22,8 @@ static const unsigned char k_byte_map[256] = {
 	142, 231, 55, 60
 };
 
-unsigned int stateless_random(unsigned int seed, unsigned int data) {
+unsigned int statelessRandom(unsigned int seed, unsigned int data)
+{
 	unsigned char t1, t2, t3, t4,
 		d1 = (data >> 24) & 0xff,
 		d2 = (data >> 16) & 0xff,
@@ -35,22 +34,22 @@ unsigned int stateless_random(unsigned int seed, unsigned int data) {
 		s3 = (seed >> 8) & 0xff,
 		s4 = seed & 0xff;
 	
-	t1 = d1 ^ k_byte_map[d2 ^ s1];
-	t2 = d2 ^ k_byte_map[d3 ^ s2];
-	t3 = d3 ^ k_byte_map[d4 ^ s3];
-	t4 = d4 ^ k_byte_map[d1 ^ s4];
+	t1 = d1 ^ ByteMap[d2 ^ s1];
+	t2 = d2 ^ ByteMap[d3 ^ s2];
+	t3 = d3 ^ ByteMap[d4 ^ s3];
+	t4 = d4 ^ ByteMap[d1 ^ s4];
 	
-	d1 = t1 ^ k_byte_map[t3 ^ s1];
-	d2 = t2 ^ k_byte_map[t4 ^ s2];
-	d3 = t3 ^ k_byte_map[t1 ^ s3];
-	d4 = t4 ^ k_byte_map[t2 ^ s4];
+	d1 = t1 ^ ByteMap[t3 ^ s1];
+	d2 = t2 ^ ByteMap[t4 ^ s2];
+	d3 = t3 ^ ByteMap[t1 ^ s3];
+	d4 = t4 ^ ByteMap[t2 ^ s4];
 	
-	t1 = d1 ^ k_byte_map[d4 ^ s1];
-	t2 = d2 ^ k_byte_map[d1 ^ s2];
-	t3 = d3 ^ k_byte_map[d2 ^ s3];
-	t4 = d4 ^ k_byte_map[d3 ^ s4];
+	t1 = d1 ^ ByteMap[d4 ^ s1];
+	t2 = d2 ^ ByteMap[d1 ^ s2];
+	t3 = d3 ^ ByteMap[d2 ^ s3];
+	t4 = d4 ^ ByteMap[d3 ^ s4];
 	
 	return (t1 << 24) | (t2 << 16) | (t3 << 8) | t4;
 }
 
-} // namespace sparks
+}

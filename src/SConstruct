@@ -30,7 +30,6 @@ env.ParseConfig('sdl-config --libs')
 
 env.Program('engine', [
     'game/space/entity.cpp',
-    'game/space/game.cpp',
     'game/space/gamescreen.cpp',
     'game/space/main.cpp',
     'game/space/player.cpp',
@@ -41,6 +40,7 @@ env.Program('engine', [
     'game/space/shot.cpp',
     'game/space/stars.cpp',
     'game/space/thinker.cpp',
+    'game/space/world.cpp',
     'game/tank/explosion.cpp',
     'game/tank/gamescreen.cpp',
     'game/tank/object.cpp',

@@ -6,15 +6,22 @@ namespace UI {
 struct KeyEvent;
 }
 namespace Space {
+class World;
 
 class GameScreen : public UI::Screen {
 public:
+    GameScreen()
+        : world_(0)
+    { }
+
     virtual void handleEvent(UI::Event const &evt);
     virtual void update(unsigned int ticks);
     virtual void draw();
 
 private:
     void handleKey(UI::KeyEvent const &evt);
+
+    World *world_;
 };
 
 }

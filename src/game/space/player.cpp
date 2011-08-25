@@ -1,69 +1,75 @@
-// Copyright 2006 Dietrich Epp <depp@zdome.net>
-// $Id: player.cpp 51 2006-08-16 15:32:33Z depp $
 #include "player.hpp"
 #include "ship.hpp"
-#include "game.hpp"
+#include "world.hpp"
 #include "shot.hpp"
 #include <math.h>
-namespace sparks {
+namespace Space {
 
-const float k_rotation_speed = 2.0 * M_PI * 2.0;
-const float k_max_speed = 30.0 * 8.0;
-const float k_acceleration = 180.0 * 8.0;
-const float k_brake = 36.0 * 8.0;
-const float k_shot_velocity = 45.0 * 8.0;
-const float k_shot_time = 25.0 / 60.0;
-const float k_shot_delay = 1.0 / 60.0;
+const float RotationSpeed = 2.0 * M_PI * 2.0;
+const float MaxSpeed = 30.0 * 8.0;
+const float Acceleration = 180.0 * 8.0;
+const float Brake = 36.0 * 8.0;
+const float ShotVelocity = 45.0 * 8.0;
+const float ShotTime = 25.0 / 60.0;
+const float ShotDelay = 1.0 / 60.0;
 
-player::player() : f_ship(NULL), f_keys(0), f_next_shot_time(-1.0) { }
+Player::Player()
+  : ship_(NULL), keys_(0), nextShotTime_(-1.0)
+{ }
 
-player::~player() { }
-	
-void player::think(game& g, double delta) {
-	int rotation = 0;
-	if (key_pressed(key_left))
-		rotation += 1;
-	if (key_pressed(key_right))
-		rotation -= 1;
-	f_ship->angle += ((float)rotation) * k_rotation_speed * delta;
-	if (key_pressed(key_thrust)) {
-		if (!key_pressed(key_brake)) {
-			f_ship->velocity += f_ship->direction * k_acceleration * delta;
-			if (f_ship->velocity.squared() > k_max_speed * k_max_speed)
-				f_ship->velocity.normalize() *= k_max_speed;
-		}
-	} else if (key_pressed(key_brake)) {
-		float delta_v = k_brake * delta;
-		float vel_squared = f_ship->velocity.squared();
-		if (vel_squared < delta_v * delta_v)
-			f_ship->velocity = vector(0.0f, 0.0f);
-		else
-			f_ship->velocity -= f_ship->velocity * (delta_v / sqrtf(vel_squared));
-	}
-	if (key_pressed(key_fire) & (g.time >= f_next_shot_time)) {
-		vector location = f_ship->location + f_ship->direction * 16.0f;
-		vector velocity = f_ship->velocity + f_ship->direction * k_shot_velocity;
-		g.add_thinker(new shot(location, velocity, k_shot_time));
-		f_next_shot_time = g.time + k_shot_delay;
-	}
+Player::~Player()
+{ }
+    
+void Player::think(World &w, double delta)
+{
+    int rotation = 0;
+    if (keyPressed(KeyLeft))
+        rotation += 1;
+    if (keyPressed(KeyRight))
+        rotation -= 1;
+    ship_->angle += ((float)rotation) * RotationSpeed * delta;
+    if (keyPressed(KeyThrust)) {
+        if (!keyPressed(KeyBrake)) {
+            ship_->velocity += ship_->direction * Acceleration * delta;
+            if (ship_->velocity.squared() > MaxSpeed * MaxSpeed)
+                ship_->velocity.normalize() *= MaxSpeed;
+        }
+    } else if (keyPressed(KeyBrake)) {
+        float delta_v = Brake * delta;
+        float vel_squared = ship_->velocity.squared();
+        if (vel_squared < delta_v * delta_v)
+            ship_->velocity = vector(0.0f, 0.0f);
+        else
+            ship_->velocity -= ship_->velocity *
+                (delta_v / sqrtf(vel_squared));
+    }
+    if (keyPressed(KeyFire) & (w.time() >= nextShotTime_)) {
+        vector location = ship_->location + ship_->direction * 16.0f;
+        vector velocity = ship_->velocity + ship_->direction * ShotVelocity;
+        w.addThinker(new Shot(location, velocity, ShotTime));
+        nextShotTime_ = w.time() + ShotDelay;
+    }
 }
 
-void player::enter_game(game& g) {
-	f_ship = new ship;
-	f_ship->angle = M_PI_2;
-	g.add_entity(f_ship);
+void Player::enterGame(World &w)
+{
+    ship_ = new Ship;
+    ship_->angle = M_PI_2;
+    w.addEntity(ship_);
 }
 
-void player::leave_game(game& g) {
-	g.remove_entity(f_ship);
+void Player::leaveGame(World &w)
+{
+    w.removeEntity(ship_);
 }
 
-void player::set_key(int key, bool flag) {
-	int mask = 1 << key;
-	if (flag)
-		f_keys |= mask;
-	else
-		f_keys &= ~mask;
+void Player::setKey(int key, bool flag)
+{
+    int mask = 1 << key;
+    if (flag)
+        keys_ |= mask;
+    else
+        keys_ &= ~mask;
 }
 
-} // namespace sparks
+}

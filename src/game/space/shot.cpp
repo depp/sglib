@@ -1,52 +1,61 @@
-// Copyright 2006 Dietrich Epp <depp@zdome.net>
-// $Id: shot.cpp 51 2006-08-16 15:32:33Z depp $
 #include <GL/gl.h>
 #include "shot.hpp"
 #include "entity.hpp"
-#include "game.hpp"
-namespace sparks {
+#include "world.hpp"
+namespace Space {
 
-class shot::shot_entity : public entity {
-	public:
-		shot_entity();
-		virtual ~shot_entity();
-		virtual void move(game& g, double delta);
-		virtual void draw();
-		vector velocity;
+class Shot::ShotEntity : public Entity {
+public:
+    ShotEntity();
+    virtual ~ShotEntity();
+
+    virtual void move(World &w, double delta);
+    virtual void draw();
+
+    vector velocity;
 };
 
-shot::shot(vector const& location, vector const& velocity, double time) {
-	f_shot = new shot_entity;
-	f_shot->location = location;
-	f_shot->velocity = velocity;
-	f_endtime = time;
+Shot::Shot(vector const& location, vector const& velocity, double time)
+{
+	shot_ = new ShotEntity;
+	shot_->location = location;
+	shot_->velocity = velocity;
+	endtime_ = time;
 }
 
-shot::~shot() { }
+Shot::~Shot()
+{ }
 
-void shot::think(game& g, double) {
-	if (g.time > f_endtime)
-		g.remove_thinker(this);
+void Shot::think(World &w, double)
+{
+	if (w.time() > endtime_)
+		w.removeThinker(this);
 }
 
-void shot::enter_game(game& g) {
-	f_endtime += g.time;
-	g.add_entity(f_shot);
+void Shot::enterGame(World &w)
+{
+	endtime_ += w.time();
+	w.addEntity(shot_);
 }
 
-void shot::leave_game(game& g) {
-	g.remove_entity(f_shot);
+void Shot::leaveGame(World &w)
+{
+	w.removeEntity(shot_);
 }
 
-shot::shot_entity::shot_entity() { }
+Shot::ShotEntity::ShotEntity()
+{ }
 
-shot::shot_entity::~shot_entity() { }
+Shot::ShotEntity::~ShotEntity()
+{ }
 
-void shot::shot_entity::move(game&, double delta) {
+void Shot::ShotEntity::move(World &, double delta)
+{
 	location += velocity * delta;
 }
 
-void shot::shot_entity::draw() {
+void Shot::ShotEntity::draw()
+{
 	glColor3ub(0, 255, 255);
 	glPointSize(2);
 	glBegin(GL_POINTS);
@@ -54,4 +63,4 @@ void shot::shot_entity::draw() {
 	glEnd();
 }
 
-} // namespace sparks
+}

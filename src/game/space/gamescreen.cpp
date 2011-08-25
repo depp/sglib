@@ -1,6 +1,7 @@
 #include "gamescreen.hpp"
 #include "ui/menu.hpp"
 #include "ui/event.hpp"
+#include "world.hpp"
 namespace Space {
 
 void GameScreen::handleEvent(UI::Event const &evt)
@@ -37,12 +38,17 @@ void GameScreen::handleKey(UI::KeyEvent const &evt)
     }
 }
 
-void GameScreen::update(unsigned int)
-{ }
+void GameScreen::update(unsigned int ticks)
+{
+    if (!world_)
+        world_ = new World;
+    world_->update(ticks);
+}
 
 void GameScreen::draw()
 {
     glClear(GL_COLOR_BUFFER_BIT);
+    world_->draw();
 }
 
 }

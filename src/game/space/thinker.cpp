@@ -1,12 +1,13 @@
-// Copyright 2006 Dietrich Epp <depp@zdome.net>
-// $Id: thinker.cpp 42 2006-08-15 11:01:35Z depp $
 #include "thinker.hpp"
-namespace sparks {
+namespace Space {
 
-thinker::~thinker() { }
+Thinker::~Thinker()
+{ }
 
-void thinker::enter_game(game&) { }
+void Thinker::enterGame(World &)
+{ }
 
-void thinker::leave_game(game&) { }
+void Thinker::leaveGame(World &)
+{ }
 
-} // namespace sparks
+}

@@ -1,17 +1,15 @@
-// Copyright 2006 Dietrich Epp <depp@zdome.net>
-// $Id: thinker.h 43 2006-08-15 22:54:22Z depp $
 #ifndef THINKER_H
 #define THINKER_H
-namespace sparks {
-class game;
+namespace Space {
+class World;
 
-class thinker {
-	public:
-		virtual ~thinker();
-		virtual void think(game& g, double delta) = 0;
-		virtual void enter_game(game& g);
-		virtual void leave_game(game& g);
+class Thinker {
+public:
+    virtual ~Thinker();
+    virtual void think(World &w, double delta) = 0;
+    virtual void enterGame(World &w);
+    virtual void leaveGame(World &w);
 };
 
-} // namespace sparks
+}
 #endif

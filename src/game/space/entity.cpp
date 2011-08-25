@@ -1,12 +1,14 @@
-// Copyright 2006 Dietrich Epp <depp@zdome.net>
-// $Id: entity.cpp 51 2006-08-16 15:32:33Z depp $
 #include "entity.hpp"
-namespace sparks {
+namespace Space {
 
-entity::entity() : radius(0.0f), layer(0) { }
+Entity::Entity()
+  : radius(0.0f), layer(0)
+{ }
 
-entity::~entity() { }
+Entity::~Entity()
+{ }
 
-void entity::move(game&, double) { }
+void Entity::move(World &, double)
+{ }
 
-} // namespace synth
+}

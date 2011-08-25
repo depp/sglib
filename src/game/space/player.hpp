@@ -1,32 +1,42 @@
-// Copyright 2006 Dietrich Epp <depp@zdome.net>
-// $Id: player.h 51 2006-08-16 15:32:33Z depp $
 #ifndef PLAYER_H
 #define PLAYER_H
 #include "thinker.hpp"
-namespace sparks {
-class ship;
+#include "ship.hpp"
+namespace Space {
+class Ship;
 
 enum {
-	key_left,
-	key_right,
-	key_thrust,
-	key_brake,
-	key_fire
+	KeyLeft,
+	KeyRight,
+	KeyThrust,
+	KeyBrake,
+	KeyFire
 };
 
-class player : public thinker {
-	public:
-		player();
-		virtual ~player();
-		virtual void think(game& g, double delta);
-		virtual void enter_game(game& g);
-		virtual void leave_game(game& g);
-		void set_key(int key, bool flag);
-		ship* f_ship;
-	private:
-		bool key_pressed(int key) const { return f_keys & (1 << key); }
-		unsigned int f_keys;
-		double f_next_shot_time;
+class Player : public Thinker {
+    Ship *ship_;
+    unsigned int keys_;
+    double nextShotTime_;
+
+public:
+    Player();
+    virtual ~Player();
+    virtual void think(World &w, double delta);
+
+    virtual void enterGame(World &w);
+    virtual void leaveGame(World &w);
+    void setKey(int key, bool flag);
+
+    vector location()
+    {
+        return (this && ship_) ? ship_->location : vector();
+    }
+
+private:
+    bool keyPressed(int key) const
+    {
+        return keys_ & (1U << key);
+    }
 };
 
 } // namespace sparks
