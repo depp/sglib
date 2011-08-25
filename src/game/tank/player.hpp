@@ -1,5 +1,5 @@
-#ifndef GAME_PLAYER_HPP
-#define GAME_PLAYER_HPP
+#ifndef GAME_TANK_PLAYER_HPP
+#define GAME_TANK_PLAYER_HPP
 #include "object.hpp"
 namespace Tank {
 

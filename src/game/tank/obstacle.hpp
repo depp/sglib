@@ -1,5 +1,5 @@
-#ifndef GAME_OBSTACLE_HPP
-#define GAME_OBSTACLE_HPP
+#ifndef GAME_TANK_OBSTACLE_HPP
+#define GAME_TANK_OBSTACLE_HPP
 #include "object.hpp"
 #include "graphics/color.hpp"
 #include "graphics/model.hpp"

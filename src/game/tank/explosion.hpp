@@ -1,5 +1,5 @@
-#ifndef GAME_EXPLOSION_HPP
-#define GAME_EXPLOSION_HPP
+#ifndef GAME_TANK_EXPLOSION_HPP
+#define GAME_TANK_EXPLOSION_HPP
 #include "object.hpp"
 namespace Tank {
 

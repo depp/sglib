@@ -1,5 +1,5 @@
-#ifndef GAME_WORLD_HPP
-#define GAME_WORLD_HPP
+#ifndef GAME_TANK_WORLD_HPP
+#define GAME_TANK_WORLD_HPP
 namespace Tank {
 class Object;
 
