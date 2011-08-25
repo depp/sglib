@@ -19,7 +19,7 @@ IFile *openIFile(std::string const &path)
         abspath = userData + '/' + path;
         try {
             return IFileReg::open(abspath);
-        } catch (system_error const &e) { }
+        } catch (system_error const &) { }
     }
     std::vector<std::string>::const_iterator
         i = globalData.begin(), e = globalData.end();
@@ -28,7 +28,7 @@ IFile *openIFile(std::string const &path)
         abspath = *i + '/' + path;
         try {
             return IFileReg::open(abspath);
-        } catch (system_error const &e) { }
+        } catch (system_error const &) { }
     }
     throw system_error(ENOENT);
 }

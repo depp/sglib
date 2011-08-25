@@ -13,7 +13,7 @@ IFileReg *IFileReg::open(char const *path)
         throw system_error(errno);
     try {
         f = new IFileReg;
-    } catch (std::exception const &e) {
+    } catch (std::exception const &) {
         ::close(fdes);
         throw;
     }

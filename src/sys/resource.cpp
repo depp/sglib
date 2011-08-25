@@ -24,7 +24,7 @@ void Resource::loadAll()
                     *i = *e;
             }
         }
-    } catch (std::exception const &exc) {
+    } catch (std::exception const &) {
         resources.resize(e - b);
         throw;
     }
