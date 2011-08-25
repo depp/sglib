@@ -1,8 +1,8 @@
 // Copyright 2006 Dietrich Epp <depp@zdome.net>
 // $Id: ship.cpp 51 2006-08-16 15:32:33Z depp $
 #include <GL/gl.h>
-#include "ship.h"
-#include "shapes.h"
+#include "ship.hpp"
+#include "shapes.hpp"
 #include <math.h>
 namespace sparks {
 

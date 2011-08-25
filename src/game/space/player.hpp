@@ -2,7 +2,7 @@
 // $Id: player.h 51 2006-08-16 15:32:33Z depp $
 #ifndef PLAYER_H
 #define PLAYER_H
-#include "thinker.h"
+#include "thinker.hpp"
 namespace sparks {
 class ship;
 

@@ -1,6 +1,6 @@
 // Copyright 2006 Dietrich Epp <depp@zdome.net>
 // $Id: random.cpp 51 2006-08-16 15:32:33Z depp $
-#include "random.h"
+#include "random.hpp"
 namespace sparks {
 
 static const unsigned char k_byte_map[256] = {

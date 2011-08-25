@@ -1,9 +1,9 @@
 // Copyright 2006 Dietrich Epp <depp@zdome.net>
 // $Id: player.cpp 51 2006-08-16 15:32:33Z depp $
-#include "player.h"
-#include "ship.h"
-#include "game.h"
-#include "shot.h"
+#include "player.hpp"
+#include "ship.hpp"
+#include "game.hpp"
+#include "shot.hpp"
 #include <math.h>
 namespace sparks {
 

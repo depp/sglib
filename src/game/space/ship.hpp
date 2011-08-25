@@ -2,7 +2,7 @@
 // $Id: ship.h 51 2006-08-16 15:32:33Z depp $
 #ifndef SHIP_H
 #define SHIP_H
-#include "entity.h"
+#include "entity.hpp"
 namespace sparks {
 
 class ship : public entity {

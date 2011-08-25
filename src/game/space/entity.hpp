@@ -2,7 +2,7 @@
 // $Id: entity.h 51 2006-08-16 15:32:33Z depp $
 #ifndef ENTITY_H
 #define ENTITY_H
-#include "vector.h"
+#include "vector.hpp"
 namespace sparks {
 class game;
 

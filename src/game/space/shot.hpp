@@ -2,7 +2,7 @@
 // $Id: shot.h 51 2006-08-16 15:32:33Z depp $
 #ifndef SHOT_H
 #define SHOT_H
-#include "thinker.h"
+#include "thinker.hpp"
 namespace sparks {
 class vector;
 

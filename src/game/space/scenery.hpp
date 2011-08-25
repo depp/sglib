@@ -2,7 +2,7 @@
 // $Id: scenery.h 51 2006-08-16 15:32:33Z depp $
 #ifndef SCENERY_H
 #define SCENERY_H
-#include "entity.h"
+#include "entity.hpp"
 namespace sparks {
 
 class scenery : public entity {

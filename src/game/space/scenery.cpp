@@ -1,8 +1,8 @@
 // Copyright 2006 Dietrich Epp <depp@zdome.net>
 // $Id: scenery.cpp 51 2006-08-16 15:32:33Z depp $
 #include <GL/gl.h>
-#include "scenery.h"
-#include "shapes.h"
+#include "scenery.hpp"
+#include "shapes.hpp"
 namespace sparks {
 
 scenery::scenery() { }

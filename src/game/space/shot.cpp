@@ -1,9 +1,9 @@
 // Copyright 2006 Dietrich Epp <depp@zdome.net>
 // $Id: shot.cpp 51 2006-08-16 15:32:33Z depp $
 #include <GL/gl.h>
-#include "shot.h"
-#include "entity.h"
-#include "game.h"
+#include "shot.hpp"
+#include "entity.hpp"
+#include "game.hpp"
 namespace sparks {
 
 class shot::shot_entity : public entity {

@@ -1,8 +1,8 @@
 // Copyright 2006 Dietrich Epp <depp@zdome.net>
 // $Id: game.cpp 51 2006-08-16 15:32:33Z depp $
-#include "game.h"
-#include "entity.h"
-#include "thinker.h"
+#include "game.hpp"
+#include "entity.hpp"
+#include "thinker.hpp"
 namespace sparks {
 
 struct game::event {

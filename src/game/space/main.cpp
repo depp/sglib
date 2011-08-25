@@ -4,11 +4,11 @@
 #include <GL/gl.h>
 #include <stdlib.h>
 #include <time.h>
-#include "player.h"
-#include "game.h"
-#include "scenery.h"
-#include "stars.h"
-#include "ship.h"
+#include "player.hpp"
+#include "game.hpp"
+#include "scenery.hpp"
+#include "stars.hpp"
+#include "ship.hpp"
 using namespace sparks;
 
 static void init() {

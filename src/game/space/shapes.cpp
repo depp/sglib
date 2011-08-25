@@ -1,7 +1,7 @@
 // Copyright 2006 Dietrich Epp <depp@zdome.net>
 // $Id: shapes.cpp 51 2006-08-16 15:32:33Z depp $
 #include <GL/gl.h>
-#include "shapes.h"
+#include "shapes.hpp"
 namespace sparks {
 
 static const int point_count = 6;
