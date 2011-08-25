@@ -29,12 +29,12 @@ env.ParseConfig('pkg-config --libs pangocairo')
 env.ParseConfig('sdl-config --libs')
 
 env.Program('engine', [
-    'game/explosion.cpp',
-    'game/object.cpp',
-    'game/obstacle.cpp',
-    'game/player.cpp',
-    'game/shot.cpp',
-    'game/world.cpp',
+    'game/tank/explosion.cpp',
+    'game/tank/object.cpp',
+    'game/tank/obstacle.cpp',
+    'game/tank/player.cpp',
+    'game/tank/shot.cpp',
+    'game/tank/world.cpp',
     'graphics/dummytexture.cpp',
     'graphics/model.cpp',
     'graphics/texture.cpp',

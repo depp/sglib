@@ -1,7 +1,7 @@
 #include "game.hpp"
 #include "menu.hpp"
-#include "game/world.hpp"
-#include "game/obstacle.hpp"
+#include "game/tank/world.hpp"
+#include "game/tank/obstacle.hpp"
 #include "graphics/model.hpp"
 #include "event.hpp"
 

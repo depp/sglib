@@ -1,7 +1,7 @@
 #ifndef UI_GAME_HPP
 #define UI_GAME_HPP
 #include "screen.hpp"
-#include "game/player.hpp"
+#include "game/tank/player.hpp"
 class World;
 class RasterText;
 namespace UI {
