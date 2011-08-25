@@ -31,6 +31,7 @@ env.ParseConfig('sdl-config --libs')
 env.Program('engine', [
     'game/space/entity.cpp',
     'game/space/game.cpp',
+    'game/space/gamescreen.cpp',
     'game/space/main.cpp',
     'game/space/player.cpp',
     'game/space/random.cpp',

@@ -19,9 +19,8 @@ public:
 private:
     virtual Widget *traceMouse(Point pt);
 
-    void newGame();
-    void multiplayer();
-    void options();
+    void tankGame();
+    void spaceGame();
     void quit();
 
     bool initted_;
