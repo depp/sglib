@@ -10,7 +10,7 @@ ship::ship() : angle(0.0f), angular_velocity(0.0f), direction(), velocity() { }
 
 ship::~ship() { }
 
-void ship::move(game& g, double delta) {
+void ship::move(game&, double delta) {
 	location += velocity * delta;
 	angle += angular_velocity * delta;
 	direction.v[0] = cosf(angle);

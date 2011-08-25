@@ -5,8 +5,8 @@ namespace sparks {
 
 thinker::~thinker() { }
 
-void thinker::enter_game(game& g) { }
+void thinker::enter_game(game&) { }
 
-void thinker::leave_game(game& g) { }
+void thinker::leave_game(game&) { }
 
 } // namespace sparks

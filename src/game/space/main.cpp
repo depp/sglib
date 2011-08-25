@@ -1,5 +1,8 @@
 // Copyright 2006 Dietrich Epp <depp@zdome.net>
 // $Id: main.cpp 51 2006-08-16 15:32:33Z depp $
+
+#if 0
+
 #include <SDL/SDL.h>
 #include <GL/gl.h>
 #include <stdlib.h>
@@ -131,9 +134,12 @@ class main_looper {
 		}
 };
 
-int main(int argc, char** argv) {
+int main(int, char**) {
 	init();
 	main_looper().run();
 	term();
 	return 0;
 }
+
+#endif
+

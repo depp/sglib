@@ -7,6 +7,6 @@ entity::entity() : radius(0.0f), layer(0) { }
 
 entity::~entity() { }
 
-void entity::move(game& g, double delta) { }
+void entity::move(game&, double) { }
 
 } // namespace synth

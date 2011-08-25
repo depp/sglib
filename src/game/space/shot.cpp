@@ -24,7 +24,7 @@ shot::shot(vector const& location, vector const& velocity, double time) {
 
 shot::~shot() { }
 
-void shot::think(game& g, double delta) {
+void shot::think(game& g, double) {
 	if (g.time > f_endtime)
 		g.remove_thinker(this);
 }
@@ -42,7 +42,7 @@ shot::shot_entity::shot_entity() { }
 
 shot::shot_entity::~shot_entity() { }
 
-void shot::shot_entity::move(game& g, double delta) {
+void shot::shot_entity::move(game&, double delta) {
 	location += velocity * delta;
 }
 
