@@ -6,9 +6,11 @@ namespace Space {
 Scenery::Scenery()
 { }
 
-Scenery::~Scenery() { }
+Scenery::~Scenery()
+{ }
 
-void Scenery::draw() {
+void Scenery::draw()
+{
     glPushAttrib(GL_CURRENT_BIT | GL_LINE_BIT);
 	glPushMatrix();
 	glTranslatef(location.v[0], location.v[1], 0.0f);
