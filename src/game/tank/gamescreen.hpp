@@ -1,5 +1,5 @@
-#ifndef UI_GAME_HPP
-#define UI_GAME_HPP
+#ifndef GAME_TANK_GAMESCREEN_HPP
+#define GAME_TANK_GAMESCREEN_HPP
 #include "ui/screen.hpp"
 #include "player.hpp"
 class RasterText;

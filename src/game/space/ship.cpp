@@ -25,7 +25,7 @@ void Ship::draw()
     glPushMatrix();
     glTranslatef(location.v[0], location.v[1], 0.0f);
     glRotatef(angle * 180.0f * M_1_PI, 0.0f, 0.0f, 1.0f);
-    
+
     glShadeModel(GL_SMOOTH);
     glBegin(GL_TRIANGLES);
     glColor3ub(119, 119, 119);
@@ -34,7 +34,7 @@ void Ship::draw()
     glColor3ub(255, 0, 0);
     glVertex2f(16.0f, 0.0f);
     glEnd();
-    
+
     glPushMatrix();
     glScalef(22.0f, 22.0f, 1.0f);
     glShadeModel(GL_FLAT);
@@ -43,7 +43,7 @@ void Ship::draw()
     drawCircle();
     glEnd();
     glPopMatrix();
-    
+
     glPopMatrix();
     glPopAttrib();
 }

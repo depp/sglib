@@ -1,5 +1,5 @@
-#ifndef THINKER_H
-#define THINKER_H
+#ifndef GAME_SPACE_THINKER_HPP
+#define GAME_SPACE_THINKER_HPP
 namespace Space {
 class World;
 

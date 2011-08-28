@@ -1,16 +1,16 @@
-#ifndef PLAYER_H
-#define PLAYER_H
+#ifndef GAME_SPACE_PLAYER_HPP
+#define GAME_SPACE_PLAYER_HPP
 #include "thinker.hpp"
 #include "ship.hpp"
 namespace Space {
 class Ship;
 
 enum {
-	KeyLeft,
-	KeyRight,
-	KeyThrust,
-	KeyBrake,
-	KeyFire
+    KeyLeft,
+    KeyRight,
+    KeyThrust,
+    KeyBrake,
+    KeyFire
 };
 
 class Player : public Thinker {

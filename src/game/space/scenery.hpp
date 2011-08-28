@@ -1,5 +1,5 @@
-#ifndef SCENERY_H
-#define SCENERY_H
+#ifndef GAME_SPACE_SCENERY_HPP
+#define GAME_SPACE_SCENERY_HPP
 #include "entity.hpp"
 namespace Space {
 

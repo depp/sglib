@@ -1,5 +1,5 @@
-#ifndef ENTITY_H
-#define ENTITY_H
+#ifndef GAME_SPACE_ENTITY_HPP
+#define GAME_SPACE_ENTITY_HPP
 #include "vector.hpp"
 namespace Space {
 class World;

@@ -1,5 +1,5 @@
-#ifndef SHOT_H
-#define SHOT_H
+#ifndef GAME_SPACE_SHOT_HPP
+#define GAME_SPACE_SHOT_HPP
 #include "thinker.hpp"
 namespace Space {
 class vector;

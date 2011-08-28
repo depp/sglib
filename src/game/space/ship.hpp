@@ -1,5 +1,5 @@
-#ifndef SHIP_H
-#define SHIP_H
+#ifndef GAME_SPACE_SHIP_HPP
+#define GAME_SPACE_SHIP_HPP
 #include "entity.hpp"
 namespace Space {
 

@@ -1,5 +1,5 @@
-#ifndef SHAPES_H
-#define SHAPES_H
+#ifndef GAME_SPACE_SHAPES_HPP
+#define GAME_SPACE_SHAPES_HPP
 namespace Space {
 
 void drawCircle();

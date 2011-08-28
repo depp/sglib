@@ -19,7 +19,7 @@ Player::Player()
 
 Player::~Player()
 { }
-    
+
 void Player::think(World &w, double delta)
 {
     int rotation = 0;

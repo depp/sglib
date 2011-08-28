@@ -1,5 +1,5 @@
-#ifndef STARS_H
-#define STARS_H
+#ifndef GAME_SPACE_STARS_HPP
+#define GAME_SPACE_STARS_HPP
 namespace Space {
 
 class Starfield {

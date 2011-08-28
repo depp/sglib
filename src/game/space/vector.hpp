@@ -1,7 +1,5 @@
-// Copyright 2006 Dietrich Epp <depp@zdome.net>
-// $Id: vector.h 51 2006-08-16 15:32:33Z depp $
-#ifndef VECTOR_H
-#define VECTOR_H
+#ifndef GAME_SPACE_VECTOR_HPP
+#define GAME_SPACE_VECTOR_HPP
 #include <math.h>
 namespace Space {
 
@@ -16,7 +14,7 @@ public:
         v[0] = a;
         v[1] = b;
     }
-		
+
     vector operator+(const vector& a) const {
         return vector(v[0] + a.v[0], v[1] + a.v[1]);
     }
