@@ -9,7 +9,7 @@ Scenery::Scenery()
 Scenery::~Scenery() { }
 
 void Scenery::draw() {
-	glMatrixMode(GL_MODELVIEW);
+    glPushAttrib(GL_CURRENT_BIT | GL_LINE_BIT);
 	glPushMatrix();
 	glTranslatef(location.v[0], location.v[1], 0.0f);
 	glScalef(radius, radius, 1.0f);
@@ -26,6 +26,7 @@ void Scenery::draw() {
 	glEnd();
 	
 	glPopMatrix();
+    glPopAttrib();
 }
 
 }

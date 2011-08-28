@@ -21,7 +21,7 @@ void Ship::move(World &, double delta)
 
 void Ship::draw()
 {
-    glMatrixMode(GL_MODELVIEW);
+    glPushAttrib(GL_CURRENT_BIT | GL_LIGHTING_BIT);
     glPushMatrix();
     glTranslatef(location.v[0], location.v[1], 0.0f);
     glRotatef(angle * 180.0f * M_1_PI, 0.0f, 0.0f, 1.0f);
@@ -45,6 +45,7 @@ void Ship::draw()
     glPopMatrix();
     
     glPopMatrix();
+    glPopAttrib();
 }
 
 }
