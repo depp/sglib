@@ -23,7 +23,7 @@ struct Tile {
 };
 
 Starfield::Starfield()
-  : seed(rand())
+    : seed(rand())
 { }
 
 void Starfield::draw(float xmin, float ymin, float xsize, float ysize)
