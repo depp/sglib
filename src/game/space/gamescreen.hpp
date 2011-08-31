@@ -7,6 +7,7 @@ struct KeyEvent;
 }
 namespace Space {
 class World;
+class Player;
 
 class GameScreen : public UI::Screen {
 public:
@@ -22,6 +23,7 @@ private:
     void handleKey(UI::KeyEvent const &evt);
 
     World *world_;
+    Player *player_;
 };
 
 }

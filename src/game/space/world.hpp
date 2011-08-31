@@ -21,6 +21,11 @@ public:
     void addThinker(Thinker *t);
     void removeThinker(Thinker *t);
 
+    void setPlayer(Player *p)
+    {
+        player_ = p;
+    }
+
     double time()
     {
         return time_;

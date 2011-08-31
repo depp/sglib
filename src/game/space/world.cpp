@@ -4,7 +4,6 @@
 #include "stars.hpp"
 #include "opengl.hpp"
 #include "player.hpp"
-#include "scenery.hpp"
 namespace Space {
 
 struct World::Event {
@@ -45,13 +44,6 @@ World::World()
         starfields_[i].parallax = 0.1 * (i + 1);
         starfields_[i].tileSize = 64.0;
     }
-
-    player_ = new Player();
-    addThinker(player_);
-
-    Scenery *s = new Scenery;
-    s->radius = 32.0f;
-    addEntity(s);
 }
 
 World::~World()
