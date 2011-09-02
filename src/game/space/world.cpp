@@ -5,6 +5,7 @@
 #include "opengl.hpp"
 #include "player.hpp"
 #include "graphics/video.hpp"
+#include <stdio.h>
 namespace Space {
 
 struct World::Event {
@@ -40,8 +41,9 @@ struct World::Event {
 World::World()
   : time_(0.0)
 {
-    starfields_.resize(9);
+    starfields_.reserve(9);
     for (int i = 0; i < 9; ++i) {
+        starfields_.push_back(Starfield());
         starfields_[i].parallax = 0.1 * (i + 1);
         starfields_[i].tileSize = 64.0;
     }
