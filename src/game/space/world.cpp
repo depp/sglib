@@ -38,7 +38,7 @@ struct World::Event {
 };
 
 World::World()
-  : time_(0.0)
+    : time_(0.0)
 {
     starfields_.reserve(9);
     for (int i = 0; i < 9; ++i) {
