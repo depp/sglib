@@ -20,22 +20,32 @@ void GameScreen::handleEvent(UI::Event const &evt)
 
 void GameScreen::handleKey(UI::KeyEvent const &evt)
 {
-    // bool state = evt.type == UI::KeyDown;
+    bool state = evt.type == UI::KeyDown;
     switch (evt.key) {
     case UI::KEscape:
         setActive(new UI::Menu);
         break;
+
     case UI::KUp:
-        
+        world_->player()->setKey(KeyThrust, state);
         break;
+
     case UI::KDown:
+        world_->player()->setKey(KeyBrake, state);
         break;
+
     case UI::KLeft:
+        world_->player()->setKey(KeyLeft, state);
         break;
+
     case UI::KRight:
+        world_->player()->setKey(KeyRight, state);
         break;
+
     case UI::KSelect:
+        world_->player()->setKey(KeyFire, state);
         break;
+
     default:
         break;
     }
