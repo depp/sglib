@@ -5,7 +5,6 @@
 #include "opengl.hpp"
 #include "player.hpp"
 #include "graphics/video.hpp"
-#include <stdio.h>
 namespace Space {
 
 struct World::Event {
@@ -66,30 +65,41 @@ void World::update(unsigned ticks)
     double new_time = 0.001 * ticks;
     double delta = new_time - time_;
     time_ = new_time;
+
     for (unsigned int i = 0; i < events_.size(); ++i) {
-        Event &evt = events_[i];
-        Entity *e = evt.asEntity();
-        Thinker *t = evt.asThinker();
+        Event evt = events_[i];
+        Entity *e;
+        Thinker *t;
+
         switch (evt.t) {
         case Event::EntityAdd:
+            e = evt.asEntity();
             entities_.insert(e);
             break;
+
         case Event::EntityRemove:
+            e = evt.asEntity();
             if (entities_.erase(e))
                 delete e;
             break;
+
         case Event::ThinkerAdd:
+            t = evt.asThinker();
             thinkers_.insert(t);
             t->enterGame(*this);
             break;
+
         case Event::ThinkerRemove:
-            t->leaveGame(*this);
-            if (thinkers_.erase(t))
+            t = evt.asThinker();
+            if (thinkers_.erase(t)) {
+                t->leaveGame(*this);
                 delete t;
+            }
             break;
         }
     }
     events_.clear();
+
     for (std::set<Thinker *>::iterator
              i = thinkers_.begin(),
              e = thinkers_.end();
@@ -97,6 +107,7 @@ void World::update(unsigned ticks)
         Thinker &a = **i;
         a.think(*this, delta);
     }
+
     for (std::set<Entity*>::iterator
              i = entities_.begin(),
              e = entities_.end();
@@ -143,7 +154,7 @@ void World::removeEntity(Entity *e)
 
 void World::addThinker(Thinker* t)
 {
-    events_.push_back(Event(Event::ThinkerRemove, t));
+    events_.push_back(Event(Event::ThinkerAdd, t));
 }
 
 void World::removeThinker(Thinker* t)
