@@ -4,6 +4,7 @@
 #include "stars.hpp"
 #include "opengl.hpp"
 #include "player.hpp"
+#include "graphics/video.hpp"
 namespace Space {
 
 struct World::Event {
@@ -105,10 +106,11 @@ void World::update(unsigned ticks)
 
 void World::draw()
 {
+    int w = Video::width, h = Video::height;
     glClear(GL_COLOR_BUFFER_BIT);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    glOrtho(-320.0, 320.0, -240.0, 240.0, -1.0, 1.0);
+    glOrtho(-w/2, w-w/2, -h/2, h-h/2, -1.0, 1.0);
     glMatrixMode(GL_MODELVIEW);
 
     vector loc = player_->location();
@@ -118,7 +120,7 @@ void World::draw()
     for (std::vector<Starfield>::iterator
              i = starfields_.begin(), e = starfields_.end();
          i != e; ++i)
-        i->draw(loc.v[0] - 320.0, loc.v[1] - 240.0, 640.0, 480.0);
+        i->draw(loc.v[0] - w/2, loc.v[1] - h/2, w, h);
 
     for (std::set<Entity*>::iterator
              i = entities_.begin(),
