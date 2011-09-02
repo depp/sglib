@@ -46,13 +46,13 @@ void GameScreen::update(unsigned int ticks)
     if (!world_) {
         world_ = new World;
 
-        player_ = new Player();
-        world_->addThinker(player_);
-        world_->setPlayer(player_);
-
         Scenery *s = new Scenery;
         s->radius = 32.0f;
         world_->addEntity(s);
+
+        player_ = new Player();
+        world_->addThinker(player_);
+        world_->setPlayer(player_);
     }
     world_->update(ticks);
 }
