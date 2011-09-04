@@ -1,6 +1,7 @@
 #include "menu.hpp"
 #include "button.hpp"
-#include "game.hpp"
+#include "game/tank/gamescreen.hpp"
+#include "game/space/gamescreen.hpp"
 #include "event.hpp"
 #include "graphics/video.hpp"
 #include "graphics/texturefile.hpp"
@@ -31,13 +32,12 @@ void UI::Menu::update(unsigned int)
 {
     if (!initted_) {
         initted_ = true;
-        static char const *const MENU_ITEMS[4] = {
-            "Single Player",
-            "Multiplayer",
-            "Options",
+        static char const *const MENU_ITEMS[3] = {
+            "Tank game",
+            "Space game",
             "Quit"
         };
-        for (int i = 0; i < 4; ++i) {
+        for (int i = 0; i < 3; ++i) {
             menu_[i].setText(MENU_ITEMS[i]);
             menu_[i].setLoc(145, 345 - 50 * i);
             scene_.addObject(&menu_[i]);
@@ -45,12 +45,10 @@ void UI::Menu::update(unsigned int)
         texture_ = TextureFile::open("font/cp437-8x8.png");
         texture2_ = TextureFile::open("font/cp437-8x8.png");
         menu_[0].setAction(Action(this, static_cast<Action::Method>
-                                  (&Menu::newGame)));
+                                  (&Menu::tankGame)));
         menu_[1].setAction(Action(this, static_cast<Action::Method>
-                                  (&Menu::multiplayer)));
+                                  (&Menu::spaceGame)));
         menu_[2].setAction(Action(this, static_cast<Action::Method>
-                                  (&Menu::options)));
-        menu_[3].setAction(Action(this, static_cast<Action::Method>
                                   (&Menu::quit)));
     }
 }
@@ -94,16 +92,15 @@ UI::Widget *UI::Menu::traceMouse(UI::Point pt)
     return 0;
 }
 
-void UI::Menu::newGame()
+void UI::Menu::tankGame()
 {
-    setActive(new Game);
+    setActive(new Tank::GameScreen);
 }
 
-void UI::Menu::multiplayer()
-{ }
-
-void UI::Menu::options()
-{ }
+void UI::Menu::spaceGame()
+{
+    setActive(new Space::GameScreen);
+}
 
 void UI::Menu::quit()
 {

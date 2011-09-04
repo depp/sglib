@@ -29,7 +29,20 @@ env.ParseConfig('pkg-config --libs pangocairo')
 env.ParseConfig('sdl-config --libs')
 
 env.Program('engine', [
+    'game/space/entity.cpp',
+    'game/space/gamescreen.cpp',
+    'game/space/main.cpp',
+    'game/space/player.cpp',
+    'game/space/random.cpp',
+    'game/space/scenery.cpp',
+    'game/space/shapes.cpp',
+    'game/space/ship.cpp',
+    'game/space/shot.cpp',
+    'game/space/stars.cpp',
+    'game/space/thinker.cpp',
+    'game/space/world.cpp',
     'game/tank/explosion.cpp',
+    'game/tank/gamescreen.cpp',
     'game/tank/object.cpp',
     'game/tank/obstacle.cpp',
     'game/tank/player.cpp',
@@ -65,7 +78,6 @@ env.Program('engine', [
     pcenv.Object('type/rastertext_cairo.cpp'),
     #'type/rastertext_osx.cpp',
     'ui/button.cpp',
-    'ui/game.cpp',
     'ui/menu.cpp',
     'ui/mousemanager.cpp',
     'ui/screen.cpp',
