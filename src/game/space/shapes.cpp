@@ -1,4 +1,4 @@
-#include <GL/gl.h>
+#include "opengl.hpp"
 #include "shapes.hpp"
 namespace Space {
 

@@ -1,4 +1,4 @@
-#include <GL/gl.h>
+#include "opengl.hpp"
 #include "shot.hpp"
 #include "entity.hpp"
 #include "world.hpp"
@@ -61,6 +61,7 @@ void Shot::ShotEntity::draw()
     glBegin(GL_POINTS);
     glVertex2f(location.v[0], location.v[1]);
     glEnd();
+    glColor3ub(255, 255, 255);
 }
 
 }
