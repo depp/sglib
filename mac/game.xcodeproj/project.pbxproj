@@ -32,7 +32,6 @@
 		382D219011D98E62009C8EF5 /* AppKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 382D218F11D98E62009C8EF5 /* AppKit.framework */; };
 		382D224611D98E6A009C8EF5 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 382D224511D98E6A009C8EF5 /* Foundation.framework */; };
 		382D22C711D98E80009C8EF5 /* ApplicationServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 382D22C611D98E80009C8EF5 /* ApplicationServices.framework */; };
-		382D239211D98E8A009C8EF5 /* SDL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 382D239111D98E8A009C8EF5 /* SDL.framework */; };
 		3857BE631321785B00F81D56 /* rastertext_osx.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3857BE5E1321785B00F81D56 /* rastertext_osx.cpp */; };
 		3857BE641321785B00F81D56 /* rastertext.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3857BE5F1321785B00F81D56 /* rastertext.cpp */; };
 		3857BE6C132178A600F81D56 /* button.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3857BE67132178A600F81D56 /* button.cpp */; };
@@ -56,7 +55,11 @@
 		38709EE81330A5D000DA858D /* configfileread.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 38709EE71330A5D000DA858D /* configfileread.cpp */; };
 		38709F181330B45C00DA858D /* data in Resources */ = {isa = PBXBuildFile; fileRef = 38709F0D1330B45C00DA858D /* data */; };
 		38709F4C1330B7CA00DA858D /* path_osx.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 38709F261330B6FD00DA858D /* path_osx.cpp */; };
-		3871E25B141ACA38000DF3D6 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3871E25A141ACA38000DF3D6 /* main.cpp */; };
+		3871E294141ACAA3000DF3D6 /* main.c in Sources */ = {isa = PBXBuildFile; fileRef = 3871E293141ACAA3000DF3D6 /* main.c */; };
+		3871E297141ACAF7000DF3D6 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 3871E296141ACAF7000DF3D6 /* MainMenu.xib */; };
+		3871E29B141ACB60000DF3D6 /* GController.mm in Sources */ = {isa = PBXBuildFile; fileRef = 3871E29A141ACB60000DF3D6 /* GController.mm */; };
+		3871E2A1141ACEA6000DF3D6 /* GView.mm in Sources */ = {isa = PBXBuildFile; fileRef = 3871E2A0141ACEA6000DF3D6 /* GView.mm */; };
+		3871E2A9141ACFCB000DF3D6 /* clock_osx.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3871E2A8141ACFCB000DF3D6 /* clock_osx.cpp */; };
 		389F06701210A46A00E6AA2A /* menu.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 389F066E1210A46A00E6AA2A /* menu.cpp */; };
 		38B2409D117BAE0800903838 /* rand.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 38B2409B117BAE0800903838 /* rand.cpp */; };
 		38F7832A121317550080545B /* widget.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 38F78329121317550080545B /* widget.cpp */; };
@@ -111,7 +114,6 @@
 		382D218F11D98E62009C8EF5 /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = /System/Library/Frameworks/AppKit.framework; sourceTree = "<absolute>"; };
 		382D224511D98E6A009C8EF5 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = /System/Library/Frameworks/Foundation.framework; sourceTree = "<absolute>"; };
 		382D22C611D98E80009C8EF5 /* ApplicationServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ApplicationServices.framework; path = /System/Library/Frameworks/ApplicationServices.framework; sourceTree = "<absolute>"; };
-		382D239111D98E8A009C8EF5 /* SDL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SDL.framework; path = /Library/Frameworks/SDL.framework; sourceTree = "<absolute>"; };
 		3852089E117434FD00640971 /* Game.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Game.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		385208A1117434FD00640971 /* Game-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Game-Info.plist"; sourceTree = "<group>"; };
 		3857BE5A1321785B00F81D56 /* font_pango.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = font_pango.cpp; sourceTree = "<group>"; };
@@ -171,6 +173,14 @@
 		38709F261330B6FD00DA858D /* path_osx.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = path_osx.cpp; sourceTree = "<group>"; };
 		38709F701330BF5900DA858D /* autocf_osx.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = autocf_osx.hpp; sourceTree = "<group>"; };
 		3871E25A141ACA38000DF3D6 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
+		3871E293141ACAA3000DF3D6 /* main.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = main.c; sourceTree = "<group>"; };
+		3871E296141ACAF7000DF3D6 /* MainMenu.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = MainMenu.xib; sourceTree = "<group>"; };
+		3871E299141ACB60000DF3D6 /* GController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GController.h; sourceTree = "<group>"; };
+		3871E29A141ACB60000DF3D6 /* GController.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = GController.mm; sourceTree = "<group>"; };
+		3871E29F141ACEA6000DF3D6 /* GView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GView.h; sourceTree = "<group>"; };
+		3871E2A0141ACEA6000DF3D6 /* GView.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = GView.mm; sourceTree = "<group>"; };
+		3871E2A7141ACFB6000DF3D6 /* clock.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = clock.hpp; sourceTree = "<group>"; };
+		3871E2A8141ACFCB000DF3D6 /* clock_osx.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = clock_osx.cpp; sourceTree = "<group>"; };
 		389F066E1210A46A00E6AA2A /* menu.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = menu.cpp; sourceTree = "<group>"; };
 		389F066F1210A46A00E6AA2A /* menu.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = menu.hpp; sourceTree = "<group>"; };
 		38B2409B117BAE0800903838 /* rand.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = rand.cpp; sourceTree = "<group>"; };
@@ -188,7 +198,6 @@
 				382D219011D98E62009C8EF5 /* AppKit.framework in Frameworks */,
 				382D224611D98E6A009C8EF5 /* Foundation.framework in Frameworks */,
 				382D22C711D98E80009C8EF5 /* ApplicationServices.framework in Frameworks */,
-				382D239211D98E8A009C8EF5 /* SDL.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -297,7 +306,6 @@
 				382D224511D98E6A009C8EF5 /* Foundation.framework */,
 				382D217B11D98E5C009C8EF5 /* OpenGL.framework */,
 				382D22C611D98E80009C8EF5 /* ApplicationServices.framework */,
-				382D239111D98E8A009C8EF5 /* SDL.framework */,
 			);
 			name = frameworks;
 			sourceTree = "<group>";
@@ -329,6 +337,7 @@
 				3813316414141FB400B8CE5B /* opengl.hpp */,
 				382C270D12119CA10048F4BF /* game */,
 				382C270312119C2E0048F4BF /* graphics */,
+				3871E28F141ACA83000DF3D6 /* mac */,
 				3857BE7F1321790100F81D56 /* scene */,
 				3871E259141ACA38000DF3D6 /* sdl */,
 				38709EC41330A5A200DA858D /* sys */,
@@ -344,6 +353,7 @@
 			isa = PBXGroup;
 			children = (
 				385208A1117434FD00640971 /* Game-Info.plist */,
+				3871E296141ACAF7000DF3D6 /* MainMenu.xib */,
 			);
 			name = mac;
 			sourceTree = "<group>";
@@ -390,6 +400,8 @@
 				38709ED91330A5A200DA858D /* system_error.hpp */,
 				38709EDA1330A5A200DA858D /* testconfig.cpp */,
 				38709F701330BF5900DA858D /* autocf_osx.hpp */,
+				3871E2A7141ACFB6000DF3D6 /* clock.hpp */,
+				3871E2A8141ACFCB000DF3D6 /* clock_osx.cpp */,
 			);
 			path = sys;
 			sourceTree = "<group>";
@@ -400,6 +412,18 @@
 				3871E25A141ACA38000DF3D6 /* main.cpp */,
 			);
 			path = sdl;
+			sourceTree = "<group>";
+		};
+		3871E28F141ACA83000DF3D6 /* mac */ = {
+			isa = PBXGroup;
+			children = (
+				3871E293141ACAA3000DF3D6 /* main.c */,
+				3871E299141ACB60000DF3D6 /* GController.h */,
+				3871E29A141ACB60000DF3D6 /* GController.mm */,
+				3871E29F141ACEA6000DF3D6 /* GView.h */,
+				3871E2A0141ACEA6000DF3D6 /* GView.mm */,
+			);
+			path = mac;
 			sourceTree = "<group>";
 		};
 		389F066D1210A46A00E6AA2A /* ui */ = {
@@ -466,6 +490,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				38709F181330B45C00DA858D /* data in Resources */,
+				3871E297141ACAF7000DF3D6 /* MainMenu.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -522,7 +547,10 @@
 				3813316114141F8600B8CE5B /* player.cpp in Sources */,
 				3813316214141F8600B8CE5B /* shot.cpp in Sources */,
 				3813316314141F8600B8CE5B /* world.cpp in Sources */,
-				3871E25B141ACA38000DF3D6 /* main.cpp in Sources */,
+				3871E294141ACAA3000DF3D6 /* main.c in Sources */,
+				3871E29B141ACB60000DF3D6 /* GController.mm in Sources */,
+				3871E2A1141ACEA6000DF3D6 /* GView.mm in Sources */,
+				3871E2A9141ACFCB000DF3D6 /* clock_osx.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
