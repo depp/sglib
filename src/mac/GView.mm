@@ -1,10 +1,10 @@
 #import "GView.h"
 #import "ui/event.hpp"
 #import "ui/screen.hpp"
-#import "clock.hpp"
+#import "ui/menu.hpp"
+// #import "clock.hpp"
 #import "resource.hpp"
 #import "opengl.hpp"
-#import "graphics/video.hpp"
 
 static int mapKey(int key)
 {
@@ -40,7 +40,7 @@ static void handleKey(GView *v, NSEvent *e, UI::EventType t)
     int keyChar = [c characterAtIndex:0];
     int keyCode = mapKey(keyChar);
     // NSLog(@"Key: %@ -> %d -> %d", c, keyChar, keyCode);
-    UI::Screen::getActive()->handleEvent(UI::KeyEvent(t, keyCode));
+    v->window_->handleEvent(UI::KeyEvent(t, keyCode));
 }
 
 static void handleMouse(GView *v, NSEvent *e, UI::EventType t, int button)
@@ -48,7 +48,7 @@ static void handleMouse(GView *v, NSEvent *e, UI::EventType t, int button)
     NSPoint pt = [e locationInWindow];
     pt = [v convertPoint:pt fromView:nil];
     // NSLog(@"Mouse: (%f, %f) %d", pt.x, pt.y, button);
-    UI::Screen::getActive()->handleEvent(UI::MouseEvent(t, button, pt.x, pt.y));
+    v->window_->handleEvent(UI::MouseEvent(t, button, pt.x, pt.y));
 }
 
 @implementation GView
@@ -147,35 +147,20 @@ static void handleMouse(GView *v, NSEvent *e, UI::EventType t, int button)
         return nil;
 
     [[self openGLContext] setValues:&on forParameter:NSOpenGLCPSwapInterval];
+    window_ = new UI::Window;
+    window_->setScreen(new UI::Menu);
 
     return self;
 }
 
 - (void)drawRect:(NSRect)rect {
-    unsigned time;
-    UI::Screen *s = UI::Screen::getActive();
-    if (!s)
-        return;
-    time = getTime();
-    s->update(time);
-    Resource::loadAll();
-
-    s->draw();
-    GLenum err = glGetError();
-    if (err != GL_NO_ERROR) {
-        const GLubyte *s = gluErrorString(err);
-        fprintf(stderr, "GL Error: %s\n", s);
-    }
+    window_->draw();
     [[self openGLContext] flushBuffer];
 }
 
 - (void)reshape {
     NSRect rect = [self bounds];
-    unsigned w = NSWidth(rect), h = NSHeight(rect);
-    glViewport(0, 0, w, h);
-    Video::width = w;
-    Video::height = h;
-    // NSLog(@"Reshape %u x %u", w, h);
+    window_->setSize(NSWidth(rect), NSHeight(rect));
 }
 
 - (void)startTimer {

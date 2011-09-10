@@ -1,5 +1,6 @@
 #include "gamescreen.hpp"
 #include "ui/menu.hpp"
+#include "ui/window.hpp"
 #include "world.hpp"
 #include "obstacle.hpp"
 #include "graphics/model.hpp"
@@ -29,7 +30,7 @@ void GameScreen::handleKey(UI::KeyEvent const &evt)
     bool state = evt.type == UI::KeyDown;
     switch (evt.key) {
     case UI::KEscape:
-        setActive(new UI::Menu);
+        window().setScreen(new UI::Menu);
         break;
     case UI::KUp:
         input_.up = state;
@@ -84,7 +85,7 @@ void GameScreen::update(unsigned int ticks)
 
 void GameScreen::draw()
 {
-    world_->draw();
+    world_->draw(window().width(), window().height());
     /*
     curfr = framecount_;
     if (curfr == 64) {

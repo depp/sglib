@@ -13,7 +13,7 @@ public:
     World();
     ~World();
 
-    void draw();
+    void draw(int w, int h);
     void update(unsigned ticks);
 
     void addEntity(Entity *e);

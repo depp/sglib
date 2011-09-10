@@ -12,7 +12,7 @@ public:
 
     void addObject(Object *obj);
     void setPlayer(Object *obj);
-    void draw();
+    void draw(int w, int h);
     void update(unsigned int ticks);
 
     float gameTime() const { return kFrameTime * frameNum_; }

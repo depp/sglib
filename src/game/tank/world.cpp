@@ -5,7 +5,6 @@
 #include <assert.h>
 #include <stdio.h>
 #include "opengl.hpp"
-#include "graphics/video.hpp"
 namespace Tank {
 
 static const unsigned int LAG_THRESHOLD = 1000;
@@ -108,7 +107,7 @@ void World::drawGround(void)
     glPopMatrix();
 }
 
-void World::draw()
+void World::draw(int w, int h)
 {
     if (player_) {
         playerX_ = player_->getX();
@@ -122,14 +121,14 @@ void World::draw()
     glLoadIdentity();
     /* Calculate the perspective matrix based on 35mm equivalent focal
        length.  Different aspect ratios are scaled to match area.  */
-    double f, znear, zfar, w, h, a;
-    a = (double)Video::width / (double)Video::height;
+    double f, znear, zfar, ww, hh, a;
+    a = (double) w / h;
     znear = 0.1;
     zfar = 100.0;
     f = 16.0;
-    h = znear / f * sqrt(24.0 * 36.0 / a);
-    w = h * a;
-    glFrustum(-0.5*w, 0.5*w, -0.5*h, 0.5*h, znear, zfar);
+    hh = znear / f * sqrt(24.0 * 36.0 / a);
+    ww = hh * a;
+    glFrustum(-0.5*ww, 0.5*ww, -0.5*hh, 0.5*hh, znear, zfar);
     glRotatef(-90.0f, 1.0f, 0.0f, 0.0f);
 
     glMatrixMode(GL_MODELVIEW);

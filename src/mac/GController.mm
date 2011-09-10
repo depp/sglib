@@ -12,7 +12,6 @@
     Path::init();
     initTime();
     Rand::global.seed();
-    UI::Screen::setActive(new UI::Menu);
 
     NSScreen *s = [NSScreen mainScreen];
     NSRect r = NSMakeRect(0, 0, 768, 480);

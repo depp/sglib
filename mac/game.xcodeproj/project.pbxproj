@@ -27,7 +27,6 @@
 		3813316214141F8600B8CE5B /* shot.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3813314D14141F8600B8CE5B /* shot.cpp */; };
 		3813316314141F8600B8CE5B /* world.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3813314F14141F8600B8CE5B /* world.cpp */; };
 		382C270712119C2E0048F4BF /* model.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 382C270512119C2E0048F4BF /* model.cpp */; };
-		382C272312119E6D0048F4BF /* video.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 382C272212119E6D0048F4BF /* video.cpp */; };
 		382D217C11D98E5C009C8EF5 /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 382D217B11D98E5C009C8EF5 /* OpenGL.framework */; };
 		382D219011D98E62009C8EF5 /* AppKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 382D218F11D98E62009C8EF5 /* AppKit.framework */; };
 		382D224611D98E6A009C8EF5 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 382D224511D98E6A009C8EF5 /* Foundation.framework */; };
@@ -60,6 +59,7 @@
 		3871E29B141ACB60000DF3D6 /* GController.mm in Sources */ = {isa = PBXBuildFile; fileRef = 3871E29A141ACB60000DF3D6 /* GController.mm */; };
 		3871E2A1141ACEA6000DF3D6 /* GView.mm in Sources */ = {isa = PBXBuildFile; fileRef = 3871E2A0141ACEA6000DF3D6 /* GView.mm */; };
 		3871E2A9141ACFCB000DF3D6 /* clock_osx.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3871E2A8141ACFCB000DF3D6 /* clock_osx.cpp */; };
+		3871E3CD141B31C3000DF3D6 /* window.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3871E3CB141B31C3000DF3D6 /* window.cpp */; };
 		389F06701210A46A00E6AA2A /* menu.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 389F066E1210A46A00E6AA2A /* menu.cpp */; };
 		38B2409D117BAE0800903838 /* rand.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 38B2409B117BAE0800903838 /* rand.cpp */; };
 		38F7832A121317550080545B /* widget.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 38F78329121317550080545B /* widget.cpp */; };
@@ -108,8 +108,6 @@
 		382C270412119C2E0048F4BF /* color.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = color.hpp; sourceTree = "<group>"; };
 		382C270512119C2E0048F4BF /* model.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = model.cpp; sourceTree = "<group>"; };
 		382C270612119C2E0048F4BF /* model.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = model.hpp; sourceTree = "<group>"; };
-		382C272112119E6D0048F4BF /* video.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = video.hpp; sourceTree = "<group>"; };
-		382C272212119E6D0048F4BF /* video.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = video.cpp; sourceTree = "<group>"; };
 		382D217B11D98E5C009C8EF5 /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = /System/Library/Frameworks/OpenGL.framework; sourceTree = "<absolute>"; };
 		382D218F11D98E62009C8EF5 /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = /System/Library/Frameworks/AppKit.framework; sourceTree = "<absolute>"; };
 		382D224511D98E6A009C8EF5 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = /System/Library/Frameworks/Foundation.framework; sourceTree = "<absolute>"; };
@@ -181,6 +179,8 @@
 		3871E2A0141ACEA6000DF3D6 /* GView.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = GView.mm; sourceTree = "<group>"; };
 		3871E2A7141ACFB6000DF3D6 /* clock.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = clock.hpp; sourceTree = "<group>"; };
 		3871E2A8141ACFCB000DF3D6 /* clock_osx.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = clock_osx.cpp; sourceTree = "<group>"; };
+		3871E3CB141B31C3000DF3D6 /* window.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = window.cpp; sourceTree = "<group>"; };
+		3871E3CC141B31C3000DF3D6 /* window.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = window.hpp; sourceTree = "<group>"; };
 		389F066E1210A46A00E6AA2A /* menu.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = menu.cpp; sourceTree = "<group>"; };
 		389F066F1210A46A00E6AA2A /* menu.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = menu.hpp; sourceTree = "<group>"; };
 		38B2409B117BAE0800903838 /* rand.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = rand.cpp; sourceTree = "<group>"; };
@@ -268,8 +268,6 @@
 				38709E7D13309B5D00DA858D /* texture.hpp */,
 				38709E7E13309B5D00DA858D /* texturefile.cpp */,
 				38709E7F13309B5D00DA858D /* texturefile.hpp */,
-				382C272112119E6D0048F4BF /* video.hpp */,
-				382C272212119E6D0048F4BF /* video.cpp */,
 			);
 			path = graphics;
 			sourceTree = "<group>";
@@ -436,12 +434,14 @@
 				3857BE69132178A600F81D56 /* event.hpp */,
 				389F066E1210A46A00E6AA2A /* menu.cpp */,
 				389F066F1210A46A00E6AA2A /* menu.hpp */,
-				3857BE6E132178AE00F81D56 /* screen.hpp */,
 				3857BE6F132178AE00F81D56 /* mousemanager.hpp */,
+				3857BE6E132178AE00F81D56 /* screen.hpp */,
 				3857BE70132178AE00F81D56 /* screen.cpp */,
 				3857BE71132178AE00F81D56 /* mousemanager.cpp */,
 				38F78328121317550080545B /* widget.hpp */,
 				38F78329121317550080545B /* widget.cpp */,
+				3871E3CB141B31C3000DF3D6 /* window.cpp */,
+				3871E3CC141B31C3000DF3D6 /* window.hpp */,
 			);
 			path = ui;
 			sourceTree = "<group>";
@@ -504,7 +504,6 @@
 				38B2409D117BAE0800903838 /* rand.cpp in Sources */,
 				389F06701210A46A00E6AA2A /* menu.cpp in Sources */,
 				382C270712119C2E0048F4BF /* model.cpp in Sources */,
-				382C272312119E6D0048F4BF /* video.cpp in Sources */,
 				38F7832A121317550080545B /* widget.cpp in Sources */,
 				3857BE631321785B00F81D56 /* rastertext_osx.cpp in Sources */,
 				3857BE641321785B00F81D56 /* rastertext.cpp in Sources */,
@@ -551,6 +550,7 @@
 				3871E29B141ACB60000DF3D6 /* GController.mm in Sources */,
 				3871E2A1141ACEA6000DF3D6 /* GView.mm in Sources */,
 				3871E2A9141ACFCB000DF3D6 /* clock_osx.cpp in Sources */,
+				3871E3CD141B31C3000DF3D6 /* window.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -3,7 +3,7 @@
 #include "game/tank/gamescreen.hpp"
 #include "game/space/gamescreen.hpp"
 #include "event.hpp"
-#include "graphics/video.hpp"
+#include "window.hpp"
 #include "graphics/texturefile.hpp"
 #include "opengl.hpp"
 #include <stdio.h>
@@ -60,7 +60,7 @@ void UI::Menu::draw()
 
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    glOrtho(0.0, Video::width, 0.0, Video::height, -1.0, 1.0);
+    glOrtho(0.0, window().width(), 0.0, window().height(), -1.0, 1.0);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 
@@ -94,15 +94,15 @@ UI::Widget *UI::Menu::traceMouse(UI::Point pt)
 
 void UI::Menu::tankGame()
 {
-    setActive(new Tank::GameScreen);
+    window().setScreen(new Tank::GameScreen);
 }
 
 void UI::Menu::spaceGame()
 {
-    setActive(new Space::GameScreen);
+    window().setScreen(new Space::GameScreen);
 }
 
 void UI::Menu::quit()
 {
-    setActive(NULL);
+    window().setScreen(NULL);
 }
