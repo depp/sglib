@@ -104,5 +104,5 @@ void UI::Menu::spaceGame()
 
 void UI::Menu::quit()
 {
-    window().setScreen(NULL);
+    window().close();
 }

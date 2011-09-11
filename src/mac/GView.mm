@@ -6,6 +6,22 @@
 #import "resource.hpp"
 #import "opengl.hpp"
 
+class MacWindow : public UI::Window {
+    GView *view_;
+
+public:
+    MacWindow(GView *v)
+        : view_(v)
+    { }
+
+    void close();
+};
+
+void MacWindow::close()
+{
+    [[view_ window] close];
+}
+
 static int mapKey(int key)
 {
     switch (key) {
@@ -147,7 +163,7 @@ static void handleMouse(GView *v, NSEvent *e, UI::EventType t, int button)
         return nil;
 
     [[self openGLContext] setValues:&on forParameter:NSOpenGLCPSwapInterval];
-    window_ = new UI::Window;
+    window_ = new MacWindow(self);
     window_->setScreen(new UI::Menu);
 
     return self;

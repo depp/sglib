@@ -11,6 +11,7 @@ UI::Window::~Window()
 
 void UI::Window::setScreen(UI::Screen *s)
 {
+    assert(s);
     if (s != screen_) {
         if (screen_)
             delete screen_;

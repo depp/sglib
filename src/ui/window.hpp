@@ -14,17 +14,11 @@ public:
         : screen_(0), width_(0), height_(0)
     { }
 
-    ~Window();
+    virtual ~Window();
 
+    /* Cross-platform interface */
     void setScreen(Screen *s);
-    void setSize(unsigned w, unsigned h);
-
-    void handleEvent(Event const &evt)
-    {
-        screen_->handleEvent(evt);
-    }
-
-    void draw();
+    virtual void close() = 0;
 
     unsigned width()
     {
@@ -35,6 +29,16 @@ public:
     {
         return height_;
     }
+
+    /* Platform code interface */
+    void setSize(unsigned w, unsigned h);
+
+    void handleEvent(Event const &evt)
+    {
+        screen_->handleEvent(evt);
+    }
+
+    void draw();
 };
 
 }
