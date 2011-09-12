@@ -206,7 +206,6 @@ static void handleMouse(GView *v, NSEvent *e, UI::EventType t, int button)
 }
 
 - (void)drawRect:(NSRect)rect {
-    NSLog(@"drawrect");
     window_->draw();
     [[self openGLContext] flushBuffer];
 }
