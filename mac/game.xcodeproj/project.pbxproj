@@ -61,6 +61,7 @@
 		3871E2A9141ACFCB000DF3D6 /* clock_osx.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3871E2A8141ACFCB000DF3D6 /* clock_osx.cpp */; };
 		3871E3CD141B31C3000DF3D6 /* window.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3871E3CB141B31C3000DF3D6 /* window.cpp */; };
 		389F06701210A46A00E6AA2A /* menu.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 389F066E1210A46A00E6AA2A /* menu.cpp */; };
+		389F7FCD141D4ECD00123790 /* CoreVideo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 389F7FCC141D4ECD00123790 /* CoreVideo.framework */; };
 		38B2409D117BAE0800903838 /* rand.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 38B2409B117BAE0800903838 /* rand.cpp */; };
 		38F7832A121317550080545B /* widget.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 38F78329121317550080545B /* widget.cpp */; };
 /* End PBXBuildFile section */
@@ -183,6 +184,7 @@
 		3871E3CC141B31C3000DF3D6 /* window.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = window.hpp; sourceTree = "<group>"; };
 		389F066E1210A46A00E6AA2A /* menu.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = menu.cpp; sourceTree = "<group>"; };
 		389F066F1210A46A00E6AA2A /* menu.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = menu.hpp; sourceTree = "<group>"; };
+		389F7FCC141D4ECD00123790 /* CoreVideo.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreVideo.framework; path = /System/Library/Frameworks/CoreVideo.framework; sourceTree = "<absolute>"; };
 		38B2409B117BAE0800903838 /* rand.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = rand.cpp; sourceTree = "<group>"; };
 		38B2409C117BAE0800903838 /* rand.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = rand.hpp; sourceTree = "<group>"; };
 		38F78328121317550080545B /* widget.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = widget.hpp; sourceTree = "<group>"; };
@@ -198,6 +200,7 @@
 				382D219011D98E62009C8EF5 /* AppKit.framework in Frameworks */,
 				382D224611D98E6A009C8EF5 /* Foundation.framework in Frameworks */,
 				382D22C711D98E80009C8EF5 /* ApplicationServices.framework in Frameworks */,
+				389F7FCD141D4ECD00123790 /* CoreVideo.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -304,6 +307,7 @@
 				382D224511D98E6A009C8EF5 /* Foundation.framework */,
 				382D217B11D98E5C009C8EF5 /* OpenGL.framework */,
 				382D22C611D98E80009C8EF5 /* ApplicationServices.framework */,
+				389F7FCC141D4ECD00123790 /* CoreVideo.framework */,
 			);
 			name = frameworks;
 			sourceTree = "<group>";
@@ -606,8 +610,6 @@
 					"-framework",
 					AppKit,
 					"-framework",
-					SDL,
-					"-framework",
 					OpenGL,
 					"-lpng",
 				);
@@ -643,8 +645,6 @@
 					Foundation,
 					"-framework",
 					AppKit,
-					"-framework",
-					SDL,
 					"-framework",
 					OpenGL,
 					"-lpng",

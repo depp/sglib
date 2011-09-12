@@ -22,6 +22,16 @@ void MacWindow::close()
     [[view_ window] close];
 }
 
+static CVReturn cvCallback(CVDisplayLinkRef displayLink, const CVTimeStamp *now, const CVTimeStamp *outputTime, CVOptionFlags flagsIn, CVOptionFlags *flagsOut, void *displayLinkContext)
+{
+    GView *v = (GView *) displayLinkContext;
+    [v lock];
+    v->window_->draw();
+    [[v openGLContext] flushBuffer];
+    [v unlock];
+    return kCVReturnSuccess;
+}
+
 static int mapKey(int key)
 {
     switch (key) {
@@ -56,7 +66,9 @@ static void handleKey(GView *v, NSEvent *e, UI::EventType t)
     int keyChar = [c characterAtIndex:0];
     int keyCode = mapKey(keyChar);
     // NSLog(@"Key: %@ -> %d -> %d", c, keyChar, keyCode);
+    pthread_mutex_lock(&v->displayLock_);
     v->window_->handleEvent(UI::KeyEvent(t, keyCode));
+    pthread_mutex_unlock(&v->displayLock_);
 }
 
 static void handleMouse(GView *v, NSEvent *e, UI::EventType t, int button)
@@ -64,7 +76,9 @@ static void handleMouse(GView *v, NSEvent *e, UI::EventType t, int button)
     NSPoint pt = [e locationInWindow];
     pt = [v convertPoint:pt fromView:nil];
     // NSLog(@"Mouse: (%f, %f) %d", pt.x, pt.y, button);
+    pthread_mutex_lock(&v->displayLock_);
     v->window_->handleEvent(UI::MouseEvent(t, button, pt.x, pt.y));
+    pthread_mutex_unlock(&v->displayLock_);
 }
 
 @implementation GView
@@ -162,6 +176,13 @@ static void handleMouse(GView *v, NSEvent *e, UI::EventType t, int button)
     if (!self)
         return nil;
 
+    pthread_mutexattr_t attr;
+    int r;
+    r = pthread_mutexattr_init(&attr);
+    r = pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
+    r = pthread_mutex_init(&displayLock_, &attr);
+    r = pthread_mutexattr_destroy(&attr);
+
     [[self openGLContext] setValues:&on forParameter:NSOpenGLCPSwapInterval];
     window_ = new MacWindow(self);
     window_->setScreen(new UI::Menu);
@@ -169,7 +190,23 @@ static void handleMouse(GView *v, NSEvent *e, UI::EventType t, int button)
     return self;
 }
 
+- (void)dealloc {
+    CVDisplayLinkRelease(displayLink_);
+    pthread_mutex_destroy(&displayLock_);
+    [super dealloc];
+}
+
+- (void)lock {
+    pthread_mutex_lock(&displayLock_);
+    [[self openGLContext] makeCurrentContext];
+}
+
+- (void)unlock {
+    pthread_mutex_unlock(&displayLock_);
+}
+
 - (void)drawRect:(NSRect)rect {
+    NSLog(@"drawrect");
     window_->draw();
     [[self openGLContext] flushBuffer];
 }
@@ -180,9 +217,18 @@ static void handleMouse(GView *v, NSEvent *e, UI::EventType t, int button)
 }
 
 - (void)startTimer {
-    NSTimer *t = [NSTimer timerWithTimeInterval:0.001 target:self selector:@selector(timerFired:) userInfo:nil repeats:YES];
-    [[NSRunLoop currentRunLoop] addTimer:t forMode:NSDefaultRunLoopMode];
-    [[NSRunLoop currentRunLoop] addTimer:t forMode:NSEventTrackingRunLoopMode];
+    if (1) {
+        CVDisplayLinkCreateWithActiveCGDisplays(&displayLink_);
+        CVDisplayLinkSetOutputCallback(displayLink_, cvCallback, self);
+        CGLContextObj cglContext = (CGLContextObj) [[self openGLContext] CGLContextObj];
+        CGLPixelFormatObj cglPixelFormat = (CGLPixelFormatObj) [[self pixelFormat] CGLPixelFormatObj];
+        CVDisplayLinkSetCurrentCGDisplayFromOpenGLContext(displayLink_, cglContext, cglPixelFormat);
+        CVDisplayLinkStart(displayLink_);
+    } else {
+        NSTimer *t = [NSTimer timerWithTimeInterval:0.001 target:self selector:@selector(timerFired:) userInfo:nil repeats:YES];
+        [[NSRunLoop currentRunLoop] addTimer:t forMode:NSDefaultRunLoopMode];
+        [[NSRunLoop currentRunLoop] addTimer:t forMode:NSEventTrackingRunLoopMode];
+    }
 }
 
 - (void)timerFired:(id)sender {
