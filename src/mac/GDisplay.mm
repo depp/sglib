@@ -137,6 +137,7 @@ static CVReturn cvCallback(CVDisplayLinkRef displayLink, const CVTimeStamp *now,
 
     NSOpenGLContext *cxt = nil;
     if (prevContext_) {
+        // In tests, context sharing succeeded between windowed contexts and failed between a windowed and a fullscreen context.
         cxt = [[NSOpenGLContext alloc] initWithFormat:fmt shareContext:prevContext_];
         [prevContext_ release];
         prevContext_ = nil;
