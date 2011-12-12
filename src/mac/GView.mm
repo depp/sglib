@@ -11,6 +11,7 @@ static void handleMouse(GView *v, NSEvent *e, UI::EventType t, int button)
 @implementation GView
 
 - (void)drawRect:(NSRect)r {
+    (void)r;
     [window_ update];
 }
 
@@ -53,7 +54,7 @@ static void handleMouse(GView *v, NSEvent *e, UI::EventType t, int button)
 }
 
 - (void)scrollWheel:(NSEvent *)theEvent {
-    
+    (void)theEvent;
 }
 
 - (void)rightMouseDragged:(NSEvent *)theEvent {
@@ -65,11 +66,11 @@ static void handleMouse(GView *v, NSEvent *e, UI::EventType t, int button)
 }
 
 - (void)mouseEntered:(NSEvent *)theEvent {
-    
+    (void)theEvent;
 }
 
 - (void)mouseExited:(NSEvent *)theEvent {
-    
+    (void)theEvent;
 }
 
 - (void)keyDown:(NSEvent *)theEvent {
@@ -81,7 +82,7 @@ static void handleMouse(GView *v, NSEvent *e, UI::EventType t, int button)
 }
 
 - (void)flagsChanged:(NSEvent *)theEvent {
-    
+    (void)theEvent;
 }
 
 @end

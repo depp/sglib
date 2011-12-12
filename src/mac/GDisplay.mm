@@ -68,6 +68,10 @@ void GDisplayKeyEvent(GDisplay *w, NSEvent *e, UI::EventType t)
 
 static CVReturn cvCallback(CVDisplayLinkRef displayLink, const CVTimeStamp *now, const CVTimeStamp *outputTime, CVOptionFlags flagsIn, CVOptionFlags *flagsOut, void *displayLinkContext)
 {
+    (void)displayLink;
+    (void)outputTime;
+    (void)flagsIn;
+    (void)flagsOut;
     static uint64_t vt, ht;
     NSLog(@"vt=%llu; ht=%llu\n", now->videoTime - vt, now->hostTime - ht);
     vt = now->videoTime;
@@ -210,7 +214,6 @@ error:
     // On OS X 10.5, enterFullScreenMode exists, but using it precludes setting the UI mode.
     // Since I don't have 10.6, this code uses the 10.4 method.
 
-    bool windowed = isWindowedMode(mode_), newWindowed = isWindowedMode(mode);
     if (isWindowedMode(mode_)) {
         if (mode_ == GDisplayFSWindow) {
             SetSystemUIMode(kUIModeNormal, 0);
@@ -232,7 +235,6 @@ error:
         NSRect r;
         NSUInteger style;
         NSWindow *w;
-        GView *v;
         if (mode == GDisplayWindow) {
             r = NSMakeRect(0, 0, 768, 480);
             style = NSTitledWindowMask | NSClosableWindowMask | NSMiniaturizableWindowMask | NSResizableWindowMask;
@@ -269,10 +271,12 @@ error:
 }
 
 - (void)showWindow:(id)sender {
+    (void)sender;
     [self setMode:GDisplayWindow];
 }
 
 - (void)showFullScreen:(id)sender {
+    (void)sender;
     [self setMode:GDisplayFSWindow];
 }
 

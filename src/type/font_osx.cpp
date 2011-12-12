@@ -48,6 +48,7 @@ void Font::setFamily(char const *const names[])
 
 void Font::setSize(float size)
 {
+    (void)size;
     /*
     AutoCF<CTFontRef> base, font;
     if (info_->font)
@@ -59,16 +60,18 @@ void Font::setSize(float size)
 
 void Font::setStyle(Style style)
 {
-    
+    (void)style;
 }
 
 void Font::setVariant(Variant variant)
 {
-    
+    (void)variant;
 }
 
 void Font::setWeight(int weight)
-{ }
+{
+    (void)weight;
+}
 
 void Font::mkinfo()
 {

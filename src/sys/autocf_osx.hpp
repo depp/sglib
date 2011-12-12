@@ -48,6 +48,7 @@ struct AutoCF {
         if (po)
             CFRelease(po);
         ptr_ = po;
+        return *this;
     }
 
     // Transparently convert to original type.

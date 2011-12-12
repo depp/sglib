@@ -54,7 +54,7 @@
 		38709EE81330A5D000DA858D /* configfileread.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 38709EE71330A5D000DA858D /* configfileread.cpp */; };
 		38709F181330B45C00DA858D /* data in Resources */ = {isa = PBXBuildFile; fileRef = 38709F0D1330B45C00DA858D /* data */; };
 		38709F4C1330B7CA00DA858D /* path_osx.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 38709F261330B6FD00DA858D /* path_osx.cpp */; };
-		3871E294141ACAA3000DF3D6 /* main.c in Sources */ = {isa = PBXBuildFile; fileRef = 3871E293141ACAA3000DF3D6 /* main.c */; };
+		3871E294141ACAA3000DF3D6 /* GMain.m in Sources */ = {isa = PBXBuildFile; fileRef = 3871E293141ACAA3000DF3D6 /* GMain.m */; };
 		3871E297141ACAF7000DF3D6 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 3871E296141ACAF7000DF3D6 /* MainMenu.xib */; };
 		3871E29B141ACB60000DF3D6 /* GController.mm in Sources */ = {isa = PBXBuildFile; fileRef = 3871E29A141ACB60000DF3D6 /* GController.mm */; };
 		3871E2A1141ACEA6000DF3D6 /* GView.mm in Sources */ = {isa = PBXBuildFile; fileRef = 3871E2A0141ACEA6000DF3D6 /* GView.mm */; };
@@ -175,7 +175,7 @@
 		38709F261330B6FD00DA858D /* path_osx.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = path_osx.cpp; sourceTree = "<group>"; };
 		38709F701330BF5900DA858D /* autocf_osx.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = autocf_osx.hpp; sourceTree = "<group>"; };
 		3871E25A141ACA38000DF3D6 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
-		3871E293141ACAA3000DF3D6 /* main.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = main.c; sourceTree = "<group>"; };
+		3871E293141ACAA3000DF3D6 /* GMain.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GMain.m; sourceTree = "<group>"; };
 		3871E296141ACAF7000DF3D6 /* MainMenu.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = MainMenu.xib; sourceTree = "<group>"; };
 		3871E299141ACB60000DF3D6 /* GController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GController.h; sourceTree = "<group>"; };
 		3871E29A141ACB60000DF3D6 /* GController.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = GController.mm; sourceTree = "<group>"; };
@@ -430,7 +430,7 @@
 		3871E28F141ACA83000DF3D6 /* mac */ = {
 			isa = PBXGroup;
 			children = (
-				3871E293141ACAA3000DF3D6 /* main.c */,
+				3871E293141ACAA3000DF3D6 /* GMain.m */,
 				3871E299141ACB60000DF3D6 /* GController.h */,
 				3871E29A141ACB60000DF3D6 /* GController.mm */,
 				38FA0EC61495ABFF00F75BAE /* GDisplay.h */,
@@ -566,7 +566,7 @@
 				3813316114141F8600B8CE5B /* player.cpp in Sources */,
 				3813316214141F8600B8CE5B /* shot.cpp in Sources */,
 				3813316314141F8600B8CE5B /* world.cpp in Sources */,
-				3871E294141ACAA3000DF3D6 /* main.c in Sources */,
+				3871E294141ACAA3000DF3D6 /* GMain.m in Sources */,
 				3871E29B141ACB60000DF3D6 /* GController.mm in Sources */,
 				3871E2A1141ACEA6000DF3D6 /* GView.mm in Sources */,
 				3871E2A9141ACFCB000DF3D6 /* clock_osx.cpp in Sources */,
@@ -588,6 +588,10 @@
 				GCC_PREPROCESSOR_DEFINITIONS = "PACKAGE_NAME=\\\"game\\\"";
 				GCC_VERSION = 4.2;
 				GCC_WARN_EFFECTIVE_CPLUSPLUS_VIOLATIONS = NO;
+				WARNING_CFLAGS = (
+					"-Wall",
+					"-Wextra",
+				);
 			};
 			name = Debug;
 		};
@@ -600,6 +604,10 @@
 				GCC_PREPROCESSOR_DEFINITIONS = "PACKAGE_NAME=\\\"game\\\"";
 				GCC_VERSION = 4.2;
 				GCC_WARN_EFFECTIVE_CPLUSPLUS_VIOLATIONS = NO;
+				WARNING_CFLAGS = (
+					"-Wall",
+					"-Wextra",
+				);
 			};
 			name = Release;
 		};

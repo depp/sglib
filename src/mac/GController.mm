@@ -8,6 +8,7 @@
 @implementation GController
 
 - (void)applicationDidFinishLaunching:(NSNotification *)notification {
+    (void)notification;
     NSLog(@"app launched");
     Path::init();
     initTime();
