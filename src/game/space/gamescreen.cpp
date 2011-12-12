@@ -1,6 +1,7 @@
 #include "gamescreen.hpp"
 #include "ui/menu.hpp"
 #include "ui/event.hpp"
+#include "ui/window.hpp"
 #include "world.hpp"
 #include "player.hpp"
 #include "scenery.hpp"
@@ -23,7 +24,7 @@ void GameScreen::handleKey(UI::KeyEvent const &evt)
     bool state = evt.type == UI::KeyDown;
     switch (evt.key) {
     case UI::KEscape:
-        setActive(new UI::Menu);
+        window().setScreen(new UI::Menu);
         break;
 
     case UI::KUp:
@@ -70,7 +71,7 @@ void GameScreen::update(unsigned int ticks)
 void GameScreen::draw()
 {
     glClear(GL_COLOR_BUFFER_BIT);
-    world_->draw();
+    world_->draw(window().width(), window().height());
 }
 
 }

@@ -4,7 +4,6 @@
 #include "stars.hpp"
 #include "opengl.hpp"
 #include "player.hpp"
-#include "graphics/video.hpp"
 namespace Space {
 
 struct World::Event {
@@ -117,9 +116,8 @@ void World::update(unsigned ticks)
     }
 }
 
-void World::draw()
+void World::draw(int w, int h)
 {
-    int w = Video::width, h = Video::height;
     glClear(GL_COLOR_BUFFER_BIT);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();

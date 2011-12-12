@@ -2,19 +2,27 @@
 #define UI_SCREEN_HPP
 namespace UI {
 struct Event;
+class Window;
 
 class Screen {
-private:
-    static Screen *active;
+    friend class Window;
+    Window *window_;
 
 public:
-    static void setActive(Screen *screen);
-    static Screen *getActive() { return active; }
+    Screen()
+        : window_(0)
+    { }
 
     virtual ~Screen();
+    virtual void init();
     virtual void handleEvent(Event const &evt) = 0;
     virtual void update(unsigned int ticks) = 0;
     virtual void draw() = 0;
+
+    Window &window()
+    {
+        return *window_;
+    }
 };
 
 }

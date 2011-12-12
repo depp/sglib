@@ -3,20 +3,38 @@
 #include "ui/menu.hpp"
 #include "ui/event.hpp"
 #include "ui/screen.hpp"
-#include "graphics/video.hpp"
+#include "ui/window.hpp"
 #include "opengl.hpp"
 #include "sys/resource.hpp"
 #include "sys/config.hpp"
 #include "sys/path.hpp"
 #include <stdio.h>
 
+unsigned getTime(void)
+{
+    return SDL_GetTicks();
+}
+
 static const unsigned int MAX_FPS = 100;
 static const unsigned int MIN_FRAMETIME = 1000 / MAX_FPS;
 
-static void videoInit()
+class SDLWindow : public UI::Window {
+public:
+    virtual void close();
+};
+
+void SDLWindow::close()
+{
+    
+}
+
+static SDLWindow *videoInit()
 {
     SDL_Surface *screen = NULL;
     int flags;
+    SDLWindow *w;
+
+    w = new SDLWindow();
 
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
         fprintf(stderr, "Could not initialize SDL Video: %s\n",
@@ -36,8 +54,8 @@ static void videoInit()
            glGetString(GL_VENDOR), glGetString(GL_RENDERER),
            glGetString(GL_VERSION));
 
-    Video::width = 768;
-    Video::height = 480;
+    w->setSize(768, 480);
+    return w;
 }
 
 static void videoUpdate()
@@ -89,31 +107,29 @@ static int mapKey(int key)
 
 int main(int, char *[])
 {
+    UI::Window *w;
     Path::init();
     if (SDL_Init(SDL_INIT_TIMER) < 0) {
         fprintf(stderr, "Could not initialize SDL Timer: %s\n",
                 SDL_GetError());
         exit(1);
     }
-    videoInit();
     Rand::global.seed();
-    UI::Screen::setActive(new UI::Menu);
+    w = videoInit();
+    w->setScreen(new UI::Menu);
 
     unsigned int lastticks = SDL_GetTicks();
     while (1) {
         SDL_Event e;
         while (SDL_PollEvent(&e)) {
-            if (!UI::Screen::getActive())
-                goto quit;
             switch (e.type) {
             case SDL_QUIT:
                 goto quit;
             case SDL_MOUSEMOTION:
             {
                 SDL_MouseMotionEvent &m = e.motion;
-                int x = m.x, y = Video::height - 1 - m.y;
-                UI::Screen::getActive()->
-                    handleEvent(UI::MouseEvent(UI::MouseMove, -1, x, y));
+                int x = m.x, y = w->height() - 1 - m.y;
+                w->handleEvent(UI::MouseEvent(UI::MouseMove, -1, x, y));
                 break;
             }
             case SDL_MOUSEBUTTONDOWN:
@@ -137,9 +153,8 @@ int main(int, char *[])
                     button = UI::ButtonOther + m.button - 4;
                     break;
                 }
-                int x = m.x, y = Video::height - 1 - m.y;
-                UI::Screen::getActive()->
-                    handleEvent(UI::MouseEvent(t, button, x, y));
+                int x = m.x, y = w->height() - 1 - m.y;
+                w->handleEvent(UI::MouseEvent(t, button, x, y));
                 break;
             }
             case SDL_KEYDOWN:
@@ -148,16 +163,13 @@ int main(int, char *[])
                 SDL_KeyboardEvent &k = e.key;
                 UI::EventType t = e.type == SDL_KEYDOWN ?
                     UI::KeyDown : UI::KeyUp;
-                UI::Screen::getActive()->
-                    handleEvent(UI::KeyEvent(t, mapKey(k.keysym.sym)));
+                w->handleEvent(UI::KeyEvent(t, mapKey(k.keysym.sym)));
                 break;
             }
             default:
                 break;
             }
         }
-        if (!UI::Screen::getActive())
-            goto quit;
         unsigned int ticks = SDL_GetTicks(), delta = ticks - lastticks;
         if (delta < MIN_FRAMETIME) {
             SDL_Delay(MIN_FRAMETIME - delta);
@@ -165,10 +177,7 @@ int main(int, char *[])
             ticks = SDL_GetTicks();
         } else
             lastticks = ticks;
-        UI::Screen *s = UI::Screen::getActive();
-        s->update(ticks);
-        Resource::loadAll();
-        s->draw();
+        w->draw();
         videoUpdate();
     }
 
