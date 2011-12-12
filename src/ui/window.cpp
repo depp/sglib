@@ -2,6 +2,8 @@
 #include "sys/clock.hpp"
 #include "opengl.hpp"
 #include "sys/resource.hpp"
+#include <assert.h>
+#include <stdio.h>
 
 UI::Window::~Window()
 {
