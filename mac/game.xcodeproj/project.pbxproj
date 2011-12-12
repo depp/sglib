@@ -191,6 +191,7 @@
 		38A2ECD01495EBA700772423 /* Carbon.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Carbon.framework; path = /System/Library/Frameworks/Carbon.framework; sourceTree = "<absolute>"; };
 		38A2EE421495FFF100772423 /* GWindow.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GWindow.h; sourceTree = "<group>"; };
 		38A2EE431495FFF100772423 /* GWindow.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GWindow.m; sourceTree = "<group>"; };
+		38A2EE75149608A400772423 /* GPrefix.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GPrefix.h; sourceTree = "<group>"; };
 		38B2409B117BAE0800903838 /* rand.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = rand.cpp; sourceTree = "<group>"; };
 		38B2409C117BAE0800903838 /* rand.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = rand.hpp; sourceTree = "<group>"; };
 		38F78328121317550080545B /* widget.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = widget.hpp; sourceTree = "<group>"; };
@@ -434,6 +435,7 @@
 				3871E29A141ACB60000DF3D6 /* GController.mm */,
 				38FA0EC61495ABFF00F75BAE /* GDisplay.h */,
 				38FA0EC71495ABFF00F75BAE /* GDisplay.mm */,
+				38A2EE75149608A400772423 /* GPrefix.h */,
 				3871E29F141ACEA6000DF3D6 /* GView.h */,
 				3871E2A0141ACEA6000DF3D6 /* GView.mm */,
 				38A2EE421495FFF100772423 /* GWindow.h */,
@@ -581,6 +583,8 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				COPY_PHASE_STRIP = NO;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = ../src/mac/GPrefix.h;
 				GCC_PREPROCESSOR_DEFINITIONS = "PACKAGE_NAME=\\\"game\\\"";
 				GCC_VERSION = 4.2;
 				GCC_WARN_EFFECTIVE_CPLUSPLUS_VIOLATIONS = NO;
@@ -591,6 +595,8 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				COPY_PHASE_STRIP = YES;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = ../src/mac/GPrefix.h;
 				GCC_PREPROCESSOR_DEFINITIONS = "PACKAGE_NAME=\\\"game\\\"";
 				GCC_VERSION = 4.2;
 				GCC_WARN_EFFECTIVE_CPLUSPLUS_VIOLATIONS = NO;
