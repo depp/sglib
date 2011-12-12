@@ -187,10 +187,7 @@ static CVReturn cvCallback(CVDisplayLinkRef displayLink, const CVTimeStamp *now,
     } else {
         /* NSTimer version */
     }
-    if (prevContext_) {
-        [prevContext_ release];
-        prevContext_ = nil;
-    }
+    // Only one of prevContext_ and context_ is ever set
     prevContext_ = context_;
     context_ = nil;
     [format_ release];
