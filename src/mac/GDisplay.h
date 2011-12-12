@@ -21,6 +21,7 @@ typedef enum {
 
     // Mode is set first, and then OpenGL will be initialized by -[GDisplay update]
     GDisplayMode mode_;
+    GDisplayMode queueMode_;
 
     // Valid when OpenGL is initialized
     NSOpenGLContext *context_;

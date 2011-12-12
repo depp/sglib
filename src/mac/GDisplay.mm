@@ -4,6 +4,17 @@
 #import "GWindow.h"
 #import <sys/resource.hpp>
 
+@interface GDisplay (Private)
+
+// Both must be called without lock
+- (void)startGraphics;
+- (void)stopGraphics;
+
+- (void)queueModeChange:(GDisplayMode)mode;
+- (void)applyChanges;
+
+@end
+
 static bool isWindowedMode(GDisplayMode mode)
 {
     return mode == GDisplayWindow || mode == GDisplayFSWindow;
@@ -24,7 +35,7 @@ public:
 
 void MacWindow::close()
 {
-    [window setMode:GDisplayNone];
+    [window queueModeChange:GDisplayNone];
 }
 
 /* Event handling */
@@ -82,14 +93,6 @@ static CVReturn cvCallback(CVDisplayLinkRef displayLink, const CVTimeStamp *now,
 }
 
 /* Private methods */
-
-@interface GDisplay (Private)
-
-// Both must be called with lock
-- (void)startGraphics;
-- (void)stopGraphics;
-
-@end
 
 @implementation GDisplay (Private)
 
@@ -192,6 +195,16 @@ static CVReturn cvCallback(CVDisplayLinkRef displayLink, const CVTimeStamp *now,
     context_ = nil;
     [format_ release];
     format_ = nil;
+}
+
+- (void)queueModeChange:(GDisplayMode)mode {
+    queueMode_ = mode;
+    if (queueMode_ != mode_)
+        [self performSelectorOnMainThread:@selector(applyChanges) withObject:nil waitUntilDone:NO];
+}
+
+- (void)applyChanges {
+    [self setMode:queueMode_];
 }
 
 @end
