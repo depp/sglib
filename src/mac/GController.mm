@@ -5,7 +5,27 @@
 #import "sys/clock.hpp"
 #import "ui/menu.hpp"
 
+static GController *gController;
+
 @implementation GController
+
++ (GController *)sharedInstance {
+    if (!gController)
+        gController = [[self alloc] init];
+    return gController;
+}
+
+- (id)init {
+    if (!(self = [super init]))
+        return nil;
+    if (gController) {
+        [self release];
+        self = gController;
+    } else {
+        gController = self;
+    }
+    return [self retain];
+}
 
 - (void)applicationDidFinishLaunching:(NSNotification *)notification {
     (void)notification;
