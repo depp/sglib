@@ -1,5 +1,5 @@
 #import "GView.h"
-#import "GWindow.h"
+#import "GDisplay.h"
 
 static void handleMouse(GView *v, NSEvent *e, UI::EventType t, int button)
 {
@@ -73,11 +73,11 @@ static void handleMouse(GView *v, NSEvent *e, UI::EventType t, int button)
 }
 
 - (void)keyDown:(NSEvent *)theEvent {
-    GWindowKeyEvent(window_, theEvent, UI::KeyDown);
+    GDisplayKeyEvent(window_, theEvent, UI::KeyDown);
 }
 
 - (void)keyUp:(NSEvent *)theEvent {
-    GWindowKeyEvent(window_, theEvent, UI::KeyUp);
+    GDisplayKeyEvent(window_, theEvent, UI::KeyUp);
 }
 
 - (void)flagsChanged:(NSEvent *)theEvent {

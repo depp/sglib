@@ -1,19 +1,19 @@
 #import <Carbon/Carbon.h>
-#import "GWindow.h"
+#import "GDisplay.h"
 #import "GView.h"
 
-static bool isWindowedMode(GWindowMode mode)
+static bool isWindowedMode(GDisplayMode mode)
 {
-    return mode == GWindowWindow || mode == GWindowFSWindow;
+    return mode == GDisplayWindow || mode == GDisplayFSWindow;
 }
 
 /* C++ interface */
 
 class MacWindow : public UI::Window {
-    GWindow *window;
+    GDisplay *window;
 
 public:
-    explicit MacWindow(GWindow *w)
+    explicit MacWindow(GDisplay *w)
         : window(w)
     { }
 
@@ -54,7 +54,7 @@ static int mapKey(int key)
     }
 }
 
-void GWindowKeyEvent(GWindow *w, NSEvent *e, UI::EventType t)
+void GDisplayKeyEvent(GDisplay *w, NSEvent *e, UI::EventType t)
 {
     NSString *c = [e charactersIgnoringModifiers];
     int keyChar = [c characterAtIndex:0];
@@ -72,7 +72,7 @@ static CVReturn cvCallback(CVDisplayLinkRef displayLink, const CVTimeStamp *now,
     vt = now->videoTime;
     ht = now->hostTime;
 
-    GWindow *w = (GWindow *) displayLinkContext;
+    GDisplay *w = (GDisplay *) displayLinkContext;
     [w update];
 
     return kCVReturnSuccess;
@@ -80,7 +80,7 @@ static CVReturn cvCallback(CVDisplayLinkRef displayLink, const CVTimeStamp *now,
 
 /* Private methods */
 
-@interface GWindow (Private)
+@interface GDisplay (Private)
 
 // Both must be called with lock
 - (void)startGraphics;
@@ -88,7 +88,7 @@ static CVReturn cvCallback(CVDisplayLinkRef displayLink, const CVTimeStamp *now,
 
 @end
 
-@implementation GWindow (Private)
+@implementation GDisplay (Private)
 
 - (void)startGraphics {
     // OpenGL pixel format
@@ -99,12 +99,12 @@ static CVReturn cvCallback(CVDisplayLinkRef displayLink, const CVTimeStamp *now,
     bool windowed;
 
     switch (mode_) {
-    case GWindowWindow:
-    case GWindowFSWindow:
+    case GDisplayWindow:
+    case GDisplayFSWindow:
         glmode = NSOpenGLPFAWindow;
         windowed = true;
         break;
-    case GWindowFSCapture:
+    case GDisplayFSCapture:
         glmode = NSOpenGLPFAFullScreen;
         windowed = false;
         break;
@@ -166,7 +166,7 @@ static CVReturn cvCallback(CVDisplayLinkRef displayLink, const CVTimeStamp *now,
 
 /* Objective C interface */
 
-@implementation GWindow
+@implementation GDisplay
 
 - (id)initWithScreen:(UI::Screen *)screen {
     [super init];
@@ -199,7 +199,7 @@ error:
 }
 */
 
-- (void)setMode:(GWindowMode)mode {
+- (void)setMode:(GDisplayMode)mode {
     if (mode == mode_)
         return;
 
@@ -211,7 +211,7 @@ error:
 
     bool windowed = isWindowedMode(mode_), newWindowed = isWindowedMode(mode);
     if (isWindowedMode(mode_)) {
-        if (mode_ == GWindowFSWindow) {
+        if (mode_ == GDisplayFSWindow) {
             SetSystemUIMode(kUIModeNormal, 0);
         }
         if (!isWindowedMode(mode)) {
@@ -220,7 +220,7 @@ error:
             [view_ release];
             view_ = nil;
         }
-    } else if (mode_ == GWindowFSCapture) {
+    } else if (mode_ == GDisplayFSCapture) {
         CGReleaseAllDisplays();
     }
 
@@ -232,7 +232,7 @@ error:
         NSUInteger style;
         NSWindow *w;
         GView *v;
-        if (mode == GWindowWindow) {
+        if (mode == GDisplayWindow) {
             r = NSMakeRect(0, 0, 768, 480);
             style = NSTitledWindowMask | NSClosableWindowMask | NSMiniaturizableWindowMask | NSResizableWindowMask;
         } else {
@@ -253,12 +253,12 @@ error:
         }
         [w setContentView:view_];
 
-        if (mode == GWindowFSWindow) {
+        if (mode == GDisplayFSWindow) {
             SetSystemUIMode(kUIModeAllSuppressed, 0);
         }
         [nswindow_ makeKeyAndOrderFront:self];
-        // -[GWindow update] is called by -[GView drawRect:], no need to call it manually
-    } else if (mode == GWindowFSCapture) {
+        // -[GDisplay update] is called by -[GView drawRect:], no need to call it manually
+    } else if (mode == GDisplayFSCapture) {
         CGDisplayErr err;
         err = CGCaptureAllDisplays();
         assert(!err);
@@ -268,11 +268,11 @@ error:
 }
 
 - (void)showWindow:(id)sender {
-    [self setMode:GWindowWindow];
+    [self setMode:GDisplayWindow];
 }
 
 - (void)showFullScreen:(id)sender {
-    [self setMode:GWindowFSWindow];
+    [self setMode:GDisplayFSWindow];
 }
 
 - (void)handleUIEvent:(UI::Event *)event
@@ -296,7 +296,7 @@ error:
         NSRect b = [view_ bounds];
         glViewport(0, 0, b.size.width, b.size.height);
         uiwindow_->setSize(b.size.width, b.size.height);
-    } else if (mode_ == GWindowFSCapture) {
+    } else if (mode_ == GDisplayFSCapture) {
         size_t w = CGDisplayPixelsWide(display_);
         size_t h = CGDisplayPixelsHigh(display_);
         glViewport(0, 0, w, h);

@@ -1,5 +1,5 @@
 #import "GController.h"
-#import "GWindow.h"
+#import "GDisplay.h"
 #import "rand.hpp"
 #import "sys/path.hpp"
 #import "sys/clock.hpp"
@@ -14,7 +14,7 @@
     Rand::global.seed();
 
     UI::Screen *s = new UI::Menu;
-    GWindow *w = [[GWindow alloc] initWithScreen:s];
+    GDisplay *w = [[GDisplay alloc] initWithScreen:s];
     // [w showWindow:self];
     [w showFullScreen:self];
 }

@@ -1,9 +1,9 @@
 #import <Cocoa/Cocoa.h>
-@class GWindow;
+@class GDisplay;
 
 @interface GView : NSView {
 @public
-    GWindow *window_;
+    GDisplay *window_;
 }
 
 @end

@@ -65,7 +65,7 @@
 		38A2ECD11495EBA700772423 /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 38A2ECD01495EBA700772423 /* Carbon.framework */; };
 		38B2409D117BAE0800903838 /* rand.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 38B2409B117BAE0800903838 /* rand.cpp */; };
 		38F7832A121317550080545B /* widget.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 38F78329121317550080545B /* widget.cpp */; };
-		38FA0EC81495ABFF00F75BAE /* GWindow.mm in Sources */ = {isa = PBXBuildFile; fileRef = 38FA0EC71495ABFF00F75BAE /* GWindow.mm */; };
+		38FA0EC81495ABFF00F75BAE /* GDisplay.mm in Sources */ = {isa = PBXBuildFile; fileRef = 38FA0EC71495ABFF00F75BAE /* GDisplay.mm */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -192,8 +192,8 @@
 		38B2409C117BAE0800903838 /* rand.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = rand.hpp; sourceTree = "<group>"; };
 		38F78328121317550080545B /* widget.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = widget.hpp; sourceTree = "<group>"; };
 		38F78329121317550080545B /* widget.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = widget.cpp; sourceTree = "<group>"; };
-		38FA0EC61495ABFF00F75BAE /* GWindow.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GWindow.h; sourceTree = "<group>"; };
-		38FA0EC71495ABFF00F75BAE /* GWindow.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = GWindow.mm; sourceTree = "<group>"; };
+		38FA0EC61495ABFF00F75BAE /* GDisplay.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GDisplay.h; sourceTree = "<group>"; };
+		38FA0EC71495ABFF00F75BAE /* GDisplay.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = GDisplay.mm; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -431,8 +431,8 @@
 				3871E29A141ACB60000DF3D6 /* GController.mm */,
 				3871E29F141ACEA6000DF3D6 /* GView.h */,
 				3871E2A0141ACEA6000DF3D6 /* GView.mm */,
-				38FA0EC61495ABFF00F75BAE /* GWindow.h */,
-				38FA0EC71495ABFF00F75BAE /* GWindow.mm */,
+				38FA0EC61495ABFF00F75BAE /* GDisplay.h */,
+				38FA0EC71495ABFF00F75BAE /* GDisplay.mm */,
 			);
 			path = mac;
 			sourceTree = "<group>";
@@ -564,7 +564,7 @@
 				3871E2A1141ACEA6000DF3D6 /* GView.mm in Sources */,
 				3871E2A9141ACFCB000DF3D6 /* clock_osx.cpp in Sources */,
 				3871E3CD141B31C3000DF3D6 /* window.cpp in Sources */,
-				38FA0EC81495ABFF00F75BAE /* GWindow.mm in Sources */,
+				38FA0EC81495ABFF00F75BAE /* GDisplay.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
