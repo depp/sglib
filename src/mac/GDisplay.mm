@@ -140,12 +140,8 @@ static CVReturn cvCallback(CVDisplayLinkRef displayLink, const CVTimeStamp *now,
         cxt = [[NSOpenGLContext alloc] initWithFormat:fmt shareContext:prevContext_];
         [prevContext_ release];
         prevContext_ = nil;
-        if (cxt) {
-            NSLog(@"Context sharing successful");
-        } else {
-            NSLog(@"Context sharing failed");
+        if (!cxt)
             Resource::resetGraphics();
-        }
     }
     if (!cxt) {
         cxt = [[NSOpenGLContext alloc] initWithFormat:fmt shareContext:nil];
