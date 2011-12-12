@@ -157,10 +157,20 @@ error:
 
     [w setContentView:v];
     [w makeKeyAndOrderFront:self];
+
+    mode_ = GWindowWindow;
+    // -[GWindow update] is called automatically by -[GView drawRect:]
 }
 
 - (void)showFullScreen:(id)sender {
-    // Unimplemented
+    CGDisplayErr err;
+
+    err = CGCaptureAllDisplays();
+    assert(!err);
+    display_ = CGMainDisplayID();
+
+    mode_ = GWindowFullscreen;
+    [self update];
 }
 
 - (void)handleUIEvent:(UI::Event *)event
@@ -177,18 +187,30 @@ error:
     if (!format_) {
         // OpenGL pixel format
         GLint on = 1;
-        GLuint attrib[] = {
-            NSOpenGLPFANoRecovery,
-            NSOpenGLPFAWindow,
-            NSOpenGLPFAAccelerated,
-            NSOpenGLPFADoubleBuffer,
-            NSOpenGLPFAColorSize, 24,
-            NSOpenGLPFAAlphaSize, 8,
-            NSOpenGLPFADepthSize, 24,
-            NSOpenGLPFAStencilSize, 8,
-            NSOpenGLPFAAccumSize, 0,
-            0
-        };
+        GLuint attrib[16];
+        int i = 0;
+        GLuint glmode;
+
+        switch (mode_) {
+        case GWindowWindow: glmode = NSOpenGLPFAWindow; break;
+        case GWindowFullscreen: glmode = NSOpenGLPFAFullScreen; break;
+        default: goto end;
+        }
+
+        attrib[i++] = glmode;
+        attrib[i++] = NSOpenGLPFAAccelerated;
+        attrib[i++] = NSOpenGLPFADoubleBuffer;
+        attrib[i++] = NSOpenGLPFAColorSize; attrib[i++] = 24;
+        attrib[i++] = NSOpenGLPFAAlphaSize; attrib[i++] = 8;
+        attrib[i++] = NSOpenGLPFADepthSize; attrib[i++] = 24;
+        // attrib[i++] = NSOpenGLPFAStencilSize; attrib[i++] = 8;
+        // attrib[i++] = NSOpenGLPFAAccumSize; attrib[i++] = 0;
+        if (mode_ == GWindowFullscreen) {
+            attrib[i++] = NSOpenGLPFAScreenMask;
+            attrib[i++] = CGDisplayIDToOpenGLDisplayMask(display_);
+        }
+        attrib[i] = 0;
+
         NSOpenGLPixelFormat *fmt = [[[NSOpenGLPixelFormat alloc] initWithAttributes:(NSOpenGLPixelFormatAttribute*) attrib] autorelease];
         format_ = fmt;
         NSLog(@"fmt = %p", fmt);
@@ -198,20 +220,31 @@ error:
         context_ = cxt;
         [cxt setValues:&on forParameter:NSOpenGLCPSwapInterval];
         NSLog(@"cxt = %p", cxt);
-        [cxt setView:view_];
+        if (mode_ == GWindowWindow)
+            [cxt setView:view_];
+        else
+            [cxt setFullScreen];
 
         // Timer
         [self startTimer];
     }
-    if (view_) {
+
+    [context_ makeCurrentContext];
+    if (mode_ == GWindowWindow) {
         NSRect b = [view_ bounds];
-        [context_ makeCurrentContext];
         glViewport(0, 0, b.size.width, b.size.height);
         uiwindow_->setSize(b.size.width, b.size.height);
-        uiwindow_->draw();
-        [context_ flushBuffer];
+    } else {
+        size_t w = CGDisplayPixelsWide(display_);
+        size_t h = CGDisplayPixelsHigh(display_);
+        glViewport(0, 0, w, h);
+        uiwindow_->setSize(w, h);
     }
 
+    uiwindow_->draw();
+    [context_ flushBuffer];
+
+end:
     [self unlock];
 }
 

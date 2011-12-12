@@ -7,19 +7,31 @@
 
 @class GView;
 
+typedef enum {
+    GWindowNone,
+    GWindowWindow,
+    GWindowFullscreen
+} GWindowMode;
+
 @interface GWindow : NSObject <NSLocking> {
     // Always valid
     UI::Window *uiwindow_;
     pthread_mutex_t lock_;
 
-    // Valid when the window is visible
+    // Mode is set first, and then OpenGL will be initialized by -[GWindow update]
+    GWindowMode mode_;
+
+    // Valid when OpenGL is initialized
     NSOpenGLContext *context_;
     NSOpenGLPixelFormat *format_;
     CVDisplayLinkRef link_;
 
-    // Valid when the window is windowed (not full-screen)
+    // Valid in windowed mode
     NSWindow *nswindow_;
     GView *view_;
+
+    // Valid in fullscreen mode
+    CGDirectDisplayID display_;
 }
 
 - (id)initWithScreen:(UI::Screen *)screen;

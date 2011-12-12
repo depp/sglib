@@ -15,7 +15,8 @@
 
     UI::Screen *s = new UI::Menu;
     GWindow *w = [[GWindow alloc] initWithScreen:s];
-    [w showWindow:self];
+    // [w showWindow:self];
+    [w showFullScreen:self];
 }
 
 
