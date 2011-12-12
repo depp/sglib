@@ -1,5 +1,5 @@
 #import "GController.h"
-#import "GView.h"
+#import "GWindow.h"
 #import "rand.hpp"
 #import "sys/path.hpp"
 #import "sys/clock.hpp"
@@ -13,15 +13,10 @@
     initTime();
     Rand::global.seed();
 
-    NSScreen *s = [NSScreen mainScreen];
-    NSRect r = NSMakeRect(0, 0, 768, 480);
-    NSUInteger style = NSTitledWindowMask | NSClosableWindowMask | NSMiniaturizableWindowMask | NSResizableWindowMask;
-    NSWindow *w = [[NSWindow alloc] initWithContentRect:r styleMask:style backing:NSBackingStoreBuffered defer:NO screen:s];
-    [w setTitle:@"Game"];
-    GView *v = [[[GView alloc] initWithFrame:r] autorelease];
-    [w setContentView:v];
-    [w makeKeyAndOrderFront:self];
-    [v startTimer];
+    UI::Screen *s = new UI::Menu;
+    GWindow *w = [[GWindow alloc] initWithScreen:s];
+    [w showWindow:self];
 }
+
 
 @end

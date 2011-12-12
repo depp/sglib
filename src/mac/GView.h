@@ -1,16 +1,9 @@
 #import <Cocoa/Cocoa.h>
-#import <CoreVideo/CoreVideo.h>
-#import "ui/window.hpp"
-#import <pthread.h>
+@class GWindow;
 
-@interface GView : NSOpenGLView {
+@interface GView : NSView {
 @public
-    CVDisplayLinkRef displayLink_;
-    pthread_mutex_t displayLock_;
-    UI::Window *window_;
+    GWindow *window_;
 }
-
-- (void)startTimer;
-- (void)timerFired:(id)sender;
 
 @end
