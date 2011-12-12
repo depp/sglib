@@ -29,7 +29,8 @@ private:
           unsigned int vcount, short const vdata[][3],
           unsigned int tcount, unsigned short const tdata[][3],
           unsigned int lcount, unsigned short const ldata[][2])
-        : path_(), data_(0), datalen_(0), scale_(scale),
+        : Resource(false),
+          path_(), data_(0), datalen_(0), scale_(scale),
           vtype_(GL_SHORT), vcount_(vcount), vdata_(vdata),
           ttype_(GL_UNSIGNED_SHORT), tcount_(tcount), tdata_(tdata),
           ltype_(GL_UNSIGNED_SHORT), lcount_(lcount), ldata_(ldata)

@@ -31,6 +31,17 @@ void Resource::loadAll()
     resources.resize(e - b);
 }
 
+void Resource::resetGraphics()
+{
+    std::vector<Resource *>::iterator
+        i = resources.begin(), e = resources.end();
+    for (; i != e; ++i) {
+        Resource *r = *i;
+        if (r->graphicsResource_)
+            r->markUnloaded();
+    }
+}
+
 Resource::~Resource()
 { }
 
@@ -41,3 +52,6 @@ void Resource::registerResource()
     resources.push_back(this);
     registered_ = true;
 }
+
+void Resource::markUnloaded()
+{ }

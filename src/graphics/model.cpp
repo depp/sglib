@@ -218,7 +218,8 @@ void Model::unloadResource()
 }
 
 Model::Model(std::string const &path)
-    : path_(path), data_(0), datalen_(0), scale_(1.0),
+    : Resource(false),
+      path_(path), data_(0), datalen_(0), scale_(1.0),
       vtype_(0), vcount_(0), vdata_(0),
       ttype_(0), tcount_(0), tdata_(0),
       ltype_(0), lcount_(0), ldata_(0)

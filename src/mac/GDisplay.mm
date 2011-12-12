@@ -2,6 +2,7 @@
 #import "GDisplay.h"
 #import "GView.h"
 #import "GWindow.h"
+#import <sys/resource.hpp>
 
 static bool isWindowedMode(GDisplayMode mode)
 {
@@ -23,7 +24,7 @@ public:
 
 void MacWindow::close()
 {
-    // [window close];
+    [window setMode:GDisplayNone];
 }
 
 /* Event handling */
@@ -93,7 +94,9 @@ static CVReturn cvCallback(CVDisplayLinkRef displayLink, const CVTimeStamp *now,
 @implementation GDisplay (Private)
 
 - (void)startGraphics {
-    // OpenGL pixel format
+    if (context_)
+        return;
+
     GLint on = 1;
     GLuint attrib[16];
     int i = 0;
@@ -128,11 +131,10 @@ static CVReturn cvCallback(CVDisplayLinkRef displayLink, const CVTimeStamp *now,
     }
     attrib[i] = 0;
 
-    NSOpenGLPixelFormat *fmt = [[[NSOpenGLPixelFormat alloc] initWithAttributes:(NSOpenGLPixelFormatAttribute*) attrib] autorelease];
+    NSOpenGLPixelFormat *fmt = [[NSOpenGLPixelFormat alloc] initWithAttributes:(NSOpenGLPixelFormatAttribute*) attrib];
     assert(fmt);
     format_ = fmt;
 
-    // OpenGL context
     NSOpenGLContext *cxt = [[NSOpenGLContext alloc] initWithFormat:fmt shareContext:nil];
     assert(cxt);
     context_ = cxt;
@@ -142,7 +144,6 @@ static CVReturn cvCallback(CVDisplayLinkRef displayLink, const CVTimeStamp *now,
     else
         [cxt setFullScreen];
 
-    // Timer
     if (1) {
         // OS X 10.4 and later only
         CVDisplayLinkCreateWithActiveCGDisplays(&link_);
@@ -161,7 +162,22 @@ static CVReturn cvCallback(CVDisplayLinkRef displayLink, const CVTimeStamp *now,
 }
 
 - (void)stopGraphics {
+    if (!context_)
+        return;
 
+    if (1) {
+        // OS X 10.4 and later only
+        CVDisplayLinkStop(link_);
+        CVDisplayLinkRelease(link_);
+        link_ = NULL;
+    } else {
+        /* NSTimer version */
+    }
+    [context_ release];
+    context_ = nil;
+    [format_ release];
+    format_ = nil;
+    Resource::resetGraphics();
 }
 
 @end
@@ -204,6 +220,8 @@ error:
 - (void)setMode:(GDisplayMode)mode {
     if (mode == mode_)
         return;
+
+    [self stopGraphics];
 
     // There are two main ways to make a fullscreen window.
     // On OS X >= 10.6, we can use enterFullScreenMode on a windowless NSView and supply the options we want.
@@ -264,6 +282,8 @@ error:
         assert(!err);
         display_ = CGMainDisplayID();
         [self update];
+    } else if (mode == GDisplayNone) {
+        
     }
 }
 

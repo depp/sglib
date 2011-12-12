@@ -5,6 +5,8 @@
 class Resource {
 public:
     static void loadAll();
+    // Mark all "graphics resources" as unloaded.
+    static void resetGraphics();
 
     virtual std::string name() const = 0;
 
@@ -15,20 +17,22 @@ public:
     void decref() { refcount_--; }
 
 protected:
-    Resource()
-        : loaded_(false), registered_(false), refcount_(0)
+    Resource(bool graphicsResource)
+        : loaded_(false), registered_(false), graphicsResource_(graphicsResource),
+          refcount_(0)
     { }
     virtual ~Resource();
 
     void registerResource();
     virtual void loadResource() = 0;
     virtual void unloadResource() = 0;
+    virtual void markUnloaded(); // "graphics resources" overload this
 
 private:
     Resource(Resource const &);
     Resource &operator=(Resource const &);
 
-    bool loaded_, registered_;
+    bool loaded_, registered_, graphicsResource_;
     unsigned int refcount_;
 };
 

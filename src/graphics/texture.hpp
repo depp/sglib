@@ -55,6 +55,7 @@ protected:
 private:
     virtual void loadResource();
     virtual void unloadResource();
+    virtual void markUnloaded();
 
     void *buf_;
     size_t bufsz_;

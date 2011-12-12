@@ -6,7 +6,8 @@
 #include <stdio.h>
 
 Texture::Texture()
-    : buf_(0), bufsz_(0), width_(0), height_(0), twidth_(0), theight_(0),
+    : Resource(true),
+      buf_(0), bufsz_(0), width_(0), height_(0), twidth_(0), theight_(0),
       iscolor_(false), hasalpha_(false), tex_(0), isnull_(false)
 { }
 
@@ -70,6 +71,13 @@ void Texture::unloadResource()
         GLuint tex = tex_;
         glDeleteTextures(1, &tex);
     }
+    tex_ = 0;
+    setLoaded(false);
+    isnull_ = false;
+}
+
+void Texture::markUnloaded()
+{
     tex_ = 0;
     setLoaded(false);
     isnull_ = false;
