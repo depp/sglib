@@ -1,5 +1,11 @@
+#import <Carbon/Carbon.h>
 #import "GWindow.h"
 #import "GView.h"
+
+static bool isWindowedMode(GWindowMode mode)
+{
+    return mode == GWindowWindow || mode == GWindowFSWindow;
+}
 
 /* C++ interface */
 
@@ -76,6 +82,7 @@ static CVReturn cvCallback(CVDisplayLinkRef displayLink, const CVTimeStamp *now,
 
 @interface GWindow (Private)
 
+// Both must be called with lock
 - (void)startGraphics;
 - (void)stopGraphics;
 
@@ -89,11 +96,20 @@ static CVReturn cvCallback(CVDisplayLinkRef displayLink, const CVTimeStamp *now,
     GLuint attrib[16];
     int i = 0;
     GLuint glmode;
+    bool windowed;
 
     switch (mode_) {
-    case GWindowWindow: glmode = NSOpenGLPFAWindow; break;
-    case GWindowFullscreen: glmode = NSOpenGLPFAFullScreen; break;
-    default: return;
+    case GWindowWindow:
+    case GWindowFSWindow:
+        glmode = NSOpenGLPFAWindow;
+        windowed = true;
+        break;
+    case GWindowFSCapture:
+        glmode = NSOpenGLPFAFullScreen;
+        windowed = false;
+        break;
+    default:
+        return;
     }
 
     attrib[i++] = glmode;
@@ -104,7 +120,7 @@ static CVReturn cvCallback(CVDisplayLinkRef displayLink, const CVTimeStamp *now,
     attrib[i++] = NSOpenGLPFADepthSize; attrib[i++] = 24;
     // attrib[i++] = NSOpenGLPFAStencilSize; attrib[i++] = 8;
     // attrib[i++] = NSOpenGLPFAAccumSize; attrib[i++] = 0;
-    if (mode_ == GWindowFullscreen) {
+    if (!windowed) {
         attrib[i++] = NSOpenGLPFAScreenMask;
         attrib[i++] = CGDisplayIDToOpenGLDisplayMask(display_);
     }
@@ -119,7 +135,7 @@ static CVReturn cvCallback(CVDisplayLinkRef displayLink, const CVTimeStamp *now,
     assert(cxt);
     context_ = cxt;
     [cxt setValues:&on forParameter:NSOpenGLCPSwapInterval];
-    if (mode_ == GWindowWindow)
+    if (windowed)
         [cxt setView:view_];
     else
         [cxt setFullScreen];
@@ -183,35 +199,80 @@ error:
 }
 */
 
+- (void)setMode:(GWindowMode)mode {
+    if (mode == mode_)
+        return;
+
+    // There are two main ways to make a fullscreen window.
+    // On OS X >= 10.6, we can use enterFullScreenMode on a windowless NSView and supply the options we want.
+    // On OS X <= 10.4, enterFullScreenMode does not exist and we must manually size the window and set the UI mode.  This requires linking to Carbon.
+    // On OS X 10.5, enterFullScreenMode exists, but using it precludes setting the UI mode.
+    // Since I don't have 10.6, this code uses the 10.4 method.
+
+    bool windowed = isWindowedMode(mode_), newWindowed = isWindowedMode(mode);
+    if (isWindowedMode(mode_)) {
+        if (mode_ == GWindowFSWindow) {
+            SetSystemUIMode(kUIModeNormal, 0);
+        }
+        if (!isWindowedMode(mode)) {
+            [nswindow_ close];
+            nswindow_ = nil;
+            [view_ release];
+            view_ = nil;
+        }
+    } else if (mode_ == GWindowFSCapture) {
+        CGReleaseAllDisplays();
+    }
+
+    mode_ = mode;
+
+    if (isWindowedMode(mode)) {
+        NSScreen *s = [NSScreen mainScreen];
+        NSRect r;
+        NSUInteger style;
+        NSWindow *w;
+        GView *v;
+        if (mode == GWindowWindow) {
+            r = NSMakeRect(0, 0, 768, 480);
+            style = NSTitledWindowMask | NSClosableWindowMask | NSMiniaturizableWindowMask | NSResizableWindowMask;
+        } else {
+            r = [s frame];
+            style = NSBorderlessWindowMask;
+        }
+        if (nswindow_) {
+            [nswindow_ close];
+            nswindow_ = nil;
+        }
+        w = [[NSWindow alloc] initWithContentRect:r styleMask:style backing:NSBackingStoreBuffered defer:NO screen:s];
+        nswindow_ = w;
+        [w setTitle:@"Game"];
+        [w setDelegate:self];
+        if (!view_) {
+            view_ = [[GView alloc] initWithFrame:r];
+            view_->window_ = self;
+        }
+        [w setContentView:view_];
+
+        if (mode == GWindowFSWindow) {
+            SetSystemUIMode(kUIModeAllSuppressed, 0);
+        }
+        [nswindow_ makeKeyAndOrderFront:self];
+        // -[GWindow update] is called by -[GView drawRect:], no need to call it manually
+    } else if (mode == GWindowFSCapture) {
+        CGDisplayErr err;
+        err = CGCaptureAllDisplays();
+        assert(!err);
+        display_ = CGMainDisplayID();
+        [self update];
+    }
+}
+
 - (void)showWindow:(id)sender {
-    NSScreen *s = [NSScreen mainScreen];
-    NSRect r = NSMakeRect(0, 0, 768, 480);
-    NSUInteger style = NSTitledWindowMask | NSClosableWindowMask | NSMiniaturizableWindowMask | NSResizableWindowMask;
-    NSWindow *w = [[NSWindow alloc] initWithContentRect:r styleMask:style backing:NSBackingStoreBuffered defer:NO screen:s];
-    nswindow_ = w;
-    [w setTitle:@"Game"];
-    [w setDelegate:self];
-
-    GView *v = [[[GView alloc] initWithFrame:r] autorelease];
-    view_ = v;
-    v->window_ = self;
-
-    [w setContentView:v];
-    [w makeKeyAndOrderFront:self];
-
-    mode_ = GWindowWindow;
-    // -[GWindow update] is called automatically by -[GView drawRect:]
+    [self setMode:GWindowWindow];
 }
 
 - (void)showFullScreen:(id)sender {
-    CGDisplayErr err;
-
-    err = CGCaptureAllDisplays();
-    assert(!err);
-    display_ = CGMainDisplayID();
-
-    mode_ = GWindowFullscreen;
-    [self update];
+    [self setMode:GWindowFSWindow];
 }
 
 - (void)handleUIEvent:(UI::Event *)event
@@ -222,27 +283,27 @@ error:
 }
 
 - (void)update {
-    [self lock];
+    NSLog(@"update");
 
     if (!context_)
         [self startGraphics];
+    if (!context_)
+        return;
 
-    if (context_) {
-        [context_ makeCurrentContext];
-        if (mode_ == GWindowWindow) {
-            NSRect b = [view_ bounds];
-            glViewport(0, 0, b.size.width, b.size.height);
-            uiwindow_->setSize(b.size.width, b.size.height);
-        } else if (mode_ == GWindowFullscreen) {
-            size_t w = CGDisplayPixelsWide(display_);
-            size_t h = CGDisplayPixelsHigh(display_);
-            glViewport(0, 0, w, h);
-            uiwindow_->setSize(w, h);
-        }
-        uiwindow_->draw();
-        [context_ flushBuffer];
+    [self lock];
+    [context_ makeCurrentContext];
+    if (isWindowedMode(mode_)) {
+        NSRect b = [view_ bounds];
+        glViewport(0, 0, b.size.width, b.size.height);
+        uiwindow_->setSize(b.size.width, b.size.height);
+    } else if (mode_ == GWindowFSCapture) {
+        size_t w = CGDisplayPixelsWide(display_);
+        size_t h = CGDisplayPixelsHigh(display_);
+        glViewport(0, 0, w, h);
+        uiwindow_->setSize(w, h);
     }
-
+    uiwindow_->draw();
+    [context_ flushBuffer];
     [self unlock];
 }
 

@@ -10,7 +10,8 @@
 typedef enum {
     GWindowNone,
     GWindowWindow,
-    GWindowFullscreen
+    GWindowFSWindow, // Fullscreen window, kiosk mode is optional
+    GWindowFSCapture // Captured display, kiosk mode is mandatory
 } GWindowMode;
 
 @interface GWindow : NSObject <NSLocking> {
@@ -36,6 +37,7 @@ typedef enum {
 
 - (id)initWithScreen:(UI::Screen *)screen;
 
+- (void)setMode:(GWindowMode)mode;
 - (void)showWindow:(id)sender;
 - (void)showFullScreen:(id)sender;
 
