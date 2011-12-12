@@ -69,13 +69,10 @@ void GDisplayKeyEvent(GDisplay *w, NSEvent *e, UI::EventType t)
 static CVReturn cvCallback(CVDisplayLinkRef displayLink, const CVTimeStamp *now, const CVTimeStamp *outputTime, CVOptionFlags flagsIn, CVOptionFlags *flagsOut, void *displayLinkContext)
 {
     (void)displayLink;
+    (void)now;
     (void)outputTime;
     (void)flagsIn;
     (void)flagsOut;
-    static uint64_t vt, ht;
-    NSLog(@"vt=%llu; ht=%llu\n", now->videoTime - vt, now->hostTime - ht);
-    vt = now->videoTime;
-    ht = now->hostTime;
 
     GDisplay *w = (GDisplay *) displayLinkContext;
     [w update];
@@ -288,8 +285,6 @@ error:
 }
 
 - (void)update {
-    NSLog(@"update");
-
     if (!context_)
         [self startGraphics];
     if (!context_)
