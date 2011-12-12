@@ -181,7 +181,6 @@ error:
 }
 
 - (void)update {
-    NSLog(@"update");
     [self lock];
 
     if (!format_) {
@@ -212,14 +211,14 @@ error:
         attrib[i] = 0;
 
         NSOpenGLPixelFormat *fmt = [[[NSOpenGLPixelFormat alloc] initWithAttributes:(NSOpenGLPixelFormatAttribute*) attrib] autorelease];
+        assert(fmt);
         format_ = fmt;
-        NSLog(@"fmt = %p", fmt);
 
         // OpenGL context
         NSOpenGLContext *cxt = [[NSOpenGLContext alloc] initWithFormat:fmt shareContext:nil];
+        assert(cxt);
         context_ = cxt;
         [cxt setValues:&on forParameter:NSOpenGLCPSwapInterval];
-        NSLog(@"cxt = %p", cxt);
         if (mode_ == GWindowWindow)
             [cxt setView:view_];
         else
