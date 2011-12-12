@@ -24,6 +24,7 @@ typedef enum {
 
     // Valid when OpenGL is initialized
     NSOpenGLContext *context_;
+    NSOpenGLContext *prevContext_;
     NSOpenGLPixelFormat *format_;
     CVDisplayLinkRef link_;
 

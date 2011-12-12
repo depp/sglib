@@ -135,8 +135,22 @@ static CVReturn cvCallback(CVDisplayLinkRef displayLink, const CVTimeStamp *now,
     assert(fmt);
     format_ = fmt;
 
-    NSOpenGLContext *cxt = [[NSOpenGLContext alloc] initWithFormat:fmt shareContext:nil];
-    assert(cxt);
+    NSOpenGLContext *cxt = nil;
+    if (prevContext_) {
+        cxt = [[NSOpenGLContext alloc] initWithFormat:fmt shareContext:prevContext_];
+        [prevContext_ release];
+        prevContext_ = nil;
+        if (cxt) {
+            NSLog(@"Context sharing successful");
+        } else {
+            NSLog(@"Context sharing failed");
+            Resource::resetGraphics();
+        }
+    }
+    if (!cxt) {
+        cxt = [[NSOpenGLContext alloc] initWithFormat:fmt shareContext:nil];
+        assert(cxt);
+    }
     context_ = cxt;
     [cxt setValues:&on forParameter:NSOpenGLCPSwapInterval];
     if (windowed)
@@ -173,11 +187,14 @@ static CVReturn cvCallback(CVDisplayLinkRef displayLink, const CVTimeStamp *now,
     } else {
         /* NSTimer version */
     }
-    [context_ release];
+    if (prevContext_) {
+        [prevContext_ release];
+        prevContext_ = nil;
+    }
+    prevContext_ = context_;
     context_ = nil;
     [format_ release];
     format_ = nil;
-    Resource::resetGraphics();
 }
 
 @end
