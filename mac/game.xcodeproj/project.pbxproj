@@ -63,6 +63,7 @@
 		389F06701210A46A00E6AA2A /* menu.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 389F066E1210A46A00E6AA2A /* menu.cpp */; };
 		389F7FCD141D4ECD00123790 /* CoreVideo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 389F7FCC141D4ECD00123790 /* CoreVideo.framework */; };
 		38A2ECD11495EBA700772423 /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 38A2ECD01495EBA700772423 /* Carbon.framework */; };
+		38A2EE441495FFF100772423 /* GWindow.m in Sources */ = {isa = PBXBuildFile; fileRef = 38A2EE431495FFF100772423 /* GWindow.m */; };
 		38B2409D117BAE0800903838 /* rand.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 38B2409B117BAE0800903838 /* rand.cpp */; };
 		38F7832A121317550080545B /* widget.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 38F78329121317550080545B /* widget.cpp */; };
 		38FA0EC81495ABFF00F75BAE /* GDisplay.mm in Sources */ = {isa = PBXBuildFile; fileRef = 38FA0EC71495ABFF00F75BAE /* GDisplay.mm */; };
@@ -188,6 +189,8 @@
 		389F066F1210A46A00E6AA2A /* menu.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = menu.hpp; sourceTree = "<group>"; };
 		389F7FCC141D4ECD00123790 /* CoreVideo.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreVideo.framework; path = /System/Library/Frameworks/CoreVideo.framework; sourceTree = "<absolute>"; };
 		38A2ECD01495EBA700772423 /* Carbon.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Carbon.framework; path = /System/Library/Frameworks/Carbon.framework; sourceTree = "<absolute>"; };
+		38A2EE421495FFF100772423 /* GWindow.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GWindow.h; sourceTree = "<group>"; };
+		38A2EE431495FFF100772423 /* GWindow.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GWindow.m; sourceTree = "<group>"; };
 		38B2409B117BAE0800903838 /* rand.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = rand.cpp; sourceTree = "<group>"; };
 		38B2409C117BAE0800903838 /* rand.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = rand.hpp; sourceTree = "<group>"; };
 		38F78328121317550080545B /* widget.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = widget.hpp; sourceTree = "<group>"; };
@@ -429,10 +432,12 @@
 				3871E293141ACAA3000DF3D6 /* main.c */,
 				3871E299141ACB60000DF3D6 /* GController.h */,
 				3871E29A141ACB60000DF3D6 /* GController.mm */,
-				3871E29F141ACEA6000DF3D6 /* GView.h */,
-				3871E2A0141ACEA6000DF3D6 /* GView.mm */,
 				38FA0EC61495ABFF00F75BAE /* GDisplay.h */,
 				38FA0EC71495ABFF00F75BAE /* GDisplay.mm */,
+				3871E29F141ACEA6000DF3D6 /* GView.h */,
+				3871E2A0141ACEA6000DF3D6 /* GView.mm */,
+				38A2EE421495FFF100772423 /* GWindow.h */,
+				38A2EE431495FFF100772423 /* GWindow.m */,
 			);
 			path = mac;
 			sourceTree = "<group>";
@@ -565,6 +570,7 @@
 				3871E2A9141ACFCB000DF3D6 /* clock_osx.cpp in Sources */,
 				3871E3CD141B31C3000DF3D6 /* window.cpp in Sources */,
 				38FA0EC81495ABFF00F75BAE /* GDisplay.mm in Sources */,
+				38A2EE441495FFF100772423 /* GWindow.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

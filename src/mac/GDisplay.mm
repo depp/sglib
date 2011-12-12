@@ -1,6 +1,7 @@
 #import <Carbon/Carbon.h>
 #import "GDisplay.h"
 #import "GView.h"
+#import "GWindow.h"
 
 static bool isWindowedMode(GDisplayMode mode)
 {
@@ -243,7 +244,7 @@ error:
             [nswindow_ close];
             nswindow_ = nil;
         }
-        w = [[NSWindow alloc] initWithContentRect:r styleMask:style backing:NSBackingStoreBuffered defer:NO screen:s];
+        w = [[GWindow alloc] initWithContentRect:r styleMask:style backing:NSBackingStoreBuffered defer:NO screen:s];
         nswindow_ = w;
         [w setTitle:@"Game"];
         [w setDelegate:self];
