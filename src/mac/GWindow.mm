@@ -76,14 +76,55 @@ static CVReturn cvCallback(CVDisplayLinkRef displayLink, const CVTimeStamp *now,
 
 @interface GWindow (Private)
 
-- (void)startTimer;
-- (void)stopTimer;
+- (void)startGraphics;
+- (void)stopGraphics;
 
 @end
 
 @implementation GWindow (Private)
 
-- (void)startTimer {
+- (void)startGraphics {
+    // OpenGL pixel format
+    GLint on = 1;
+    GLuint attrib[16];
+    int i = 0;
+    GLuint glmode;
+
+    switch (mode_) {
+    case GWindowWindow: glmode = NSOpenGLPFAWindow; break;
+    case GWindowFullscreen: glmode = NSOpenGLPFAFullScreen; break;
+    default: return;
+    }
+
+    attrib[i++] = glmode;
+    attrib[i++] = NSOpenGLPFAAccelerated;
+    attrib[i++] = NSOpenGLPFADoubleBuffer;
+    attrib[i++] = NSOpenGLPFAColorSize; attrib[i++] = 24;
+    attrib[i++] = NSOpenGLPFAAlphaSize; attrib[i++] = 8;
+    attrib[i++] = NSOpenGLPFADepthSize; attrib[i++] = 24;
+    // attrib[i++] = NSOpenGLPFAStencilSize; attrib[i++] = 8;
+    // attrib[i++] = NSOpenGLPFAAccumSize; attrib[i++] = 0;
+    if (mode_ == GWindowFullscreen) {
+        attrib[i++] = NSOpenGLPFAScreenMask;
+        attrib[i++] = CGDisplayIDToOpenGLDisplayMask(display_);
+    }
+    attrib[i] = 0;
+
+    NSOpenGLPixelFormat *fmt = [[[NSOpenGLPixelFormat alloc] initWithAttributes:(NSOpenGLPixelFormatAttribute*) attrib] autorelease];
+    assert(fmt);
+    format_ = fmt;
+
+    // OpenGL context
+    NSOpenGLContext *cxt = [[NSOpenGLContext alloc] initWithFormat:fmt shareContext:nil];
+    assert(cxt);
+    context_ = cxt;
+    [cxt setValues:&on forParameter:NSOpenGLCPSwapInterval];
+    if (mode_ == GWindowWindow)
+        [cxt setView:view_];
+    else
+        [cxt setFullScreen];
+
+    // Timer
     if (1) {
         // OS X 10.4 and later only
         CVDisplayLinkCreateWithActiveCGDisplays(&link_);
@@ -101,7 +142,7 @@ static CVReturn cvCallback(CVDisplayLinkRef displayLink, const CVTimeStamp *now,
     }
 }
 
-- (void)stopTimer {
+- (void)stopGraphics {
 
 }
 
@@ -183,67 +224,25 @@ error:
 - (void)update {
     [self lock];
 
-    if (!format_) {
-        // OpenGL pixel format
-        GLint on = 1;
-        GLuint attrib[16];
-        int i = 0;
-        GLuint glmode;
+    if (!context_)
+        [self startGraphics];
 
-        switch (mode_) {
-        case GWindowWindow: glmode = NSOpenGLPFAWindow; break;
-        case GWindowFullscreen: glmode = NSOpenGLPFAFullScreen; break;
-        default: goto end;
+    if (context_) {
+        [context_ makeCurrentContext];
+        if (mode_ == GWindowWindow) {
+            NSRect b = [view_ bounds];
+            glViewport(0, 0, b.size.width, b.size.height);
+            uiwindow_->setSize(b.size.width, b.size.height);
+        } else if (mode_ == GWindowFullscreen) {
+            size_t w = CGDisplayPixelsWide(display_);
+            size_t h = CGDisplayPixelsHigh(display_);
+            glViewport(0, 0, w, h);
+            uiwindow_->setSize(w, h);
         }
-
-        attrib[i++] = glmode;
-        attrib[i++] = NSOpenGLPFAAccelerated;
-        attrib[i++] = NSOpenGLPFADoubleBuffer;
-        attrib[i++] = NSOpenGLPFAColorSize; attrib[i++] = 24;
-        attrib[i++] = NSOpenGLPFAAlphaSize; attrib[i++] = 8;
-        attrib[i++] = NSOpenGLPFADepthSize; attrib[i++] = 24;
-        // attrib[i++] = NSOpenGLPFAStencilSize; attrib[i++] = 8;
-        // attrib[i++] = NSOpenGLPFAAccumSize; attrib[i++] = 0;
-        if (mode_ == GWindowFullscreen) {
-            attrib[i++] = NSOpenGLPFAScreenMask;
-            attrib[i++] = CGDisplayIDToOpenGLDisplayMask(display_);
-        }
-        attrib[i] = 0;
-
-        NSOpenGLPixelFormat *fmt = [[[NSOpenGLPixelFormat alloc] initWithAttributes:(NSOpenGLPixelFormatAttribute*) attrib] autorelease];
-        assert(fmt);
-        format_ = fmt;
-
-        // OpenGL context
-        NSOpenGLContext *cxt = [[NSOpenGLContext alloc] initWithFormat:fmt shareContext:nil];
-        assert(cxt);
-        context_ = cxt;
-        [cxt setValues:&on forParameter:NSOpenGLCPSwapInterval];
-        if (mode_ == GWindowWindow)
-            [cxt setView:view_];
-        else
-            [cxt setFullScreen];
-
-        // Timer
-        [self startTimer];
+        uiwindow_->draw();
+        [context_ flushBuffer];
     }
 
-    [context_ makeCurrentContext];
-    if (mode_ == GWindowWindow) {
-        NSRect b = [view_ bounds];
-        glViewport(0, 0, b.size.width, b.size.height);
-        uiwindow_->setSize(b.size.width, b.size.height);
-    } else {
-        size_t w = CGDisplayPixelsWide(display_);
-        size_t h = CGDisplayPixelsHigh(display_);
-        glViewport(0, 0, w, h);
-        uiwindow_->setSize(w, h);
-    }
-
-    uiwindow_->draw();
-    [context_ flushBuffer];
-
-end:
     [self unlock];
 }
 
