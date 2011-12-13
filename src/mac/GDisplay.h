@@ -1,4 +1,6 @@
-// The GDisplay class is the center of the Mac UI code.  Everything in the UI must touch GDisplay because it has the lock.  Rendering can be done in a separate thread, making the lock necessary.  NOTE: All GDisplay methods will lock, there is no need to obtain the lock yourself.  The lock maintains exclusion on the UI::Window object and on the OpenGL context, 
+// The GDisplay object is the center of the Mac UI code: it manages a window from the viewpoint of the common code.  It sends Cocoa events to the common code, and changes the window configuration in response to calls from the common code.
+// The display will also manage the OpenGL context and rendering thread / rendering timer.
+// Each display has a lock for accessing the OpenGL context and window object.  There is no need to obtain a lock, all calls are safe to call from the main thread and -update is safe to call from any thread.
 #import <Cocoa/Cocoa.h>
 #import <CoreVideo/CoreVideo.h>
 #import "ui/window.hpp"

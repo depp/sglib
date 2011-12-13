@@ -34,9 +34,28 @@ static GController *gController;
     Rand::global.seed();
 
     UI::Screen *s = new UI::Menu;
-    GDisplay *w = [[GDisplay alloc] initWithScreen:s];
-    [w showWindow:self];
+    GDisplay *d = [[[GDisplay alloc] initWithScreen:s] autorelease];
+    [d showWindow:self];
 }
 
+- (BOOL)applicationShouldTerminateAfterLastWindowClosed:(NSApplication *)theApplication {
+    (void)theApplication;
+    return !displays_ || ![displays_ count];
+}
+
+- (void)addDisplay:(GDisplay *)display {
+    if (!displays_)
+        displays_ = [[NSMutableArray alloc] initWithObjects:&display count:1];
+    else
+        [displays_ addObject:display];
+}
+
+- (void)removeDisplay:(GDisplay *)display {
+    if (displays_) {
+        [displays_ removeObjectIdenticalTo:display];
+        if (![displays_ count] && ![[NSApp windows] count])
+            [NSApp terminate:self];
+    }
+}
 
 @end

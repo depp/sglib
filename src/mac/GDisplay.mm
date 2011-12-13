@@ -2,6 +2,7 @@
 #import "GDisplay.h"
 #import "GView.h"
 #import "GWindow.h"
+#import "GController.h"
 #import <sys/resource.hpp>
 
 @interface GDisplay (Private)
@@ -265,6 +266,8 @@ error:
         }
     } else if (mode_ == GDisplayFSCapture) {
         CGReleaseAllDisplays();
+    } else if (mode_ == GDisplayNone) {
+        [[GController sharedInstance] addDisplay:self];
     }
 
     mode_ = mode;
@@ -307,7 +310,7 @@ error:
         display_ = CGMainDisplayID();
         [self update];
     } else if (mode == GDisplayNone) {
-        
+        [[GController sharedInstance] removeDisplay:self];
     }
 }
 
@@ -318,7 +321,7 @@ error:
 
 - (void)showFullScreen:(id)sender {
     (void)sender;
-    [self setMode:GDisplayFSWindow];
+    [self setMode:GDisplayFSCapture];
 }
 
 - (void)handleUIEvent:(UI::Event *)event
