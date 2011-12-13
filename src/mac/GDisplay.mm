@@ -457,6 +457,7 @@ error:
 
 - (void)windowWillClose:(NSNotification *)notification {
     (void)notification;
+    nswindow_ = nil;
     [self setMode:GDisplayNone];
 }
 
