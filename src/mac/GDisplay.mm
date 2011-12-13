@@ -14,6 +14,8 @@
 - (void)queueModeChange:(GDisplayMode)mode;
 - (void)applyChanges;
 
+- (void)frameChanged:(NSNotification *)notification;
+
 @end
 
 static bool isWindowedMode(GDisplayMode mode)
@@ -166,10 +168,18 @@ static void handleMouse(GDisplay *d, NSEvent *e, UI::EventType t, int button)
     }
     context_ = cxt;
     [cxt setValues:&on forParameter:NSOpenGLCPSwapInterval];
-    if (windowed)
+    if (windowed) {
         [cxt setView:view_];
-    else
+        NSRect frame = [view_ frame];
+        frameChanged_ = YES;
+        width_ = frame.size.width;
+        height_ = frame.size.height;
+    } else {
         [cxt setFullScreen];
+        frameChanged_ = YES;
+        width_ = CGDisplayPixelsWide(display_);
+        height_ = CGDisplayPixelsHigh(display_);
+    }
 
     if (1) {
         // OS X 10.4 and later only
@@ -215,6 +225,16 @@ static void handleMouse(GDisplay *d, NSEvent *e, UI::EventType t, int button)
 
 - (void)applyChanges {
     [self setMode:queueMode_];
+}
+
+- (void)frameChanged:(NSNotification *)notification {
+    (void)notification;
+    NSRect frame = [view_ bounds];
+    [self lock];
+    frameChanged_ = YES;
+    width_ = frame.size.width;
+    height_ = frame.size.height;
+    [self unlock];
 }
 
 @end
@@ -314,6 +334,8 @@ error:
         if (!view_) {
             view_ = [[GView alloc] initWithFrame:r];
             view_->display_ = self;
+            [view_ setPostsFrameChangedNotifications:YES];
+            [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(frameChanged:) name:NSViewFrameDidChangeNotification object:view_];
         }
         [w setContentView:view_];
 
@@ -368,15 +390,10 @@ error:
 
     [self lock];
     [context_ makeCurrentContext];
-    if (isWindowedMode(mode_)) {
-        NSRect b = [view_ bounds];
-        glViewport(0, 0, b.size.width, b.size.height);
-        uiwindow_->setSize(b.size.width, b.size.height);
-    } else if (mode_ == GDisplayFSCapture) {
-        size_t w = CGDisplayPixelsWide(display_);
-        size_t h = CGDisplayPixelsHigh(display_);
-        glViewport(0, 0, w, h);
-        uiwindow_->setSize(w, h);
+    if (frameChanged_) {
+        [context_ update];
+        glViewport(0, 0, width_, height_);
+        uiwindow_->setSize(width_, height_);
     }
     uiwindow_->draw();
     [context_ flushBuffer];

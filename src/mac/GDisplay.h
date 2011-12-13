@@ -23,6 +23,9 @@ typedef enum {
     pthread_mutex_t lock_;
     BOOL modeChange_;
 
+    BOOL frameChanged_;
+    int width_, height_;
+
     // Mode is set first, and then OpenGL will be initialized by -[GDisplay update]
     GDisplayMode mode_;
     GDisplayMode queueMode_;
