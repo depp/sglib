@@ -427,6 +427,8 @@ error:
     // case NSMouseExited:
 
     case NSKeyDown:
+        if ([event modifierFlags] & NSCommandKeyMask)
+            return NO;
         GDisplayKeyEvent(self, event, UI::KeyDown);
         return YES;
 
