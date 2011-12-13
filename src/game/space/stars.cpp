@@ -61,6 +61,7 @@ void Starfield::draw(float xmin, float ymin, float xsize, float ysize)
     }
     glEnd();
     glPopMatrix();
+    glColor3ub(255, 255, 255);
 }
 
 }
