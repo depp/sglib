@@ -3,7 +3,7 @@
 
 @interface GView : NSView {
 @public
-    GDisplay *window_;
+    GDisplay *display_;
 }
 
 @end

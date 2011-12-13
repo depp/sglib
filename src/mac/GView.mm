@@ -5,14 +5,14 @@ static void handleMouse(GView *v, NSEvent *e, UI::EventType t, int button)
 {
     NSPoint pt = [v convertPoint:[e locationInWindow] fromView:nil];
     UI::MouseEvent uevent(t, button, pt.x, pt.y);
-    [v->window_ handleUIEvent:&uevent];
+    [v->display_ handleUIEvent:&uevent];
 }
 
 @implementation GView
 
 - (void)drawRect:(NSRect)r {
     (void)r;
-    [window_ update];
+    [display_ update];
 }
 
 - (BOOL)acceptsFirstResponder {
@@ -74,11 +74,11 @@ static void handleMouse(GView *v, NSEvent *e, UI::EventType t, int button)
 }
 
 - (void)keyDown:(NSEvent *)theEvent {
-    GDisplayKeyEvent(window_, theEvent, UI::KeyDown);
+    GDisplayKeyEvent(display_, theEvent, UI::KeyDown);
 }
 
 - (void)keyUp:(NSEvent *)theEvent {
-    GDisplayKeyEvent(window_, theEvent, UI::KeyUp);
+    GDisplayKeyEvent(display_, theEvent, UI::KeyUp);
 }
 
 - (void)flagsChanged:(NSEvent *)theEvent {

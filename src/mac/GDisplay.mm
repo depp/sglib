@@ -309,7 +309,7 @@ error:
         [w setDelegate:self];
         if (!view_) {
             view_ = [[GView alloc] initWithFrame:r];
-            view_->window_ = self;
+            view_->display_ = self;
         }
         [w setContentView:view_];
 
