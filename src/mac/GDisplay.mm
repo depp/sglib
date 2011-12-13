@@ -339,7 +339,14 @@ error:
 
 - (void)showFullScreen:(id)sender {
     (void)sender;
-    [self setMode:GDisplayFSCapture];
+    [self setMode:GDisplayFSWindow];
+}
+
+- (void)toggleFullScreen:(id)sender {
+    if (mode_ == GDisplayWindow)
+        [self showFullScreen:sender];
+    else if (mode_ == GDisplayFSWindow || mode_ == GDisplayFSCapture)
+        [self showWindow:sender];
 }
 
 - (void)handleUIEvent:(UI::Event *)event
@@ -447,6 +454,17 @@ error:
     // case NSTabletProximity:
     }
     return NO;
+}
+
+- (BOOL)validateMenuItem:(NSMenuItem *)item {
+    if ([item action] == @selector(toggleFullScreen:)) {
+        if (mode_ == GDisplayWindow) {
+            [item setTitle:NSLocalizedString(@"Enter Full Screen", nil)];
+        } else {
+            [item setTitle:NSLocalizedString(@"Exit Full Screen", nil)];
+        }
+    }
+    return YES;
 }
 
 @end
