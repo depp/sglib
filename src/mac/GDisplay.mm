@@ -307,6 +307,10 @@ error:
         nswindow_ = w;
         [w setTitle:@"Game"];
         [w setDelegate:self];
+        if (mode == GDisplayWindow) {
+            [w center];
+            [w setFrameAutosaveName:@"Game"];
+        }
         if (!view_) {
             view_ = [[GView alloc] initWithFrame:r];
             view_->display_ = self;
