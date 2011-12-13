@@ -14,6 +14,8 @@
 - (void)queueModeChange:(GDisplayMode)mode;
 - (void)applyChanges;
 
+- (void)runEventLoop;
+
 @end
 
 static bool isWindowedMode(GDisplayMode mode)
@@ -94,6 +96,18 @@ static CVReturn cvCallback(CVDisplayLinkRef displayLink, const CVTimeStamp *now,
 }
 
 /* Private methods */
+
+static void handleMouse(GDisplay *d, NSEvent *e, UI::EventType t, int button)
+{
+    // FIXME need to translate if there are multiple screens
+    if ([e window]) {
+        NSLog(@"Windowed mouse event...");
+        return;
+    }
+    NSPoint pt = [e locationInWindow];
+    UI::MouseEvent uevent(t, button, pt.x, pt.y);
+    [d handleUIEvent:&uevent];
+}
 
 @implementation GDisplay (Private)
 
@@ -205,6 +219,72 @@ static CVReturn cvCallback(CVDisplayLinkRef displayLink, const CVTimeStamp *now,
     [self setMode:queueMode_];
 }
 
+- (void)runEventLoop {
+    NSDate *distantPast = [NSDate distantPast];
+    NSEvent *event;
+    NSAutoreleasePool *pool;
+    while (wantEvtLoop_) {
+        pool = [[NSAutoreleasePool alloc] init];
+        event = [NSApp nextEventMatchingMask:NSAnyEventMask untilDate:distantPast inMode:NSDefaultRunLoopMode dequeue:YES];
+        if (event) {
+            switch ([event type]) {
+            case NSLeftMouseDown:
+                handleMouse(self, event, UI::MouseDown, UI::ButtonLeft);
+                break;
+
+            case NSLeftMouseUp:
+                handleMouse(self, event, UI::MouseUp, UI::ButtonLeft);
+                break;
+
+            case NSRightMouseDown:
+                handleMouse(self, event, UI::MouseDown, UI::ButtonRight);
+                break;
+
+            case NSRightMouseUp:
+                handleMouse(self, event, UI::MouseUp, UI::ButtonRight);
+                break;
+
+            case NSOtherMouseDown:
+                handleMouse(self, event, UI::MouseDown, UI::ButtonMiddle);
+                break;
+
+            case NSOtherMouseUp:
+                handleMouse(self, event, UI::MouseUp, UI::ButtonMiddle);
+                break;
+
+            case NSMouseMoved:
+            case NSLeftMouseDragged:
+            case NSRightMouseDragged:
+            case NSOtherMouseDragged:
+                handleMouse(self, event, UI::MouseMove, -1);
+                break;
+
+            // case NSMouseEntered:
+            // case NSMouseExited:
+
+            case NSKeyDown:
+                GDisplayKeyEvent(self, event, UI::KeyDown);
+                break;
+
+            case NSKeyUp:
+                GDisplayKeyEvent(self, event, UI::KeyUp);
+                break;
+
+            // case NSFlagsChanged:
+            // case NSAppKitDefined:
+            // case NSSystemDefined:
+            // case NSApplicationDefined:
+            // case NSPeriodic:
+            // case NSCursorUpdate:
+            // case NSScrollWheel:
+            // case NSTabletPoint:
+            // case NSTabletProximity:
+            }
+        }
+        [pool release];
+    }
+}
+
 @end
 
 /* Objective C interface */
@@ -274,6 +354,7 @@ error:
 
     mode_ = mode;
 
+    wantEvtLoop_ = NO;
     if (isWindowedMode(mode)) {
         NSScreen *s = [NSScreen mainScreen];
         NSRect r;
@@ -311,11 +392,15 @@ error:
         assert(!err);
         display_ = CGMainDisplayID();
         [self update];
+        wantEvtLoop_ = YES;
     } else if (mode == GDisplayNone) {
         [[GController sharedInstance] removeDisplay:self];
     }
 
     modeChange_ = NO;
+
+    if (wantEvtLoop_ && !hasEvtLoop_)
+        [self performSelectorOnMainThread:@selector(runEventLoop) withObject:nil waitUntilDone:NO];
 }
 
 - (void)showWindow:(id)sender {

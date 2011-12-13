@@ -21,6 +21,8 @@ typedef enum {
     UI::Window *uiwindow_;
     pthread_mutex_t lock_;
     BOOL modeChange_;
+    BOOL wantEvtLoop_;
+    BOOL hasEvtLoop_;
 
     // Mode is set first, and then OpenGL will be initialized by -[GDisplay update]
     GDisplayMode mode_;
