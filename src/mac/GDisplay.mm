@@ -3,7 +3,7 @@
 #import "GView.h"
 #import "GWindow.h"
 #import "GController.h"
-#import <sys/resource.hpp>
+#import "sys/resource.hpp"
 
 @interface GDisplay (Private)
 
