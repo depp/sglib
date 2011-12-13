@@ -456,6 +456,7 @@ error:
     return NO;
 }
 
+// Note: this won't get called in "capture" fullscreen mode but it doesn't matter since you can't see the menubar anyway.
 - (BOOL)validateMenuItem:(NSMenuItem *)item {
     if ([item action] == @selector(toggleFullScreen:)) {
         if (mode_ == GDisplayWindow) {
