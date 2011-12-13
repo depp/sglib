@@ -243,9 +243,9 @@ error:
 */
 
 - (void)setMode:(GDisplayMode)mode {
-    if (mode == mode_)
+    if (mode == mode_ || modeChange_)
         return;
-
+    modeChange_ = YES;
     [self stopGraphics];
 
     // There are two main ways to make a fullscreen window.
@@ -259,8 +259,10 @@ error:
             SetSystemUIMode(kUIModeNormal, 0);
         }
         if (!isWindowedMode(mode)) {
-            [nswindow_ close];
-            nswindow_ = nil;
+            if (nswindow_) {
+                [nswindow_ close];
+                nswindow_ = nil;
+            }
             [view_ release];
             view_ = nil;
         }
@@ -312,6 +314,8 @@ error:
     } else if (mode == GDisplayNone) {
         [[GController sharedInstance] removeDisplay:self];
     }
+
+    modeChange_ = NO;
 }
 
 - (void)showWindow:(id)sender {
@@ -364,6 +368,11 @@ error:
     int r;
     r = pthread_mutex_unlock(&lock_);
     assert(!r);
+}
+
+- (void)windowWillClose:(NSNotification *)notification {
+    (void)notification;
+    [self setMode:GDisplayNone];
 }
 
 @end
