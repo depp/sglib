@@ -5,6 +5,7 @@
 #import <CoreVideo/CoreVideo.h>
 #import "ui/window.hpp"
 #import "ui/event.hpp"
+#import "GApplication.h"
 #import <pthread.h>
 
 @class GView;
@@ -16,13 +17,11 @@ typedef enum {
     GDisplayFSCapture // Captured display, kiosk mode is mandatory
 } GDisplayMode;
 
-@interface GDisplay : NSObject <NSLocking> {
+@interface GDisplay : NSObject <NSLocking, GEventCapture> {
     // Always valid
     UI::Window *uiwindow_;
     pthread_mutex_t lock_;
     BOOL modeChange_;
-    BOOL wantEvtLoop_;
-    BOOL hasEvtLoop_;
 
     // Mode is set first, and then OpenGL will be initialized by -[GDisplay update]
     GDisplayMode mode_;

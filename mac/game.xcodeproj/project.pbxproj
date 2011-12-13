@@ -67,6 +67,7 @@
 		38B2409D117BAE0800903838 /* rand.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 38B2409B117BAE0800903838 /* rand.cpp */; };
 		38F7832A121317550080545B /* widget.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 38F78329121317550080545B /* widget.cpp */; };
 		38FA0EC81495ABFF00F75BAE /* GDisplay.mm in Sources */ = {isa = PBXBuildFile; fileRef = 38FA0EC71495ABFF00F75BAE /* GDisplay.mm */; };
+		38FB7F5814971BDA006F40FE /* GApplication.m in Sources */ = {isa = PBXBuildFile; fileRef = 38FB7F5714971BDA006F40FE /* GApplication.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -198,6 +199,8 @@
 		38F78329121317550080545B /* widget.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = widget.cpp; sourceTree = "<group>"; };
 		38FA0EC61495ABFF00F75BAE /* GDisplay.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GDisplay.h; sourceTree = "<group>"; };
 		38FA0EC71495ABFF00F75BAE /* GDisplay.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = GDisplay.mm; sourceTree = "<group>"; };
+		38FB7F5614971BDA006F40FE /* GApplication.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GApplication.h; sourceTree = "<group>"; };
+		38FB7F5714971BDA006F40FE /* GApplication.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GApplication.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -430,11 +433,13 @@
 		3871E28F141ACA83000DF3D6 /* mac */ = {
 			isa = PBXGroup;
 			children = (
-				3871E293141ACAA3000DF3D6 /* GMain.m */,
+				38FB7F5614971BDA006F40FE /* GApplication.h */,
+				38FB7F5714971BDA006F40FE /* GApplication.m */,
 				3871E299141ACB60000DF3D6 /* GController.h */,
 				3871E29A141ACB60000DF3D6 /* GController.mm */,
 				38FA0EC61495ABFF00F75BAE /* GDisplay.h */,
 				38FA0EC71495ABFF00F75BAE /* GDisplay.mm */,
+				3871E293141ACAA3000DF3D6 /* GMain.m */,
 				38A2EE75149608A400772423 /* GPrefix.h */,
 				3871E29F141ACEA6000DF3D6 /* GView.h */,
 				3871E2A0141ACEA6000DF3D6 /* GView.mm */,
@@ -573,6 +578,7 @@
 				3871E3CD141B31C3000DF3D6 /* window.cpp in Sources */,
 				38FA0EC81495ABFF00F75BAE /* GDisplay.mm in Sources */,
 				38A2EE441495FFF100772423 /* GWindow.m in Sources */,
+				38FB7F5814971BDA006F40FE /* GApplication.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
