@@ -178,7 +178,7 @@
 		38709ED91330A5A200DA858D /* system_error.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = system_error.hpp; sourceTree = "<group>"; };
 		38709EDA1330A5A200DA858D /* testconfig.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = testconfig.cpp; sourceTree = "<group>"; };
 		38709EE71330A5D000DA858D /* configfileread.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = configfileread.cpp; sourceTree = "<group>"; };
-		38709F0D1330B45C00DA858D /* data */ = {isa = PBXFileReference; lastKnownFileType = folder; name = data; path = ../data; sourceTree = SOURCE_ROOT; };
+		38709F0D1330B45C00DA858D /* data */ = {isa = PBXFileReference; lastKnownFileType = folder; path = data; sourceTree = "<group>"; };
 		38709F1F1330B66D00DA858D /* path_linux.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = path_linux.cpp; sourceTree = "<group>"; };
 		38709F221330B6A600DA858D /* path_xdg.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = path_xdg.cpp; sourceTree = "<group>"; };
 		38709F261330B6FD00DA858D /* path_osx.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = path_osx.cpp; sourceTree = "<group>"; };
@@ -381,8 +381,7 @@
 				382D216E11D98DF9009C8EF5 /* type */,
 				389F066D1210A46A00E6AA2A /* ui */,
 			);
-			name = src;
-			path = ../src;
+			path = src;
 			sourceTree = SOURCE_ROOT;
 			usesTabs = 0;
 		};
@@ -392,7 +391,7 @@
 				385208A1117434FD00640971 /* Game-Info.plist */,
 				3871E296141ACAF7000DF3D6 /* MainMenu.xib */,
 			);
-			name = mac;
+			path = mac;
 			sourceTree = "<group>";
 			usesTabs = 0;
 		};
@@ -614,7 +613,7 @@
 			buildSettings = {
 				COPY_PHASE_STRIP = NO;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				GCC_PREFIX_HEADER = ../src/mac/GPrefix.h;
+				GCC_PREFIX_HEADER = src/mac/GPrefix.h;
 				GCC_PREPROCESSOR_DEFINITIONS = "PACKAGE_NAME=\\\"game\\\"";
 				GCC_VERSION = 4.2;
 				GCC_WARN_EFFECTIVE_CPLUSPLUS_VIOLATIONS = NO;
@@ -630,7 +629,7 @@
 			buildSettings = {
 				COPY_PHASE_STRIP = YES;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				GCC_PREFIX_HEADER = ../src/mac/GPrefix.h;
+				GCC_PREFIX_HEADER = src/mac/GPrefix.h;
 				GCC_PREPROCESSOR_DEFINITIONS = "PACKAGE_NAME=\\\"game\\\"";
 				GCC_VERSION = 4.2;
 				GCC_WARN_EFFECTIVE_CPLUSPLUS_VIOLATIONS = NO;
@@ -657,12 +656,12 @@
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				HEADER_SEARCH_PATHS = (
-					../src,
+					src,
 					"$(HOME)/Library/Frameworks/SDL.framework/Headers",
 					/Library/Frameworks/SDL.framework/Headers,
 					"$(HEADER_SEARCH_PATHS)",
 				);
-				INFOPLIST_FILE = "Game-Info.plist";
+				INFOPLIST_FILE = "mac/Game-Info.plist";
 				INSTALL_PATH = "$(HOME)/Applications";
 				OTHER_LDFLAGS = (
 					"-framework",
@@ -693,12 +692,12 @@
 				GCC_MODEL_TUNING = G5;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				HEADER_SEARCH_PATHS = (
-					../src,
+					src,
 					"$(HOME)/Library/Frameworks/SDL.framework/Headers",
 					/Library/Frameworks/SDL.framework/Headers,
 					"$(HEADER_SEARCH_PATHS)",
 				);
-				INFOPLIST_FILE = "Game-Info.plist";
+				INFOPLIST_FILE = "mac/Game-Info.plist";
 				INSTALL_PATH = "$(HOME)/Applications";
 				OTHER_LDFLAGS = (
 					"-framework",
