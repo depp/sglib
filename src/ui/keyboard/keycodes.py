@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import re, os, sys
+import re, os, sys, cStringIO
 
 def readTable(path):
     v = []
@@ -23,12 +23,34 @@ def readTable(path):
     return v
 
 USED = set()
+HID_NAMES = readTable('keycodes.txt')
 
-def ptable(f, table, name):
-    print >>f, 'const unsigned char %s[%d] = {' % (name, len(table))
+def ptable(f, table, name, ttype):
+    print >>f, '%s %s[%d] = {' % (ttype, name, len(table))
     rows = [','.join(['%3d' % x for x in table[i:i+16]]) for i in range(0, len(table), 16)]
     print >>f, ',\n'.join(rows)
     print >>f, '};'
+
+def pdata(f, data, name, ttype):
+    print >>f, '%s %s[%d] =' % (ttype, name, len(data))
+    io = cStringIO.StringIO()
+    for i, c in enumerate(data[:-1]):
+        n = ord(c)
+        if n < 32 or n >= 127:
+            if n == 0:
+                if data[i + 1].isdigit():
+                    t = '\\x00'
+                else:
+                    t = '\\0'
+            else:
+                t = '\\x%02x' % (n,)
+        else:
+            t = c
+        if io.tell() + len(t) + 3 > 78:
+            print >>f, '"%s"' % (io.getvalue(),)
+            io = cStringIO.StringIO()
+        io.write(t)
+    print >>f, '"%s";' % (io.getvalue(),)
 
 def macwin(table1, table2, out):
     t1 = readTable(table1)
@@ -58,8 +80,8 @@ def macwin(table1, table2, out):
         out2[ii] = i
     f = open(tmp, 'w')
     try:
-        ptable(f, out1, 'KBD_HID_TO_NATIVE')
-        ptable(f, out2, 'KBD_NATIVE_TO_HID')
+        ptable(f, out1, 'KBD_HID_TO_NATIVE', 'const unsigned char')
+        ptable(f, out2, 'KBD_NATIVE_TO_HID',  'const unsigned char')
         f.close()
         os.rename(tmp, out)
     except:
@@ -86,15 +108,87 @@ def mkid(n):
 def idents():
     # Call this AFTER calling all the others, so we know which codes
     # are actually used
-    hid_names = [x for x in readTable('keycodes.txt') if x[0] in USED]
-    hid_names.sort()
+    names = [x for x in HID_NAMES if x[0] in USED]
+    names.sort()
     out = 'keycode.h'
     tmp = out + '.tmp'
     f = open(tmp, 'w')
     try:
         print >>f, 'enum {'
-        print >>f, ',\n'.join(['    %s = %d' % (mkid(nn or n), i) for (i, n, nn) in hid_names])
+        print >>f, ',\n'.join(['    %s = %d' % (mkid(nn or n), i) for (i, n, nn) in names])
         print >>f, '};'
+        f.close()
+        os.rename(tmp, out)
+    except:
+        try:
+            os.unlink(tmp)
+        except OSError:
+            pass
+        raise
+
+def mkid2(n):
+    return n.replace(' ', '')
+
+KEYID_HEADER = '''\
+#include "keyid.h"
+#include <string.h>
+'''
+
+KEYID_CODE = '''\
+int keyid_code_from_name(const char *name)
+{
+    unsigned l = 0, r = %(count)d, m;
+    int x, c;
+    while (l < r) {
+        m = (l + r) / 2;
+        x = KEYID_ORDER[m];
+        c = strcmp(name, KEYID_NAME + KEYID_OFF[x]);
+        if (c < 0)
+            r = m;
+        else if (c > 0)
+            l = m + 1;
+        else
+            return x;
+    }
+    return -1;
+}
+
+const char *keyid_name_from_code(int code)
+{
+    int off;
+    if (code < 0 || code > 255)
+        return 0;
+    off = KEYID_OFF[code];
+    if (off == (unsigned short) -1)
+        return 0;
+    return KEYID_NAME + off;
+}\
+'''
+
+def names():
+    names = [(mkid2(nn or n), i) for (i, n, nn) in HID_NAMES if i in USED]
+    names.sort()
+    data = cStringIO.StringIO()
+    offsets = [-1] * 256
+    order = []
+    for n, i in names:
+        order.append(i)
+        offsets[i] = data.tell()
+        data.write(n)
+        data.write('\0')
+    data = data.getvalue()
+    out = 'keyid.c'
+    tmp = out + '.tmp'
+    f = open(tmp, 'w')
+    try:
+        print >>f, KEYID_HEADER
+        pdata(f, data, 'KEYID_NAME', 'static const char')
+        print >>f
+        ptable(f, offsets, 'KEYID_OFF', 'static const unsigned short')
+        print >>f
+        ptable(f, order, 'KEYID_ORDER', 'static const unsigned char')
+        print >>f
+        print >>f, KEYID_CODE % { 'count': len(names) }
         f.close()
         os.rename(tmp, out)
     except:
@@ -106,3 +200,4 @@ def idents():
 
 macwin('mac.txt', 'mac2.txt', 'keytable_mac.c')
 idents()
+names()
