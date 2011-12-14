@@ -3,3 +3,4 @@
 .dirstamp
 .scons*
 /engine
+/game-bin
