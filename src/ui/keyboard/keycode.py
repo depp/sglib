@@ -23,7 +23,7 @@ def readTable(path):
     return v
 
 USED = set()
-HID_NAMES = readTable('keycodes.txt')
+HID_NAMES = readTable('keycode.txt')
 
 def ptable(f, table, name, ttype):
     print >>f, '%s %s[%d] = {' % (ttype, name, len(table))
