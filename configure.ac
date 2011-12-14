@@ -6,6 +6,7 @@ AC_CONFIG_FILES([Makefile src/Makefile])
 
 AC_DEFINE(_GNU_SOURCE)
 AC_PROG_CXX
+AC_PROG_RANLIB
 
 dnl # From the changelog: "SDL 1.2.10 is a major release, featuring a
 dnl # revamp of the build system and many API improvements and bug fixes."

@@ -1,10 +1,9 @@
 AUTOMAKE_OPTIONS = 1.5 foreign subdir-objects nostdinc
 
 bin_PROGRAMS = game-bin
+noinst_LIBRARIES = libmsys.a libmgfx.a libmtype.a
 
-AM_LDFLAGS = @GTK_LIBS@ @GTKGLEXT_LIBS@ @PANGOCAIRO_LIBS@
-AM_CFLAGS = @warning_cppflags@ -I@srcdir@ @GTK_CFLAGS@ @GTKGLEXT_CFLAGS@ @PANGOCAIRO_CFLAGS@
-AM_CXXFLAGS = @warning_cppflags@ -I@srcdir@ @GTK_CFLAGS@ @GTKGLEXT_CFLAGS@ @PANGOCAIRO_CFLAGS@
+common_CFLAGS = @warning_cppflags@ -I@srcdir@
 
 mac_sources = \
 	mac/GApplication.h \
@@ -30,7 +29,40 @@ other_sources = \
 	sys/parseconfig.cpp \
 	sys/testconfig.cpp
 
-game_bin_SOURCES = \
+libmsys_a_CFLAGS = $(common_CFLAGS)
+libmsys_a_CXXFLAGS = $(common_CFLAGS)
+libmsys_a_SOURCES = \
+	opengl.hpp \
+	rand.cpp \
+	rand.hpp \
+	sys/autocf_osx.hpp \
+	sys/buffer.hpp \
+	sys/clock.hpp \
+	sys/clock_posix.cpp \
+	sys/config.cpp \
+	sys/config.hpp \
+	sys/configfile.cpp \
+	sys/configfile.hpp \
+	sys/configfileread.rl \
+	sys/ifile.cpp \
+	sys/ifile.hpp \
+	sys/ifilereg.cpp \
+	sys/ifilereg.hpp \
+	sys/path.cpp \
+	sys/path.hpp \
+	sys/path_linux.cpp \
+	sys/path_xdg.cpp \
+	sys/resource.cpp \
+	sys/resource.hpp \
+	sys/sharedref.hpp \
+	sys/stringarray.cpp \
+	sys/stringarray.hpp \
+	sys/system_error.cpp \
+	sys/system_error.hpp
+
+libmgfx_a_CFLAGS = $(common_CFLAGS)
+libmgfx_a_CXXFLAGS = $(common_CFLAGS)
+libmgfx_a_SOURCES = \
 	game/space/entity.cpp \
 	game/space/entity.hpp \
 	game/space/gamescreen.cpp \
@@ -78,46 +110,12 @@ game_bin_SOURCES = \
 	graphics/texture.hpp \
 	graphics/texturefile.cpp \
 	graphics/texturefile.hpp \
-	gtk/main.cpp \
-	opengl.hpp \
-	rand.cpp \
-	rand.hpp \
 	scene/group.cpp \
 	scene/group.hpp \
 	scene/leafobject.cpp \
 	scene/leafobject.hpp \
 	scene/object.cpp \
 	scene/object.hpp \
-	sys/autocf_osx.hpp \
-	sys/buffer.hpp \
-	sys/clock.hpp \
-	sys/clock_posix.cpp \
-	sys/config.cpp \
-	sys/config.hpp \
-	sys/configfile.cpp \
-	sys/configfile.hpp \
-	sys/configfileread.rl \
-	sys/ifile.cpp \
-	sys/ifile.hpp \
-	sys/ifilereg.cpp \
-	sys/ifilereg.hpp \
-	sys/path.cpp \
-	sys/path.hpp \
-	sys/path_linux.cpp \
-	sys/path_xdg.cpp \
-	sys/resource.cpp \
-	sys/resource.hpp \
-	sys/sharedref.hpp \
-	sys/stringarray.cpp \
-	sys/stringarray.hpp \
-	sys/system_error.cpp \
-	sys/system_error.hpp \
-	type/font.hpp \
-	type/font_pango.cpp \
-	type/font_pango.hpp \
-	type/rastertext.cpp \
-	type/rastertext.hpp \
-	type/rastertext_cairo.cpp \
 	ui/action.hpp \
 	ui/button.cpp \
 	ui/button.hpp \
@@ -138,6 +136,22 @@ game_bin_SOURCES = \
 	ui/widget.hpp \
 	ui/window.cpp \
 	ui/window.hpp
+
+libmtype_a_CFLAGS = $(common_CFLAGS) @PANGOCAIRO_CFLAGS@
+libmtype_a_CXXFLAGS = $(common_CFLAGS) @PANGOCAIRO_CFLAGS@
+libmtype_a_SOURCES = \
+	type/font.hpp \
+	type/font_pango.cpp \
+	type/font_pango.hpp \
+	type/rastertext.cpp \
+	type/rastertext.hpp \
+	type/rastertext_cairo.cpp
+
+game_bin_CXXFLAGS = $(common_CFLAGS) @GTK_CFLAGS@ @GTKGLEXT_CFLAGS@
+game_bin_LDFLAGS = @GTK_LIBS@ @GTKGLEXT_LIBS@ @PANGOCAIRO_LIBS@
+game_bin_LDADD = libmgfx.a libmtype.a libmsys.a
+game_bin_SOURCES = \
+	gtk/main.cpp
 
 SUFFIXES = .rl
 
