@@ -22,7 +22,7 @@ def readTable(path):
         v.append((int(i), n, nn))
     return v
 
-# hid_names = readTable('keycodes.txt')
+USED = set()
 
 def ptable(f, table, name):
     print >>f, 'const unsigned char %s[%d] = {' % (name, len(table))
@@ -40,6 +40,7 @@ def macwin(table1, table2, out):
     out1 = [255] * 256
     out2 = [255] * 256
     for i, n, nn in t1:
+        USED.add(i)
         if i < 0 or i > 255:
             raise Exception("HID Key code out of range: %d" % i)
         if n[0].isdigit():
@@ -59,6 +60,42 @@ def macwin(table1, table2, out):
     try:
         ptable(f, out1, 'KBD_HID_TO_NATIVE')
         ptable(f, out2, 'KBD_NATIVE_TO_HID')
+        f.close()
+        os.rename(tmp, out)
+    except:
+        try:
+            os.unlink(tmp)
+        except OSError:
+            pass
+        raise
+
+IDENT = re.compile('^[A-Za-z][A-Za-z0-9_]*$')
+
+def mkid(n):
+    if n.startswith('KP '):
+        pfx = 'KP_'
+        sfx = n[3:]
+    else:
+        pfx = 'KEY_'
+        sfx = n
+    i = pfx + sfx.replace(' ', '')
+    if not IDENT.match(i):
+        raise Exception("Invalid name: %s" % repr(n))
+    return i
+
+def idents():
+    # Call this AFTER calling all the others, so we know which codes
+    # are actually used
+    hid_names = [x for x in readTable('keycodes.txt') if x[0] in USED]
+    hid_names.sort()
+    out = 'keycode.h'
+    tmp = out + '.tmp'
+    f = open(tmp, 'w')
+    try:
+        print >>f, 'enum {'
+        print >>f, ',\n'.join(['    %s = %d' % (mkid(nn or n), i) for (i, n, nn) in hid_names])
+        print >>f, '};'
+        f.close()
         os.rename(tmp, out)
     except:
         try:
@@ -68,3 +105,4 @@ def macwin(table1, table2, out):
         raise
 
 macwin('mac.txt', 'mac2.txt', 'keytable_mac.c')
+idents()
