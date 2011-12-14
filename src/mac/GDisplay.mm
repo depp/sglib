@@ -5,7 +5,7 @@
 #import "GController.h"
 #import "sys/resource.hpp"
 #import "ui/keyboard/keyid.h"
-#import "ui/keyboard/keytable_mac.h"
+#import "ui/keyboard/keytable.h"
 
 @interface GDisplay (Private)
 

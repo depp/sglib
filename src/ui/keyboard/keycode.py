@@ -51,7 +51,7 @@ def pdata(f, data, name, ttype):
         io.write(t)
     print >>f, '"%s";' % (io.getvalue(),)
 
-def macwin(table1, table2, out, size, name):
+def gencodemap(table1, table2, out, size, name):
     t1 = readTable(table1)
     t2 = readTable(table2)
     tmp = out + '.tmp'
@@ -203,6 +203,7 @@ def names():
             pass
         raise
 
-macwin('mac.txt', 'mac2.txt', 'keytable_mac.c', 128, 'MAC')
+gencodemap('mac.txt', 'mac2.txt', 'keytable_mac.c', 128, 'MAC')
+gencodemap('xkb.txt', 'evdev.txt', 'keytable_evdev.c', 256, 'EVDEV')
 idents()
 names()
