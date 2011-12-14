@@ -82,9 +82,13 @@ int main(int argc, char *argv[])
 
     GtkWidget *area = gtk_drawing_area_new();
     gtk_container_add(GTK_CONTAINER(window), area);
-    gtk_widget_set_events(area, GDK_EXPOSURE_MASK);
+    gtk_widget_set_can_focus(area, TRUE);
+    unsigned mask = GDK_EXPOSURE_MASK |
+        GDK_KEY_PRESS_MASK | GDK_KEY_RELEASE_MASK;
+    gtk_widget_set_events(area, mask);
 
     gtk_widget_show(window);
+    gtk_widget_grab_focus(area);
     GdkScreen *screen = gtk_window_get_screen(GTK_WINDOW(window));
 
     static const int ATTRIB_1[] = {
@@ -126,8 +130,8 @@ int main(int argc, char *argv[])
     */
     g_signal_connect(area, "expose-event",
                      G_CALLBACK(expose), &w);
-    g_signal_connect(window, "key-press-event", G_CALLBACK(key), &w);
-    g_signal_connect(window, "key-release-event", G_CALLBACK(key), &w);
+    g_signal_connect(area, "key-press-event", G_CALLBACK(key), &w);
+    g_signal_connect(area, "key-release-event", G_CALLBACK(key), &w);
 
     gtk_widget_show_all(window);
 
