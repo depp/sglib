@@ -54,7 +54,7 @@ def pdata(f, data, name, ttype):
         io.write(t)
     print >>f, '"%s";' % (io.getvalue(),)
 
-def macwin(table1, table2, out):
+def macwin(table1, table2, out, size, name):
     t1 = readTable(table1)
     t2 = readTable(table2)
     tmp = out + '.tmp'
@@ -62,7 +62,7 @@ def macwin(table1, table2, out):
     if len(names) != len(t2):
         raise Exception("%s: contains duplicate name" % (table2,))
     out1 = [255] * 256
-    out2 = [255] * 256
+    out2 = [255] * size
     for i, n, nn in t1:
         USED.add(i)
         if i < 0 or i > 255:
@@ -71,7 +71,7 @@ def macwin(table1, table2, out):
             ii = int(n, 0)
         else:
             ii = names[n]
-        if ii < 0 or ii > 255:
+        if ii < 0 or ii >= size:
             raise Exception("Platform Key code out of range: %d" % ii)
         if out1[i] != 255 or out2[ii] != 255:
             print >>sys.stderr, '%d -> %d' % (i, ii)
@@ -83,8 +83,8 @@ def macwin(table1, table2, out):
     f = open(tmp, 'w')
     try:
         print >>f, WARNING
-        ptable(f, out1, 'KBD_HID_TO_NATIVE', 'const unsigned char')
-        ptable(f, out2, 'KBD_NATIVE_TO_HID',  'const unsigned char')
+        ptable(f, out1, '%s_HID_TO_NATIVE' % name, 'const unsigned char')
+        ptable(f, out2, '%s_NATIVE_TO_HID' % name,  'const unsigned char')
         f.close()
         os.rename(tmp, out)
     except:
@@ -206,6 +206,6 @@ def names():
             pass
         raise
 
-macwin('mac.txt', 'mac2.txt', 'keytable_mac.c')
+macwin('mac.txt', 'mac2.txt', 'keytable_mac.c', 128, 'MAC')
 idents()
 names()
