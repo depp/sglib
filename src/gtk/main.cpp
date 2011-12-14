@@ -18,7 +18,9 @@ public:
 };
 
 void GTKWindow::close()
-{ }
+{
+    gtk_main_quit();
+}
 
 static const unsigned int MAX_FPS = 100;
 static const unsigned int MIN_FRAMETIME = 1000 / MAX_FPS;
