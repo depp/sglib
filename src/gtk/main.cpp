@@ -14,7 +14,13 @@
 
 class GTKWindow : public UI::Window {
 public:
+    GTKWindow()
+        : updateSize(false)
+    { }
+
     virtual void close();
+
+    bool updateSize;
 };
 
 void GTKWindow::close()
@@ -34,6 +40,12 @@ static gboolean handle_expose(GtkWidget *area, GTKWindow *w)
         exit(1);
     }
 
+    if (w->updateSize) {
+        GtkAllocation a;
+        gtk_widget_get_allocation(area, &a);
+        glViewport(0, 0, a.width, a.height);
+        w->setSize(a.width, a.height);
+    }
     w->draw();
 
     if (gdk_gl_drawable_is_double_buffered(drawable))
@@ -41,6 +53,12 @@ static gboolean handle_expose(GtkWidget *area, GTKWindow *w)
     else
         glFlush();
     gdk_gl_drawable_gl_end(drawable);
+    return TRUE;
+}
+
+static gboolean handle_configure(GTKWindow *w)
+{
+    w->updateSize = true;
     return TRUE;
 }
 
@@ -133,6 +151,8 @@ static gboolean handle_event(GtkWidget *widget, GdkEvent *event,
         return handle_key(w, &event->key, UI::KeyDown);
     case GDK_KEY_RELEASE:
         return handle_key(w, &event->key, UI::KeyUp);
+    case GDK_CONFIGURE:
+        return handle_configure(w);
     default:
         return FALSE;
     }
