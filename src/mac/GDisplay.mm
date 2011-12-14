@@ -4,6 +4,8 @@
 #import "GWindow.h"
 #import "GController.h"
 #import "sys/resource.hpp"
+#import "ui/keyboard/keyid.h"
+#import "ui/keyboard/keytable_mac.h"
 
 @interface GDisplay (Private)
 
@@ -75,6 +77,8 @@ void GDisplayKeyEvent(GDisplay *w, NSEvent *e, UI::EventType t)
     NSString *c = [e charactersIgnoringModifiers];
     int keyChar = [c characterAtIndex:0];
     int keyCode = mapKey(keyChar);
+    int ncode = [e keyCode] & 0x7F;
+    NSLog(@"Key %d %s", ncode, keyid_name_from_code(MAC_NATIVE_TO_HID[ncode]));
     UI::KeyEvent uevent(t, keyCode);
     [w handleUIEvent:&uevent];
 }

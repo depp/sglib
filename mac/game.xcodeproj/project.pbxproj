@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		3809F9E3149870CC0022121F /* keyid.c in Sources */ = {isa = PBXBuildFile; fileRef = 3809F9D9149870CC0022121F /* keyid.c */; };
+		3809F9E4149870CC0022121F /* keytable_mac.c in Sources */ = {isa = PBXBuildFile; fileRef = 3809F9DB149870CC0022121F /* keytable_mac.c */; };
 		3813315114141F8600B8CE5B /* entity.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3813312A14141F8600B8CE5B /* entity.cpp */; };
 		3813315214141F8600B8CE5B /* gamescreen.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3813312C14141F8600B8CE5B /* gamescreen.cpp */; };
 		3813315314141F8600B8CE5B /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3813312E14141F8600B8CE5B /* main.cpp */; };
@@ -71,6 +73,11 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		3809F9D6149870CC0022121F /* keycode.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = keycode.h; sourceTree = "<group>"; };
+		3809F9D9149870CC0022121F /* keyid.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = keyid.c; sourceTree = "<group>"; };
+		3809F9DA149870CC0022121F /* keyid.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = keyid.h; sourceTree = "<group>"; };
+		3809F9DB149870CC0022121F /* keytable_mac.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = keytable_mac.c; sourceTree = "<group>"; };
+		3809F9DC149870CC0022121F /* keytable_mac.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = keytable_mac.h; sourceTree = "<group>"; };
 		3813312A14141F8600B8CE5B /* entity.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = entity.cpp; sourceTree = "<group>"; };
 		3813312B14141F8600B8CE5B /* entity.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = entity.hpp; sourceTree = "<group>"; };
 		3813312C14141F8600B8CE5B /* gamescreen.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = gamescreen.cpp; sourceTree = "<group>"; };
@@ -220,6 +227,18 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		3809F9D5149870CC0022121F /* keyboard */ = {
+			isa = PBXGroup;
+			children = (
+				3809F9D6149870CC0022121F /* keycode.h */,
+				3809F9D9149870CC0022121F /* keyid.c */,
+				3809F9DA149870CC0022121F /* keyid.h */,
+				3809F9DB149870CC0022121F /* keytable_mac.c */,
+				3809F9DC149870CC0022121F /* keytable_mac.h */,
+			);
+			path = keyboard;
+			sourceTree = "<group>";
+		};
 		3813312914141F8600B8CE5B /* space */ = {
 			isa = PBXGroup;
 			children = (
@@ -452,6 +471,7 @@
 		389F066D1210A46A00E6AA2A /* ui */ = {
 			isa = PBXGroup;
 			children = (
+				3809F9D5149870CC0022121F /* keyboard */,
 				3857BE65132178A600F81D56 /* geometry.hpp */,
 				3857BE66132178A600F81D56 /* action.hpp */,
 				3857BE67132178A600F81D56 /* button.cpp */,
@@ -579,6 +599,8 @@
 				38FA0EC81495ABFF00F75BAE /* GDisplay.mm in Sources */,
 				38A2EE441495FFF100772423 /* GWindow.m in Sources */,
 				38FB7F5814971BDA006F40FE /* GApplication.m in Sources */,
+				3809F9E3149870CC0022121F /* keyid.c in Sources */,
+				3809F9E4149870CC0022121F /* keytable_mac.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

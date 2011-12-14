@@ -39,13 +39,10 @@ def pdata(f, data, name, ttype):
     for i, c in enumerate(data[:-1]):
         n = ord(c)
         if n < 32 or n >= 127:
-            if n == 0:
-                if data[i + 1].isdigit():
-                    t = '\\x00'
-                else:
-                    t = '\\0'
+            if n == 0 and not data[i+1].isdigit():
+                t = '\\0';
             else:
-                t = '\\x%02x' % (n,)
+                t = '\\%03o' % n
         else:
             t = c
         if io.tell() + len(t) + 3 > 78:
