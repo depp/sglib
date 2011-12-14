@@ -2,6 +2,7 @@
 #include "ui/menu.hpp"
 #include "ui/event.hpp"
 #include "ui/window.hpp"
+#include "ui/keyboard/keycode.h"
 #include "ui/keyboard/keyid.h"
 #include "ui/keyboard/keytable.h"
 #include "sys/resource.hpp"
@@ -51,15 +52,83 @@ static gboolean update(gpointer user_data)
     return TRUE;
 }
 
+static int mapKey(int key)
+{
+    switch (key) {
+    case KEY_Escape:
+        return UI::KEscape;
+
+    case KEY_Space:
+    case KEY_Enter:
+        return UI::KSelect;
+
+    case KEY_Left:
+        return UI::KLeft;
+
+    case KEY_Right:
+        return UI::KRight;
+
+    case KEY_Down:
+        return UI::KDown;
+
+    case KEY_Up:
+        return UI::KUp;
+
+    default:
+        return -1;
+    }
+}
+
 static gboolean key(GtkWidget *widget, GdkEventKey *event,
                     gpointer user_data)
 {
-    int code = event->hardware_keycode, hcode;
+    GTKWindow *w = reinterpret_cast<GTKWindow *>(user_data);
+    int code = event->hardware_keycode, hcode, gcode;
     if (code < 0 || code > 255)
         return true;
     hcode = EVDEV_NATIVE_TO_HID[code];
-    printf("Key %d %s\n", code, keyid_name_from_code(hcode));
-    return false;
+    gcode = mapKey(hcode);
+    if (gcode < 0)
+        return true;
+    UI::EventType t = event->type == GDK_KEY_PRESS ?
+        UI::KeyDown : UI::KeyUp;
+    UI::KeyEvent uevt(t, gcode);
+    w->handleEvent(uevt);
+    // printf("Key %d %s\n", code, keyid_name_from_code(hcode));
+    return true;
+}
+
+static gboolean motion_event(GtkWidget *widget, GdkEventMotion *event,
+                             gpointer user_data)
+{
+    GTKWindow *w = reinterpret_cast<GTKWindow *>(user_data);
+    double x = event->x, y = w->height() - 1 - event->y;
+    UI::MouseEvent uevt(UI::MouseMove, -1, x, y);
+    w->handleEvent(uevt);
+    return true;
+}
+
+static gboolean button_event(GtkWidget *widget, GdkEventButton *event,
+                             gpointer user_data)
+{
+    GTKWindow *w = reinterpret_cast<GTKWindow *>(user_data);
+    double x = event->x, y = w->height() - 1 - event->y;
+    int button;
+    UI::EventType t;
+    switch (event->type) {
+    case GDK_BUTTON_PRESS: t = UI::MouseDown; break;
+    case GDK_BUTTON_RELEASE: t = UI::MouseUp; break;
+    default: return true;
+    }
+    switch (event->button) {
+    case 1: button = UI::ButtonLeft; break;
+    case 2: button = UI::ButtonMiddle; break;
+    case 3: button = UI::ButtonRight; break;
+    default: button = UI::ButtonOther + event->button - 4; break;
+    }
+    UI::MouseEvent uevt(t, button, x, y);
+    w->handleEvent(uevt);
+    return true;
 }
 
 int main(int argc, char *argv[])
@@ -84,7 +153,9 @@ int main(int argc, char *argv[])
     gtk_container_add(GTK_CONTAINER(window), area);
     gtk_widget_set_can_focus(area, TRUE);
     unsigned mask = GDK_EXPOSURE_MASK |
-        GDK_KEY_PRESS_MASK | GDK_KEY_RELEASE_MASK;
+        GDK_KEY_PRESS_MASK | GDK_KEY_RELEASE_MASK |
+        GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK |
+        GDK_POINTER_MOTION_MASK;
     gtk_widget_set_events(area, mask);
 
     gtk_widget_show(window);
@@ -132,6 +203,12 @@ int main(int argc, char *argv[])
                      G_CALLBACK(expose), &w);
     g_signal_connect(area, "key-press-event", G_CALLBACK(key), &w);
     g_signal_connect(area, "key-release-event", G_CALLBACK(key), &w);
+    g_signal_connect(area, "button-press-event",
+                     G_CALLBACK(button_event), &w);
+    g_signal_connect(area, "button-release-event",
+                     G_CALLBACK(button_event), &w);
+    g_signal_connect(area, "motion-notify-event",
+                     G_CALLBACK(motion_event), &w);
 
     gtk_widget_show_all(window);
 
