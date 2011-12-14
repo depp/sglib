@@ -2,6 +2,8 @@
 #include "ui/menu.hpp"
 #include "ui/event.hpp"
 #include "ui/window.hpp"
+#include "ui/keyboard/keyid.h"
+#include "ui/keyboard/keytable.h"
 #include "sys/resource.hpp"
 #include "sys/config.hpp"
 #include "sys/path.hpp"
@@ -47,6 +49,17 @@ static gboolean update(gpointer user_data)
     gdk_window_invalidate_rect(area->window, &area->allocation, FALSE);
     gdk_window_process_updates(area->window, FALSE);
     return TRUE;
+}
+
+static gboolean key(GtkWidget *widget, GdkEventKey *event,
+                    gpointer user_data)
+{
+    int code = event->hardware_keycode, hcode;
+    if (code < 0 || code > 255)
+        return true;
+    hcode = EVDEV_NATIVE_TO_HID[code];
+    printf("Key %d %s\n", code, keyid_name_from_code(hcode));
+    return false;
 }
 
 int main(int argc, char *argv[])
@@ -113,6 +126,8 @@ int main(int argc, char *argv[])
     */
     g_signal_connect(area, "expose-event",
                      G_CALLBACK(expose), &w);
+    g_signal_connect(window, "key-press-event", G_CALLBACK(key), &w);
+    g_signal_connect(window, "key-release-event", G_CALLBACK(key), &w);
 
     gtk_widget_show_all(window);
 

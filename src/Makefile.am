@@ -23,7 +23,8 @@ mac_sources = \
 	sys/clock_osx.cpp \
 	type/font_osx.cpp \
 	type/font_osx.hpp \
-	type/rastertext_osx.cpp
+	type/rastertext_osx.cpp \
+	ui/keyboard/keytable_mac.c
 
 other_sources = \
 	sys/parseconfig.cpp \
@@ -124,8 +125,8 @@ libmgfx_a_SOURCES = \
 	ui/keyboard/keycode.h \
 	ui/keyboard/keyid.c \
 	ui/keyboard/keyid.h \
-	ui/keyboard/keytable_mac.c \
-	ui/keyboard/keytable_mac.h \
+	ui/keyboard/keytable.h \
+	ui/keyboard/keytable_evdev.c \
 	ui/menu.cpp \
 	ui/menu.hpp \
 	ui/mousemanager.cpp \
