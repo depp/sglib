@@ -3,8 +3,9 @@ AC_INIT([game], [0.1])
 AM_INIT_AUTOMAKE
 AC_CONFIG_SRCDIR([src/gtk/main.cpp])
 AC_CONFIG_FILES([Makefile src/Makefile])
+AC_CONFIG_HEADERS([src/config.h])
 
-AC_DEFINE(_GNU_SOURCE)
+dnl AC_DEFINE(_GNU_SOURCE)
 AC_PROG_CXX
 AC_PROG_RANLIB
 
