@@ -5,7 +5,6 @@
 #include <stdio.h>
 #include <err.h>
 #include <stdint.h>
-#include <png.h>
 #include <set>
 #include <memory>
 #include <vector>
@@ -67,6 +66,87 @@ bool TextureFile::loadTexture()
         return loadPNG();
     return false;
 }
+
+
+#if defined(HAVE_COREGRAPHICS)
+#include <CoreGraphics/CoreGraphics.h>
+
+static void releaseData(void *info, const void *data, size_t size)
+{
+    (void) data;
+    (void) size;
+    free(info);
+}
+
+static CGDataProviderRef getDataProvider(const std::string &path)
+{
+    std::auto_ptr<IFile> f(Path::openIFile(path));
+    Buffer buf = f->readall();
+    CGDataProviderRef dp = CGDataProviderCreateWithData(buf.get(), buf.get(), buf.size(), releaseData);
+    assert(dp);
+    buf.release();
+    return dp;
+}
+
+static bool imageToTexture(TextureFile &tex, CGImageRef img)
+{
+    // FIXME: We assume here that the image is color.
+    size_t w = CGImageGetWidth(img), h = CGImageGetHeight(img);
+    CGImageAlphaInfo alphaInfo = CGImageGetAlphaInfo(img);
+    bool hasAlpha;
+
+    switch (alphaInfo) {
+    case kCGImageAlphaNone:
+    case kCGImageAlphaNoneSkipLast:
+    case kCGImageAlphaNoneSkipFirst:
+        hasAlpha = false;
+        break;
+
+    case kCGImageAlphaPremultipliedLast:
+    case kCGImageAlphaPremultipliedFirst:
+    case kCGImageAlphaLast:
+    case kCGImageAlphaFirst:
+    default:
+        hasAlpha = true;
+        break;
+    }
+
+    tex.alloc(w, h, true, true);
+    size_t tw = tex.twidth(), th = tex.theight(); 
+    printf("tw = %zu, th = %zu\n", tw, th);
+    CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
+    assert(colorSpace);
+    CGBitmapInfo info = (hasAlpha ? kCGImageAlphaPremultipliedLast : kCGImageAlphaNoneSkipLast);
+    CGContextRef cxt = CGBitmapContextCreate(tex.buf(), tw, th, 8, tex.rowbytes(), colorSpace, info);
+    assert(cxt);
+    CGColorSpaceRelease(colorSpace);
+
+    CGContextSetRGBFillColor(cxt, 1.0f, 0.0f, 0.0f, 0.0f);
+    if (w < tw)
+        CGContextFillRect(cxt, CGRectMake(w, 0, tw - w, h));
+    if (h < th)
+        CGContextFillRect(cxt, CGRectMake(0, h, tw, tw - h));
+    CGContextDrawImage(cxt, CGRectMake(0, 0, w, h), img);
+
+    CGImageRelease(img);
+    CGContextRelease(cxt);
+    return true;
+}
+
+bool TextureFile::loadPNG()
+{
+    CGDataProviderRef dp = getDataProvider(path_);
+    assert(dp);
+    CGImageRef img = CGImageCreateWithPNGDataProvider(dp, NULL, false, kCGRenderingIntentDefault);
+    CGDataProviderRelease(dp);
+    assert(img);
+    return imageToTexture(*this, img);
+}
+
+#else /* !HAVE_COREGRAPHICS */
+
+#if defined(HAVE_LIBPNG)
+#include <png.h>
 
 struct PNGStruct {
     PNGStruct() : png(0), info(0) { }
@@ -176,3 +256,9 @@ bool TextureFile::loadPNG()
     png_read_end(ps.png, NULL);
     return true;
 }
+
+#else /* !HAVE_LIBPNG */
+#error "Can't load PNG images"
+#endif
+
+#endif
