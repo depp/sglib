@@ -45,8 +45,6 @@ libmsys_a_SOURCES = \
 	sys/buffer.hpp \
 	sys/clock.hpp \
 	sys/clock.cpp \
-	sys/config.cpp \
-	sys/config.hpp \
 	sys/configfile.cpp \
 	sys/configfile.hpp \
 	sys/configfileread.rl \
