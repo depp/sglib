@@ -30,15 +30,12 @@
 		382D219011D98E62009C8EF5 /* AppKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 382D218F11D98E62009C8EF5 /* AppKit.framework */; };
 		382D224611D98E6A009C8EF5 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 382D224511D98E6A009C8EF5 /* Foundation.framework */; };
 		382D22C711D98E80009C8EF5 /* ApplicationServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 382D22C611D98E80009C8EF5 /* ApplicationServices.framework */; };
-		38709EDC1330A5A200DA858D /* config.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 38709EC71330A5A200DA858D /* config.cpp */; };
-		38709EDD1330A5A200DA858D /* configfile.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 38709EC91330A5A200DA858D /* configfile.cpp */; };
 		38709EDF1330A5A200DA858D /* ifile.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 38709ECC1330A5A200DA858D /* ifile.cpp */; };
 		38709EE01330A5A200DA858D /* ifilereg.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 38709ECE1330A5A200DA858D /* ifilereg.cpp */; };
 		38709EE21330A5A200DA858D /* path.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 38709ED11330A5A200DA858D /* path.cpp */; };
 		38709EE31330A5A200DA858D /* resource.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 38709ED31330A5A200DA858D /* resource.cpp */; };
 		38709EE41330A5A200DA858D /* stringarray.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 38709ED61330A5A200DA858D /* stringarray.cpp */; };
 		38709EE51330A5A200DA858D /* system_error.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 38709ED81330A5A200DA858D /* system_error.cpp */; };
-		38709EE81330A5D000DA858D /* configfileread.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 38709EE71330A5D000DA858D /* configfileread.cpp */; };
 		38709F181330B45C00DA858D /* data in Resources */ = {isa = PBXBuildFile; fileRef = 38709F0D1330B45C00DA858D /* data */; };
 		38709F4C1330B7CA00DA858D /* path_osx.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 38709F261330B6FD00DA858D /* path_osx.cpp */; };
 		3871E294141ACAA3000DF3D6 /* GMain.m in Sources */ = {isa = PBXBuildFile; fileRef = 3871E293141ACAA3000DF3D6 /* GMain.m */; };
@@ -128,8 +125,6 @@
 		3852089E117434FD00640971 /* Game.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Game.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		385208A1117434FD00640971 /* Game-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Game-Info.plist"; sourceTree = "<group>"; };
 		38709EC61330A5A200DA858D /* buffer.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = buffer.hpp; sourceTree = "<group>"; };
-		38709EC71330A5A200DA858D /* config.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = config.cpp; sourceTree = "<group>"; };
-		38709EC81330A5A200DA858D /* config.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = config.hpp; sourceTree = "<group>"; };
 		38709EC91330A5A200DA858D /* configfile.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = configfile.cpp; sourceTree = "<group>"; };
 		38709ECA1330A5A200DA858D /* configfile.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = configfile.hpp; sourceTree = "<group>"; };
 		38709ECC1330A5A200DA858D /* ifile.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ifile.cpp; sourceTree = "<group>"; };
@@ -147,7 +142,6 @@
 		38709ED81330A5A200DA858D /* system_error.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = system_error.cpp; sourceTree = "<group>"; };
 		38709ED91330A5A200DA858D /* system_error.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = system_error.hpp; sourceTree = "<group>"; };
 		38709EDA1330A5A200DA858D /* testconfig.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = testconfig.cpp; sourceTree = "<group>"; };
-		38709EE71330A5D000DA858D /* configfileread.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = configfileread.cpp; sourceTree = "<group>"; };
 		38709F0D1330B45C00DA858D /* data */ = {isa = PBXFileReference; lastKnownFileType = folder; path = data; sourceTree = "<group>"; };
 		38709F1F1330B66D00DA858D /* path_linux.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = path_linux.cpp; sourceTree = "<group>"; };
 		38709F221330B6A600DA858D /* path_xdg.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = path_xdg.cpp; sourceTree = "<group>"; };
@@ -370,11 +364,8 @@
 				38709EC61330A5A200DA858D /* buffer.hpp */,
 				3871E2A7141ACFB6000DF3D6 /* clock.hpp */,
 				38A2E8E61499D13B00A820A9 /* clock.cpp */,
-				38709EC71330A5A200DA858D /* config.cpp */,
-				38709EC81330A5A200DA858D /* config.hpp */,
 				38709EC91330A5A200DA858D /* configfile.cpp */,
 				38709ECA1330A5A200DA858D /* configfile.hpp */,
-				38709EE71330A5D000DA858D /* configfileread.cpp */,
 				38709ECC1330A5A200DA858D /* ifile.cpp */,
 				38709ECD1330A5A200DA858D /* ifile.hpp */,
 				38709ECE1330A5A200DA858D /* ifilereg.cpp */,
@@ -584,15 +575,12 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				38709EDC1330A5A200DA858D /* config.cpp in Sources */,
-				38709EDD1330A5A200DA858D /* configfile.cpp in Sources */,
 				38709EDF1330A5A200DA858D /* ifile.cpp in Sources */,
 				38709EE01330A5A200DA858D /* ifilereg.cpp in Sources */,
 				38709EE21330A5A200DA858D /* path.cpp in Sources */,
 				38709EE31330A5A200DA858D /* resource.cpp in Sources */,
 				38709EE41330A5A200DA858D /* stringarray.cpp in Sources */,
 				38709EE51330A5A200DA858D /* system_error.cpp in Sources */,
-				38709EE81330A5D000DA858D /* configfileread.cpp in Sources */,
 				38709F4C1330B7CA00DA858D /* path_osx.cpp in Sources */,
 				3813315114141F8600B8CE5B /* entity.cpp in Sources */,
 				3813315214141F8600B8CE5B /* gamescreen.cpp in Sources */,
