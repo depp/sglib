@@ -14,7 +14,7 @@ struct dict {
 };
 
 struct dict_entry {
-    char const *key;
+    char *key;
     void *value;
     unsigned hash;
 };
