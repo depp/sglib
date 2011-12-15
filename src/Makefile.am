@@ -2,6 +2,15 @@ AUTOMAKE_OPTIONS = 1.5 foreign subdir-objects nostdinc
 
 bin_PROGRAMS = game-bin
 noinst_LIBRARIES = libmsys.a libmgfx.a libmtype.a
+noinst_SCRIPTS = config.ini
+
+config.ini : config.ini.in Makefile
+	sed \
+		-e 's,@''builddir@,@abs_top_builddir@,g' \
+		-e 's,@''srcdir@,@abs_top_srcdir@,g' \
+		$(srcdir)/config.ini.in > $@.tmp
+	mv $@.tmp $@
+
 
 common_CFLAGS = @warning_cppflags@ -I@srcdir@ -I@builddir@
 
