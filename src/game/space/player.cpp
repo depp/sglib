@@ -2,6 +2,7 @@
 #include "ship.hpp"
 #include "world.hpp"
 #include "shot.hpp"
+#include "client/ui/keymanager.hpp"
 #include <math.h>
 namespace Space {
 
@@ -13,8 +14,8 @@ const float ShotVelocity = 45.0 * 8.0;
 const float ShotTime = 25.0 / 60.0;
 const float ShotDelay = 1.0 / 60.0;
 
-Player::Player()
-  : ship_(NULL), keys_(0), nextShotTime_(-1.0)
+Player::Player(const UI::KeyManager &mgr)
+  : ship_(NULL), keys_(mgr), nextShotTime_(-1.0)
 { }
 
 Player::~Player()
@@ -63,13 +64,9 @@ void Player::leaveGame(World &w)
     w.removeEntity(ship_);
 }
 
-void Player::setKey(int key, bool flag)
+bool Player::keyPressed(int key) const
 {
-    int mask = 1 << key;
-    if (flag)
-        keys_ |= mask;
-    else
-        keys_ &= ~mask;
+    return keys_.inputState(key);
 }
 
 }

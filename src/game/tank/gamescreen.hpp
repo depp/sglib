@@ -1,19 +1,14 @@
 #ifndef GAME_TANK_GAMESCREEN_HPP
 #define GAME_TANK_GAMESCREEN_HPP
 #include "client/ui/screen.hpp"
-#include "player.hpp"
+#include "client/ui/keymanager.hpp"
 class RasterText;
-namespace UI {
-struct KeyEvent;
-}
 namespace Tank {
 class World;
 
 class GameScreen : public UI::Screen {
 public:
-    GameScreen()
-        : world_(0)
-    { }
+    GameScreen();
     virtual ~GameScreen();
 
     virtual void handleEvent(UI::Event const &evt);
@@ -21,10 +16,8 @@ public:
     virtual void draw();
 
 private:
-    void handleKey(UI::KeyEvent const &evt);
-
+    UI::KeyManager key_;
     World *world_;
-    Player::Input input_;
 };
 
 }

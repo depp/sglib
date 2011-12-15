@@ -1,6 +1,7 @@
 #ifndef GAME_SPACE_GAMESCREEN_HPP
 #define GAME_SPACE_GAMESCREEN_HPP
 #include "client/ui/screen.hpp"
+#include "client/ui/keymanager.hpp"
 class RasterText;
 namespace UI {
 struct KeyEvent;
@@ -11,17 +12,14 @@ class Player;
 
 class GameScreen : public UI::Screen {
 public:
-    GameScreen()
-        : world_(0)
-    { }
+    GameScreen();
 
     virtual void handleEvent(UI::Event const &evt);
     virtual void update(unsigned int ticks);
     virtual void draw();
 
 private:
-    void handleKey(UI::KeyEvent const &evt);
-
+    UI::KeyManager kmgr_;
     World *world_;
     Player *player_;
 };

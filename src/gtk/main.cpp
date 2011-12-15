@@ -67,43 +67,15 @@ static gboolean update(gpointer user_data)
     return TRUE;
 }
 
-static int mapKey(int key)
-{
-    switch (key) {
-    case KEY_Escape:
-        return UI::KEscape;
-
-    case KEY_Space:
-    case KEY_Enter:
-        return UI::KSelect;
-
-    case KEY_Left:
-        return UI::KLeft;
-
-    case KEY_Right:
-        return UI::KRight;
-
-    case KEY_Down:
-        return UI::KDown;
-
-    case KEY_Up:
-        return UI::KUp;
-
-    default:
-        return -1;
-    }
-}
-
 static gboolean handle_key(GTKWindow *w, GdkEventKey *e, UI::EventType t)
 {
-    int code = e->hardware_keycode, hcode, gcode;
+    int code = e->hardware_keycode, hcode;
     if (code < 0 || code > 255)
-        return true;
+        return TRUE;
     hcode = EVDEV_NATIVE_TO_HID[code];
-    gcode = mapKey(hcode);
-    if (gcode < 0)
-        return true;
-    UI::KeyEvent uevt(t, gcode);
+    if (hcode == 255)
+        return TRUE;
+    UI::KeyEvent uevt(t, hcode);
     w->handleEvent(uevt);
     return TRUE;
 }

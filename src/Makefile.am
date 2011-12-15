@@ -95,6 +95,8 @@ libmgfx_a_SOURCES = \
 	client/ui/button.hpp \
 	client/ui/event.hpp \
 	client/ui/geometry.hpp \
+	client/ui/keymanager.cpp \
+	client/ui/keymanager.hpp \
 	client/ui/menu.cpp \
 	client/ui/menu.hpp \
 	client/ui/mousemanager.cpp \

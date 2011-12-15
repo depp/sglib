@@ -2,51 +2,50 @@
 #include "client/ui/menu.hpp"
 #include "client/ui/event.hpp"
 #include "client/ui/window.hpp"
+#include "client/keyboard/keycode.h"
 #include "world.hpp"
 #include "player.hpp"
 #include "scenery.hpp"
 namespace Space {
 
+static const unsigned char KEY_MAP[] = {
+    KEY_W, KeyThrust,
+    KP_8, KeyThrust,
+    KEY_Up, KeyThrust,
+
+    KEY_A, KeyLeft,
+    KP_4, KeyLeft,
+    KEY_Left, KeyLeft,
+
+    KEY_S, KeyBrake,
+    KP_5, KeyBrake,
+    KEY_Down, KeyBrake,
+
+    KEY_D, KeyRight,
+    KP_6, KeyRight,
+    KEY_Right, KeyRight,
+
+    KP_0, KeyFire,
+    KEY_Space, KeyFire,
+
+    255
+};
+
+GameScreen::GameScreen()
+    : kmgr_(KEY_MAP), world_(0)
+{ }
+
 void GameScreen::handleEvent(UI::Event const &evt)
 {
     switch (evt.type) {
     case UI::KeyDown:
+        if (evt.keyEvent().key == KEY_Escape) {
+            window().setScreen(new UI::Menu);
+            break;
+        }
     case UI::KeyUp:
-        handleKey(evt.keyEvent());
+        kmgr_.handleKeyEvent(evt.keyEvent());
         break;
-    default:
-        break;
-    }
-}
-
-void GameScreen::handleKey(UI::KeyEvent const &evt)
-{
-    bool state = evt.type == UI::KeyDown;
-    switch (evt.key) {
-    case UI::KEscape:
-        window().setScreen(new UI::Menu);
-        break;
-
-    case UI::KUp:
-        world_->player()->setKey(KeyThrust, state);
-        break;
-
-    case UI::KDown:
-        world_->player()->setKey(KeyBrake, state);
-        break;
-
-    case UI::KLeft:
-        world_->player()->setKey(KeyLeft, state);
-        break;
-
-    case UI::KRight:
-        world_->player()->setKey(KeyRight, state);
-        break;
-
-    case UI::KSelect:
-        world_->player()->setKey(KeyFire, state);
-        break;
-
     default:
         break;
     }
@@ -61,7 +60,7 @@ void GameScreen::update(unsigned int ticks)
         s->radius = 32.0f;
         world_->addEntity(s);
 
-        player_ = new Player();
+        player_ = new Player(kmgr_);
         world_->addThinker(player_);
         world_->setPlayer(player_);
     }

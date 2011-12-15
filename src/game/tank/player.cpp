@@ -1,6 +1,7 @@
 #include "player.hpp"
 #include "world.hpp"
 #include "shot.hpp"
+#include "client/ui/keymanager.hpp"
 #include <cmath>
 namespace Tank {
 
@@ -9,9 +10,9 @@ const float kPlayerTurnSpeed = 100.0f;
 const float kPlayerSize = 1.0f;
 const float kShotDistance = 1.3f;
 
-Player::Player(float x, float y, float face, Input &input)
+Player::Player(float x, float y, float face, const UI::KeyManager &key)
     : Object(kClassSolid, kClassSolid, x, y, face, kPlayerSize),
-      input_(input)
+      key_(key), fireLatch_(false)
 { }
 
 Player::~Player()
@@ -23,26 +24,26 @@ void Player::draw()
 void Player::update()
 {
     float forward = 0.0f, turn = 0.0f;
-    if (input_.left)
+    if (key_.inputState(KeyLeft))
         turn += kPlayerTurnSpeed;
-    if (input_.right)
+    if (key_.inputState(KeyRight))
         turn -= kPlayerTurnSpeed;
-    if (input_.up)
+    if (key_.inputState(KeyForward))
         forward += kPlayerForwardSpeed;
-    if (input_.down)
+    if (key_.inputState(KeyBack))
         forward -= kPlayerForwardSpeed;
     turn *= World::kFrameTime;
     setFace(getFace() + turn);
     setSpeed(forward);
 
-    if (input_.fire) {
-        input_.fire = false;
+    if (key_.inputState(KeyFire) && !fireLatch_) {
         float a = getFace() * (4.0 * std::atan(1.0) / 180.0f);
         Object *obj = new Shot(getX() + std::cos(a) * kShotDistance,
                                getY() + std::sin(a) * kShotDistance,
                                getFace());
         getWorld().addObject(obj);
     }
+    fireLatch_ = key_.inputState(KeyFire);
 }
 
 }
