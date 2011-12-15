@@ -1,5 +1,5 @@
-#ifndef GRAPHICS_TEXTURE_HPP
-#define GRAPHICS_TEXTURE_HPP
+#ifndef CLIENT_TEXTURE_HPP
+#define CLIENT_TEXTURE_HPP
 #include <string>
 #include "color.hpp"
 #include "sys/sharedref.hpp"

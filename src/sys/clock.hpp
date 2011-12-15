@@ -1,5 +1,5 @@
-#ifndef SYS_CLOCK_H
-#define SYS_CLOCK_H
+#ifndef SYS_CLOCK_HPP
+#define SYS_CLOCK_HPP
 
 void initTime(void);
 unsigned getTime(void);

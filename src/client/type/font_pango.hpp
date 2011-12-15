@@ -1,5 +1,5 @@
-#ifndef TYPE_FONT_PANGO_HPP
-#define TYPE_FONT_PANGO_HPP
+#ifndef CLIENT_TYPE_FONT_PANGO_HPP
+#define CLIENT_TYPE_FONT_PANGO_HPP
 #include "font.hpp"
 #include <pango/pango.h>
 

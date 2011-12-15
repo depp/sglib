@@ -1,5 +1,5 @@
-#ifndef GRAPHICS_TEXTUREFILE_HPP
-#define GRAPHICS_TEXTUREFILE_HPP
+#ifndef CLIENT_TEXTUREFILE_HPP
+#define CLIENT_TEXTUREFILE_HPP
 #include "texture.hpp"
 
 class TextureFile : public Texture {

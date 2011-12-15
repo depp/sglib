@@ -1,5 +1,5 @@
-#ifndef RAND_HPP
-#define RAND_HPP
+#ifndef SYS_RAND_HPP
+#define SYS_RAND_HPP
 #include <stdint.h>
 #include <cmath>
 

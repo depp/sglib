@@ -1,5 +1,5 @@
-#ifndef SCENE_LEAFOBJECT_HPP
-#define SCENE_LEAFOBJECT_HPP
+#ifndef CLIENT_SCENE_LEAFOBJECT_HPP
+#define CLIENT_SCENE_LEAFOBJECT_HPP
 #include "object.hpp"
 namespace Scene {
 

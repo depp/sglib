@@ -1,5 +1,5 @@
-#ifndef SCENE_OBJECT_HPP
-#define SCENE_OBJECT_HPP
+#ifndef CLIENT_SCENE_OBJECT_HPP
+#define CLIENT_SCENE_OBJECT_HPP
 #include <vector>
 #include "client/ui/geometry.hpp"
 namespace Scene {

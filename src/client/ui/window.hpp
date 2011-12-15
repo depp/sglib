@@ -1,5 +1,5 @@
-#ifndef UI_WINDOW_HPP
-#define UI_WINDOW_HPP
+#ifndef CLIENT_UI_WINDOW_HPP
+#define CLIENT_UI_WINDOW_HPP
 /* A Window object is the interface between platform code and common code.  */
 #include "screen.hpp"
 namespace UI {

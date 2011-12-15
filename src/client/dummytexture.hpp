@@ -1,5 +1,5 @@
-#ifndef GRAPHICS_DUMMYTEXTURE_HPP
-#define GRAPHICS_DUMMYTEXTURE_HPP
+#ifndef CLIENT_DUMMYTEXTURE_HPP
+#define CLIENT_DUMMYTEXTURE_HPP
 #include "texture.hpp"
 #include "color.hpp"
 

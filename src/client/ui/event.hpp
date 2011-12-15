@@ -1,5 +1,5 @@
-#ifndef UI_EVENT_HPP
-#define UI_EVENT_HPP
+#ifndef CLIENT_UI_EVENT_HPP
+#define CLIENT_UI_EVENT_HPP
 namespace UI {
 
 enum EventType {

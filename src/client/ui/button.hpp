@@ -1,5 +1,5 @@
-#ifndef UI_BUTTON_HPP
-#define UI_BUTTON_HPP
+#ifndef CLIENT_UI_BUTTON_HPP
+#define CLIENT_UI_BUTTON_HPP
 #include "widget.hpp"
 #include "action.hpp"
 #include "client/type/rastertext.hpp"

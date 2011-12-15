@@ -1,5 +1,5 @@
-#ifndef SCENE_GROUP_HPP
-#define SCENE_GROUP_HPP
+#ifndef CLIENT_SCENE_GROUP_HPP
+#define CLIENT_SCENE_GROUP_HPP
 #include "object.hpp"
 namespace Scene {
 

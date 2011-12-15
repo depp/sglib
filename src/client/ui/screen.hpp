@@ -1,5 +1,5 @@
-#ifndef UI_SCREEN_HPP
-#define UI_SCREEN_HPP
+#ifndef CLIENT_UI_SCREEN_HPP
+#define CLIENT_UI_SCREEN_HPP
 namespace UI {
 struct Event;
 class Window;

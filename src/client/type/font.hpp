@@ -1,5 +1,5 @@
-#ifndef TYPE_FONT_HPP
-#define TYPE_FONT_HPP
+#ifndef CLIENT_TYPE_FONT_HPP
+#define CLIENT_TYPE_FONT_HPP
 class RasterText;
 
 class Font {

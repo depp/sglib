@@ -1,5 +1,5 @@
-#ifndef GRAPHICS_COLOR_HPP
-#define GRAPHICS_COLOR_HPP
+#ifndef CLIENT_COLOR_HPP
+#define CLIENT_COLOR_HPP
 
 struct Color {
     Color()

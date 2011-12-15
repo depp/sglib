@@ -1,5 +1,5 @@
-#ifndef UI_MOUSEMANAGER_HPP
-#define UI_MOUSEMANAGER_HPP
+#ifndef CLIENT_UI_MOUSEMANAGER_HPP
+#define CLIENT_UI_MOUSEMANAGER_HPP
 namespace UI {
 struct MouseEvent;
 class Widget;

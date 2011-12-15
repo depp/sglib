@@ -1,5 +1,5 @@
-#ifndef UI_WIDGET_HPP
-#define UI_WIDGET_HPP
+#ifndef CLIENT_UI_WIDGET_HPP
+#define CLIENT_UI_WIDGET_HPP
 #include "geometry.hpp"
 #include "client/scene/leafobject.hpp"
 namespace UI {

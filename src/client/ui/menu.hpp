@@ -1,5 +1,5 @@
-#ifndef UI_MENU_HPP
-#define UI_MENU_HPP
+#ifndef CLIENT_UI_MENU_HPP
+#define CLIENT_UI_MENU_HPP
 #include "screen.hpp"
 #include "button.hpp"
 #include "mousemanager.hpp"

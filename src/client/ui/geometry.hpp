@@ -1,5 +1,5 @@
-#ifndef UI_GEOMETRY_HPP
-#define UI_GEOMETRY_HPP
+#ifndef CLIENT_UI_GEOMETRY_HPP
+#define CLIENT_UI_GEOMETRY_HPP
 namespace UI {
 
 struct Point {

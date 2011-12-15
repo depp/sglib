@@ -1,5 +1,5 @@
-#ifndef UI_ACTION_HPP
-#define UI_ACTION_HPP
+#ifndef CLIENT_UI_ACTION_HPP
+#define CLIENT_UI_ACTION_HPP
 #include "screen.hpp"
 namespace UI {
 class Screen;

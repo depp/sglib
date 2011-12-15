@@ -1,5 +1,5 @@
-#ifndef TYPE_RASTERTEXT_HPP
-#define TYPE_RASTERTEXT_HPP
+#ifndef CLIENT_TYPE_RASTERTEXT_HPP
+#define CLIENT_TYPE_RASTERTEXT_HPP
 #include <string>
 #include "client/opengl.hpp"
 #include "font.hpp"

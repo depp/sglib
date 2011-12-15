@@ -1,5 +1,5 @@
-#ifndef KEYBOARD_KEYID_H
-#define KEYBOARD_KEYID_H
+#ifndef CLIENT_KEYBOARD_KEYID_H
+#define CLIENT_KEYBOARD_KEYID_H
 #ifdef __cplusplus
 extern "C" {
 #endif

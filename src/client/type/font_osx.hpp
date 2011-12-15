@@ -1,5 +1,5 @@
-#ifndef TYPE_FONT_OSX_HPP
-#define TYPE_FONT_OSX_HPP
+#ifndef CLIENT_TYPE_FONT_OSX_HPP
+#define CLIENT_TYPE_FONT_OSX_HPP
 #include "font.hpp"
 #include "sys/autocf_osx.hpp"
 #include <CoreText/CoreText.h>

@@ -1,5 +1,5 @@
-#ifndef OPENGL_HPP
-#define OPENGL_HPP
+#ifndef CLIENT_OPENGL_HPP
+#define CLIENT_OPENGL_HPP
 
 #if defined(__APPLE__)
 
