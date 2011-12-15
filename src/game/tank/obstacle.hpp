@@ -1,8 +1,8 @@
 #ifndef GAME_TANK_OBSTACLE_HPP
 #define GAME_TANK_OBSTACLE_HPP
 #include "object.hpp"
-#include "graphics/color.hpp"
-#include "graphics/model.hpp"
+#include "client/color.hpp"
+#include "client/model.hpp"
 namespace Tank {
 
 class Obstacle : public Object {

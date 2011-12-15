@@ -2,7 +2,7 @@
 #include "entity.hpp"
 #include "thinker.hpp"
 #include "stars.hpp"
-#include "opengl.hpp"
+#include "client/opengl.hpp"
 #include "player.hpp"
 namespace Space {
 

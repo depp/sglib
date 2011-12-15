@@ -1,5 +1,5 @@
 #include "obstacle.hpp"
-#include "graphics/model.hpp"
+#include "client/model.hpp"
 namespace Tank {
 
 Obstacle::Obstacle(float x, float y, float face, float size,

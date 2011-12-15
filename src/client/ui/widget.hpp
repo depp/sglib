@@ -1,7 +1,7 @@
 #ifndef UI_WIDGET_HPP
 #define UI_WIDGET_HPP
 #include "geometry.hpp"
-#include "scene/leafobject.hpp"
+#include "client/scene/leafobject.hpp"
 namespace UI {
 struct MouseEvent;
 struct KeyEvent;

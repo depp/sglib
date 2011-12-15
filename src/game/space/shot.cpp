@@ -1,4 +1,4 @@
-#include "opengl.hpp"
+#include "client/opengl.hpp"
 #include "shot.hpp"
 #include "entity.hpp"
 #include "world.hpp"

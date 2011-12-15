@@ -1,8 +1,8 @@
 #include "explosion.hpp"
-#include "rand.hpp"
-#include "graphics/color.hpp"
+#include "sys/rand.hpp"
+#include "client/color.hpp"
 #include "world.hpp"
-#include "opengl.hpp"
+#include "client/opengl.hpp"
 #include <stdlib.h>
 namespace Tank {
 

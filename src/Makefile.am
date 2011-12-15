@@ -42,9 +42,6 @@ other_sources = \
 libmsys_a_CFLAGS = $(common_CFLAGS)
 libmsys_a_CXXFLAGS = $(common_CFLAGS)
 libmsys_a_SOURCES = \
-	opengl.hpp \
-	rand.cpp \
-	rand.hpp \
 	sys/autocf_osx.hpp \
 	sys/buffer.hpp \
 	sys/clock.hpp \
@@ -62,6 +59,8 @@ libmsys_a_SOURCES = \
 	sys/path.hpp \
 	sys/path_linux.cpp \
 	sys/path_xdg.cpp \
+	sys/rand.cpp \
+	sys/rand.hpp \
 	sys/resource.cpp \
 	sys/resource.hpp \
 	sys/sharedref.hpp \
@@ -73,6 +72,42 @@ libmsys_a_SOURCES = \
 libmgfx_a_CFLAGS = $(common_CFLAGS)
 libmgfx_a_CXXFLAGS = $(common_CFLAGS)
 libmgfx_a_SOURCES = \
+	client/color.hpp \
+	client/dummytexture.cpp \
+	client/dummytexture.hpp \
+	client/keyboard/keycode.h \
+	client/keyboard/keyid.c \
+	client/keyboard/keyid.h \
+	client/keyboard/keytable.h \
+	client/keyboard/keytable_evdev.c \
+	client/model.cpp \
+	client/model.hpp \
+	client/opengl.hpp \
+	client/scene/group.cpp \
+	client/scene/group.hpp \
+	client/scene/leafobject.cpp \
+	client/scene/leafobject.hpp \
+	client/scene/object.cpp \
+	client/scene/object.hpp \
+	client/texture.cpp \
+	client/texture.hpp \
+	client/texturefile.cpp \
+	client/texturefile.hpp \
+	client/ui/action.hpp \
+	client/ui/button.cpp \
+	client/ui/button.hpp \
+	client/ui/event.hpp \
+	client/ui/geometry.hpp \
+	client/ui/menu.cpp \
+	client/ui/menu.hpp \
+	client/ui/mousemanager.cpp \
+	client/ui/mousemanager.hpp \
+	client/ui/screen.cpp \
+	client/ui/screen.hpp \
+	client/ui/widget.cpp \
+	client/ui/widget.hpp \
+	client/ui/window.cpp \
+	client/ui/window.hpp \
 	game/space/entity.cpp \
 	game/space/entity.hpp \
 	game/space/gamescreen.cpp \
@@ -110,52 +145,17 @@ libmgfx_a_SOURCES = \
 	game/tank/shot.cpp \
 	game/tank/shot.hpp \
 	game/tank/world.cpp \
-	game/tank/world.hpp \
-	graphics/color.hpp \
-	graphics/dummytexture.cpp \
-	graphics/dummytexture.hpp \
-	graphics/model.cpp \
-	graphics/model.hpp \
-	graphics/texture.cpp \
-	graphics/texture.hpp \
-	graphics/texturefile.cpp \
-	graphics/texturefile.hpp \
-	scene/group.cpp \
-	scene/group.hpp \
-	scene/leafobject.cpp \
-	scene/leafobject.hpp \
-	scene/object.cpp \
-	scene/object.hpp \
-	ui/action.hpp \
-	ui/button.cpp \
-	ui/button.hpp \
-	ui/event.hpp \
-	ui/geometry.hpp \
-	ui/keyboard/keycode.h \
-	ui/keyboard/keyid.c \
-	ui/keyboard/keyid.h \
-	ui/keyboard/keytable.h \
-	ui/keyboard/keytable_evdev.c \
-	ui/menu.cpp \
-	ui/menu.hpp \
-	ui/mousemanager.cpp \
-	ui/mousemanager.hpp \
-	ui/screen.cpp \
-	ui/screen.hpp \
-	ui/widget.cpp \
-	ui/widget.hpp \
-	ui/window.cpp \
-	ui/window.hpp
+	game/tank/world.hpp
 
 libmtype_a_CFLAGS = $(common_CFLAGS) @PANGOCAIRO_CFLAGS@
 libmtype_a_CXXFLAGS = $(common_CFLAGS) @PANGOCAIRO_CFLAGS@
 libmtype_a_SOURCES = \
-	type/font.hpp \
-	type/font_pango.cpp \
-	type/font_pango.hpp \
-	type/rastertext.cpp \
-	type/rastertext.hpp \
-	type/rastertext_cairo.cpp
+	client/type/font.hpp \
+	client/type/font_pango.cpp \
+	client/type/font_pango.hpp \
+	client/type/rastertext.cpp \
+	client/type/rastertext.hpp \
+	client/type/rastertext_cairo.cpp
 
 game_bin_CXXFLAGS = $(common_CFLAGS) @GTK_CFLAGS@ @GTKGLEXT_CFLAGS@
 game_bin_LDFLAGS = @GTK_LIBS@ @GTKGLEXT_LIBS@ @PANGOCAIRO_LIBS@

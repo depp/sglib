@@ -4,8 +4,8 @@
 #include "game/space/gamescreen.hpp"
 #include "event.hpp"
 #include "window.hpp"
-#include "graphics/texturefile.hpp"
-#include "opengl.hpp"
+#include "client/texturefile.hpp"
+#include "client/opengl.hpp"
 #include <stdio.h>
 
 UI::Menu::Menu()

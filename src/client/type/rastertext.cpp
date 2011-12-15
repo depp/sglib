@@ -1,5 +1,5 @@
 #include "rastertext.hpp"
-#include "opengl.hpp"
+#include "client/opengl.hpp"
 #include <stdlib.h>
 #include <stdio.h>
 

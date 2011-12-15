@@ -1,9 +1,9 @@
 #include "shot.hpp"
-#include "graphics/model.hpp"
-#include "graphics/color.hpp"
+#include "client/model.hpp"
+#include "client/color.hpp"
 #include "world.hpp"
 #include "explosion.hpp"
-#include "opengl.hpp"
+#include "client/opengl.hpp"
 namespace Tank {
 
 static const float kShotTwist = 720.0f;

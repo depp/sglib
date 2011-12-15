@@ -4,7 +4,7 @@
 #include <limits>
 #include <assert.h>
 #include <stdio.h>
-#include "opengl.hpp"
+#include "client/opengl.hpp"
 namespace Tank {
 
 static const unsigned int LAG_THRESHOLD = 1000;

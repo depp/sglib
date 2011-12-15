@@ -3,8 +3,8 @@
 #include "screen.hpp"
 #include "button.hpp"
 #include "mousemanager.hpp"
-#include "scene/group.hpp"
-#include "graphics/texture.hpp"
+#include "client/scene/group.hpp"
+#include "client/texture.hpp"
 namespace UI {
 
 class Menu : public Screen, private MouseManager {

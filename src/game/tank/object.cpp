@@ -1,5 +1,5 @@
 #include "object.hpp"
-#include "opengl.hpp"
+#include "client/opengl.hpp"
 namespace Tank {
 
 Object::Object(unsigned int colGen, unsigned int colRcv,

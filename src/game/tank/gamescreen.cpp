@@ -1,10 +1,10 @@
 #include "gamescreen.hpp"
-#include "ui/menu.hpp"
-#include "ui/window.hpp"
+#include "client/ui/menu.hpp"
+#include "client/ui/window.hpp"
 #include "world.hpp"
 #include "obstacle.hpp"
-#include "graphics/model.hpp"
-#include "ui/event.hpp"
+#include "client/model.hpp"
+#include "client/ui/event.hpp"
 namespace Tank {
 
 GameScreen::~GameScreen()

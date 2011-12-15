@@ -1,6 +1,6 @@
 #ifndef GAME_SPACE_GAMESCREEN_HPP
 #define GAME_SPACE_GAMESCREEN_HPP
-#include "ui/screen.hpp"
+#include "client/ui/screen.hpp"
 class RasterText;
 namespace UI {
 struct KeyEvent;

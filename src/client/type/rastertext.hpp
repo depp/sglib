@@ -1,9 +1,9 @@
 #ifndef TYPE_RASTERTEXT_HPP
 #define TYPE_RASTERTEXT_HPP
 #include <string>
-#include "opengl.hpp"
+#include "client/opengl.hpp"
 #include "font.hpp"
-#include "graphics/texture.hpp"
+#include "client/texture.hpp"
 
 /* Rasterized text texture.  The texture is grayscale with no
    alpha.  */

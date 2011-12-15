@@ -1,4 +1,4 @@
-#include "opengl.hpp"
+#include "client/opengl.hpp"
 #include "stars.hpp"
 #include "random.hpp"
 #include <stdlib.h>

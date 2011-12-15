@@ -1,4 +1,4 @@
-#include "opengl.hpp"
+#include "client/opengl.hpp"
 #include "ship.hpp"
 #include "shapes.hpp"
 #include <math.h>

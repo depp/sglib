@@ -1,7 +1,7 @@
 #ifndef SCENE_OBJECT_HPP
 #define SCENE_OBJECT_HPP
 #include <vector>
-#include "ui/geometry.hpp"
+#include "client/ui/geometry.hpp"
 namespace Scene {
 class LeafObject;
 
