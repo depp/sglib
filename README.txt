@@ -1,3 +1,35 @@
+Dietrich's Game
+===============
+
+This started out as a "Spectre" clone (the 1991 video game) but it
+turned into a platform for my own personal game development.  It has
+some rudimentary UI classes, texture loading, text rendering, and a
+bin of ill-advised platform code.  I also dumped an incomplete port of
+a game I made around 1999; both this game and the Spectre clone can be
+selected from the main menu.
+
+Much of the platform-specific code reimplements the kind of
+functionality found in LibSDL.  One of the goals of this project is to
+provide functionality close to that of a native application, which is
+beyond SDL's capabilities.  The trade-off is that this way requires
+more work.
+
+Requirements
+------------
+
+Linux:
+* Gtk+ 2.0
+* GtkGLExt
+* Cairo
+* Pango (with Cairo backend)
+* OpenGL
+* LibPNG
+* C++ compiler
+* Evdev (no other keyboard input is supported, sorry)
+
+Mac OS X:
+* Mac OS X 10.5 (uses the Core Text API)
+
 Known Limitations
 -----------------
 
