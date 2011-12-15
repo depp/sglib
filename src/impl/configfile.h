@@ -4,6 +4,12 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/* A configuration file is a collection of variables.  Conceptually,
+   each variable is identified by a qualified name and has a value
+   which is a string.  The periods in a qualified name separate the
+   section name from the variable name.  For example, A.B.C is a
+   variable named C in section A.B.  Configuration files use a variant
+   of INI file format, which is not really standardized.  */
 
 /* Entries in a config file are sections allocated with malloc.  The
    name of each section is also allocated with malloc and is shared
@@ -68,6 +74,21 @@ configfile_insert_var(struct configfile_section *s,
 void
 configfile_erase_var(struct configfile_section *s,
                      struct dict_entry *e);
+
+/* ===== I/O functions ===== */
+
+/* Read a configuration file.  Return 0 if successful or if the file
+   does not exist, an error code if an error occured, or -1 if error
+   in the file syntax caused the operation to abort.  Duplicate
+   variables will be discarded with a warning, the first copy of each
+   variable will be kept.  */
+int
+configfile_read(struct configfile *f, const char *path);
+
+/* Write a configuration file and return 0, or return an error
+   code.  */
+int
+configfile_write(struct configfile *f, const char *path);
 
 #ifdef __cplusplus
 }
