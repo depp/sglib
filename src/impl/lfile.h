@@ -8,6 +8,7 @@ extern "C" {
    like reading an entire file into memory or writing a file
    atomically.  */
 
+/* Do not try to free this structure manually.  */
 struct lfile_contents {
     void *data;
     size_t length;
@@ -19,6 +20,10 @@ struct lfile_contents {
    buffer will have one extra byte beyond the end set to 0.  */
 int
 lfile_readall(struct lfile_contents *p, const char *path, size_t maxsize);
+
+/* Free a file read with lfile_readall.  */
+void
+lfile_read_destroy(struct lfile_contents *p);
 
 #ifdef __cplusplus
 }

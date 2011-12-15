@@ -63,3 +63,9 @@ lfile_readall(struct lfile_contents *p, const char *path, size_t maxsize)
     close(fd);
     return 0;
 }
+
+void
+lfile_read_destroy(struct lfile_contents *p)
+{
+    free(p->data);
+}
