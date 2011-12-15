@@ -668,7 +668,6 @@
 					AppKit,
 					"-framework",
 					OpenGL,
-					"-lpng",
 				);
 				PREBINDING = NO;
 				PRODUCT_NAME = Game;
@@ -704,7 +703,6 @@
 					AppKit,
 					"-framework",
 					OpenGL,
-					"-lpng",
 				);
 				PREBINDING = NO;
 				PRODUCT_NAME = Game;
