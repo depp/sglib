@@ -176,9 +176,6 @@ static void textureFileRead(png_structp pngp,
     } catch (std::exception const &e) {
         fprintf(stderr, "Error: %s\n", e.what());
         longjmp(png_jmpbuf(pngp), 1);
-    } catch (...) {
-        fputs("Unknown error\n", stderr);
-        longjmp(png_jmpbuf(pngp), 1);
     }
 }
 
