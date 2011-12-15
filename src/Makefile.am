@@ -29,7 +29,6 @@ mac_sources = \
 	mac/GWindow.m \
 	sys/path_osx.cpp \
 	sdl/main.cpp \
-	sys/clock_osx.cpp \
 	type/font_osx.cpp \
 	type/font_osx.hpp \
 	type/rastertext_osx.cpp \
@@ -45,7 +44,7 @@ libmsys_a_SOURCES = \
 	sys/autocf_osx.hpp \
 	sys/buffer.hpp \
 	sys/clock.hpp \
-	sys/clock_posix.cpp \
+	sys/clock.cpp \
 	sys/config.cpp \
 	sys/config.hpp \
 	sys/configfile.cpp \
