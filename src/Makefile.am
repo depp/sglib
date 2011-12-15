@@ -1,7 +1,7 @@
 AUTOMAKE_OPTIONS = 1.5 foreign subdir-objects nostdinc
 
 bin_PROGRAMS = game-bin
-noinst_LIBRARIES = libmsys.a libmgfx.a libmtype.a
+noinst_LIBRARIES = libmimp.a libmsys.a libmgfx.a libmtype.a
 noinst_SCRIPTS = config.ini
 
 config.ini : config.ini.in Makefile
@@ -37,6 +37,13 @@ mac_sources = \
 other_sources = \
 	sys/parseconfig.cpp \
 	sys/testconfig.cpp
+
+libmimp_a_CFLAGS = $(common_CFLAGS)
+libmimp_a_SOURCES = \
+	impl/dict.c \
+	impl/dict.h \
+	impl/hash.c \
+	impl/hash.h
 
 libmsys_a_CFLAGS = $(common_CFLAGS)
 libmsys_a_CXXFLAGS = $(common_CFLAGS)
