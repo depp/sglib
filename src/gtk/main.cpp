@@ -3,10 +3,7 @@
 #include "client/ui/event.hpp"
 #include "client/ui/window.hpp"
 #include "client/keyboard/keycode.h"
-#include "client/keyboard/keyid.h"
 #include "client/keyboard/keytable.h"
-#include "sys/resource.hpp"
-#include "sys/config.hpp"
 #include "sys/path.hpp"
 #include <gtk/gtk.h>
 #include <gtk/gtkgl.h>
