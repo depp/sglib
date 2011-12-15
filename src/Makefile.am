@@ -40,6 +40,8 @@ other_sources = \
 
 libmimp_a_CFLAGS = $(common_CFLAGS)
 libmimp_a_SOURCES = \
+	impl/configfile.c \
+	impl/configfile.h \
 	impl/dict.c \
 	impl/dict.h \
 	impl/hash.c \
