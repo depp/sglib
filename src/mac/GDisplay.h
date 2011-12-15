@@ -3,8 +3,8 @@
 // Each display has a lock for accessing the OpenGL context and window object.  There is no need to obtain a lock, all calls are safe to call from the main thread and -update is safe to call from any thread.
 #import <Cocoa/Cocoa.h>
 #import <CoreVideo/CoreVideo.h>
-#import "ui/window.hpp"
-#import "ui/event.hpp"
+#import "client/ui/window.hpp"
+#import "client/ui/event.hpp"
 #import "GApplication.h"
 #import <pthread.h>
 

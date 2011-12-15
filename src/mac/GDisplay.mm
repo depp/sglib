@@ -4,8 +4,8 @@
 #import "GWindow.h"
 #import "GController.h"
 #import "sys/resource.hpp"
-#import "ui/keyboard/keyid.h"
-#import "ui/keyboard/keytable.h"
+#import "client/keyboard/keyid.h"
+#import "client/keyboard/keytable.h"
 
 @interface GDisplay (Private)
 

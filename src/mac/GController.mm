@@ -1,9 +1,9 @@
 #import "GController.h"
 #import "GDisplay.h"
-#import "rand.hpp"
+#import "sys/rand.hpp"
 #import "sys/path.hpp"
 #import "sys/clock.hpp"
-#import "ui/menu.hpp"
+#import "client/ui/menu.hpp"
 
 static GController *gController;
 
