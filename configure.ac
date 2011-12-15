@@ -19,6 +19,9 @@ dnl   AC_MSG_ERROR([LibSDL 1.2.10 or greater is required]))
 AC_SEARCH_LIBS([glVertex3f], [GL])
 AC_SEARCH_LIBS([gluErrorString], [GLU])
 PKG_PROG_PKG_CONFIG(0.16)
+PKG_CHECK_MODULES(
+  [LIBPNG], [libpng12],
+  [AC_DEFINE([HAVE_LIBPNG], [1], [LibPNG is available])])
 PKG_CHECK_MODULES([PANGOCAIRO], [pangocairo])
 PKG_CHECK_MODULES([GTK], [gtk+-2.0])
 PKG_CHECK_MODULES([GTKGLEXT], [gtkglext-1.0])

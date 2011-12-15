@@ -3,7 +3,7 @@ AUTOMAKE_OPTIONS = 1.5 foreign subdir-objects nostdinc
 bin_PROGRAMS = game-bin
 noinst_LIBRARIES = libmsys.a libmgfx.a libmtype.a
 
-common_CFLAGS = @warning_cppflags@ -I@srcdir@
+common_CFLAGS = @warning_cppflags@ -I@srcdir@ -I@builddir@
 
 mac_sources = \
 	mac/GApplication.h \

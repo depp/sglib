@@ -1,3 +1,7 @@
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include "texturefile.hpp"
 #include "sys/ifile.hpp"
 #include "sys/path.hpp"
