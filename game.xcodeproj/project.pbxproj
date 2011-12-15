@@ -73,6 +73,7 @@
 		38A2E8B91499D08300A820A9 /* window.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 38A2E89A1499D08300A820A9 /* window.cpp */; };
 		38A2E8D01499D0E500A820A9 /* rand.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 38A2E8CE1499D0E500A820A9 /* rand.cpp */; };
 		38A2E8E71499D13B00A820A9 /* clock.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 38A2E8E61499D13B00A820A9 /* clock.cpp */; };
+		38A2E926149A51C700A820A9 /* keymanager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 38A2E924149A51C700A820A9 /* keymanager.cpp */; };
 		38A2ECD11495EBA700772423 /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 38A2ECD01495EBA700772423 /* Carbon.framework */; };
 		38A2EE441495FFF100772423 /* GWindow.m in Sources */ = {isa = PBXBuildFile; fileRef = 38A2EE431495FFF100772423 /* GWindow.m */; };
 		38FA0EC81495ABFF00F75BAE /* GDisplay.mm in Sources */ = {isa = PBXBuildFile; fileRef = 38FA0EC71495ABFF00F75BAE /* GDisplay.mm */; };
@@ -214,6 +215,8 @@
 		38A2E8CE1499D0E500A820A9 /* rand.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = rand.cpp; sourceTree = "<group>"; };
 		38A2E8CF1499D0E500A820A9 /* rand.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = rand.hpp; sourceTree = "<group>"; };
 		38A2E8E61499D13B00A820A9 /* clock.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = clock.cpp; sourceTree = "<group>"; };
+		38A2E924149A51C700A820A9 /* keymanager.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = keymanager.cpp; sourceTree = "<group>"; };
+		38A2E925149A51C700A820A9 /* keymanager.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = keymanager.hpp; sourceTree = "<group>"; };
 		38A2ECD01495EBA700772423 /* Carbon.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Carbon.framework; path = /System/Library/Frameworks/Carbon.framework; sourceTree = "<absolute>"; };
 		38A2EE421495FFF100772423 /* GWindow.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GWindow.h; sourceTree = "<group>"; };
 		38A2EE431495FFF100772423 /* GWindow.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GWindow.m; sourceTree = "<group>"; };
@@ -497,6 +500,8 @@
 				38A2E88F1499D08300A820A9 /* button.hpp */,
 				38A2E8901499D08300A820A9 /* event.hpp */,
 				38A2E8911499D08300A820A9 /* geometry.hpp */,
+				38A2E924149A51C700A820A9 /* keymanager.cpp */,
+				38A2E925149A51C700A820A9 /* keymanager.hpp */,
 				38A2E8921499D08300A820A9 /* menu.cpp */,
 				38A2E8931499D08300A820A9 /* menu.hpp */,
 				38A2E8941499D08300A820A9 /* mousemanager.cpp */,
@@ -628,6 +633,7 @@
 				38A2E8B91499D08300A820A9 /* window.cpp in Sources */,
 				38A2E8D01499D0E500A820A9 /* rand.cpp in Sources */,
 				38A2E8E71499D13B00A820A9 /* clock.cpp in Sources */,
+				38A2E926149A51C700A820A9 /* keymanager.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
