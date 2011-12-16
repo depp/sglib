@@ -141,6 +141,9 @@
     <ClCompile Include="src\client\keyboard\keyid.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\sys\error_win.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\client\ui\window.hpp">
@@ -291,6 +294,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\client\keyboard\keytable.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\sys\error_win.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

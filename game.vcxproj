@@ -48,6 +48,7 @@
     <ClCompile Include="src\game\tank\shot.cpp" />
     <ClCompile Include="src\game\tank\world.cpp" />
     <ClCompile Include="src\sys\clock.cpp" />
+    <ClCompile Include="src\sys\error_win.cpp" />
     <ClCompile Include="src\sys\ifile.cpp" />
     <ClCompile Include="src\sys\path_win.cpp" />
     <ClCompile Include="src\sys\rand.cpp" />
@@ -100,6 +101,7 @@
     <ClInclude Include="src\game\tank\world.hpp" />
     <ClInclude Include="src\sys\buffer.hpp" />
     <ClInclude Include="src\sys\clock.hpp" />
+    <ClInclude Include="src\sys\error_win.hpp" />
     <ClInclude Include="src\sys\ifile.hpp" />
     <ClInclude Include="src\sys\path.hpp" />
     <ClInclude Include="src\sys\rand.hpp" />
