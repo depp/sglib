@@ -1,3 +1,7 @@
+#include "client/ui/menu.hpp"
+#include "client/ui/window.hpp"
+#include "sys/path.hpp"
+#include "sys/rand.hpp"
 #include <windows.h>
 #include <gl\gl.h>
 #include <gl\glu.h>
@@ -5,12 +9,24 @@
 #pragma comment(lib, "opengl32.lib")
 #pragma comment(lib, "glu32.lib")
 
+class WinWindow : public UI::Window {
+public:
+    virtual void close();
+};
+
+void WinWindow::close()
+{
+    PostQuitMessage(0);
+}
+
 static HDC hDC;
 static HGLRC hRC;
 static HWND hWnd;
 static HINSTANCE hInstance;
 
 static bool inactive;
+
+static WinWindow *gWindow;
 
 static LRESULT CALLBACK wndProc(HWND, UINT, WPARAM, LPARAM);
 
@@ -31,12 +47,7 @@ static void handleResize(int width, int height)
     if (!width)
         width = 1;
     glViewport(0, 0, width, height);
-}
-
-static void handleRedraw()
-{
-    glClearColor(0.5, 0.0, 0.0, 0.0);
-    glClear(GL_COLOR_BUFFER_BIT);
+    gWindow->setSize(width, height);
 }
 
 static void killGLWindow()
@@ -205,27 +216,31 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
                    LPSTR lpCmdLine, int iCmdShow)
 {
     MSG msg;
-    BOOL done = FALSE;
+    WinWindow w;
+    gWindow = &w;
+
+    Path::init();
+    Rand::global.seed();
+    w.setScreen(new UI::Menu);
 
     if (!createWindow("Game", 768, 480))
         return 0;
 
-    while (!done) {
-        if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
-            if (msg.message == WM_QUIT) {
-                done = TRUE;
-            } else {
-                TranslateMessage(&msg);
-                DispatchMessage(&msg);
-            }
-        } else {
-            if (!inactive) {
-                handleRedraw();
-                SwapBuffers(hDC);
-            }
+    while (1) {
+        while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
+            if (msg.message == WM_QUIT)
+                goto done;
+            TranslateMessage(&msg);
+            DispatchMessage(&msg);
+        }
+
+        if (!inactive) {
+            w.draw();
+            SwapBuffers(hDC);
         }
     }
-
+done:
+    
     killGLWindow();
     return 0;
 }
