@@ -181,20 +181,20 @@ BOOL createWindow(const char *title, int width, int height)
 
 static void handleKey(int code, UI::EventType t)
 {
-	if (code < 0 || code > 255)
-		return;
-	int hcode = WIN_NATIVE_TO_HID[code];
-	if (hcode == 255)
-		return;
-	UI::KeyEvent e(t, hcode);
-	gWindow->handleEvent(e);
+    if (code < 0 || code > 255)
+        return;
+    int hcode = WIN_NATIVE_TO_HID[code];
+    if (hcode == 255)
+        return;
+    UI::KeyEvent e(t, hcode);
+    gWindow->handleEvent(e);
 }
 
 static void handleMouse(int param, UI::EventType t, int button)
 {
-	int x = LOWORD(param), y = HIWORD(param);
-	UI::MouseEvent e(t, button, x, gWindow->height() - 1 - y);
-	gWindow->handleEvent(e);
+    int x = LOWORD(param), y = HIWORD(param);
+    UI::MouseEvent e(t, button, x, gWindow->height() - 1 - y);
+    gWindow->handleEvent(e);
 }
 
 static LRESULT CALLBACK wndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -217,40 +217,40 @@ static LRESULT CALLBACK wndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
         return 0;
 
     case WM_KEYDOWN:
-		handleKey(wParam, UI::KeyDown);
-		return 0;
-
-    case WM_KEYUP:
-		handleKey(wParam, UI::KeyUp);
+        handleKey(wParam, UI::KeyDown);
         return 0;
 
-	case WM_LBUTTONDOWN:
-		handleMouse(lParam, UI::MouseDown, UI::ButtonLeft);
-		return 0;
+    case WM_KEYUP:
+        handleKey(wParam, UI::KeyUp);
+        return 0;
 
-	case WM_RBUTTONDOWN:
-		handleMouse(lParam, UI::MouseDown, UI::ButtonRight);
-		return 0;
+    case WM_LBUTTONDOWN:
+        handleMouse(lParam, UI::MouseDown, UI::ButtonLeft);
+        return 0;
 
-	case WM_MBUTTONDOWN:
-		handleMouse(lParam, UI::MouseDown, UI::ButtonMiddle);
-		return 0;
+    case WM_RBUTTONDOWN:
+        handleMouse(lParam, UI::MouseDown, UI::ButtonRight);
+        return 0;
 
-	case WM_LBUTTONUP:
-		handleMouse(lParam, UI::MouseUp, UI::ButtonLeft);
-		return 0;
+    case WM_MBUTTONDOWN:
+        handleMouse(lParam, UI::MouseDown, UI::ButtonMiddle);
+        return 0;
 
-	case WM_RBUTTONUP:
-		handleMouse(lParam, UI::MouseUp, UI::ButtonRight);
-		return 0;
+    case WM_LBUTTONUP:
+        handleMouse(lParam, UI::MouseUp, UI::ButtonLeft);
+        return 0;
 
-	case WM_MBUTTONUP:
-		handleMouse(lParam, UI::MouseUp, UI::ButtonMiddle);
-		return 0;
+    case WM_RBUTTONUP:
+        handleMouse(lParam, UI::MouseUp, UI::ButtonRight);
+        return 0;
 
-	case WM_MOUSEMOVE:
-		handleMouse(lParam, UI::MouseMove, -1);
-		return 0;
+    case WM_MBUTTONUP:
+        handleMouse(lParam, UI::MouseUp, UI::ButtonMiddle);
+        return 0;
+
+    case WM_MOUSEMOVE:
+        handleMouse(lParam, UI::MouseMove, -1);
+        return 0;
 
     case WM_SIZE:
         handleResize(LOWORD(lParam), HIWORD(lParam));
