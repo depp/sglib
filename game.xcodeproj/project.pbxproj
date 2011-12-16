@@ -44,18 +44,8 @@
 		3871E2A1141ACEA6000DF3D6 /* GView.mm in Sources */ = {isa = PBXBuildFile; fileRef = 3871E2A0141ACEA6000DF3D6 /* GView.mm */; };
 		389F7FCD141D4ECD00123790 /* CoreVideo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 389F7FCC141D4ECD00123790 /* CoreVideo.framework */; };
 		38A2E89C1499D08300A820A9 /* dummytexture.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 38A2E8621499D08300A820A9 /* dummytexture.cpp */; };
-		38A2E89D1499D08300A820A9 /* evdev.txt in Resources */ = {isa = PBXBuildFile; fileRef = 38A2E8651499D08300A820A9 /* evdev.txt */; };
-		38A2E89E1499D08300A820A9 /* keycode.py in Resources */ = {isa = PBXBuildFile; fileRef = 38A2E8671499D08300A820A9 /* keycode.py */; };
-		38A2E89F1499D08300A820A9 /* keycode.txt in Resources */ = {isa = PBXBuildFile; fileRef = 38A2E8681499D08300A820A9 /* keycode.txt */; };
 		38A2E8A01499D08300A820A9 /* keyid.c in Sources */ = {isa = PBXBuildFile; fileRef = 38A2E8691499D08300A820A9 /* keyid.c */; };
-		38A2E8A11499D08300A820A9 /* keytable_evdev.c in Sources */ = {isa = PBXBuildFile; fileRef = 38A2E86C1499D08300A820A9 /* keytable_evdev.c */; };
 		38A2E8A21499D08300A820A9 /* keytable_mac.c in Sources */ = {isa = PBXBuildFile; fileRef = 38A2E86D1499D08300A820A9 /* keytable_mac.c */; };
-		38A2E8A31499D08300A820A9 /* mac.py in Resources */ = {isa = PBXBuildFile; fileRef = 38A2E86E1499D08300A820A9 /* mac.py */; };
-		38A2E8A41499D08300A820A9 /* mac.txt in Resources */ = {isa = PBXBuildFile; fileRef = 38A2E86F1499D08300A820A9 /* mac.txt */; };
-		38A2E8A51499D08300A820A9 /* mac2.txt in Resources */ = {isa = PBXBuildFile; fileRef = 38A2E8701499D08300A820A9 /* mac2.txt */; };
-		38A2E8A61499D08300A820A9 /* README.txt in Resources */ = {isa = PBXBuildFile; fileRef = 38A2E8711499D08300A820A9 /* README.txt */; };
-		38A2E8A71499D08300A820A9 /* xkb.py in Resources */ = {isa = PBXBuildFile; fileRef = 38A2E8721499D08300A820A9 /* xkb.py */; };
-		38A2E8A81499D08300A820A9 /* xkb.txt in Resources */ = {isa = PBXBuildFile; fileRef = 38A2E8731499D08300A820A9 /* xkb.txt */; };
 		38A2E8A91499D08300A820A9 /* model.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 38A2E8741499D08300A820A9 /* model.cpp */; };
 		38A2E8AA1499D08300A820A9 /* group.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 38A2E8781499D08300A820A9 /* group.cpp */; };
 		38A2E8AB1499D08300A820A9 /* leafobject.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 38A2E87A1499D08300A820A9 /* leafobject.cpp */; };
@@ -561,15 +551,6 @@
 			files = (
 				38709F181330B45C00DA858D /* data in Resources */,
 				3871E297141ACAF7000DF3D6 /* MainMenu.xib in Resources */,
-				38A2E89D1499D08300A820A9 /* evdev.txt in Resources */,
-				38A2E89E1499D08300A820A9 /* keycode.py in Resources */,
-				38A2E89F1499D08300A820A9 /* keycode.txt in Resources */,
-				38A2E8A31499D08300A820A9 /* mac.py in Resources */,
-				38A2E8A41499D08300A820A9 /* mac.txt in Resources */,
-				38A2E8A51499D08300A820A9 /* mac2.txt in Resources */,
-				38A2E8A61499D08300A820A9 /* README.txt in Resources */,
-				38A2E8A71499D08300A820A9 /* xkb.py in Resources */,
-				38A2E8A81499D08300A820A9 /* xkb.txt in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -614,7 +595,6 @@
 				38FB7F5814971BDA006F40FE /* GApplication.m in Sources */,
 				38A2E89C1499D08300A820A9 /* dummytexture.cpp in Sources */,
 				38A2E8A01499D08300A820A9 /* keyid.c in Sources */,
-				38A2E8A11499D08300A820A9 /* keytable_evdev.c in Sources */,
 				38A2E8A21499D08300A820A9 /* keytable_mac.c in Sources */,
 				38A2E8A91499D08300A820A9 /* model.cpp in Sources */,
 				38A2E8AA1499D08300A820A9 /* group.cpp in Sources */,
