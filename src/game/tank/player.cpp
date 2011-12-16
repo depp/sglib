@@ -37,7 +37,7 @@ void Player::update()
     setSpeed(forward);
 
     if (key_.inputState(KeyFire) && !fireLatch_) {
-        float a = getFace() * (4.0f * std::atanf(1.0f) / 180.0f);
+        float a = getFace() * (4.0f * std::atan(1.0f) / 180.0f);
         Object *obj = new Shot(getX() + std::cos(a) * kShotDistance,
                                getY() + std::sin(a) * kShotDistance,
                                getFace());
