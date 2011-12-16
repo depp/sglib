@@ -107,6 +107,7 @@
     <ClInclude Include="src\sys\rand.hpp" />
     <ClInclude Include="src\sys\resource.hpp" />
     <ClInclude Include="src\sys\sharedref.hpp" />
+    <ClInclude Include="src\win\defs.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <Keyword>Win32Proj</Keyword>

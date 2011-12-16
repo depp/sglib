@@ -299,5 +299,8 @@
     <ClInclude Include="src\sys\error_win.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\win\defs.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

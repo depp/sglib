@@ -1,4 +1,4 @@
-#define UNICODE
+#include "defs.h"
 
 #include "client/keyboard/keytable.h"
 #include "client/ui/event.hpp"
@@ -6,7 +6,7 @@
 #include "client/ui/window.hpp"
 #include "sys/path.hpp"
 #include "sys/rand.hpp"
-#include <windows.h>
+#include "sys/error_win.hpp"
 #include <gl\gl.h>
 #include <gl\glu.h>
 
@@ -262,15 +262,59 @@ static LRESULT CALLBACK wndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
     return DefWindowProc(hWnd, uMsg, wParam, lParam);
 }
 
+static void init()
+{
+    exe_options opts;
+    opts.alt_data_dir= NULL;
+    LPWSTR cmdLine = GetCommandLine();
+    if (cmdLine && *cmdLine) {
+        int argc, i;
+        LPWSTR *argv = CommandLineToArgvW(cmdLine, &argc);
+        if (!argv)
+            throw error_win(GetLastError());
+        for (i = 1; i < argc; ++i) {
+            wchar_t *s = argv[i];
+            if (s[0] == L'/') {
+                switch (s[1]) {
+                case L'I':
+                    if (!s[2]) {
+                        if (i + 1 >= argc)
+                            goto parseError;
+                        i++;
+                        s = argv[i];
+                    } else {
+                        s += 2;
+                    }
+                    opts.alt_data_dir = s;
+                    break;
+
+                default:
+                    goto parseError;
+                }
+            } else {
+                goto parseError;
+            }
+        }
+        if (false) {
+parseError:
+            errorBox("Invalid command line options");
+        }
+    }
+
+    path_init(&opts);
+    Rand::global.seed();
+    if (cmdLine)
+        LocalFree(cmdLine);
+}
+
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
                    LPSTR lpCmdLine, int iCmdShow)
 {
     MSG msg;
     WinWindow w;
     gWindow = &w;
-
-    Path::init();
-    Rand::global.seed();
+    
+    init();
     w.setScreen(new UI::Menu);
 
     if (!createWindow(L"Game", 768, 480))
