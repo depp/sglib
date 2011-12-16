@@ -1,3 +1,5 @@
+#define UNICODE
+
 #include "client/keyboard/keytable.h"
 #include "client/ui/event.hpp"
 #include "client/ui/menu.hpp"
@@ -34,12 +36,12 @@ static LRESULT CALLBACK wndProc(HWND, UINT, WPARAM, LPARAM);
 
 static void errorBox(const char *str)
 {
-    MessageBox(NULL, str, "ERROR", MB_OK | MB_ICONEXCLAMATION);
+    MessageBoxA(NULL, str, "ERROR", MB_OK | MB_ICONEXCLAMATION);
 }
 
 static void serrorBox(const char *str)
 {
-    MessageBox(NULL, str, "SHUTDOWN ERROR", MB_OK | MB_ICONINFORMATION);
+    MessageBoxA(NULL, str, "SHUTDOWN ERROR", MB_OK | MB_ICONINFORMATION);
 }
 
 static void handleResize(int width, int height)
@@ -70,12 +72,12 @@ static void killGLWindow()
         serrorBox("Could not release window.");
     hWnd = NULL;
 
-    if (!UnregisterClass("OpenGL", hInstance))
+    if (!UnregisterClass(L"OpenGL", hInstance))
         serrorBox("Could not unregister class");
     hInstance = NULL;
 }
 
-BOOL createWindow(const char *title, int width, int height)
+BOOL createWindow(LPCWSTR title, int width, int height)
 {
     GLuint pixelFormat;
     WNDCLASS wc;
@@ -98,7 +100,7 @@ BOOL createWindow(const char *title, int width, int height)
     wc.hCursor = LoadCursor(NULL, IDC_ARROW);
     wc.hbrBackground = NULL;
     wc.lpszMenuName = NULL;
-    wc.lpszClassName = "OpenGL";
+    wc.lpszClassName = L"OpenGL";
 
     if (!RegisterClass(&wc)) {
         errorBox("Failed to register window class.");
@@ -110,7 +112,7 @@ BOOL createWindow(const char *title, int width, int height)
     dwStyle |= WS_CLIPSIBLINGS | WS_CLIPCHILDREN;
 
     AdjustWindowRectEx(&windowRect, dwStyle, FALSE, dwExStyle);
-    hWnd = CreateWindowEx(dwExStyle, "OpenGL", title, dwStyle, 0, 0,
+    hWnd = CreateWindowEx(dwExStyle, L"OpenGL", title, dwStyle, 0, 0,
                           windowRect.right - windowRect.left,
                           windowRect.bottom - windowRect.top,
                           NULL, NULL, hInstance, NULL);
@@ -271,7 +273,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
     Rand::global.seed();
     w.setScreen(new UI::Menu);
 
-    if (!createWindow("Game", 768, 480))
+    if (!createWindow(L"Game", 768, 480))
         return 0;
 
     while (1) {
