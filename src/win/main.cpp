@@ -1,4 +1,3 @@
-#include "client/keyboard/keyid.h"
 #include "client/keyboard/keytable.h"
 #include "client/ui/event.hpp"
 #include "client/ui/menu.hpp"
@@ -187,10 +186,6 @@ static void handleKey(int code, UI::EventType t)
 	int hcode = WIN_NATIVE_TO_HID[code];
 	if (hcode == 255)
 		return;
-	char buf[64];
-	_snprintf(buf, sizeof(buf), "key: %s\n", keyid_name_from_code(hcode));
-	buf[63] = '\0';
-	OutputDebugString(buf);
 	UI::KeyEvent e(t, hcode);
 	gWindow->handleEvent(e);
 }
