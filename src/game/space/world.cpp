@@ -63,6 +63,8 @@ void World::update(unsigned ticks)
 {
     double new_time = 0.001 * ticks;
     double delta = new_time - time_;
+    if (delta < 0.005)
+        return;
     time_ = new_time;
 
     for (unsigned int i = 0; i < events_.size(); ++i) {
