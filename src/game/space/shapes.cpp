@@ -4,8 +4,8 @@ namespace Space {
 
 static const int PointCount = 6;
 static const float points[PointCount + 1] = {
-    0.0, 0.258819045103, 0.5, 0.707106781187,
-    0.866025403784, 0.965925826289, 1.0
+    0.0f, 0.258819045103f, 0.5f, 0.707106781187f,
+    0.866025403784f, 0.965925826289f, 1.0f
 };
 
 void drawCircle()

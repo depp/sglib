@@ -18,6 +18,22 @@ unsigned getTime(void)
         / ((uint64_t) ClockInfo.denom * 1000000);
 }
 
+#elif defined(_WIN32)
+#include <windows.h>
+
+static DWORD ClockZero;
+
+void initTime(void)
+{
+    ClockZero = GetTickCount();
+}
+
+unsigned getTime(void)
+{
+    DWORD tv = GetTickCount();
+    return tv - ClockZero;
+}
+
 #else
 
 #include <time.h>

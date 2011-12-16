@@ -1,0 +1,174 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\client\dummytexture.cpp" />
+    <ClCompile Include="src\client\keyboard\keyid.c" />
+    <ClCompile Include="src\client\keyboard\keytable_win.c" />
+    <ClCompile Include="src\client\model.cpp" />
+    <ClCompile Include="src\client\scene\group.cpp" />
+    <ClCompile Include="src\client\scene\leafobject.cpp" />
+    <ClCompile Include="src\client\scene\object.cpp" />
+    <ClCompile Include="src\client\texture.cpp" />
+    <ClCompile Include="src\client\texturefile.cpp" />
+    <ClCompile Include="src\client\type\rastertext.cpp" />
+    <ClCompile Include="src\client\type\rastertext_win.cpp" />
+    <ClCompile Include="src\client\ui\button.cpp" />
+    <ClCompile Include="src\client\ui\keymanager.cpp" />
+    <ClCompile Include="src\client\ui\menu.cpp" />
+    <ClCompile Include="src\client\ui\mousemanager.cpp" />
+    <ClCompile Include="src\client\ui\screen.cpp" />
+    <ClCompile Include="src\client\ui\widget.cpp" />
+    <ClCompile Include="src\client\ui\window.cpp" />
+    <ClCompile Include="src\game\space\entity.cpp" />
+    <ClCompile Include="src\game\space\gamescreen.cpp" />
+    <ClCompile Include="src\game\space\player.cpp" />
+    <ClCompile Include="src\game\space\random.cpp" />
+    <ClCompile Include="src\game\space\scenery.cpp" />
+    <ClCompile Include="src\game\space\shapes.cpp" />
+    <ClCompile Include="src\game\space\ship.cpp" />
+    <ClCompile Include="src\game\space\shot.cpp" />
+    <ClCompile Include="src\game\space\stars.cpp" />
+    <ClCompile Include="src\game\space\thinker.cpp" />
+    <ClCompile Include="src\game\space\world.cpp" />
+    <ClCompile Include="src\game\tank\explosion.cpp" />
+    <ClCompile Include="src\game\tank\gamescreen.cpp" />
+    <ClCompile Include="src\game\tank\object.cpp" />
+    <ClCompile Include="src\game\tank\obstacle.cpp" />
+    <ClCompile Include="src\game\tank\player.cpp" />
+    <ClCompile Include="src\game\tank\shot.cpp" />
+    <ClCompile Include="src\game\tank\world.cpp" />
+    <ClCompile Include="src\sys\clock.cpp" />
+    <ClCompile Include="src\sys\error_win.cpp" />
+    <ClCompile Include="src\sys\ifile.cpp" />
+    <ClCompile Include="src\sys\path_win.cpp" />
+    <ClCompile Include="src\sys\rand.cpp" />
+    <ClCompile Include="src\sys\resource.cpp" />
+    <ClCompile Include="src\win\main.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\client\color.hpp" />
+    <ClInclude Include="src\client\dummytexture.hpp" />
+    <ClInclude Include="src\client\keyboard\keycode.h" />
+    <ClInclude Include="src\client\keyboard\keyid.h" />
+    <ClInclude Include="src\client\keyboard\keytable.h" />
+    <ClInclude Include="src\client\model.hpp" />
+    <ClInclude Include="src\client\opengl.hpp" />
+    <ClInclude Include="src\client\scene\group.hpp" />
+    <ClInclude Include="src\client\scene\leafobject.hpp" />
+    <ClInclude Include="src\client\scene\object.hpp" />
+    <ClInclude Include="src\client\texture.hpp" />
+    <ClInclude Include="src\client\texturefile.hpp" />
+    <ClInclude Include="src\client\type\font.hpp" />
+    <ClInclude Include="src\client\type\rastertext.hpp" />
+    <ClInclude Include="src\client\ui\action.hpp" />
+    <ClInclude Include="src\client\ui\button.hpp" />
+    <ClInclude Include="src\client\ui\event.hpp" />
+    <ClInclude Include="src\client\ui\geometry.hpp" />
+    <ClInclude Include="src\client\ui\keymanager.hpp" />
+    <ClInclude Include="src\client\ui\menu.hpp" />
+    <ClInclude Include="src\client\ui\mousemanager.hpp" />
+    <ClInclude Include="src\client\ui\screen.hpp" />
+    <ClInclude Include="src\client\ui\widget.hpp" />
+    <ClInclude Include="src\client\ui\window.hpp" />
+    <ClInclude Include="src\game\space\entity.hpp" />
+    <ClInclude Include="src\game\space\gamescreen.hpp" />
+    <ClInclude Include="src\game\space\player.hpp" />
+    <ClInclude Include="src\game\space\random.hpp" />
+    <ClInclude Include="src\game\space\scenery.hpp" />
+    <ClInclude Include="src\game\space\shapes.hpp" />
+    <ClInclude Include="src\game\space\ship.hpp" />
+    <ClInclude Include="src\game\space\shot.hpp" />
+    <ClInclude Include="src\game\space\stars.hpp" />
+    <ClInclude Include="src\game\space\thinker.hpp" />
+    <ClInclude Include="src\game\space\vector.hpp" />
+    <ClInclude Include="src\game\space\world.hpp" />
+    <ClInclude Include="src\game\tank\explosion.hpp" />
+    <ClInclude Include="src\game\tank\gamescreen.hpp" />
+    <ClInclude Include="src\game\tank\object.hpp" />
+    <ClInclude Include="src\game\tank\obstacle.hpp" />
+    <ClInclude Include="src\game\tank\player.hpp" />
+    <ClInclude Include="src\game\tank\shot.hpp" />
+    <ClInclude Include="src\game\tank\world.hpp" />
+    <ClInclude Include="src\sys\buffer.hpp" />
+    <ClInclude Include="src\sys\clock.hpp" />
+    <ClInclude Include="src\sys\error_win.hpp" />
+    <ClInclude Include="src\sys\ifile.hpp" />
+    <ClInclude Include="src\sys\path.hpp" />
+    <ClInclude Include="src\sys\rand.hpp" />
+    <ClInclude Include="src\sys\resource.hpp" />
+    <ClInclude Include="src\sys\sharedref.hpp" />
+    <ClInclude Include="src\win\defs.h" />
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <Keyword>Win32Proj</Keyword>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+    <IncludePath>$(ProjectDir)src;$(IncludePath)</IncludePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <Optimization>Disabled</Optimization>
+      <ObjectFileName>$(IntDir)/%(RelativeDir)/</ObjectFileName>
+    </ClCompile>
+    <Link>
+      <TargetMachine>MachineX86</TargetMachine>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Windows</SubSystem>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+    </ClCompile>
+    <Link>
+      <TargetMachine>MachineX86</TargetMachine>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Windows</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+  </ItemDefinitionGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

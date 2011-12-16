@@ -86,7 +86,7 @@ void Explosion::draw()
     for (int i = 0; i < 3; ++i)
         c1[i] = c2[i] = type_.color.c[i];
     float a = t / type_.time;
-    c1[3] = 255.0f * (1.0f - a * a);
+    c1[3] = (unsigned char) (255.0f * (1.0f - a * a));
     c2[3] = 0;
     float cam[3];
     getWorld().getCamera(cam);

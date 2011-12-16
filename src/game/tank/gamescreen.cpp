@@ -63,6 +63,7 @@ void GameScreen::update(unsigned int ticks)
     if (!world_) {
         world_ = new Tank::World;
         Tank::World &w = *world_;
+        Model::Ref pyramid = Model::pyramid(), cube = Model::cube();
 
         Tank::Object *obj;
         obj = new Tank::Obstacle(
@@ -72,15 +73,15 @@ void GameScreen::update(unsigned int ticks)
         w.addObject(obj);
         obj = new Tank::Obstacle(
             5.0f, -5.0f, 22.5f, 3.0f,
-            &Model::kPyramid, Color::maroon(), Color::red());
+            pyramid, Color::maroon(), Color::red());
         w.addObject(obj);
         obj = new Tank::Obstacle(
             -5.0f, 5.0f, 67.5f, 0.5f,
-            &Model::kCube, Color::olive(), Color::yellow());
+            cube, Color::olive(), Color::yellow());
         w.addObject(obj);
         obj = new Tank::Obstacle(
             -5.0f, -5.0f, 45.0f, 1.5f,
-            &Model::kPyramid, Color::maroon(), Color::red());
+            pyramid, Color::maroon(), Color::red());
         w.addObject(obj);
         obj = new Tank::Player(0.0f, 0.0f, 0.0f, key_);
         w.addObject(obj);

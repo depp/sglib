@@ -6,13 +6,13 @@
 #include <math.h>
 namespace Space {
 
-const float RotationSpeed = 2.0 * M_PI * 2.0;
-const float MaxSpeed = 30.0 * 8.0;
-const float Acceleration = 180.0 * 8.0;
-const float Brake = 36.0 * 8.0;
-const float ShotVelocity = 45.0 * 8.0;
-const float ShotTime = 25.0 / 60.0;
-const float ShotDelay = 1.0 / 60.0;
+const float RotationSpeed = 2.0f * (4.0f*atan(1.0f)) * 2.0f;
+const float MaxSpeed = 30.0f * 8.0f;
+const float Acceleration = 180.0f * 8.0f;
+const float Brake = 36.0f * 8.0f;
+const float ShotVelocity = 45.0f * 8.0f;
+const float ShotTime = 25.0f / 60.0f;
+const float ShotDelay = 1.0f / 60.0f;
 
 Player::Player(const UI::KeyManager &mgr)
   : ship_(NULL), keys_(mgr), nextShotTime_(-1.0)
@@ -28,15 +28,15 @@ void Player::think(World &w, double delta)
         rotation += 1;
     if (keyPressed(KeyRight))
         rotation -= 1;
-    ship_->angle += ((float)rotation) * RotationSpeed * delta;
+    ship_->angle += ((float)rotation) * RotationSpeed * (float) delta;
     if (keyPressed(KeyThrust)) {
         if (!keyPressed(KeyBrake)) {
-            ship_->velocity += ship_->direction * Acceleration * delta;
+            ship_->velocity += ship_->direction * Acceleration * (float) delta;
             if (ship_->velocity.squared() > MaxSpeed * MaxSpeed)
                 ship_->velocity.normalize() *= MaxSpeed;
         }
     } else if (keyPressed(KeyBrake)) {
-        float delta_v = Brake * delta;
+        float delta_v = Brake * (float) delta;
         float vel_squared = ship_->velocity.squared();
         if (vel_squared < delta_v * delta_v)
             ship_->velocity = vector(0.0f, 0.0f);
@@ -55,7 +55,7 @@ void Player::think(World &w, double delta)
 void Player::enterGame(World &w)
 {
     ship_ = new Ship;
-    ship_->angle = M_PI_2;
+    ship_->angle = 2.0f * atanf(1.0f);
     w.addEntity(ship_);
 }
 

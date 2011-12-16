@@ -51,7 +51,7 @@ Shot::ShotEntity::~ShotEntity()
 
 void Shot::ShotEntity::move(World &, double delta)
 {
-    location += velocity * delta;
+    location += velocity * (float) delta;
 }
 
 void Shot::ShotEntity::draw()
