@@ -22,7 +22,7 @@ public:
 
     bool inputState(int i) const
     {
-        return vinput_[i];
+        return vinput_[i] != 0;
     }
 
 private:

@@ -42,8 +42,8 @@ World::World()
     starfields_.reserve(9);
     for (int i = 0; i < 9; ++i) {
         starfields_.push_back(Starfield());
-        starfields_[i].parallax = 0.1 * (i + 1);
-        starfields_[i].tileSize = 64.0;
+        starfields_[i].parallax = 0.1f * (float) (i + 1);
+        starfields_[i].tileSize = 64.0f;
     }
 }
 
@@ -131,7 +131,8 @@ void World::draw(int w, int h)
     for (std::vector<Starfield>::iterator
              i = starfields_.begin(), e = starfields_.end();
          i != e; ++i)
-        i->draw(loc.v[0] - w/2, loc.v[1] - h/2, w, h);
+        i->draw(loc.v[0] - (float) (w/2), loc.v[1] - (float) (h/2),
+                (float) w, (float) h);
 
     for (std::set<Entity*>::iterator
              i = entities_.begin(),
