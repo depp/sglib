@@ -7,7 +7,7 @@
 #include "sys/path.hpp"
 #include <stdlib.h>
 #include <stdio.h>
-#include <err.h>
+// #include <err.h>
 #include <stdint.h>
 #include <set>
 #include <memory>
@@ -147,7 +147,15 @@ bool TextureFile::loadPNG()
     return imageToTexture(*this, img);
 }
 
-#else /* !HAVE_COREGRAPHICS */
+#elif defined(_WIN32)
+
+bool TextureFile::loadPNG()
+{
+    // FIXME: unimplemented
+    return true; // blatant lies
+}
+
+#else /* !HAVE_COREGRAPHICS !_WIN32 */
 
 #if defined(HAVE_LIBPNG)
 #include <png.h>
