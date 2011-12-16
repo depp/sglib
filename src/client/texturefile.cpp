@@ -2,13 +2,17 @@
 #include "config.h"
 #endif
 
+#if defined(_WIN32)
+// Known Visual Studio bug: 621653
+#pragma warning (disable : 4005)
+#endif
+
 #include "texturefile.hpp"
 #include "sys/ifile.hpp"
 #include "sys/path.hpp"
 #include <stdlib.h>
 #include <stdio.h>
 // #include <err.h>
-#include <stdint.h>
 #include <set>
 #include <memory>
 #include <vector>
@@ -148,11 +152,106 @@ bool TextureFile::loadPNG()
 }
 
 #elif defined(_WIN32)
+#include <wincodec.h>
+
+#pragma comment(lib, "WindowsCodecs.lib")
 
 bool TextureFile::loadPNG()
 {
-    // FIXME: unimplemented
-    return true; // blatant lies
+    std::auto_ptr<IFile> f(Path::openIFile(path_));
+    Buffer buffer = f->readall();
+    f.reset();
+
+    HRESULT hr;
+    IWICImagingFactory *fac = NULL;
+    IWICStream *stream = NULL;
+    IWICBitmapDecoder *decoder = NULL;
+    IWICBitmapFrameDecode *frame = NULL;
+    WICPixelFormatGUID pixelFormat, targetFormat;
+    IWICComponentInfo *cinfo = NULL;
+    IWICPixelFormatInfo *pinfo = NULL;
+    IWICFormatConverter *converter = NULL;
+    UINT chanCount, iwidth, iheight;
+    bool color, alpha, success = false;
+    unsigned tw, th, tstride;
+
+    hr = CoCreateInstance(CLSID_WICImagingFactory, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&fac));
+    if (hr != S_OK)
+        goto failed;
+    hr = fac->CreateStream(&stream);
+    if (hr != S_OK)
+        goto failed;
+    hr = stream->InitializeFromMemory(buffer.getUC(), buffer.size());
+    if (hr != S_OK)
+        goto failed;
+    hr = fac->CreateDecoderFromStream(stream, NULL, WICDecodeMetadataCacheOnDemand, &decoder);
+    if (hr != S_OK)
+        goto failed;
+    hr = decoder->GetFrame(0, &frame);
+    if (hr != S_OK)
+        goto failed;
+    hr = frame->GetPixelFormat(&pixelFormat);
+    if (hr != S_OK)
+        goto failed;
+    hr = fac->CreateComponentInfo(pixelFormat, &cinfo);
+    if (hr != S_OK)
+        goto failed;
+    hr = cinfo->QueryInterface(IID_IWICPixelFormatInfo, (void **) &pinfo);
+    if (hr != S_OK)
+        goto failed;
+    hr = pinfo->GetChannelCount(&chanCount);
+    if (hr != S_OK)
+        goto failed;
+
+    switch (chanCount) {
+    case 1:
+        color = false;
+        alpha = false;
+        targetFormat = GUID_WICPixelFormat8bppGray;
+        break;
+
+    case 3:
+        color = true;
+        alpha = false;
+        targetFormat = GUID_WICPixelFormat24bppRGB;
+        break;
+
+    case 4:
+        color = true;
+        alpha = true;
+        targetFormat = GUID_WICPixelFormat32bppRGBA;
+        break;
+
+    default:
+        goto failed;
+    }
+
+    hr = fac->CreateFormatConverter(&converter);
+    if (hr != S_OK)
+        goto failed;
+    hr = converter->Initialize(frame, targetFormat, WICBitmapDitherTypeNone, NULL, 0, WICBitmapPaletteTypeCustom);
+    if (hr != S_OK)
+        goto failed;
+    hr = converter->GetSize(&iwidth, &iheight);
+    if (hr != S_OK)
+        goto failed;
+    
+    alloc(iwidth, iheight, color, alpha);
+    tw = twidth();
+    th = theight(); 
+    tstride = rowbytes();
+    converter->CopyPixels(NULL, tstride, th * tstride, (BYTE *) buf());
+    success = true;
+
+failed:
+    if (converter) converter->Release();
+    if (pinfo) pinfo->Release();
+    if (cinfo) cinfo->Release();
+    if (frame) frame->Release();
+    if (decoder) decoder->Release();
+    if (stream) stream->Release();
+    if (fac) fac->Release();
+    return success;
 }
 
 #else /* !HAVE_COREGRAPHICS !_WIN32 */
