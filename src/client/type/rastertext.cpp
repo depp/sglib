@@ -22,8 +22,13 @@ RasterText::~RasterText()
 std::string RasterText::name() const
 {
     char buf[32];
+#if !defined(_WIN32)
     snprintf(buf, sizeof(buf), "<rastertext %p>", (void *)this);
-    return buf;
+#else
+    _snprintf(buf, sizeof(buf), "<rastertext %p>", (void *) this);
+    buf[sizeof(buf) - 1] = '\0';
+#endif
+    return std::string(buf);
 }
 
 void RasterText::setText(std::string const &text)
