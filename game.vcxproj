@@ -12,6 +12,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\client\dummytexture.cpp" />
+    <ClCompile Include="src\client\keyboard\keyid.c" />
+    <ClCompile Include="src\client\keyboard\keytable_win.c" />
     <ClCompile Include="src\client\model.cpp" />
     <ClCompile Include="src\client\scene\group.cpp" />
     <ClCompile Include="src\client\scene\leafobject.cpp" />
@@ -55,6 +57,9 @@
   <ItemGroup>
     <ClInclude Include="src\client\color.hpp" />
     <ClInclude Include="src\client\dummytexture.hpp" />
+    <ClInclude Include="src\client\keyboard\keycode.h" />
+    <ClInclude Include="src\client\keyboard\keyid.h" />
+    <ClInclude Include="src\client\keyboard\keytable.h" />
     <ClInclude Include="src\client\model.hpp" />
     <ClInclude Include="src\client\opengl.hpp" />
     <ClInclude Include="src\client\scene\group.hpp" />

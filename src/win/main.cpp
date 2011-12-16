@@ -1,3 +1,6 @@
+#include "client/keyboard/keyid.h"
+#include "client/keyboard/keytable.h"
+#include "client/ui/event.hpp"
 #include "client/ui/menu.hpp"
 #include "client/ui/window.hpp"
 #include "sys/path.hpp"
@@ -177,6 +180,21 @@ BOOL createWindow(const char *title, int width, int height)
     return TRUE;
 }
 
+static void handleKey(int code, UI::EventType t)
+{
+	if (code < 0 || code > 255)
+		return;
+	int hcode = WIN_NATIVE_TO_HID[code];
+	if (hcode == 255)
+		return;
+	char buf[64];
+	_snprintf(buf, sizeof(buf), "key: %s\n", keyid_name_from_code(hcode));
+	buf[63] = '\0';
+	OutputDebugString(buf);
+	UI::KeyEvent e(t, hcode);
+	gWindow->handleEvent(e);
+}
+
 static LRESULT CALLBACK wndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     switch (uMsg) {
@@ -197,11 +215,11 @@ static LRESULT CALLBACK wndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
         return 0;
 
     case WM_KEYDOWN:
-        // Handle key down
-        return 0;
+		handleKey(wParam, UI::KeyDown);
+		return 0;
 
     case WM_KEYUP:
-        // handle key up
+		handleKey(wParam, UI::KeyUp);
         return 0;
 
     case WM_SIZE:

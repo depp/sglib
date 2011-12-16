@@ -135,6 +135,12 @@
     <ClCompile Include="src\client\texturefile.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\client\keyboard\keytable_win.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\client\keyboard\keyid.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\client\ui\window.hpp">
@@ -276,6 +282,15 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\client\type\font.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\client\keyboard\keyid.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\client\keyboard\keycode.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\client\keyboard\keytable.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
