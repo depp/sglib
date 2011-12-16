@@ -9,6 +9,11 @@
 
 #else
 
+#if defined(_WIN32)
+#include <WTypes.h>
+#include <wingdi.h>
+#endif
+
 /* GNU/Linux */
 #include <GL/gl.h>
 #include <GL/glu.h>
