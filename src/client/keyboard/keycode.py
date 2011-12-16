@@ -204,6 +204,7 @@ def names():
         raise
 
 gencodemap('mac.txt', 'mac2.txt', 'keytable_mac.c', 128, 'MAC')
+gencodemap('win.txt', 'win2.txt', 'keytable_win.c', 256, 'WIN')
 gencodemap('xkb.txt', 'evdev.txt', 'keytable_evdev.c', 256, 'EVDEV')
 idents()
 names()
