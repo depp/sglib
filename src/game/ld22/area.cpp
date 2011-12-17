@@ -25,6 +25,8 @@ void Area::addActor(Actor *a)
 
 void Area::draw(int delta)
 {
+    glPushMatrix();
+    glScalef(32.0f, 32.0f, 1.0f);
     glBegin(GL_QUADS);
     for (int y = 0; y < TILE_HEIGHT; ++y) {
         for (int x = 0; x < TILE_WIDTH; ++x) {
@@ -38,8 +40,8 @@ void Area::draw(int delta)
         }
     }
     glEnd();
+    glPopMatrix();
 
-    glScalef(1.0f/32.0f, 1.0f/32.0f, 1.0f);
     std::vector<Actor *>::iterator i = m_actors.begin(), e = m_actors.end();
     for (; i != e; ++i) {
         Actor &a = **i;
