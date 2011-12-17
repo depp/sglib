@@ -1,2 +1,2 @@
 [path]
-data.global = "@builddir@/../data:@srcdir@/../data"
+data.global = "@builddir@/data:@srcdir@/data"
