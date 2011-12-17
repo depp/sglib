@@ -18,8 +18,12 @@ public:
     virtual void draw();
     virtual void advance();
 
-    /* Can this actor move to the given location? */
-    bool canMove(int x, int y);
+    /* Test whether actor hits a wall at the given location */
+    bool wallAt(int x, int y);
+
+    /* Move actor to new coordinates, or partway if something is hit.
+       Returns true if the actor hits something and stops partway.  */
+    bool moveTo(int x, int y);
 };
 
 }

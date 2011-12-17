@@ -17,12 +17,5 @@ void Player::advance()
         dy += 1;
     if (m_scr.getKey(InDown))
         dy -= 1;
-    if (canMove(m_x + dx, m_y + dy)) {
-        m_x += dx;
-        m_y += dy;
-    } else if (canMove(m_x + dx, m_y)) {
-        m_x += dx;
-    } else if (canMove(m_x, m_y + dy)) {
-        m_y += dy;
-    }
+    moveTo(m_x + dx, m_y + dy);
 }
