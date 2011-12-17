@@ -6,10 +6,11 @@
 #include "client/ui/window.hpp"
 #include "client/keyboard/keycode.h"
 #include "client/keyboard/keytable.h"
-#include "sys/path.hpp"
+#include "sys/path_posix.hpp"
 #include <gtk/gtk.h>
 #include <gtk/gtkgl.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 class GTKWindow : public UI::Window {
 public:
@@ -129,16 +130,44 @@ static gboolean handle_event(GtkWidget *widget, GdkEvent *event,
     }
 }
 
+static bool gEditor = false;
+
+static void init(int argc, char *argv[])
+{
+    int opt;
+    const char *altpath = NULL;
+
+    gtk_init(&argc, &argv);
+    gtk_gl_init(&argc, &argv);
+
+    while ((opt = getopt(argc, argv, "ei:")) != -1) {
+        switch (opt) {
+        case 'e':
+            gEditor = true;
+            break;
+
+        case 'i':
+            altpath = optarg;
+            break;
+
+        default:
+            fputs("Invalid usage\n", stderr);
+            exit(1);
+        }
+    }
+
+    pathInit(altpath);
+    Rand::global.seed();
+}
+
 int main(int argc, char *argv[])
 {
     gboolean r;
     GTKWindow w;
 
-    gtk_init(&argc, &argv);
-    gtk_gl_init(&argc, &argv);
-    Path::init();
+    init(argc, argv);
+
     w.setSize(768, 480);
-    Rand::global.seed();
     w.setScreen(new LD22::Screen);
 
     GtkWidget *window = gtk_window_new(GTK_WINDOW_TOPLEVEL);

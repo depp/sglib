@@ -5,12 +5,12 @@
 
 class system_error : public std::exception {
 public:
-    system_error(int errno) throw() : errno_(errno) { }
+    system_error(int code) throw() : code_(code) { }
     virtual ~system_error() throw ();
     virtual char const *what() const throw();
-    int errno() const throw() { return errno_; }
+    int code() const throw() { return code_; }
 private:
-    int errno_;
+    int code_;
     mutable std::string what_;
 };
 

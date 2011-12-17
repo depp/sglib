@@ -52,10 +52,9 @@ libmsys_a_SOURCES = \
 	sys/ifile.hpp \
 	sys/ifilereg.cpp \
 	sys/ifilereg.hpp \
-	sys/path.cpp \
 	sys/path.hpp \
-	sys/path_linux.cpp \
-	sys/path_xdg.cpp \
+	sys/path_posix.cpp \
+	sys/path_posix.hpp \
 	sys/rand.cpp \
 	sys/rand.hpp \
 	sys/resource.cpp \
