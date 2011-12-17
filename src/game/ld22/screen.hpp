@@ -4,12 +4,14 @@
 #include "client/ui/keymanager.hpp"
 namespace LD22 {
 class Area;
+class Background;
 
 class Screen : public UI::Screen {
     UI::KeyManager m_key;
     Area *m_area;
     unsigned m_tickref;
     int m_delta;
+    Background *m_background;
 
 public:
     Screen();

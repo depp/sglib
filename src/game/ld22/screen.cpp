@@ -3,6 +3,7 @@
 #include "area.hpp"
 #include "actor.hpp"
 #include "player.hpp"
+#include "background.hpp"
 #include "client/keyboard/keycode.h"
 #include "client/opengl.hpp"
 #include "client/ui/event.hpp"
@@ -57,6 +58,7 @@ static const unsigned LAG_THRESHOLD = 250;
 void Screen::advance()
 {
     m_area->advance();
+    m_background->advance();
 }
 
 void Screen::update(unsigned int ticks)
@@ -65,6 +67,7 @@ void Screen::update(unsigned int ticks)
         m_area = new Area;
         m_area->addActor(new Player(64, 64, *this));
         m_tickref = ticks;
+        m_background = Background::getBackground(Background::MOUNTAINS);
     } else {
         unsigned delta = ticks - m_tickref, frames;
         if (delta > LAG_THRESHOLD) {
@@ -100,5 +103,6 @@ void Screen::draw()
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 
+    m_background->draw(m_delta);
     m_area->draw(m_delta);
 }
