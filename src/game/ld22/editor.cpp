@@ -55,11 +55,11 @@ void Editor::handleMouseDown(const UI::MouseEvent &evt)
     if (!inbounds)
         return;
     if (inScreen(x, y)) {
-        Area &a = area();
         int tx = x / TILE_SIZE, ty = y / TILE_SIZE;
         m_mx = tx;
         m_my = ty;
-        a.setTile(tx, ty, 1);
+        m_mouse = evt.button;
+        tileBrush(tx, ty);
     } else {
         
     }
@@ -67,9 +67,7 @@ void Editor::handleMouseDown(const UI::MouseEvent &evt)
 
 void Editor::handleMouseUp(const UI::MouseEvent &evt)
 {
-    int x, y;
-    bool inbounds;
-    inbounds = translateMouse(evt, &x, &y);
+    m_mouse = -1;
 }
 
 void Editor::handleMouseMove(const UI::MouseEvent &evt)
@@ -79,6 +77,17 @@ void Editor::handleMouseMove(const UI::MouseEvent &evt)
     int x, y;
     bool inbounds;
     inbounds = translateMouse(evt, &x, &y);
+    if (inScreen(x, y)) {
+        int tx = x / TILE_SIZE, ty = y / TILE_SIZE;
+        if (tx != m_mx || ty != m_my) {
+            m_mx = tx;
+            m_my = ty;
+            tileBrush(tx, ty);
+        }
+    } else {
+        m_mx = -1;
+        m_my = -1;
+    }
 }
 
 void Editor::drawExtra()
@@ -101,4 +110,14 @@ bool Editor::translateMouse(const UI::MouseEvent &evt, int *x, int *y)
     *y = yy;
     return xx >= 0 && xx < SCREEN_WIDTH + EDITBAR_SIZE &&
         yy >= 0 && yy < SCREEN_HEIGHT;
+}
+
+void Editor::tileBrush(int x, int y)
+{
+    Area &a = area();
+    if (m_mouse == UI::ButtonLeft) {
+        a.setTile(x, y, 1);
+    } else if (m_mouse == UI::ButtonRight) {
+        a.setTile(x, y, 0);
+    }
 }
