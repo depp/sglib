@@ -15,27 +15,29 @@ static path_dir gDirs[2];
 #include "sys/autocf_osx.hpp"
 #include <CoreFoundation/CFBundle.h>
 
-static void init()
+static void getExeDir()
 {
     std::string resources, bundle;
-    {
-        CFBundleRef main = CFBundleGetMainBundle();
-        AutoCF<CFURLRef> resourcesURL(
-            CFBundleCopyResourcesDirectoryURL(main));
-        AutoCF<CFURLRef> bundleURL(CFBundleCopyBundleURL(main));
-        char buf[1024]; // FIXME maximum?
-        bool r;
-        r = CFURLGetFileSystemRepresentation(
-            resourcesURL, true, reinterpret_cast<UInt8 *>(buf), sizeof(buf));
-        if (r) resources = std::string(buf);
-        r = CFURLGetFileSystemRepresentation(
-            bundleURL, true, reinterpret_cast<UInt8 *>(buf), sizeof(buf));
-        if (r) bundle = std::string(buf);
-    }
-    if (!resources.empty()) {
-        resources += "/data";
-        globalData.push_back(resources);
-    }
+    CFBundleRef main = CFBundleGetMainBundle();
+    AutoCF<CFURLRef> bundleURL(CFBundleCopyBundleURL(main));
+    char buf[1024]; // FIXME maximum?
+    bool r;
+    r = CFURLGetFileSystemRepresentation(
+        bundleURL, true, reinterpret_cast<UInt8 *>(buf), sizeof(buf));
+    if (!r)
+        return;
+    unsigned l = strlen(buf);
+    while (l && buf[l - 1] != '/')
+        l--;
+    if (l <= 1)
+        return;
+    l--;
+    char *ptr = (char *) malloc(l);
+    if (!ptr)
+        abort();
+    memcpy(ptr, buf, l);
+    gDirs[1].path = ptr;
+    gDirs[1].len = l;
 }
 
 #elif defined(__linux__)
