@@ -8,8 +8,8 @@ using namespace LD22;
 Area::Area()
 {
     std::memset(m_tile, 0, sizeof(m_tile));
-    for (int i = 1; i <= 5; ++i)
-        m_tile[1][i] = 1;
+    for (int i = 0; i < TILE_WIDTH; ++i)
+        m_tile[0][i] = 1;
     m_tex = TextureFile::open("sprite/tile.png");
 }
 
