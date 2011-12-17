@@ -38,3 +38,15 @@ Evdev is Linux-specific, and older Linux distributions do not
 necessarily use evdev at all.  If you use X11 but not evdev, the
 default keyboard configuration will be messed up and saved
 configurations will not be portable to other systems.
+
+Mac OS X Notes
+--------------
+
+If building, go to the projects Executables > Game > Info, and under
+the "Arguments" tab add the following arguments:
+
+    -i
+    $(PROJECT_DIR)/Data
+
+This doesn't get checked into Git since it's part of the user
+settings.
