@@ -7,6 +7,7 @@ class Actor {
 public:
     // x, y are bottom left
     int m_x, m_y, m_w, m_h;
+    int m_x0, m_y0;
     Area *m_area;
 
     Actor(int x, int y, int w, int h)
@@ -15,7 +16,7 @@ public:
 
     virtual ~Actor();
 
-    virtual void draw();
+    virtual void draw(int delta);
     virtual void advance();
 
     /* Test whether actor hits a wall at the given location */

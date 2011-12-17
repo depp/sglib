@@ -18,9 +18,11 @@ void Area::addActor(Actor *a)
 {
     m_actors.push_back(a);
     a->m_area = this;
+    a->m_x0 = a->m_x;
+    a->m_y0 = a->m_x;
 }
 
-void Area::draw()
+void Area::draw(int delta)
 {
     glBegin(GL_QUADS);
     for (int y = 0; y < HEIGHT; ++y) {
@@ -40,7 +42,7 @@ void Area::draw()
     std::vector<Actor *>::iterator i = m_actors.begin(), e = m_actors.end();
     for (; i != e; ++i) {
         Actor &a = **i;
-        a.draw();
+        a.draw(delta);
     }
 }
 
@@ -49,6 +51,8 @@ void Area::advance()
     std::vector<Actor *>::iterator i = m_actors.begin(), e = m_actors.end();
     for (; i != e; ++i) {
         Actor &a = **i;
+        a.m_x0 = a.m_x;
+        a.m_y0 = a.m_y;
         a.advance();
     }
 }

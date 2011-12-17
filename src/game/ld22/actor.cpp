@@ -1,14 +1,17 @@
 #include "actor.hpp"
 #include "area.hpp"
+#include "defs.hpp"
 #include "client/opengl.hpp"
 using namespace LD22;
 
 Actor::~Actor()
 { }
 
-void Actor::draw()
+void Actor::draw(int delta)
 {
-    int x = m_x, y = m_y, w = m_w, h = m_h;
+    int x = m_x0 + (m_x - m_x0) * delta / FRAME_TIME;
+    int y = m_y0 + (m_y - m_y0) * delta / FRAME_TIME;
+    int w = m_w, h = m_h;
     glColor3ub(255, 40, 40);
     glBegin(GL_QUADS);
     glVertex2f(x, y);

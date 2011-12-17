@@ -9,5 +9,7 @@ enum {
     InDown
 };
 
+static const int FRAME_TIME = 32;
+
 }
 #endif

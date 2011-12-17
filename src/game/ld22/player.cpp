@@ -17,5 +17,6 @@ void Player::advance()
         dy += 1;
     if (m_scr.getKey(InDown))
         dy -= 1;
-    moveTo(m_x + dx, m_y + dy);
+    int speed = 4;
+    moveTo(m_x + dx * speed, m_y + dy * speed);
 }

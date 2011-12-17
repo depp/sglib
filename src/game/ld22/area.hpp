@@ -33,7 +33,7 @@ public:
 
     void addActor(Actor *a);
 
-    void draw();
+    void draw(int delta);
     void advance();
 };
 

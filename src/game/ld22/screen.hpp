@@ -9,6 +9,7 @@ class Screen : public UI::Screen {
     UI::KeyManager m_key;
     Area *m_area;
     unsigned m_tickref;
+    int m_delta;
 
 public:
     Screen();
