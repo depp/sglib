@@ -17,6 +17,7 @@ protected:
 private:
     TextureFile(std::string const &path);
     bool loadPNG();
+    bool loadJPEG();
     std::string path_;
 };
 

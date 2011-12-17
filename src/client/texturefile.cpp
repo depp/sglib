@@ -18,6 +18,8 @@
 #include <vector>
 #include "opengl.hpp"
 
+static const unsigned MAX_SIZE = 2048;
+
 static const std::string filePrefix("file:");
 
 struct TextureFileCompare {
@@ -72,6 +74,8 @@ bool TextureFile::loadTexture()
     std::string suffix(d, e);
     if (suffix == "png")
         return loadPNG();
+    else if (suffix == "jpg" || suffix == "jpeg")
+        return loadJPEG();
     return false;
 }
 
@@ -367,6 +371,132 @@ bool TextureFile::loadPNG()
 
 #else /* !HAVE_LIBPNG */
 #error "Can't load PNG images"
+#endif
+
+#if defined(HAVE_LIBJPEG)
+#include <jpeglib.h>
+
+// These few methods for the input source are
+// basically lifted from the LibJPEG source code,
+// for a *later version* with a "memory source".
+
+static void jInitSource(j_decompress_ptr cinfo)
+{
+    (void) cinfo;
+}
+
+static void jTermSource(j_decompress_ptr cinfo)
+{
+    (void) cinfo;
+}
+
+static boolean jFillInputBuffer(j_decompress_ptr cinfo)
+{
+    static JOCTET buf[4];
+    // WARN
+    buf[0] = 0xff;
+    buf[1] = JPEG_EOI;
+    cinfo->src->next_input_byte = buf;
+    cinfo->src->bytes_in_buffer = 2;
+    return TRUE;
+}
+
+static void jSkipInputData(j_decompress_ptr cinfo, long num_bytes)
+{
+    struct jpeg_source_mgr *src = cinfo->src;
+    if (num_bytes > 0) {
+        while (num_bytes > (long) src->bytes_in_buffer) {
+            num_bytes -= (long) src->bytes_in_buffer;
+            (void) (*src->fill_input_buffer) (cinfo);
+        }
+        src->next_input_byte += (size_t) num_bytes;
+        src->bytes_in_buffer -= (size_t) num_bytes;
+    }
+}
+
+struct jStruct {
+    jStruct()
+    {
+        jpeg_create_decompress(&cinfo);
+    }
+
+    ~jStruct()
+    {
+        jpeg_destroy_decompress(&cinfo);
+    }
+
+    struct jpeg_decompress_struct cinfo;
+};
+
+// FIXME error handling
+bool TextureFile::loadJPEG()
+{
+    std::auto_ptr<IFile> f;
+    Buffer b;
+    jStruct jj;
+    struct jpeg_error_mgr jerr;
+    struct jpeg_source_mgr jsrc;
+    unsigned w, h, rb, i;
+    unsigned char *jdata = NULL, *jptr[1];
+    bool color;
+
+    f.reset(Path::openIFile(path_));
+    b = f->readall();
+    f.reset();
+    if (!b.size())
+        return false;
+
+    jj.cinfo.err = jpeg_std_error(&jerr);
+
+    jj.cinfo.src = &jsrc;
+    jsrc.next_input_byte = b.getUC();
+    jsrc.bytes_in_buffer = b.size();
+    jsrc.init_source =  jInitSource;
+    jsrc.fill_input_buffer = jFillInputBuffer;
+    jsrc.skip_input_data = jSkipInputData;
+    jsrc.resync_to_restart = jpeg_resync_to_restart;
+    jsrc.term_source = jTermSource;
+
+    jpeg_read_header(&jj.cinfo, TRUE);
+
+    w = jj.cinfo.image_width;
+    h = jj.cinfo.image_height;
+    if (w > MAX_SIZE || h > MAX_SIZE) {
+        fprintf(stderr, "%s: too big\n", path_.c_str());
+        return false;
+    }
+
+    switch (jj.cinfo.out_color_space) {
+    case JCS_GRAYSCALE:
+        color = false;
+        break;
+
+    case JCS_RGB:
+        color = true;
+        break;
+
+    default:
+        fprintf(stderr, "%s: unknown color space\n", path_.c_str());
+        return false;
+    }
+
+    jpeg_start_decompress(&jj.cinfo);
+
+    alloc(w, h, color, false);
+    rb = rowbytes();
+    jdata = reinterpret_cast<unsigned char *> (buf());
+    while ((unsigned) jj.cinfo.output_scanline < h) {
+        for (i = 0; i < 1; ++i)
+            jptr[i] = jdata + jj.cinfo.output_scanline * (rb + i);
+        jpeg_read_scanlines(&jj.cinfo, jptr, 1);
+    }
+
+    jpeg_finish_decompress(&jj.cinfo);
+    return true;
+}
+
+#else /* !HAVE_LIBJPEG */
+#error "Can't load JPEG images"
 #endif
 
 #endif
