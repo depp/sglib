@@ -8,6 +8,7 @@ class Actor;
 class Area {
 public:
     static const int WIDTH = 24, HEIGHT = 15;
+    static const int SCALE = 5;
 
 private:
     unsigned char m_tile[HEIGHT][WIDTH];

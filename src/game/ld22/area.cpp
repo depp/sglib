@@ -17,6 +17,7 @@ Area::~Area()
 void Area::addActor(Actor *a)
 {
     m_actors.push_back(a);
+    a->m_area = this;
 }
 
 void Area::draw()
