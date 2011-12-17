@@ -30,6 +30,8 @@ private:
     bool translateMouse(const UI::MouseEvent &evt, int *x, int *y);
 
     void tileBrush(int x, int y);
+
+    void save();
 };
 
 }

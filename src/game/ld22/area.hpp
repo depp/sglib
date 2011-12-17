@@ -3,6 +3,7 @@
 #include "defs.hpp"
 #include "client/texture.hpp"
 #include <vector>
+#include <stdio.h>
 namespace LD22 {
 class Actor;
 
@@ -37,6 +38,8 @@ public:
 
     void draw(int delta);
     void advance();
+
+    void dumpTiles(FILE *f);
 };
 
 }

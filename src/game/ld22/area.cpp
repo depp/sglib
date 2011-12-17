@@ -70,3 +70,8 @@ void Area::advance()
         a.advance();
     }
 }
+
+void Area::dumpTiles(FILE *f)
+{
+    fwrite(m_tile, sizeof(m_tile), 1, f);
+}

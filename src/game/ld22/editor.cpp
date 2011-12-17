@@ -1,8 +1,10 @@
 #include "editor.hpp"
 #include "defs.hpp"
 #include "area.hpp"
+#include "client/keyboard/keycode.h"
 #include "client/opengl.hpp"
 #include "client/ui/event.hpp"
+#include "sys/path.hpp"
 #include <stdio.h>
 using namespace LD22;
 
@@ -44,7 +46,14 @@ void Editor::handleEvent(const UI::Event &evt)
 
 void Editor::handleKeyDown(const UI::KeyEvent &evt)
 {
-    (void) evt;
+    switch (evt.key) {
+    case KEY_F1:
+        save();
+        break;
+
+    default:
+        break;
+    }
 }
 
 void Editor::handleMouseDown(const UI::MouseEvent &evt)
@@ -120,4 +129,17 @@ void Editor::tileBrush(int x, int y)
     } else if (m_mouse == UI::ButtonRight) {
         a.setTile(x, y, 0);
     }
+}
+
+void Editor::save()
+{
+    char buf[32];
+    snprintf(buf, sizeof(buf), "level/%02d.dat", 1);
+    fprintf(stderr, "Saving %s...\n", buf);
+    FILE *f = Path::openOFile(buf);
+    area().dumpTiles(f);
+    if (ferror(f))
+        fputs("===== ERROR! =====\n", stderr);
+    fclose(f);
+    fputs("Done\n", stderr);
 }
