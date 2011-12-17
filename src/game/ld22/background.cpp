@@ -30,6 +30,7 @@ public:
         glVertex2f(x1, y0);
         glEnd();
         glColor3ub(255, 255, 255);
+        (void) delta;
     }
 };
 
@@ -66,6 +67,7 @@ public:
         glTexCoord2f(u1, v0); glVertex2f(x1, y0);
         glEnd();
         glDisable(GL_TEXTURE_2D);
+        (void) delta;
     }
 };
 
