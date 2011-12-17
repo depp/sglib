@@ -14,6 +14,9 @@
 		381E8AD8149C879F0091D850 /* background.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 381E8AD6149C879F0091D850 /* background.cpp */; };
 		381E8ADB149C87A30091D850 /* walker.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 381E8ADA149C87A30091D850 /* walker.cpp */; };
 		381E8AE4149CD0000091D850 /* path_posix.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 381E8AE2149CD0000091D850 /* path_posix.cpp */; };
+		381E8B30149CF6E00091D850 /* letterbox.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 381E8B2E149CF6E00091D850 /* letterbox.cpp */; };
+		381E8B36149CF7010091D850 /* editor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 381E8B34149CF7010091D850 /* editor.cpp */; };
+		381E8B39149CF7080091D850 /* screenbase.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 381E8B38149CF7080091D850 /* screenbase.cpp */; };
 		382D217C11D98E5C009C8EF5 /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 382D217B11D98E5C009C8EF5 /* OpenGL.framework */; };
 		382D219011D98E62009C8EF5 /* AppKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 382D218F11D98E62009C8EF5 /* AppKit.framework */; };
 		382D224611D98E6A009C8EF5 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 382D224511D98E6A009C8EF5 /* Foundation.framework */; };
@@ -108,6 +111,12 @@
 		381E8ADA149C87A30091D850 /* walker.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = walker.cpp; sourceTree = "<group>"; };
 		381E8AE2149CD0000091D850 /* path_posix.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = path_posix.cpp; sourceTree = "<group>"; };
 		381E8AE3149CD0000091D850 /* path_posix.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = path_posix.hpp; sourceTree = "<group>"; };
+		381E8B2E149CF6E00091D850 /* letterbox.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = letterbox.cpp; sourceTree = "<group>"; };
+		381E8B2F149CF6E00091D850 /* letterbox.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = letterbox.hpp; sourceTree = "<group>"; };
+		381E8B34149CF7010091D850 /* editor.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = editor.cpp; sourceTree = "<group>"; };
+		381E8B35149CF7010091D850 /* editor.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = editor.hpp; sourceTree = "<group>"; };
+		381E8B37149CF7080091D850 /* screenbase.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = screenbase.hpp; sourceTree = "<group>"; };
+		381E8B38149CF7080091D850 /* screenbase.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = screenbase.cpp; sourceTree = "<group>"; };
 		382D217B11D98E5C009C8EF5 /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = /System/Library/Frameworks/OpenGL.framework; sourceTree = "<absolute>"; };
 		382D218F11D98E62009C8EF5 /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = /System/Library/Frameworks/AppKit.framework; sourceTree = "<absolute>"; };
 		382D224511D98E6A009C8EF5 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = /System/Library/Frameworks/Foundation.framework; sourceTree = "<absolute>"; };
@@ -286,10 +295,14 @@
 				381E8AD6149C879F0091D850 /* background.cpp */,
 				381E8AD7149C879F0091D850 /* background.hpp */,
 				381E8AB7149C6B540091D850 /* defs.hpp */,
+				381E8B34149CF7010091D850 /* editor.cpp */,
+				381E8B35149CF7010091D850 /* editor.hpp */,
 				381E8AB8149C6B540091D850 /* player.cpp */,
 				381E8AB9149C6B540091D850 /* player.hpp */,
 				381E8ABA149C6B540091D850 /* screen.cpp */,
 				381E8ABB149C6B540091D850 /* screen.hpp */,
+				381E8B37149CF7080091D850 /* screenbase.hpp */,
+				381E8B38149CF7080091D850 /* screenbase.cpp */,
 				381E8AD9149C87A30091D850 /* walker.hpp */,
 				381E8ADA149C87A30091D850 /* walker.cpp */,
 			);
@@ -421,6 +434,8 @@
 				38A2E8621499D08300A820A9 /* dummytexture.cpp */,
 				38A2E8631499D08300A820A9 /* dummytexture.hpp */,
 				38A2E8641499D08300A820A9 /* keyboard */,
+				381E8B2E149CF6E00091D850 /* letterbox.cpp */,
+				381E8B2F149CF6E00091D850 /* letterbox.hpp */,
 				38A2E8741499D08300A820A9 /* model.cpp */,
 				38A2E8751499D08300A820A9 /* model.hpp */,
 				38A2E8761499D08300A820A9 /* opengl.hpp */,
@@ -602,6 +617,9 @@
 				381E8AD8149C879F0091D850 /* background.cpp in Sources */,
 				381E8ADB149C87A30091D850 /* walker.cpp in Sources */,
 				381E8AE4149CD0000091D850 /* path_posix.cpp in Sources */,
+				381E8B30149CF6E00091D850 /* letterbox.cpp in Sources */,
+				381E8B36149CF7010091D850 /* editor.cpp in Sources */,
+				381E8B39149CF7080091D850 /* screenbase.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
