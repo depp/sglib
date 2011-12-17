@@ -79,5 +79,7 @@ void ScreenBase::draw()
     m_background->draw(m_delta);
     m_area->draw(m_delta);
 
+    drawExtra();
+
     m_letterbox.disable();
 }
