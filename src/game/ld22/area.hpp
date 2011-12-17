@@ -1,6 +1,7 @@
 #ifndef GAME_LD22_AREA_HPP
 #define GAME_LD22_AREA_HPP
 #include "defs.hpp"
+#include "client/texture.hpp"
 #include <vector>
 namespace LD22 {
 class Actor;
@@ -13,6 +14,7 @@ public:
 private:
     unsigned char m_tile[TILE_HEIGHT][TILE_WIDTH];
     std::vector<Actor *> m_actors;
+    Texture::Ref m_tex;
 
 public:
     Area();
