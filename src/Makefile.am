@@ -85,7 +85,7 @@ libmgfx_a_SOURCES = \
 	client/ui/mousemanager.cpp \
 	client/ui/mousemanager.hpp \
 	client/ui/screen.cpp \
-	client/ui/screen.hpp \
+s	client/ui/screen.hpp \
 	client/ui/widget.cpp \
 	client/ui/widget.hpp \
 	client/ui/window.cpp \
@@ -101,6 +101,8 @@ libmgfx_a_SOURCES = \
 	game/ld22/player.hpp \
 	game/ld22/screen.cpp \
 	game/ld22/screen.hpp \
+	game/ld22/screenbase.cpp \
+	game/ld22/screenbase.hpp \
 	game/ld22/walker.cpp \
 	game/ld22/walker.hpp
 
