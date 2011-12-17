@@ -72,6 +72,14 @@ void Letterbox::disable()
     glViewport(0, 0, m_ow, m_oh);
 }
 
+void Letterbox::convert(int &x, int &y)
+{
+    if (m_x < 0)
+        recalc();
+    x = (x - m_x) * m_iw / m_w;
+    y = (y - m_y) * m_ih / m_h;
+}
+
 void Letterbox::recalc()
 {
     if (m_ow * m_ih > m_oh * m_iw) {

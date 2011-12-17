@@ -29,6 +29,11 @@ protected:
     // will be set up
     virtual void drawExtra() = 0;
 
+    void convert(int &x, int &y)
+    {
+        m_letterbox.convert(x, y);
+    }
+
 public:
     ScreenBase();
     virtual ~ScreenBase();
@@ -36,7 +41,6 @@ public:
     virtual void init();
     virtual void update(unsigned int ticks);
     virtual void draw();
-
 
     Area &area()
     {
