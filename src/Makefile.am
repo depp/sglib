@@ -60,6 +60,8 @@ libmgfx_a_SOURCES = \
 	client/keyboard/keyid.h \
 	client/keyboard/keytable.h \
 	client/keyboard/keytable_evdev.c \
+	client/letterbox.cpp \
+	client/letterbox.hpp \
 	client/model.cpp \
 	client/model.hpp \
 	client/opengl.hpp \

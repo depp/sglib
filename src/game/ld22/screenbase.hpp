@@ -1,6 +1,7 @@
 #ifndef GAME_LD22_SCREENBASE_HPP
 #define GAME_LD22_SCREENBASE_HPP
 #include "client/ui/screen.hpp"
+#include "client/letterbox.hpp"
 #include <memory>
 namespace LD22 {
 class Area;
@@ -12,6 +13,7 @@ class ScreenBase : public UI::Screen {
     unsigned m_tickref;
     int m_delta;
     bool m_init;
+    Letterbox m_letterbox;
 
 public:
     ScreenBase();
