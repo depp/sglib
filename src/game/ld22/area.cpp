@@ -1,0 +1,31 @@
+#include "area.hpp"
+#include "client/opengl.hpp"
+#include <cstring>
+using namespace LD22;
+
+Area::Area()
+{
+    std::memset(m_tile, 0, sizeof(m_tile));
+    for (int i = 1; i <= 5; ++i)
+        m_tile[1][i] = 1;
+}
+
+Area::~Area()
+{ }
+
+void Area::draw()
+{
+    glBegin(GL_QUADS);
+    for (int y = 0; y < HEIGHT; ++y) {
+        for (int x = 0; x < WIDTH; ++x) {
+            int t = m_tile[y][x];
+            if (t) {
+                glVertex2f(x, y);
+                glVertex2f(x, y + 1);
+                glVertex2f(x + 1, y + 1);
+                glVertex2f(x + 1, y);
+            }
+        }
+    }
+    glEnd();
+}

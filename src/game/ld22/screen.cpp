@@ -1,8 +1,11 @@
 #include "defs.hpp"
 #include "screen.hpp"
+#include "area.hpp"
 #include "client/keyboard/keycode.h"
 #include "client/opengl.hpp"
 #include "client/ui/event.hpp"
+#include "client/ui/window.hpp"
+#include <cstdlib>
 using namespace LD22;
 
 static const unsigned char KEY_MAP[] = {
@@ -25,20 +28,20 @@ static const unsigned char KEY_MAP[] = {
     255
 };
 
-LD22::Screen::Screen()
-    : key_(KEY_MAP)
+Screen::Screen()
+    : m_key(KEY_MAP), m_area(NULL)
 { }
 
-LD22::Screen::~Screen()
+Screen::~Screen()
 { }
 
-void LD22::Screen::handleEvent(const UI::Event &evt)
+void Screen::handleEvent(const UI::Event &evt)
 {
     switch (evt.type) {
     case UI::KeyDown:
         // if (evt.keyEvent().key == KEY_Escape)
     case UI::KeyUp:
-        key_.handleKeyEvent(evt.keyEvent());
+        m_key.handleKeyEvent(evt.keyEvent());
         break;
 
     default:
@@ -46,13 +49,29 @@ void LD22::Screen::handleEvent(const UI::Event &evt)
     }
 }
 
-void LD22::Screen::update(unsigned int ticks)
+void Screen::update(unsigned int ticks)
 {
+    if (!m_area) {
+        m_area = new Area;
+    }
     (void) ticks;
 }
 
-void LD22::Screen::draw()
+void Screen::draw()
 {
-    glClearColor(1.0f, 0.5f, 0.0f, 0.0f);
+    if (!m_area)
+        std::abort();
+
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    glOrtho(0, window().width(), 0, window().height(), -1, 1);
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+
+    glScalef(32.0f, 32.0f, 1.0f);
+
+    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
     glClear(GL_COLOR_BUFFER_BIT);
+
+    m_area->draw();
 }

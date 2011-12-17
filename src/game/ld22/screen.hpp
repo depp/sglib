@@ -1,6 +1,7 @@
 #include "client/ui/screen.hpp"
 #include "client/ui/keymanager.hpp"
 namespace LD22 {
+class Area;
 
 class Screen : public UI::Screen {
 public:
@@ -12,7 +13,8 @@ public:
     virtual void draw();
 
 private:
-    UI::KeyManager key_;
+    UI::KeyManager m_key;
+    Area *m_area;
 };
 
 }
