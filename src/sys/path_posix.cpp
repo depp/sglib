@@ -120,7 +120,7 @@ FILE *Path::openOFile(std::string const &path)
         if (*p == '/') {
             buf[i] = '\0';
             r = mkdir(buf, 0777);
-            if (r) {
+            if (r && errno != EEXIST) {
                 perror("mkdir");
                 abort();
             }
