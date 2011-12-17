@@ -1,6 +1,7 @@
 #include "defs.hpp"
 #include "screen.hpp"
 #include "area.hpp"
+#include "actor.hpp"
 #include "client/keyboard/keycode.h"
 #include "client/opengl.hpp"
 #include "client/ui/event.hpp"
@@ -53,6 +54,7 @@ void Screen::update(unsigned int ticks)
 {
     if (!m_area) {
         m_area = new Area;
+        m_area->addActor(new Actor(64, 64));
     }
     (void) ticks;
 }

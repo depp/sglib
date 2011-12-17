@@ -107,6 +107,8 @@ libmgfx_a_SOURCES = \
 	client/ui/widget.hpp \
 	client/ui/window.cpp \
 	client/ui/window.hpp \
+	game/ld22/actor.cpp \
+	game/ld22/actor.hpp \
 	game/ld22/area.cpp \
 	game/ld22/area.hpp \
 	game/ld22/defs.hpp \

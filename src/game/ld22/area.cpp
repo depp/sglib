@@ -1,4 +1,5 @@
 #include "area.hpp"
+#include "actor.hpp"
 #include "client/opengl.hpp"
 #include <cstring>
 using namespace LD22;
@@ -12,6 +13,11 @@ Area::Area()
 
 Area::~Area()
 { }
+
+void Area::addActor(Actor *a)
+{
+    m_actors.push_back(a);
+}
 
 void Area::draw()
 {
@@ -28,4 +34,11 @@ void Area::draw()
         }
     }
     glEnd();
+
+    glScalef(1.0f/32.0f, 1.0f/32.0f, 1.0f);
+    std::vector<Actor *>::iterator i = m_actors.begin(), e = m_actors.end();
+    for (; i != e; ++i) {
+        Actor &a = **i;
+        a.draw();
+    }
 }

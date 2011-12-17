@@ -1,4 +1,6 @@
+#include <vector>
 namespace LD22 {
+class Actor;
 
 /* One "screen" of level area.  */
 class Area {
@@ -7,6 +9,7 @@ public:
 
 private:
     unsigned char m_tile[HEIGHT][WIDTH];
+    std::vector<Actor *> m_actors;
 
 public:
     Area();
@@ -24,6 +27,8 @@ public:
         if (x >= 0 && x < WIDTH && y >= 0 && y < HEIGHT)
             m_tile[y][x] = v;
     }
+
+    void addActor(Actor *a);
 
     void draw();
 };
