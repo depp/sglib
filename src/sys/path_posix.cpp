@@ -3,6 +3,7 @@
 #include "ifilereg.hpp"
 #include "system_error.hpp"
 #include <errno.h>
+#include <sys/stat.h>
 
 struct path_dir {
     const char *path;
@@ -101,15 +102,36 @@ IFile *Path::openIFile(std::string const &path)
     throw system_error(ENOENT);
 }
 
-FILE *openOFile(std::string const &path)
+FILE *Path::openOFile(std::string const &path)
 {
-    if (gDirs[0].path)
+    if (!gDirs[0].path)
         abort();
-    std::string abspath = std::string(gDirs[0].path, gDirs[0].len);
-    abspath += '/';
-    abspath += path;
-    FILE *f = fopen(path.c_str(), "w");
-    if (!f)
-        throw system_error(errno);
+    char buf[512];
+    if (gDirs[0].len > 510 || path.size() > 510 - gDirs[0].len) {
+        fputs("File name too long\n", stderr);
+        abort();
+    }
+    int i = 0, r;
+    memcpy(buf, gDirs[0].path, gDirs[0].len);
+    i += gDirs[0].len;
+    buf[i++] = '/';
+    std::string::const_iterator p = path.begin(), e = path.end();
+    for (; p != e; ++p) {
+        if (*p == '/') {
+            buf[i] = '\0';
+            r = mkdir(buf, 0777);
+            if (r) {
+                perror("mkdir");
+                abort();
+            }
+        }
+        buf[i++] = *p;
+    }
+    buf[i] = '\0';
+    FILE *f = fopen(buf, "w");
+    if (!f) {
+        perror("fopen");
+        abort();
+    }
     return f;
 }
