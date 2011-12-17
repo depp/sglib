@@ -6,23 +6,43 @@ namespace LD22 {
 
 /* An actor that walks around, is affected by gravity.  */
 class Walker : public Actor {
-public:
     typedef enum {
         WFall,
         WStand
     } WState;
+
+    typedef enum {
+        AStand,
+        // AWaveLeft,
+        // AWaveRight,
+        AFall,
+        ALandLeft,
+        ALandRight,
+        AWalkLeft,
+        AWalkRight
+    } WAnim;
 
     static const int WWIDTH = 28, WHEIGHT = 48;
     static const int SPEED_SCALE = 256;
     static const int GRAVITY = 128;
     // Current velocity, updated by this class
     int m_xspeed, m_yspeed;
-    // "Push": walking and jumping, updated by subclasses
-    int m_xpush, m_ypush;
     // Updated by Walker
     WState m_wstate;
     Texture::Ref m_tex;
 
+    WAnim m_anim;
+    int m_animtime;
+    bool m_animlock;
+
+    int m_sprite;
+
+protected:
+    // "Push": walking and jumping
+    // subclass is responsible for updating
+    int m_xpush, m_ypush;
+
+public:
     Walker(int x, int y)
         : Actor(x, y, WWIDTH, WHEIGHT)
     { }
@@ -32,6 +52,7 @@ public:
     virtual void init();
     virtual void advance();
 
+private:
     // Check whether falling or standing
     void checkState();
 };
