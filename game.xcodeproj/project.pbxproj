@@ -115,13 +115,10 @@
 		3852089E117434FD00640971 /* Game.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Game.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		385208A1117434FD00640971 /* Game-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Game-Info.plist"; sourceTree = "<group>"; };
 		38709EC61330A5A200DA858D /* buffer.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = buffer.hpp; sourceTree = "<group>"; };
-		38709EC91330A5A200DA858D /* configfile.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = configfile.cpp; sourceTree = "<group>"; };
-		38709ECA1330A5A200DA858D /* configfile.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = configfile.hpp; sourceTree = "<group>"; };
 		38709ECC1330A5A200DA858D /* ifile.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ifile.cpp; sourceTree = "<group>"; };
 		38709ECD1330A5A200DA858D /* ifile.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = ifile.hpp; sourceTree = "<group>"; };
 		38709ECE1330A5A200DA858D /* ifilereg.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ifilereg.cpp; sourceTree = "<group>"; };
 		38709ECF1330A5A200DA858D /* ifilereg.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = ifilereg.hpp; sourceTree = "<group>"; };
-		38709ED01330A5A200DA858D /* parseconfig.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = parseconfig.cpp; sourceTree = "<group>"; };
 		38709ED21330A5A200DA858D /* path.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = path.hpp; sourceTree = "<group>"; };
 		38709ED31330A5A200DA858D /* resource.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = resource.cpp; sourceTree = "<group>"; };
 		38709ED41330A5A200DA858D /* resource.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = resource.hpp; sourceTree = "<group>"; };
@@ -130,7 +127,6 @@
 		38709ED71330A5A200DA858D /* stringarray.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = stringarray.hpp; sourceTree = "<group>"; };
 		38709ED81330A5A200DA858D /* system_error.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = system_error.cpp; sourceTree = "<group>"; };
 		38709ED91330A5A200DA858D /* system_error.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = system_error.hpp; sourceTree = "<group>"; };
-		38709EDA1330A5A200DA858D /* testconfig.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = testconfig.cpp; sourceTree = "<group>"; };
 		38709F701330BF5900DA858D /* autocf_osx.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = autocf_osx.hpp; sourceTree = "<group>"; };
 		3871E25A141ACA38000DF3D6 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		3871E293141ACAA3000DF3D6 /* GMain.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = GMain.mm; sourceTree = "<group>"; };
@@ -371,13 +367,10 @@
 				38709EC61330A5A200DA858D /* buffer.hpp */,
 				3871E2A7141ACFB6000DF3D6 /* clock.hpp */,
 				38A2E8E61499D13B00A820A9 /* clock.cpp */,
-				38709EC91330A5A200DA858D /* configfile.cpp */,
-				38709ECA1330A5A200DA858D /* configfile.hpp */,
 				38709ECC1330A5A200DA858D /* ifile.cpp */,
 				38709ECD1330A5A200DA858D /* ifile.hpp */,
 				38709ECE1330A5A200DA858D /* ifilereg.cpp */,
 				38709ECF1330A5A200DA858D /* ifilereg.hpp */,
-				38709ED01330A5A200DA858D /* parseconfig.cpp */,
 				38709ED21330A5A200DA858D /* path.hpp */,
 				381E8AE2149CD0000091D850 /* path_posix.cpp */,
 				381E8AE3149CD0000091D850 /* path_posix.hpp */,
@@ -390,7 +383,6 @@
 				38709ED71330A5A200DA858D /* stringarray.hpp */,
 				38709ED81330A5A200DA858D /* system_error.cpp */,
 				38709ED91330A5A200DA858D /* system_error.hpp */,
-				38709EDA1330A5A200DA858D /* testconfig.cpp */,
 			);
 			path = sys;
 			sourceTree = "<group>";
