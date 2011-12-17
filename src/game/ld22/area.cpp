@@ -20,6 +20,7 @@ void Area::addActor(Actor *a)
     a->m_area = this;
     a->m_x0 = a->m_x;
     a->m_y0 = a->m_x;
+    a->init();
 }
 
 void Area::draw(int delta)

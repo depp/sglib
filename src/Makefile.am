@@ -115,7 +115,9 @@ libmgfx_a_SOURCES = \
 	game/ld22/player.cpp \
 	game/ld22/player.hpp \
 	game/ld22/screen.cpp \
-	game/ld22/screen.hpp
+	game/ld22/screen.hpp \
+	game/ld22/walker.cpp \
+	game/ld22/walker.hpp
 
 libmtype_a_CFLAGS = $(common_CFLAGS) @PANGOCAIRO_CFLAGS@
 libmtype_a_CXXFLAGS = $(common_CFLAGS) @PANGOCAIRO_CFLAGS@

@@ -25,6 +25,9 @@ void Actor::draw(int delta)
 void Actor::advance()
 { }
 
+void Actor::init()
+{ }
+
 bool Actor::wallAt(int x, int y)
 {
     Area &a = *m_area;

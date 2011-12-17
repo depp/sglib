@@ -15,8 +15,11 @@ void Player::advance()
         dx -= 1;
     if (m_scr.getKey(InUp))
         dy += 1;
+    /*
     if (m_scr.getKey(InDown))
         dy -= 1;
-    int speed = 4;
-    moveTo(m_x + dx * speed, m_y + dy * speed);
+    */
+    m_xpush = dx * 4;
+    m_ypush = dy * 8;
+    Walker::advance();
 }

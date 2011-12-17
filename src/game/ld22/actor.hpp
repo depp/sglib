@@ -16,14 +16,22 @@ public:
 
     virtual ~Actor();
 
+    // Called with number of ms since last frame
     virtual void draw(int delta);
+
+    // Called once per frame
+    // Default does nothing
     virtual void advance();
 
-    /* Test whether actor hits a wall at the given location */
+    // Called when added to area
+    // Default does nothing
+    virtual void init();
+
+    // Test whether actor hits a wall at the given location
     bool wallAt(int x, int y);
 
-    /* Move actor to new coordinates, or partway if something is hit.
-       Returns true if the actor hits something and stops partway.  */
+    // Move actor to new coordinates, or partway if something is hit.
+    // Returns true if the actor hits something and stops partway.
     bool moveTo(int x, int y);
 };
 
