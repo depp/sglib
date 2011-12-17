@@ -1,5 +1,6 @@
 #ifndef GAME_LD22_ACTOR_HPP
 #define GAME_LD22_ACTOR_HPP
+#include "defs.hpp"
 namespace LD22 {
 class Area;
 
@@ -18,6 +19,15 @@ public:
 
     // Called with number of ms since last frame
     virtual void draw(int delta);
+
+    void getDrawPos(int *x, int *y, int delta)
+    {
+        *x = m_x0 + (m_x - m_x0) * delta / FRAME_TIME;
+        *y = m_y0 + (m_y - m_y0) * delta / FRAME_TIME;
+    }
+
+    // Draw the hit box
+    void drawHitBox(int delta);
 
     // Called once per frame
     // Default does nothing

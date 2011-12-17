@@ -7,7 +7,7 @@ class Screen;
 class Player : public Walker {
 public:
     Player(int x, int y, Screen &scr)
-        : Walker(x, y, 24, 32), m_scr(scr)
+        : Walker(x, y), m_scr(scr)
     { }
     virtual ~Player();
     virtual void advance();

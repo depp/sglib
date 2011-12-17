@@ -9,8 +9,8 @@ Actor::~Actor()
 
 void Actor::draw(int delta)
 {
-    int x = m_x0 + (m_x - m_x0) * delta / FRAME_TIME;
-    int y = m_y0 + (m_y - m_y0) * delta / FRAME_TIME;
+    int x, y;
+    getDrawPos(&x, &y, delta);
     int w = m_w, h = m_h;
     glColor3ub(255, 40, 40);
     glBegin(GL_QUADS);
@@ -20,6 +20,24 @@ void Actor::draw(int delta)
     glVertex2f(x + w, y);
     glEnd();
     glColor3ub(255, 255, 255);
+}
+
+void Actor::drawHitBox(int delta)
+{
+    int x, y;
+    getDrawPos(&x, &y, delta);
+    int w = m_w, h = m_h;
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glColor4ub(255, 40, 40, 128);
+    glBegin(GL_QUADS);
+    glVertex2f(x, y);
+    glVertex2f(x, y + h);
+    glVertex2f(x + w, y + h);
+    glVertex2f(x + w, y);
+    glEnd();
+    glColor3ub(255, 255, 255);
+    glDisable(GL_BLEND);
 }
 
 void Actor::advance()
