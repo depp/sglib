@@ -29,7 +29,6 @@ AC_SEARCH_LIBS(
 PKG_CHECK_MODULES([PANGOCAIRO], [pangocairo])
 PKG_CHECK_MODULES([GTK], [gtk+-2.0])
 PKG_CHECK_MODULES([GTKGLEXT], [gtkglext-1.0])
-CHECK_RAGEL_AM([../src/config/configfileread.cpp])
 
 ENABLE_WARNINGS
 

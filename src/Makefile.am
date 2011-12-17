@@ -2,15 +2,6 @@ AUTOMAKE_OPTIONS = 1.5 foreign subdir-objects nostdinc
 
 bin_PROGRAMS = game-bin
 noinst_LIBRARIES = libmsys.a libmgfx.a libmtype.a
-noinst_SCRIPTS = config.ini
-
-config.ini : config.ini.in Makefile
-	sed \
-		-e 's,@''builddir@,@abs_top_builddir@,g' \
-		-e 's,@''srcdir@,@abs_top_srcdir@,g' \
-		$(srcdir)/config.ini.in > $@.tmp
-	mv $@.tmp $@
-
 
 common_CFLAGS = @warning_cppflags@ -I@srcdir@ -I@builddir@
 
@@ -34,10 +25,6 @@ mac_sources = \
 	type/rastertext_osx.cpp \
 	ui/keyboard/keytable_mac.c
 
-other_sources = \
-	sys/parseconfig.cpp \
-	sys/testconfig.cpp
-
 libmsys_a_CFLAGS = $(common_CFLAGS)
 libmsys_a_CXXFLAGS = $(common_CFLAGS)
 libmsys_a_SOURCES = \
@@ -45,9 +32,6 @@ libmsys_a_SOURCES = \
 	sys/buffer.hpp \
 	sys/clock.hpp \
 	sys/clock.cpp \
-	sys/configfile.cpp \
-	sys/configfile.hpp \
-	sys/configfileread.rl \
 	sys/ifile.cpp \
 	sys/ifile.hpp \
 	sys/ifilereg.cpp \
@@ -135,8 +119,3 @@ game_bin_LDFLAGS = @GTK_LIBS@ @GTKGLEXT_LIBS@ @PANGOCAIRO_LIBS@
 game_bin_LDADD = libmgfx.a libmtype.a libmsys.a
 game_bin_SOURCES = \
 	gtk/main.cpp
-
-SUFFIXES = .rl
-
-.rl.cpp:
-	$(RAGEL) $(RAGELFLAGS) -C $< -o $@
