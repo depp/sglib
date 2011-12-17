@@ -1,9 +1,15 @@
+#ifndef GAME_LD22_SCREEN_HPP
+#define GAME_LD22_SCREEN_HPP
 #include "client/ui/screen.hpp"
 #include "client/ui/keymanager.hpp"
 namespace LD22 {
 class Area;
 
 class Screen : public UI::Screen {
+    UI::KeyManager m_key;
+    Area *m_area;
+    unsigned m_tickref;
+
 public:
     Screen();
     virtual ~Screen();
@@ -12,9 +18,14 @@ public:
     virtual void update(unsigned int ticks);
     virtual void draw();
 
+    bool getKey(int k)
+    {
+        return m_key.inputState(k);
+    }
+
 private:
-    UI::KeyManager m_key;
-    Area *m_area;
+    void advance();
 };
 
 }
+#endif

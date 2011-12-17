@@ -112,6 +112,8 @@ libmgfx_a_SOURCES = \
 	game/ld22/area.cpp \
 	game/ld22/area.hpp \
 	game/ld22/defs.hpp \
+	game/ld22/player.cpp \
+	game/ld22/player.hpp \
 	game/ld22/screen.cpp \
 	game/ld22/screen.hpp
 

@@ -1,3 +1,5 @@
+#ifndef GAME_LD22_ACTOR_HPP
+#define GAME_LD22_ACTOR_HPP
 namespace LD22 {
 class Area;
 
@@ -12,6 +14,8 @@ public:
     virtual ~Actor();
 
     virtual void draw();
+    virtual void advance();
 };
 
 }
+#endif

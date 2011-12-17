@@ -17,3 +17,6 @@ void Actor::draw()
     glEnd();
     glColor3ub(255, 255, 255);
 }
+
+void Actor::advance()
+{ }

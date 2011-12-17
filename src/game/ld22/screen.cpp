@@ -2,6 +2,7 @@
 #include "screen.hpp"
 #include "area.hpp"
 #include "actor.hpp"
+#include "player.hpp"
 #include "client/keyboard/keycode.h"
 #include "client/opengl.hpp"
 #include "client/ui/event.hpp"
@@ -50,13 +51,32 @@ void Screen::handleEvent(const UI::Event &evt)
     }
 }
 
+static const unsigned FRAME_TICKS = 32;
+static const unsigned LAG_THRESHOLD = 250;
+
+void Screen::advance()
+{
+    m_area->advance();
+}
+
 void Screen::update(unsigned int ticks)
 {
     if (!m_area) {
         m_area = new Area;
-        m_area->addActor(new Actor(64, 64));
+        m_area->addActor(new Player(64, 64, *this));
+        m_tickref = ticks;
+    } else {
+        unsigned delta = ticks - m_tickref, frames;
+        if (delta > LAG_THRESHOLD) {
+            m_tickref = ticks;
+            advance();
+        } else if (delta >= FRAME_TICKS) {
+            frames = delta / FRAME_TICKS;
+            m_tickref += frames * FRAME_TICKS;
+            while (frames--)
+                advance();
+        }
     }
-    (void) ticks;
 }
 
 void Screen::draw()

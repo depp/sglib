@@ -42,3 +42,12 @@ void Area::draw()
         a.draw();
     }
 }
+
+void Area::advance()
+{
+    std::vector<Actor *>::iterator i = m_actors.begin(), e = m_actors.end();
+    for (; i != e; ++i) {
+        Actor &a = **i;
+        a.advance();
+    }
+}

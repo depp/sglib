@@ -1,3 +1,5 @@
+#ifndef GAME_LD22_AREA_HPP
+#define GAME_LD22_AREA_HPP
 #include <vector>
 namespace LD22 {
 class Actor;
@@ -31,6 +33,8 @@ public:
     void addActor(Actor *a);
 
     void draw();
+    void advance();
 };
 
 }
+#endif
