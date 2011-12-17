@@ -1,5 +1,5 @@
+#include "sys/clock.hpp"
 #include "sys/rand.hpp"
-// #include "client/ui/menu.hpp"
 #include "game/ld22/screen.hpp"
 #include "client/opengl.hpp"
 #include "client/ui/event.hpp"
@@ -157,6 +157,7 @@ static void init(int argc, char *argv[])
     }
 
     pathInit(altpath);
+    initTime();
     Rand::global.seed();
 }
 
