@@ -100,3 +100,16 @@ IFile *Path::openIFile(std::string const &path)
     }
     throw system_error(ENOENT);
 }
+
+FILE *openOFile(std::string const &path)
+{
+    if (gDirs[0].path)
+        abort();
+    std::string abspath = std::string(gDirs[0].path, gDirs[0].len);
+    abspath += '/';
+    abspath += path;
+    FILE *f = fopen(path.c_str(), "w");
+    if (!f)
+        throw system_error(errno);
+    return f;
+}
