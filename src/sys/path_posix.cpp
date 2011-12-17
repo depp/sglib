@@ -36,8 +36,8 @@ static void getExeDir()
     if (!ptr)
         abort();
     memcpy(ptr, buf, l);
-    gDirs[1].path = ptr;
-    gDirs[1].len = l;
+    gDirs[0].path = ptr;
+    gDirs[0].len = l;
 }
 
 #elif defined(__linux__)
@@ -60,8 +60,8 @@ static void getExeDir()
             if (!ptr)
                 abort();
             memcpy(ptr, buf, p);
-            gDirs[1].path = ptr;
-            gDirs[1].len = p;
+            gDirs[0].path = ptr;
+            gDirs[0].len = p;
         }
     }
 }
@@ -77,8 +77,8 @@ void pathInit(const char *altpath)
 {
     getExeDir();
     if (altpath) {
-        gDirs[0].path = altpath;
-        gDirs[0].len = strlen(altpath);
+        gDirs[1].path = altpath;
+        gDirs[1].len = strlen(altpath);
     }
 }
 

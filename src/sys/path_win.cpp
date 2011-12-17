@@ -32,8 +32,8 @@ void path_init(exe_options *opts)
     if (!p)
         goto error;
     wmemcpy(p, buf, i);
-    gDirs[1].path = p;
-    gDirs[1].len = i;
+    gDirs[0].path = p;
+    gDirs[0].len = i;
 
     // Get the alternate path specified on the command line
     s = opts->alt_data_dir;
@@ -45,8 +45,8 @@ void path_init(exe_options *opts)
         if (!p)
             goto error;
         wmemcpy(p, s, i);
-        gDirs[0].path = p;
-        gDirs[0].len = i;
+        gDirs[1].path = p;
+        gDirs[1].len = i;
     }
 
     return;
