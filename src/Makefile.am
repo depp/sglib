@@ -85,7 +85,7 @@ libmgfx_a_SOURCES = \
 	client/ui/mousemanager.cpp \
 	client/ui/mousemanager.hpp \
 	client/ui/screen.cpp \
-s	client/ui/screen.hpp \
+	client/ui/screen.hpp \
 	client/ui/widget.cpp \
 	client/ui/widget.hpp \
 	client/ui/window.cpp \
@@ -97,6 +97,8 @@ s	client/ui/screen.hpp \
 	game/ld22/background.cpp \
 	game/ld22/background.hpp \
 	game/ld22/defs.hpp \
+	game/ld22/editor.cpp \
+	game/ld22/editor.hpp \
 	game/ld22/player.cpp \
 	game/ld22/player.hpp \
 	game/ld22/screen.cpp \

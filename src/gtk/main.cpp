@@ -1,6 +1,7 @@
 #include "sys/clock.hpp"
 #include "sys/rand.hpp"
 #include "game/ld22/screen.hpp"
+#include "game/ld22/editor.hpp"
 #include "client/opengl.hpp"
 #include "client/ui/event.hpp"
 #include "client/ui/window.hpp"
@@ -169,7 +170,10 @@ int main(int argc, char *argv[])
     init(argc, argv);
 
     w.setSize(768, 480);
-    w.setScreen(new LD22::Screen);
+    if (gEditor)
+        w.setScreen(new LD22::Editor);
+    else
+        w.setScreen(new LD22::Screen);
 
     GtkWidget *window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     gtk_window_set_title(GTK_WINDOW(window), "Game");
