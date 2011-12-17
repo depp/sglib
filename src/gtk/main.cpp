@@ -1,5 +1,7 @@
 #include "sys/rand.hpp"
-#include "client/ui/menu.hpp"
+// #include "client/ui/menu.hpp"
+#include "game/ld22/screen.hpp"
+#include "client/opengl.hpp"
 #include "client/ui/event.hpp"
 #include "client/ui/window.hpp"
 #include "client/keyboard/keycode.h"
@@ -137,7 +139,7 @@ int main(int argc, char *argv[])
     Path::init();
     w.setSize(768, 480);
     Rand::global.seed();
-    w.setScreen(new UI::Menu);
+    w.setScreen(new LD22::Screen);
 
     GtkWidget *window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     gtk_window_set_title(GTK_WINDOW(window), "Game");
