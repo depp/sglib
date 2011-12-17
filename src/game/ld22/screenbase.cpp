@@ -14,7 +14,9 @@ using namespace LD22;
 
 ScreenBase::ScreenBase()
     :m_init(false)
-{ }
+{
+    setSize(SCREEN_WIDTH, SCREEN_HEIGHT);
+}
 
 ScreenBase::~ScreenBase()
 { }
@@ -31,7 +33,6 @@ void ScreenBase::init()
 {
     m_area.reset(new Area);
     m_background.reset(Background::getBackground(Background::MOUNTAINS));
-    m_letterbox.setISize(768, 480);
 }
 
 void ScreenBase::update(unsigned int ticks)
@@ -66,26 +67,14 @@ void ScreenBase::draw()
     if (!m_area.get() || !m_background.get())
         std::abort();
 
-/*
-    glClearColor(1, 1, 0, 0);
-    glClear(GL_COLOR_BUFFER_BIT);
-*/
-
     m_letterbox.setOSize(window().width(), window().height());
     m_letterbox.enable();
 
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    glOrtho(0, 768, 0, 480, -1, 1);
+    glOrtho(0, m_width, 0, m_height, -1, 1);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
-
-    glScalef(32.0f, 32.0f, 1.0f);
-
-/*
-    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
-*/
 
     m_background->draw(m_delta);
     m_area->draw(m_delta);

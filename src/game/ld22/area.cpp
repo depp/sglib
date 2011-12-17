@@ -26,8 +26,8 @@ void Area::addActor(Actor *a)
 void Area::draw(int delta)
 {
     glBegin(GL_QUADS);
-    for (int y = 0; y < HEIGHT; ++y) {
-        for (int x = 0; x < WIDTH; ++x) {
+    for (int y = 0; y < TILE_HEIGHT; ++y) {
+        for (int x = 0; x < TILE_WIDTH; ++x) {
             int t = m_tile[y][x];
             if (t) {
                 glVertex2f(x, y);

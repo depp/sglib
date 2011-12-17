@@ -52,3 +52,8 @@ void Screen::init()
     ScreenBase::init();
     area().addActor(new Player(64, 64, *this));
 }
+
+void Screen::drawExtra()
+{
+
+}

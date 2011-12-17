@@ -11,3 +11,8 @@ void Editor::handleEvent(const UI::Event &evt)
 {
     
 }
+
+void Editor::drawExtra()
+{
+
+}

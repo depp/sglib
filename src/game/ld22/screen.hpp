@@ -7,6 +7,9 @@ namespace LD22 {
 class Screen : public ScreenBase {
     UI::KeyManager m_key;
 
+protected:
+    virtual void drawExtra();
+
 public:
     Screen();
     virtual ~Screen();

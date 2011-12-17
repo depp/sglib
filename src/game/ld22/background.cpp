@@ -1,4 +1,5 @@
 #include "background.hpp"
+#include "defs.hpp"
 #include "client/texturefile.hpp"
 #include <memory>
 namespace LD22 {
@@ -20,8 +21,8 @@ public:
 
     virtual void draw(int delta)
     {
-        float x0 = 0.0f, x1 = 24.0f;
-        float y0 = 0.0f, y1 = 15.0f;
+        float x0 = 0.0f, x1 = SCREEN_WIDTH;
+        float y0 = 0.0f, y1 = SCREEN_HEIGHT;
         glColor3ub(64, 64, 64);
         glBegin(GL_QUADS);
         glVertex2f(x0, y0);
@@ -54,8 +55,8 @@ public:
 
     virtual void draw(int delta)
     {
-        float x0 = 0.0f, x1 = 24.0f;
-        float y0 = 0.0f, y1 = 15.0f;
+        float x0 = 0.0f, x1 = SCREEN_WIDTH;
+        float y0 = 0.0f, y1 = SCREEN_HEIGHT;
         float u0 = 0.0f, u1 = 1.0f;
         float v0 = 1.0f, v1 = 0.0f;
         glEnable(GL_TEXTURE_2D);

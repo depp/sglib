@@ -4,6 +4,9 @@
 namespace LD22 {
 
 class Editor : public ScreenBase {
+protected:
+    virtual void drawExtra();
+
 public:
     Editor();
     virtual ~Editor();
