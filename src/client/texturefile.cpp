@@ -155,6 +155,16 @@ bool TextureFile::loadPNG()
     return imageToTexture(*this, img);
 }
 
+bool TextureFile::loadJPEG()
+{
+    CGDataProviderRef dp = getDataProvider(path_);
+    assert(dp);
+    CGImageRef img = CGImageCreateWithJPEGDataProvider(dp, NULL, false, kCGRenderingIntentDefault);
+    CGDataProviderRelease(dp);
+    assert(img);
+    return imageToTexture(*this, img);
+}
+
 #elif defined(_WIN32)
 #include <wincodec.h>
 
