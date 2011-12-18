@@ -226,6 +226,43 @@ public:
     }
 };
 
+class City : public Background {
+    Texture::Ref m_tex;
+
+public:
+    City()
+        : Background(CITY)
+    { }
+
+    virtual ~City()
+    { }
+
+    virtual void init()
+    {
+        m_tex = TextureFile::open("back/city.jpg");
+    }
+
+    virtual void advance()
+    { }
+
+    virtual void draw(int delta)
+    {
+        float x0 = 0.0f, x1 = SCREEN_WIDTH;
+        float y0 = 0.0f, y1 = SCREEN_HEIGHT;
+        float u0 = 0.0f, u1 = 1.0f;
+        float v0 = 1.0f, v1 = 0.0f;
+        glEnable(GL_TEXTURE_2D);
+        m_tex->bind();
+        glBegin(GL_QUADS);
+        glTexCoord2f(u0, v0); glVertex2f(x0, y0);
+        glTexCoord2f(u0, v1); glVertex2f(x0, y1);
+        glTexCoord2f(u1, v1); glVertex2f(x1, y1);
+        glTexCoord2f(u1, v0); glVertex2f(x1, y0);
+        glEnd();
+        glDisable(GL_TEXTURE_2D);
+    }
+};
+
 }
 
 Background::~Background()
@@ -242,6 +279,10 @@ Background *Background::getBackground(int which)
 
     case MOUNTAINS:
         b.reset(new Bkgr::Mountains);
+        break;
+
+    case CITY:
+        b.reset(new Bkgr::City);
         break;
     }
     b->init();

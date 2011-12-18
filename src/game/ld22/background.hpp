@@ -9,6 +9,7 @@ public:
     enum {
         EMPTY,
         MOUNTAINS,
+        CITY,
         COUNT
     };
     static const int MAX = COUNT - 1;
