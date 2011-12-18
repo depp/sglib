@@ -13,13 +13,14 @@ class Editor : public ScreenBase {
     int m_mouse;
 
 protected:
-    virtual void drawExtra();
+    virtual void drawExtra(int delta);
 
 public:
     Editor();
     virtual ~Editor();
 
     virtual void handleEvent(const UI::Event &evt);
+    virtual void init();
 
 private:
     void handleKeyDown(const UI::KeyEvent &evt);

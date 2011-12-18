@@ -4,20 +4,25 @@ namespace LD22 {
 
 class Background {
 public:
-    typedef enum {
+    int which;
+
+    enum {
         EMPTY,
         MOUNTAINS
-    } Type;
+    };
+    static const int COUNT = MOUNTAINS + 1;
 
-    Background()
+    Background(int which_)
+        : which(which_)
     { }
+
     virtual ~Background();    
 
     virtual void init() = 0;
     virtual void advance() = 0;
     virtual void draw(int delta) = 0;
 
-    static Background *getBackground(Type t);
+    static Background *getBackground(int which);
 };
 
 }

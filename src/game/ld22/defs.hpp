@@ -11,7 +11,8 @@ enum {
 
 static const int FRAME_TIME = 32;
 
-static const int TILE_SIZE = 32;
+static const int TILE_BITS = 5;
+static const int TILE_SIZE = 1 << TILE_BITS;
 static const int TILE_WIDTH = 24;
 static const int TILE_HEIGHT = 15;
 static const int SCREEN_WIDTH = TILE_SIZE * TILE_WIDTH;

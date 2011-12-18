@@ -99,7 +99,7 @@ IFile *Path::openIFile(std::string const &path)
                 throw;
         }
     }
-    throw system_error(ENOENT);
+    throw file_not_found();
 }
 
 FILE *Path::openOFile(std::string const &path)

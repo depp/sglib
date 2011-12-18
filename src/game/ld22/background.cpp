@@ -156,6 +156,7 @@ public:
 class Empty : public Background {
 public:
     Empty()
+        : Background(EMPTY)
     { }
 
     virtual ~Empty()
@@ -189,6 +190,7 @@ class Mountains : public Background {
 
 public:
     Mountains()
+        : Background(MOUNTAINS)
     { }
 
     virtual ~Mountains()
@@ -229,18 +231,21 @@ public:
 Background::~Background()
 { }
 
-Background *Background::getBackground(Type t)
+Background *Background::getBackground(int which)
 {
     std::auto_ptr<Background> b;
+    int w = which % COUNT;
+    if (w < 0)
+        w += COUNT;
 
-    switch (t) {
-    case MOUNTAINS:
-        b.reset(new Bkgr::Mountains);
-        break;
-
+    switch (w) {
     case EMPTY:
     default:
         b.reset(new Bkgr::Empty);
+        break;
+
+    case MOUNTAINS:
+        b.reset(new Bkgr::Mountains);
         break;
     }
 

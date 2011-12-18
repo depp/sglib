@@ -49,7 +49,7 @@ void Actor::init()
 bool Actor::wallAt(int x, int y)
 {
     Area &a = *m_area;
-    int s = Area::SCALE, w = m_w, h = m_h;
+    int s = TILE_BITS, w = m_w, h = m_h;
     for (int yp = y >> s; (yp << s) < y + h; ++yp) {
         for (int xp = x >> s; (xp << s) < x + w; ++xp) {
             int t = a.getTile(xp, yp);

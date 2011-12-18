@@ -36,6 +36,7 @@ libmsys_a_SOURCES = \
 	sys/ifile.hpp \
 	sys/ifilereg.cpp \
 	sys/ifilereg.hpp \
+	sys/path.cpp \
 	sys/path.hpp \
 	sys/path_posix.cpp \
 	sys/path_posix.hpp \
@@ -101,12 +102,16 @@ libmgfx_a_SOURCES = \
 	game/ld22/defs.hpp \
 	game/ld22/editor.cpp \
 	game/ld22/editor.hpp \
+	game/ld22/level.cpp \
+	game/ld22/level.hpp \
 	game/ld22/player.cpp \
 	game/ld22/player.hpp \
 	game/ld22/screen.cpp \
 	game/ld22/screen.hpp \
 	game/ld22/screenbase.cpp \
 	game/ld22/screenbase.hpp \
+	game/ld22/tileset.cpp \
+	game/ld22/tileset.hpp \
 	game/ld22/walker.cpp \
 	game/ld22/walker.hpp
 

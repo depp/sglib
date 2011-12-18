@@ -1,11 +1,10 @@
 #include "editor.hpp"
 #include "defs.hpp"
-#include "area.hpp"
+#include "tileset.hpp"
 #include "client/keyboard/keycode.h"
 #include "client/opengl.hpp"
 #include "client/ui/event.hpp"
 #include "sys/path.hpp"
-#include <stdio.h>
 using namespace LD22;
 
 static const int EDITBAR_SIZE = 64;
@@ -23,6 +22,12 @@ Editor::Editor()
 
 Editor::~Editor()
 { }
+
+void Editor::init()
+{
+    level().clear();
+    loadLevel();
+}
 
 void Editor::handleEvent(const UI::Event &evt)
 {
@@ -99,8 +104,10 @@ void Editor::handleMouseMove(const UI::MouseEvent &evt)
     }
 }
 
-void Editor::drawExtra()
+void Editor::drawExtra(int delta)
 {
+    tileset().drawTiles(level().tiles, delta);
+
     glTranslatef(SCREEN_WIDTH, 0, 0);
     int w = EDITBAR_SIZE, h = SCREEN_WIDTH;
     glBegin(GL_QUADS);
@@ -123,23 +130,19 @@ bool Editor::translateMouse(const UI::MouseEvent &evt, int *x, int *y)
 
 void Editor::tileBrush(int x, int y)
 {
-    Area &a = area();
+    if (x < 0 || y < 0 || x >= TILE_WIDTH || y >= TILE_HEIGHT) {
+        fputs("bad tileBrush\n", stderr);
+        return;
+    }
+    Level &l = level();
     if (m_mouse == UI::ButtonLeft) {
-        a.setTile(x, y, 1);
+        l.tiles[y][x] = 1;
     } else if (m_mouse == UI::ButtonRight) {
-        a.setTile(x, y, 0);
+        l.tiles[y][x] = 0;
     }
 }
 
 void Editor::save()
 {
-    char buf[32];
-    snprintf(buf, sizeof(buf), "level/%02d.dat", 1);
-    fprintf(stderr, "Saving %s...\n", buf);
-    FILE *f = Path::openOFile(buf);
-    area().dumpTiles(f);
-    if (ferror(f))
-        fputs("===== ERROR! =====\n", stderr);
-    fclose(f);
-    fputs("Done\n", stderr);
+    level().save(1);
 }

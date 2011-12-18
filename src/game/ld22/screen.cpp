@@ -28,7 +28,9 @@ static const unsigned char KEY_MAP[] = {
 
 Screen::Screen()
     : m_key(KEY_MAP)
-{ }
+{
+    m_area.reset(new Area(*this));
+}
 
 Screen::~Screen()
 { }
@@ -49,11 +51,23 @@ void Screen::handleEvent(const UI::Event &evt)
 
 void Screen::init()
 {
-    ScreenBase::init();
-    area().addActor(new Player(64, 64, *this));
+    level().load(1);
+    startGame();
 }
 
-void Screen::drawExtra()
+void Screen::startGame()
 {
-
+    m_area->load();
+    m_area->addActor(new Player(64, 64, *this));
 }
+
+void Screen::drawExtra(int delta)
+{
+    m_area->draw(delta);
+}
+
+void Screen::advance()
+{
+    m_area->advance();
+}
+

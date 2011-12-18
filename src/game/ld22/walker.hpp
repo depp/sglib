@@ -22,7 +22,6 @@ class Walker : public Actor {
         AWalkRight
     } WAnim;
 
-    static const int WWIDTH = 28, WHEIGHT = 48;
     static const int SPEED_SCALE = 256;
     static const int GRAVITY = 128;
     // Current velocity, updated by this class
@@ -43,6 +42,8 @@ protected:
     int m_xpush, m_ypush;
 
 public:
+    static const int WWIDTH = 28, WHEIGHT = 48;
+
     Walker(int x, int y)
         : Actor(x, y, WWIDTH, WHEIGHT)
     { }

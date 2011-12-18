@@ -4,10 +4,13 @@
 #include "actor.hpp"
 #include "player.hpp"
 #include "background.hpp"
-#include "client/keyboard/keycode.h"
+// #include "client/keyboard/keycode.h"
 #include "client/opengl.hpp"
 #include "client/ui/event.hpp"
 #include "client/ui/window.hpp"
+// #include "sys/path.hpp"
+// #include "sys/ifile.hpp"
+#include "tileset.hpp"
 #include <cstdlib>
 #include <stdio.h>
 using namespace LD22;
@@ -16,6 +19,8 @@ ScreenBase::ScreenBase()
     :m_init(false)
 {
     setSize(SCREEN_WIDTH, SCREEN_HEIGHT);
+    m_background.reset(Background::getBackground(Background::EMPTY));
+    m_tileset.reset(new Tileset);
 }
 
 ScreenBase::~ScreenBase()
@@ -25,22 +30,13 @@ static const unsigned LAG_THRESHOLD = 250;
 
 void ScreenBase::advance()
 {
-    m_area->advance();
     m_background->advance();
-}
-
-void ScreenBase::init()
-{
-    m_area.reset(new Area);
-    m_background.reset(Background::getBackground(Background::MOUNTAINS));
 }
 
 void ScreenBase::update(unsigned int ticks)
 {
     if (!m_init) {
         init();
-        if (!m_area.get() || !m_background.get())
-            std::abort();
         m_tickref = ticks;
         m_init = true;
     } else {
@@ -62,11 +58,13 @@ void ScreenBase::update(unsigned int ticks)
     }
 }
 
+void ScreenBase::loadLevel()
+{
+    m_background.reset(Background::getBackground(m_level.background));
+}
+
 void ScreenBase::draw()
 {
-    if (!m_area.get() || !m_background.get())
-        std::abort();
-
     m_letterbox.setOSize(window().width(), window().height());
     m_letterbox.enable();
 
@@ -77,9 +75,7 @@ void ScreenBase::draw()
     glLoadIdentity();
 
     m_background->draw(m_delta);
-    m_area->draw(m_delta);
-
-    drawExtra();
+    drawExtra(m_delta);
 
     m_letterbox.disable();
 }

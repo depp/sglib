@@ -5,41 +5,40 @@
 #include <vector>
 #include <stdio.h>
 namespace LD22 {
+class ScreenBase;
 class Actor;
 
-/* One "screen" of level area.  */
 class Area {
-public:
-    static const int SCALE = 5;
-
-private:
-    unsigned char m_tile[TILE_HEIGHT][TILE_WIDTH];
+    ScreenBase &m_screen;
+    unsigned char m_tiles[TILE_HEIGHT][TILE_WIDTH];
     std::vector<Actor *> m_actors;
-    Texture::Ref m_tex;
 
 public:
-    Area();
+    Area(ScreenBase &screen);
     ~Area();
 
     int getTile(int x, int y) const
     {
         if (x >= 0 && x < TILE_WIDTH && y >= 0 && y < TILE_HEIGHT)
-            return m_tile[y][x];
+            return m_tiles[y][x];
         return 0;
     }
 
     void setTile(int x, int y, int v)
     {
         if (x >= 0 && x < TILE_WIDTH && y >= 0 && y < TILE_HEIGHT)
-            m_tile[y][x] = v;
+            m_tiles[y][x] = v;
+    }
+
+    ScreenBase &screen()
+    {
+        return m_screen;
     }
 
     void addActor(Actor *a);
-
     void draw(int delta);
     void advance();
-
-    void dumpTiles(FILE *f);
+    void load();
 };
 
 }
