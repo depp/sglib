@@ -3,8 +3,6 @@
 #include "walker.hpp"
 using namespace LD22;
 
-static const int GRAB_HEIGHT = 24;
-
 Item::~Item()
 { }
 
@@ -23,12 +21,10 @@ void Item::advance()
     } else {
         m_xs = 0;
         m_ys = 0;
-        int div;
-        int lx = m_x, ly = m_y;
-        int tx = m_owner->centerx() - IWIDTH / 2;
-        int ty = m_owner->centery() +
-            STICK_HEIGHT / 2 + GRAB_HEIGHT - IHEIGHT / 2;
-        int nx, ny, dx, dy;
+        int div, lx = m_x, ly = m_y, tx, ty, nx, ny, dx, dy;
+        m_owner->getGrabPos(&tx, &ty);
+        tx -= IWIDTH / 2;
+        ty -= IWIDTH / 2;
         switch (m_state) {
         case SGrabbing:
             div = 10 - ++m_frame;

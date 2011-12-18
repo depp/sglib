@@ -65,6 +65,9 @@ public:
     // Pick up m_item.
     bool pickupItem();
 
+    // Get the position where a grabbed item should be held
+    void getGrabPos(int *x, int *y);
+
     Item *m_item;
     float m_item_distance;
 

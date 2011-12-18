@@ -203,6 +203,37 @@ void Walker::updateItem()
     m_item_distance = std::sqrt(dx*dx + dy*dy);
 }
 
+
+void Walker::getGrabPos(int *x, int *y)
+{
+    int height;
+    switch (m_sprite & 0x7f) {
+    case 10:
+        height = 20;
+        break;
+
+    case 11:
+    case 15:
+        height = 18;
+        break;
+
+    case 14:
+    case 12:
+        height = 16;
+        break;
+
+    case 13:
+        height  = 14;
+        break;
+
+    default:
+        height = 24;
+        break;
+    }
+    *x = centerx();
+    *y = centery() + STICK_HEIGHT / 2 + height;
+};
+
 bool Walker::pickupItem()
 {
     if (!m_item)
