@@ -71,6 +71,12 @@ public:
     // Pick up m_item.
     bool pickupItem();
 
+    // Drop m_item: relinquish ownership, but do not set it to NULL.
+    void dropItem();
+
+    // Return whether we have a valid grab
+    bool haveGrab();
+
     // Get the position where a grabbed item should be held
     void getGrabPos(int *x, int *y);
 

@@ -260,3 +260,17 @@ bool Walker::pickupItem()
     }
     return true;
 }
+
+void Walker::dropItem()
+{
+    if (haveGrab()) {
+        m_item->m_owner = NULL;
+        m_item->m_state = Item::SFree;
+        m_item->m_locked = false;
+    }
+}
+
+bool Walker::haveGrab()
+{
+    return m_item && m_item->isvalid() && m_item->m_owner == this;
+}

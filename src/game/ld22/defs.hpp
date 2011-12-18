@@ -6,7 +6,8 @@ enum {
     InRight,
     InLeft,
     InUp,
-    InDown
+    InDown,
+    InThrow
 };
 
 static const int FRAME_TIME = 32;

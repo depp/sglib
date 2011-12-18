@@ -24,6 +24,9 @@ static const unsigned char KEY_MAP[] = {
     KP_6, InRight,
     KEY_Right, InRight,
 
+    KEY_Space, InThrow,
+    KP_0, InThrow,
+
     255
 };
 

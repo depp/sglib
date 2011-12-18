@@ -4,14 +4,13 @@
 namespace LD22 {
 
 class Mover : public Actor {
-protected:
+public:
     // xspeed, yspeed.  Must be initialized by subclass.
     // These will be changed by Mover::advance if it
     // hits an obstacle.
     // Multiply by SPEED_SCALE.
     int m_xs, m_ys;
 
-public:
     explicit Mover(Type t)
         : Actor(t), m_xs(0), m_ys(0)
     { }

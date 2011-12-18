@@ -4,9 +4,12 @@
 namespace LD22 {
 
 class Player : public Walker {
+    // Can't pick anything up until this hits zero.
+    int m_pickuptimer;
+
 public:
     Player(int x, int y)
-        : Walker(false)
+        : Walker(false), m_pickuptimer(0)
     {
         m_x = x;
         m_y = y;
