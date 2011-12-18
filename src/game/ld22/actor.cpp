@@ -77,6 +77,8 @@ static int LOOK_OFFSET = 64;
 
 bool Actor::visible(Actor *a)
 {
+    if (!a || !a->isvalid())
+        return false;
     int c[4], i;
     c[0] = centerx(); c[1] = centery();
     c[2] = a->centerx(); c[3] = a->centery();

@@ -7,6 +7,9 @@
 #include <stdlib.h>
 using namespace LD22;
 
+static int AHA_DELAY = 5;
+static int AHA_TIME = 15;
+
 static int lookInterval()
 {
     static int LOOK_INTERVAL = 15;
@@ -61,7 +64,7 @@ void Other::draw(int delta, Tileset &tiles)
         break;
 
     case SAha:
-        if (m_timer > 15) {
+        if (m_timer > AHA_DELAY) {
             tiles.drawWidget(x - 30, y + 40, Widget::ThoughtLeft, 1.0f);
             tiles.drawWidget(x + 15, y + 100, Widget::Star, 0.6f);
         }
@@ -72,8 +75,9 @@ void Other::draw(int delta, Tileset &tiles)
 void Other::idle()
 {
     if (m_timer >= 0) {
+        m_visfail = 0;
         scanItems();
-        if (m_item && visible(m_item)) {
+        if (itemVisible()) {
             setState(SAha);
             return;
         }
@@ -88,7 +92,7 @@ void Other::chase()
         return;
     }
     if (m_timer >= 0) {
-        if (!visible(m_item)) {
+        if (!itemVisible()) {
             setState(SIdle);
             return;
         }
@@ -135,7 +139,7 @@ void Other::aha()
         setState(SIdle);
         return;
     }
-    if (m_timer == 30) {
+    if (m_timer == AHA_DELAY + AHA_TIME) {
         setState(SChase);
         return;
     }
@@ -148,6 +152,36 @@ void Other::munch()
 
 void Other::setState(State s)
 {
+    switch (s) {
+    case SIdle: puts("idle"); break;
+    case SAha: puts("aha"); break;
+    case SChase: puts("chase"); break;
+    case SMunch: puts("munch"); break;
+    }
     m_state = s;
     m_timer = 0;
+}
+
+// This smooths over the results and changes a few "false" results to
+// "true".
+bool Other::itemVisible()
+{
+    if (!m_item) {
+        m_visfail = 0;
+        return false;
+    }
+    if (visible(m_item))
+        goto yes;
+    if (m_item->m_state == Item::SGrabbed && visible(m_item->m_owner))
+        goto yes;
+    if (m_visfail) {
+        m_visfail--;
+        return true;
+    } else {
+        return false;
+    }
+
+yes:
+    m_visfail = 1;
+    return true;
 }

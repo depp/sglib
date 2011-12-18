@@ -103,7 +103,8 @@ public:
     }
 
     // Test if the other actor is visible.  Not deterministic, uses
-    // random offsets to "peek around corners".
+    // random offsets to "peek around corners".  Safe to pass NULL or
+    // defunct actors.
     bool visible(Actor *a);
 };
 

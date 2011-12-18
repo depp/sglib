@@ -13,10 +13,11 @@ class Other : public Walker {
 
     State m_state;
     int m_timer;
+    int m_visfail;
 
 public:
     Other(int x, int y)
-        : Walker(true), m_state(SIdle)
+        : Walker(true), m_state(SIdle), m_visfail(0)
     {
         m_x = x;
         m_y = y;
@@ -33,6 +34,7 @@ private:
     void aha();
     void munch();
     void setState(State s);
+    bool itemVisible();
 };
 
 }
