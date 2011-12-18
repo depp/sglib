@@ -5,16 +5,16 @@
 #include <vector>
 #include <stdio.h>
 namespace LD22 {
-class ScreenBase;
+class Screen;
 class Actor;
 
 class Area {
-    ScreenBase &m_screen;
+    Screen &m_screen;
     unsigned char m_tiles[TILE_HEIGHT][TILE_WIDTH];
     std::vector<Actor *> m_actors;
 
 public:
-    Area(ScreenBase &screen);
+    Area(Screen &screen);
     ~Area();
 
     int getTile(int x, int y) const
@@ -30,7 +30,7 @@ public:
             m_tiles[y][x] = v;
     }
 
-    ScreenBase &screen()
+    Screen &screen()
     {
         return m_screen;
     }

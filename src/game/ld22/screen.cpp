@@ -1,7 +1,6 @@
 #include "defs.hpp"
 #include "screen.hpp"
 #include "area.hpp"
-#include "player.hpp"
 #include "client/keyboard/keycode.h"
 #include "client/ui/event.hpp"
 using namespace LD22;
@@ -58,7 +57,6 @@ void Screen::init()
 void Screen::startGame()
 {
     m_area->load();
-    m_area->addActor(new Player(64, 64, *this));
 }
 
 void Screen::drawExtra(int delta)

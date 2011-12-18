@@ -1,15 +1,16 @@
 #include "area.hpp"
 #include "actor.hpp"
-#include "screenbase.hpp"
+#include "screen.hpp"
 #include "tileset.hpp"
 #include "level.hpp"
 #include "defs.hpp"
+#include "player.hpp"
 #include "client/opengl.hpp"
 #include "client/texturefile.hpp"
 #include <cstring>
 using namespace LD22;
 
-Area::Area(ScreenBase &screen)
+Area::Area(Screen &screen)
     : m_screen(screen)
 { }
 
@@ -48,6 +49,7 @@ void Area::advance()
 
 void Area::load()
 {
-    puts("LOAD");
-    std::memcpy(m_tiles, m_screen.level().tiles, sizeof(m_tiles));
+    const Level &l = m_screen.level();
+    std::memcpy(m_tiles, l.tiles, sizeof(m_tiles));
+    addActor(new Player(l.playerx, l.playery));
 }

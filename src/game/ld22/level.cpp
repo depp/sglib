@@ -20,14 +20,15 @@ void Level::clear()
     std::memset(tiles, 0, TILE_COUNT);
     std::memset(tiles, 1, TILE_WIDTH);
     playerx = SCREEN_WIDTH / 2 - Walker::WWIDTH / 2;
-    playery = TILE_HEIGHT;
+    playery = TILE_SIZE;
     background = 0;
 }
 
 enum {
     DATA_EOF,
     DATA_AREA,
-    DATA_BACKGROUND
+    DATA_BACKGROUND,
+    DATA_PLAYER
 };
 
 void Level::load(int num)
@@ -60,6 +61,14 @@ void Level::load(int num)
             background = *p++;
             break;
 
+        case DATA_PLAYER:
+            if (e - p < 4)
+                goto err;
+            playerx = (p[0] << 8) | p[1];
+            playery = (p[2] << 8) | p[3];
+            p += 4;
+            break;
+
         default:
             goto err;
         }
@@ -81,6 +90,16 @@ void Level::save(int num)
 
     fputc(DATA_BACKGROUND, f);
     fputc(background, f);
+
+    {
+        unsigned char buf[5];
+        buf[0] = DATA_PLAYER;
+        buf[1] = playerx >> 8;
+        buf[2] = playerx;
+        buf[3] = playery >> 8;
+        buf[4] = playery;
+        fwrite(buf, 5, 1, f);
+    }
 
     fputc(DATA_EOF, f);
 
