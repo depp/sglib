@@ -131,7 +131,6 @@ void Screen::win()
 
 void Screen::startLevel(int num)
 {
-    printf("startLevel(%d)\n", num);
     if (m_levelno != num)
         level().load(num);
     loadLevel();
