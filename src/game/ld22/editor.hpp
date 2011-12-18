@@ -32,6 +32,7 @@ private:
 
     void tileBrush(int x, int y);
 
+    void open(int num);
     void save();
 };
 

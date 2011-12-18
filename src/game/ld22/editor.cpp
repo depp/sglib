@@ -25,8 +25,7 @@ Editor::~Editor()
 
 void Editor::init()
 {
-    level().clear();
-    loadLevel();
+    open(1);
 }
 
 void Editor::handleEvent(const UI::Event &evt)
@@ -140,6 +139,15 @@ void Editor::tileBrush(int x, int y)
     } else if (m_mouse == UI::ButtonRight) {
         l.tiles[y][x] = 0;
     }
+}
+
+void Editor::open(int num)
+{
+    level().clear();
+    try {
+        level().load(num);
+    } catch (Path::file_not_found &) { }
+    loadLevel();
 }
 
 void Editor::save()
