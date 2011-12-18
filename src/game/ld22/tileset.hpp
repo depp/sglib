@@ -5,7 +5,7 @@
 namespace LD22 {
 
 class Tileset {
-    Texture::Ref m_tex;
+    Texture::Ref m_tile, m_stick;
 
 public:
     Tileset();
@@ -13,6 +13,8 @@ public:
 
     void drawTiles(const unsigned char t[TILE_HEIGHT][TILE_WIDTH],
                    int delta) const;
+
+    void drawStick(int x, int y, int frame);
 };
 
 }

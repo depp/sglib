@@ -3,6 +3,7 @@
 #include "defs.hpp"
 namespace LD22 {
 class Area;
+class Tileset;
 
 class Actor {
 public:
@@ -18,7 +19,7 @@ public:
     virtual ~Actor();
 
     // Called with number of ms since last frame
-    virtual void draw(int delta);
+    virtual void draw(int delta, Tileset &tiles);
 
     void getDrawPos(int *x, int *y, int delta)
     {

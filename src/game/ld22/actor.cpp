@@ -7,19 +7,10 @@ using namespace LD22;
 Actor::~Actor()
 { }
 
-void Actor::draw(int delta)
+void Actor::draw(int delta, Tileset &tiles)
 {
-    int x, y;
-    getDrawPos(&x, &y, delta);
-    int w = m_w, h = m_h;
-    glColor3ub(255, 40, 40);
-    glBegin(GL_QUADS);
-    glVertex2f(x, y);
-    glVertex2f(x, y + h);
-    glVertex2f(x + w, y + h);
-    glVertex2f(x + w, y);
-    glEnd();
-    glColor3ub(255, 255, 255);
+    (void) tiles;
+    drawHitBox(delta);
 }
 
 void Actor::drawHitBox(int delta)

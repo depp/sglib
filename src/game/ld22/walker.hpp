@@ -1,7 +1,6 @@
 #ifndef GAME_LD22_WALKER_HPP
 #define GAME_LD22_WALKER_HPP
 #include "actor.hpp"
-#include "client/texture.hpp"
 namespace LD22 {
 
 /* An actor that walks around, is affected by gravity.  */
@@ -28,7 +27,6 @@ class Walker : public Actor {
     int m_xspeed, m_yspeed;
     // Updated by Walker
     WState m_wstate;
-    Texture::Ref m_tex;
 
     WAnim m_anim;
     int m_animtime;
@@ -42,14 +40,12 @@ protected:
     int m_xpush, m_ypush;
 
 public:
-    static const int WWIDTH = 28, WHEIGHT = 48;
-
     Walker(int x, int y)
-        : Actor(x, y, WWIDTH, WHEIGHT)
+        : Actor(x, y, STICK_WIDTH, STICK_HEIGHT)
     { }
 
     virtual ~Walker();
-    virtual void draw(int delta);
+    virtual void draw(int delta, Tileset &tiles);
     virtual void init();
     virtual void advance();
 

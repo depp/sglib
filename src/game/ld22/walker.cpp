@@ -1,4 +1,6 @@
+#include "area.hpp"
 #include "walker.hpp"
+#include "tileset.hpp"
 #include "client/texturefile.hpp"
 #include "sys/rand.hpp"
 #include <stdio.h>
@@ -7,36 +9,11 @@ using namespace LD22;
 Walker::~Walker()
 { }
 
-void Walker::draw(int delta)
+void Walker::draw(int delta, Tileset &tiles)
 {
-    int s = m_sprite, u = s & 7, v = (s / 8) & 3;
-    bool flip = s & 0x80;
     int x, y;
     getDrawPos(&x, &y, delta);
-    float x0 = x + WWIDTH/2 - 32, x1 = x0 + 64;
-    float y0 = y + WHEIGHT/2 - 32, y1 = y0 + 64;
-    float u0 = u * 0.125f, u1 = u0 + 0.125f;
-    float v1 = v * 0.25f, v0 = v1 + 0.25f;
-    if (flip) {
-        float t;
-        t = u0;
-        u0 = u1;
-        u1 = t;
-    }
-    glEnable(GL_TEXTURE_2D);
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_DST_COLOR, GL_ZERO);
-    m_tex->bind();
-    glBegin(GL_QUADS);
-    glTexCoord2f(u0, v0); glVertex2f(x0, y0);
-    glTexCoord2f(u0, v1); glVertex2f(x0, y1);
-    glTexCoord2f(u1, v1); glVertex2f(x1, y1);
-    glTexCoord2f(u1, v0); glVertex2f(x1, y0);
-    glEnd();
-    glDisable(GL_BLEND);
-    glDisable(GL_TEXTURE_2D);
-
-    // drawHitBox(delta);
+    tiles.drawStick(x, y, m_sprite);
 }
 
 void Walker::init()
@@ -45,7 +22,6 @@ void Walker::init()
     m_yspeed = 0;
     m_xpush = 0;
     checkState();
-    m_tex = TextureFile::open("sprite/stick.png");
 }
 
 #if 0

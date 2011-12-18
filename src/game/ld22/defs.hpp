@@ -17,6 +17,7 @@ static const int TILE_WIDTH = 24;
 static const int TILE_HEIGHT = 15;
 static const int SCREEN_WIDTH = TILE_SIZE * TILE_WIDTH;
 static const int SCREEN_HEIGHT = TILE_SIZE * TILE_HEIGHT;
+static const int STICK_WIDTH = 28, STICK_HEIGHT = 48;
 
 }
 #endif

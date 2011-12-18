@@ -28,11 +28,12 @@ void Area::addActor(Actor *a)
 
 void Area::draw(int delta)
 {
-    m_screen.tileset().drawTiles(m_tiles, delta);
+    Tileset &tiles = m_screen.tileset();
+    tiles.drawTiles(m_tiles, delta);
     std::vector<Actor *>::iterator i = m_actors.begin(), e = m_actors.end();
     for (; i != e; ++i) {
         Actor &a = **i;
-        a.draw(delta);
+        a.draw(delta, tiles);
     }
 }
 
