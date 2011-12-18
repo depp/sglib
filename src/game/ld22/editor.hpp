@@ -17,7 +17,7 @@ class Editor : public ScreenBase {
     int m_tile;
     int m_mx, m_my;
     int m_mouse;
-    int m_ent;
+    int m_ent, m_etype;
 
 protected:
     virtual void drawExtra(int delta);
@@ -38,6 +38,7 @@ private:
     bool translateMouse(const UI::MouseEvent &evt, int *x, int *y);
 
     void setMode(Mode m);
+    void incType(int delta, bool max);
     void tileBrush(int x, int y);
     void selectEntity(int x, int y, bool click);
     void newEntity(int x, int y);

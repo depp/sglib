@@ -17,7 +17,8 @@ static bool inScreen(int x, int y)
 }
 
 Editor::Editor()
-    : m_mode(MBrush), m_tile(0), m_mx(0), m_my(0), m_mouse(-1)
+    : m_mode(MBrush), m_tile(1), m_mx(0), m_my(0), m_mouse(-1),
+      m_ent(-1), m_etype(0)
 {
     setSize(SCREEN_WIDTH + EDITBAR_SIZE, SCREEN_HEIGHT);
 }
@@ -63,6 +64,22 @@ void Editor::handleKeyDown(const UI::KeyEvent &evt)
 
     case KEY_2:
         setMode(MEntity);
+        break;
+
+    case KEY_PageUp:
+        incType(-1, false);
+        break;
+
+    case KEY_PageDown:
+        incType(1, false);
+        break;
+
+    case KEY_Home:
+        incType(-1, true);
+        break;
+
+    case KEY_End:
+        incType(1, true);
         break;
 
     default:
@@ -197,13 +214,16 @@ void Editor::drawExtra(int delta)
     glVertex2s(0, h);
     glEnd();
 
-    const char *mname = NULL;
     switch (m_mode) {
-    case MBrush: mname = "brush"; break;
-    case MEntity: mname = "entity"; break;
+    case MBrush:
+        f.print(5, 5, "brush");
+        break;
+
+    case MEntity:
+        f.print(5, 5, "entity");
+        f.print(5, 25, Entity::typeName((Entity::Type) m_etype));
+        break;
     }
-    if (mname)
-        f.print(5, 5, mname);
 
     glPopMatrix();
 }
@@ -225,6 +245,32 @@ void Editor::setMode(Mode m)
     m_ent = -1;
 }
 
+static void incWrap(int &v, int minv, int maxv, int delta, bool max)
+{
+    if (max) {
+        v = delta > 0 ? maxv : minv;
+    } else {
+        v += delta;
+        if (v > maxv)
+            v = minv;
+        else if (v < minv)
+            v = maxv;
+    }
+}
+
+void Editor::incType(int delta, bool max)
+{
+    switch (m_mode) {
+    case MBrush:
+        incWrap(m_tile, 1, MAX_TILE, delta, max);
+        break;
+
+    case MEntity:
+        incWrap(m_etype, 0, Entity::MAX_TYPE, delta, max);
+        break;
+    }
+}
+
 void Editor::tileBrush(int x, int y)
 {
     if (x < 0 || y < 0 || x >= TILE_WIDTH || y >= TILE_HEIGHT) {
@@ -233,7 +279,7 @@ void Editor::tileBrush(int x, int y)
     }
     Level &l = level();
     if (m_mouse == UI::ButtonLeft) {
-        l.tiles[y][x] = 1;
+        l.tiles[y][x] = m_tile;
     } else if (m_mouse == UI::ButtonRight) {
         l.tiles[y][x] = 0;
     }
@@ -266,7 +312,7 @@ void Editor::selectEntity(int x, int y, bool click)
 void Editor::newEntity(int x, int y)
 {
     Entity e;
-    e.type = Entity::Null;
+    e.type = (Entity::Type) m_etype;
     e.x = x;
     e.y = y;
     Level &l = level();
