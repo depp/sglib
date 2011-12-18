@@ -17,7 +17,7 @@ class Other : public Walker {
 
 public:
     Other(int x, int y)
-        : Walker(true), m_state(SIdle), m_visfail(0)
+        : Walker(true), m_state(SIdle), m_timer(0), m_visfail(0)
     {
         m_x = x;
         m_y = y;
