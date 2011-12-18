@@ -47,6 +47,15 @@ void Screen::handleEvent(const UI::Event &evt)
     switch (evt.type) {
     case UI::KeyDown:
         // if (evt.keyEvent().key == KEY_Escape)
+        switch (evt.keyEvent().key) {
+        case KEY_F5:
+            lose();
+            break;
+
+        case KEY_F8:
+            win();
+            break;
+        }
     case UI::KeyUp:
         m_key.handleKeyEvent(evt.keyEvent());
         break;
