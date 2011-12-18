@@ -102,6 +102,8 @@ public:
         m_type = ADefunct;
     }
 
+    // Test if the other actor is visible.  Not deterministic, uses
+    // random offsets to "peek around corners".
     bool visible(Actor *a);
 };
 
