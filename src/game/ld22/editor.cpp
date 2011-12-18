@@ -217,6 +217,10 @@ static void drawEntity(const Entity &e, Tileset &t)
     case Entity::Other:
         t.drawStick(e.x, e.y, 0, true);
         break;
+
+    case Entity::Bomb:
+        t.drawWidget(e.x, e.y, Widget::Bomb, 1.0f);
+        break;
     }
 }
 

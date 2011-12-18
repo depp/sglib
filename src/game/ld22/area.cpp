@@ -85,11 +85,15 @@ void Area::load()
             break;
 
         case Entity::Star:
-            addActor(new Item(i->x, i->y));
+            addActor(new Item(i->x, i->y, Item::Star));
             break;
 
         case Entity::Other:
             addActor(new Other(i->x, i->y));
+            break;
+
+        case Entity::Bomb:
+            addActor(new Item(i->x, i->y, Item::Bomb));
             break;
         }
     }

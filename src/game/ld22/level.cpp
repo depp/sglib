@@ -13,6 +13,7 @@ const char *Entity::typeName(Type t)
     case Player: return "Player";
     case Star: return "Star";
     case Other: return "Other";
+    case Bomb: return "Bomb";
     default: return "<unknown>";
     }
 }

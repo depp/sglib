@@ -177,6 +177,11 @@ void Walker::checkState()
 
 void Walker::scanItems()
 {
+    if (haveGrab()) {
+        updateItem();
+        if (m_item)
+            return;
+    }
     const std::vector<Actor *> &v = area().actors();
     std::vector<Actor *>::const_iterator i = v.begin(), e = v.end();
     int x = centerx(), y = centery();
@@ -254,6 +259,7 @@ bool Walker::pickupItem()
     if (m_item->m_owner != this) {
         if (m_item->m_locked)
             return false;
+        dropItem();
         m_item->m_owner = this;
         m_item->m_state = Item::SGrabbing;
         m_item->m_frame = 0;

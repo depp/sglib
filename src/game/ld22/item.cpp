@@ -11,7 +11,16 @@ void Item::draw(int delta, Tileset &tiles)
 {
     int x, y;
     getDrawPos(&x, &y, delta);
-    tiles.drawWidget(x, y, Widget::Star, 1.0f);
+
+    switch (m_itype) {
+    case Star:
+        tiles.drawWidget(x, y, Widget::Star, 1.0f);
+        break;
+
+    case Bomb:
+        tiles.drawWidget(x, y, Widget::Bomb, 1.0f);
+        break;
+    }
 }
 
 void Item::advance()
