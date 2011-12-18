@@ -11,7 +11,7 @@ struct Entity {
         Player
     } Type;
 
-    static const int MAX_TYPE = (int) Player + 1;
+    static const int MAX_TYPE = (int) Player;
     static const char *typeName(Type t);
 
     Type type;
