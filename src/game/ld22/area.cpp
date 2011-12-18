@@ -4,6 +4,7 @@
 #include "tileset.hpp"
 #include "level.hpp"
 #include "defs.hpp"
+#include "other.hpp"
 #include "player.hpp"
 #include "item.hpp"
 #include "client/opengl.hpp"
@@ -66,6 +67,10 @@ void Area::load()
 
         case Entity::Star:
             addActor(new Item(i->x, i->y));
+            break;
+
+        case Entity::Other:
+            addActor(new Other(i->x, i->y));
             break;
         }
     }

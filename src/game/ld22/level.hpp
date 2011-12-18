@@ -9,10 +9,11 @@ struct Entity {
     typedef enum {
         Null,
         Player,
-        Star
+        Star,
+        Other
     } Type;
 
-    static const int MAX_TYPE = (int) Star;
+    static const int MAX_TYPE = (int) Other;
     static const char *typeName(Type t);
 
     Type type;
