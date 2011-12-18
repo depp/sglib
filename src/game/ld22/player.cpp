@@ -41,8 +41,7 @@ void Player::advance()
     Walker::advance();
 }
 
-void Player::didFallOut()
+void Player::wasDestroyed()
 {
-    Screen &scr = area().screen();
-    scr.lose();
+    area().removePlayer();
 }

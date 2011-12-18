@@ -37,6 +37,11 @@ public:
 
     virtual ~Actor();
 
+    // A final "this object was destroyed" message Unlike the
+    // destructor ~Actor, in this method it is guaranteed that there
+    // is an active Area with an active game.
+    virtual void wasDestroyed();
+
     // Called with number of ms since last frame
     virtual void draw(int delta, Tileset &tiles);
 

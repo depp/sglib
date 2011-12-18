@@ -8,6 +8,9 @@ using namespace LD22;
 Actor::~Actor()
 { }
 
+void Actor::wasDestroyed()
+{ }
+
 void Actor::draw(int delta, Tileset &tiles)
 {
     (void) tiles;

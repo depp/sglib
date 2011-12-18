@@ -1,11 +1,25 @@
 #include "item.hpp"
 #include "tileset.hpp"
 #include "walker.hpp"
+#include "area.hpp"
 #include <stdio.h>
 using namespace LD22;
 
 Item::~Item()
 { }
+
+void Item::wasDestroyed()
+{
+    markAsLost();
+}
+
+void Item::markAsLost()
+{
+    if (!m_gone) {
+        area().removeItem();
+        m_gone = true;
+    }
+}
 
 void Item::draw(int delta, Tileset &tiles)
 {

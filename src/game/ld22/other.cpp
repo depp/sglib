@@ -1,6 +1,5 @@
 #include "other.hpp"
 #include "item.hpp"
-#include "screen.hpp"
 #include "area.hpp"
 #include "tileset.hpp"
 #include "effect.hpp"
@@ -18,6 +17,11 @@ static int lookInterval()
 
 Other::~Other()
 { }
+
+void Other::wasDestroyed()
+{
+    area().removeOther();
+}
 
 void Other::advance()
 {
@@ -45,12 +49,6 @@ void Other::advance()
     }
 
     Walker::advance();
-}
-
-void Other::didFallOut()
-{
-    Screen &scr = area().screen();
-    scr.win();
 }
 
 void Other::idle()
@@ -98,6 +96,7 @@ void Other::chase()
         m_xpush = 0;
         m_ypush = 0;
         area().addActor(new Effect(Effect::SayHeart, this));
+        m_item->markAsLost();
         return;
     }
 

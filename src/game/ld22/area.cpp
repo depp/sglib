@@ -13,6 +13,14 @@
 #include <algorithm>
 using namespace LD22;
 
+// Time between when all items are destroyed and when the level is
+// lost.  The level can still be won in the interim.
+static const int ITEM_TIMER = 25;
+
+// Time between when all others are gone and the level is wone.  The
+// level can still be lost in the interim.
+static const int OTHER_TIMER = 50;
+
 Area::Area(Screen &screen)
     : m_screen(screen)
 { }
@@ -51,6 +59,16 @@ struct ActorValid {
 
 void Area::advance()
 {
+    if (m_timer > 0) {
+        m_timer--;
+        if (!m_timer) {
+            if (!m_others)
+                m_screen.win();
+            else
+                m_screen.lose();
+            m_timer = -1;
+        }
+    }
     ActorValid filt;
     std::vector<Actor *>::iterator
         b = m_actors.begin(), i, e = m_actors.end(), ne;
@@ -63,8 +81,10 @@ void Area::advance()
         a.m_y0 = a.m_y;
         a.advance();
     }
-    for (; i != e; ++i)
+    for (; i != e; ++i) {
+        (*i)->wasDestroyed();
         delete *i;
+    }
     m_actors.erase(ne, e);
     m_actors.insert(m_actors.end(), m_anew.begin(), m_anew.end());
     m_anew.clear();
@@ -73,6 +93,10 @@ void Area::advance()
 void Area::load()
 {
     clear();
+    m_items = 0;
+    m_others = 0;
+    m_players = 0;
+    m_timer = 0;
     const Level &l = m_screen.level();
     std::memcpy(m_tiles, l.tiles, sizeof(m_tiles));
     std::vector<Entity>::const_iterator
@@ -84,18 +108,22 @@ void Area::load()
 
         case Entity::Player:
             addActor(new Player(i->x, i->y));
+            m_players++;
             break;
 
         case Entity::Star:
             addActor(new Item(i->x, i->y, Item::Star));
+            m_items++;
             break;
 
         case Entity::Other:
             addActor(new Other(i->x, i->y));
+            m_others++;
             break;
 
         case Entity::Bomb:
             addActor(new Item(i->x, i->y, Item::Bomb));
+            m_items++;
             break;
         }
     }
@@ -132,4 +160,34 @@ bool Area::trace(int x1, int y1, int x2, int y2)
             return false;
     }
     return true;
+}
+
+void Area::removeItem()
+{
+    if (m_timer >= 0) {
+        m_items--;
+        if (!m_items && (m_timer == 0 || m_timer > ITEM_TIMER))
+            m_timer = ITEM_TIMER;
+    }
+}
+
+void Area::removeOther()
+{
+    if (m_timer >= 0) {
+        m_others--;
+        if (!m_others && (m_timer == 0 || m_timer > OTHER_TIMER))
+            m_timer = OTHER_TIMER;
+    }
+}
+
+void Area::removePlayer()
+{
+    if (m_timer >= 0) {
+        puts("  >>");
+        m_players--;
+        if (!m_players) {
+            m_screen.lose();
+            m_timer = -1;
+        }
+    }
 }

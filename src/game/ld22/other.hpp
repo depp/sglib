@@ -25,7 +25,7 @@ public:
 
     virtual ~Other();
     virtual void advance();
-    virtual void didFallOut();
+    virtual void wasDestroyed();
 
 private:
     void idle();

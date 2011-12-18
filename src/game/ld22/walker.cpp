@@ -78,7 +78,6 @@ void Walker::advance()
 
     Mover::advance();
     if (m_y < OUT_OF_BOUNDS) {
-        didFallOut();
         destroy();
         return;
     }

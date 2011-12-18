@@ -5,6 +5,9 @@ namespace LD22 {
 class Walker;
 
 class Item : public Mover {
+    // No longer usable to player, but still on screen (maybe)
+    bool m_gone;
+
 public:
     typedef enum {
         SFree,
@@ -20,7 +23,7 @@ public:
     static const int IWIDTH = 48, IHEIGHT = 48;
 
     Item(int x, int y, Type t)
-        : Mover(AItem), m_itype(t),
+        : Mover(AItem), m_gone(false), m_itype(t),
           m_owner(0), m_state(SFree), m_frame(0), m_locked(false)
     {
         m_x = x;
@@ -30,7 +33,7 @@ public:
     }
 
     virtual ~Item();
-
+    virtual void wasDestroyed();
     virtual void draw(int delta, Tileset &tiles);
 
     virtual void advance();
@@ -47,6 +50,8 @@ public:
 
     // Locked items can't be grabbed
     bool m_locked;
+
+    void markAsLost();
 };
 
 }

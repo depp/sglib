@@ -56,10 +56,6 @@ public:
     virtual void init();
     virtual void advance();
 
-    // Called when the walker falls off screen The Walker will be
-    // automatically destroyed after this function returns
-    virtual void didFallOut() = 0;
-
     // Scan for items.  The closest item will be placed in m_item with
     // its distance.
     void scanItems();

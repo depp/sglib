@@ -14,6 +14,7 @@ class Area {
     unsigned char m_tiles[TILE_HEIGHT][TILE_WIDTH];
     std::vector<Actor *> m_actors, m_anew;
     std::vector<Thinker *> m_thinkers;
+    int m_items, m_others, m_players, m_timer;
 
 public:
     Area(Screen &screen);
@@ -55,6 +56,12 @@ public:
     {
         return m_thinkers;
     }
+
+    // Number of items / other is counted to determine winning and
+    // losing the level
+    void removeItem();
+    void removeOther();
+    void removePlayer();
 };
 
 }
