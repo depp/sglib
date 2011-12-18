@@ -178,6 +178,18 @@ void Editor::handleMouseMove(const UI::MouseEvent &evt)
     }
 }
 
+static void drawEntity(const Entity &e, Tileset &t)
+{
+    switch (e.type) {
+    case Entity::Null:
+        break;
+
+    case Entity::Player:
+        t.drawStick(e.x, e.y, 0);
+        break;
+    }
+}
+
 void Editor::drawExtra(int delta)
 {
     BitmapFont &f = font();
@@ -190,6 +202,7 @@ void Editor::drawExtra(int delta)
         int idx = i - s;
         bool selected = idx == m_ent;
         int x = i->x, y = i->y;
+        drawEntity(*i, tileset());
         if (selected)
             glLineWidth(5.0f);
         else
