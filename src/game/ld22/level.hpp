@@ -8,10 +8,11 @@ namespace LD22 {
 struct Entity {
     typedef enum {
         Null,
-        Player
+        Player,
+        Star
     } Type;
 
-    static const int MAX_TYPE = (int) Player;
+    static const int MAX_TYPE = (int) Star;
     static const char *typeName(Type t);
 
     Type type;

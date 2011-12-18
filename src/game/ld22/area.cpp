@@ -5,6 +5,7 @@
 #include "level.hpp"
 #include "defs.hpp"
 #include "player.hpp"
+#include "item.hpp"
 #include "client/opengl.hpp"
 #include "client/texturefile.hpp"
 #include <cstring>
@@ -61,6 +62,10 @@ void Area::load()
 
         case Entity::Player:
             addActor(new Player(i->x, i->y));
+            break;
+
+        case Entity::Star:
+            addActor(new Item(i->x, i->y));
             break;
         }
     }

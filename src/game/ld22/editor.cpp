@@ -187,6 +187,9 @@ static void drawEntity(const Entity &e, Tileset &t)
     case Entity::Player:
         t.drawStick(e.x, e.y, 0);
         break;
+
+    case Entity::Star:
+        t.drawWidget(e.x, e.y, Widget::Star);
     }
 }
 

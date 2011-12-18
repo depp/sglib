@@ -11,6 +11,7 @@ const char *Entity::typeName(Type t)
     switch (t) {
     case Null: return "null";
     case Player: return "Player";
+    case Star: return "Star";
     default: return "<unknown>";
     }
 }
