@@ -33,7 +33,7 @@ void Tileset::drawTiles(const unsigned char t[TILE_HEIGHT][TILE_WIDTH],
                 continue;
             int u = (i - 1) & 3, v = ((i - 1) >> 2) & 3;
             float u0 = u * 0.25f, u1 = u0 + 0.25f;
-            float v1 = v * 0.25f, v0 = v1 - 0.25f;
+            float v1 = v * 0.25f, v0 = v1 + 0.25f;
             glTexCoord2f(u0, v0); glVertex2f(x, y);
             glTexCoord2f(u0, v1); glVertex2f(x, y + 1);
             glTexCoord2f(u1, v1); glVertex2f(x + 1, y + 1);
