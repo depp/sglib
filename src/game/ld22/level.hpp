@@ -11,10 +11,13 @@ struct Entity {
         Player,
         Star,
         Other,
-        Bomb
+        Bomb,
+        EndTitle,
+        EndStar,
+        EndWalker
     } Type;
 
-    static const int MAX_TYPE = (int) Bomb;
+    static const int MAX_TYPE = (int) EndWalker;
     static const char *typeName(Type t);
 
     Type type;

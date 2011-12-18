@@ -9,7 +9,8 @@ public:
         ThinkStar,
         ThinkStarBang,
         ThinkStarQuestion,
-        SayHeart
+        SayHeart,
+        EndTitle
     } EType;
 
 private:
@@ -17,6 +18,7 @@ private:
     Actor *m_track;
     int m_timer;
     bool m_right;
+    int m_state;
 
 public:
 

@@ -14,6 +14,9 @@ const char *Entity::typeName(Type t)
     case Star: return "Star";
     case Other: return "Other";
     case Bomb: return "Bomb";
+    case EndTitle: return "ETitl";
+    case EndStar: return "EStar";
+    case EndWalker: return "EWalk";
     default: return "<unknown>";
     }
 }

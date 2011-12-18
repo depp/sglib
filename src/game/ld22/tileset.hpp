@@ -23,7 +23,7 @@ static const int MAX_WIDGET = Question;
 };
 
 class Tileset {
-    Texture::Ref m_tile, m_stick, m_widget;
+    Texture::Ref m_tile, m_stick, m_widget, m_end;
 
 public:
     Tileset();
@@ -35,6 +35,10 @@ public:
     void drawStick(int x, int y, int frame, bool isOther);
 
     void drawWidget(int x, int y, int which, float scale);
+
+    void loadEnd();
+
+    void drawEnd(int x, int y, int which, float scale);
 };
 
 }

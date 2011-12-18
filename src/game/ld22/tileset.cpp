@@ -131,3 +131,33 @@ void Tileset::drawWidget(int x, int y, int which, float scale)
     glDisable(GL_BLEND);
     glDisable(GL_TEXTURE_2D);
 }
+
+void Tileset::loadEnd()
+{
+    m_end = TextureFile::open("menu/fin.jpg");
+}
+
+void Tileset::drawEnd(int x, int y, int which, float scale)
+{
+    float u0 = 0.0f, u1 = 1.0f;
+    float v0 = 0.0f, v1 = 1.0f;
+    switch (which) {
+    case 0: v0 = 0.50f; v1 = 0.00f; break;
+    case 1: v0 = 0.75f; v1 = 0.50f; break;
+    case 2: v0 = 1.00f; v1 = 0.75f; break;
+    }
+    float x0 = x, x1 = x + scale;
+    float y0 = y, y1 = y + scale * (which == 0 ? 1.0f : 0.5f);
+    glEnable(GL_TEXTURE_2D);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_COLOR);
+    m_end->bind();
+    glBegin(GL_QUADS);
+    glTexCoord2f(u0, v0); glVertex2f(x0, y0);
+    glTexCoord2f(u0, v1); glVertex2f(x0, y1);
+    glTexCoord2f(u1, v1); glVertex2f(x1, y1);
+    glTexCoord2f(u1, v0); glVertex2f(x1, y0);
+    glEnd();
+    glDisable(GL_BLEND);
+    glDisable(GL_TEXTURE_2D);
+}

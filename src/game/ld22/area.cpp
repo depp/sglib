@@ -7,6 +7,7 @@
 #include "other.hpp"
 #include "player.hpp"
 #include "item.hpp"
+#include "effect.hpp"
 #include "client/opengl.hpp"
 #include "client/texturefile.hpp"
 #include <cstring>
@@ -124,6 +125,17 @@ void Area::load()
         case Entity::Bomb:
             addActor(new Item(i->x, i->y, Item::Bomb));
             m_items++;
+            break;
+
+        case Entity::EndTitle:
+            m_screen.tileset().loadEnd();
+            addActor(new Effect(Effect::EndTitle, i->x, i->y));
+            break;
+
+        case Entity::EndStar:
+            break;
+
+        case Entity::EndWalker:
             break;
         }
     }

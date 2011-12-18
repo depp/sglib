@@ -211,6 +211,7 @@ static void drawEntity(const Entity &e, Tileset &t)
         break;
 
     case Entity::Star:
+    case Entity::EndStar:
         t.drawWidget(e.x, e.y, Widget::Star, 1.0f);
         break;
 
@@ -220,6 +221,13 @@ static void drawEntity(const Entity &e, Tileset &t)
 
     case Entity::Bomb:
         t.drawWidget(e.x, e.y, Widget::Bomb, 1.0f);
+        break;
+
+    case Entity::EndWalker:
+        t.drawStick(e.x, e.y, 0, 2);
+        break;
+
+    case Entity::EndTitle:
         break;
     }
 }
