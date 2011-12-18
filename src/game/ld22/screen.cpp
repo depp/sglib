@@ -51,6 +51,7 @@ void Screen::handleEvent(const UI::Event &evt)
 void Screen::init()
 {
     level().load(1);
+    loadLevel();
     startGame();
 }
 
@@ -66,6 +67,7 @@ void Screen::drawExtra(int delta)
 
 void Screen::advance()
 {
+    ScreenBase::advance();
     m_area->advance();
 }
 
