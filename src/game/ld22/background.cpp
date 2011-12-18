@@ -184,13 +184,44 @@ public:
     }
 };
 
-class Mountains : public Background {
+class Picture {
+    std::string m_path;
     Texture::Ref m_tex;
+public:
+    Picture(const std::string &path)
+        : m_path(path)
+    { }
+
+    void init()
+    {
+        m_tex = TextureFile::open(m_path);        
+    }
+
+    void draw()
+    {
+        float x0 = 0.0f, x1 = SCREEN_WIDTH;
+        float y0 = 0.0f, y1 = SCREEN_HEIGHT;
+        float u0 = 0.1f, u1 = 0.9f;
+        float v0 = 1.0f, v1 = 0.0f;
+        glEnable(GL_TEXTURE_2D);
+        m_tex->bind();
+        glBegin(GL_QUADS);
+        glTexCoord2f(u0, v0); glVertex2f(x0, y0);
+        glTexCoord2f(u0, v1); glVertex2f(x0, y1);
+        glTexCoord2f(u1, v1); glVertex2f(x1, y1);
+        glTexCoord2f(u1, v0); glVertex2f(x1, y0);
+        glEnd();
+        glDisable(GL_TEXTURE_2D);
+    }
+};
+
+class Mountains : public Background {
+    Picture m_pic;
     Clouds m_clouds;
 
 public:
     Mountains()
-        : Background(MOUNTAINS)
+        : Background(MOUNTAINS), m_pic("back/mountains.jpg")
     { }
 
     virtual ~Mountains()
@@ -198,7 +229,7 @@ public:
 
     virtual void init()
     {
-        m_tex = TextureFile::open("back/mountains.jpg");
+        m_pic.init();
         m_clouds.init();
     }
 
@@ -209,29 +240,17 @@ public:
 
     virtual void draw(int delta)
     {
-        float x0 = 0.0f, x1 = SCREEN_WIDTH;
-        float y0 = 0.0f, y1 = SCREEN_HEIGHT;
-        float u0 = 0.0f, u1 = 1.0f;
-        float v0 = 1.0f, v1 = 0.0f;
-        glEnable(GL_TEXTURE_2D);
-        m_tex->bind();
-        glBegin(GL_QUADS);
-        glTexCoord2f(u0, v0); glVertex2f(x0, y0);
-        glTexCoord2f(u0, v1); glVertex2f(x0, y1);
-        glTexCoord2f(u1, v1); glVertex2f(x1, y1);
-        glTexCoord2f(u1, v0); glVertex2f(x1, y0);
-        glEnd();
-        glDisable(GL_TEXTURE_2D);
+        m_pic.draw();
         m_clouds.draw(delta);
     }
 };
 
 class City : public Background {
-    Texture::Ref m_tex;
+    Picture m_pic;
 
 public:
     City()
-        : Background(CITY)
+        : Background(CITY), m_pic("back/city.jpg")
     { }
 
     virtual ~City()
@@ -239,7 +258,7 @@ public:
 
     virtual void init()
     {
-        m_tex = TextureFile::open("back/city.jpg");
+        m_pic.init();
     }
 
     virtual void advance()
@@ -247,19 +266,7 @@ public:
 
     virtual void draw(int delta)
     {
-        float x0 = 0.0f, x1 = SCREEN_WIDTH;
-        float y0 = 0.0f, y1 = SCREEN_HEIGHT;
-        float u0 = 0.0f, u1 = 1.0f;
-        float v0 = 1.0f, v1 = 0.0f;
-        glEnable(GL_TEXTURE_2D);
-        m_tex->bind();
-        glBegin(GL_QUADS);
-        glTexCoord2f(u0, v0); glVertex2f(x0, y0);
-        glTexCoord2f(u0, v1); glVertex2f(x0, y1);
-        glTexCoord2f(u1, v1); glVertex2f(x1, y1);
-        glTexCoord2f(u1, v0); glVertex2f(x1, y0);
-        glEnd();
-        glDisable(GL_TEXTURE_2D);
+        m_pic.draw();
     }
 };
 
