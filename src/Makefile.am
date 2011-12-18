@@ -115,6 +115,8 @@ libmgfx_a_SOURCES = \
 	game/ld22/screen.hpp \
 	game/ld22/screenbase.cpp \
 	game/ld22/screenbase.hpp \
+	game/ld22/thinker.cpp \
+	game/ld22/thinker.hpp \
 	game/ld22/tileset.cpp \
 	game/ld22/tileset.hpp \
 	game/ld22/walker.cpp \

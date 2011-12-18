@@ -7,11 +7,13 @@
 namespace LD22 {
 class Screen;
 class Actor;
+class Thinker;
 
 class Area {
     Screen &m_screen;
     unsigned char m_tiles[TILE_HEIGHT][TILE_WIDTH];
     std::vector<Actor *> m_actors;
+    std::vector<Thinker *> m_thinkers;
 
 public:
     Area(Screen &screen);
@@ -36,6 +38,7 @@ public:
     }
 
     void addActor(Actor *a);
+    void addThinker(Thinker *a);
     void draw(int delta);
     void advance();
     void load();
