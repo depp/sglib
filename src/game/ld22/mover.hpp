@@ -4,14 +4,11 @@
 namespace LD22 {
 
 class Mover : public Actor {
-public:
-    // Multiply all speed by SPEED_SCALE
-    static const int SPEED_SCALE = 256;
-
 protected:
     // xspeed, yspeed.  Must be initialized by subclass.
     // These will be changed by Mover::advance if it
     // hits an obstacle.
+    // Multiply by SPEED_SCALE.
     int m_xs, m_ys;
 
 public:

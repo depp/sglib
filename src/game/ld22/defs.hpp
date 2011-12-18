@@ -20,6 +20,8 @@ static const int SCREEN_HEIGHT = TILE_SIZE * TILE_HEIGHT;
 static const int STICK_WIDTH = 28, STICK_HEIGHT = 48;
 
 static const int MAX_TILE = 16;
+static const int SPEED_SCALE = 256;
+static const int GRAVITY = SPEED_SCALE * 3/2;
 
 }
 #endif

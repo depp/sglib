@@ -36,7 +36,7 @@ static int clip(int x, int n)
 static int applyPush(int speed, int push, int scale, int traction)
 {
     int p = clip(push, Walker::PUSH_SCALE);
-    int nspeed = p * scale * Mover::SPEED_SCALE / Walker::PUSH_SCALE;
+    int nspeed = p * scale * SPEED_SCALE / Walker::PUSH_SCALE;
     return speed + clip(nspeed - speed, traction);
 }
 
@@ -44,14 +44,15 @@ void Walker::advance()
 {
     static const int
         // physics
-        GRAVITY = SPEED_SCALE * 3/2,
         SPEED_WALK = 12,
         SPEED_JUMP = 18,
         TRACTION_GROUND = SPEED_SCALE * 2,
         TRACTION_AIR = SPEED_SCALE * 1,
         // animation
         MIN_WALK = SPEED_SCALE * 2,
-        MIN_FALL = SPEED_SCALE * 6;
+        MIN_FALL = SPEED_SCALE * 6,
+        // out of bounds threshold
+        OUT_OF_BOUNDS = -100;
 
     int traction = 0;
     int prevyspeed = m_ys;
@@ -74,6 +75,11 @@ void Walker::advance()
     m_xs = applyPush(m_xs, m_xpush, SPEED_WALK, traction);
 
     Mover::advance();
+    if (m_y < OUT_OF_BOUNDS) {
+        didFallOut();
+        destroy();
+        return;
+    }
 
     switch (m_wstate) {
     case WStand:
@@ -198,6 +204,11 @@ void Walker::updateItem()
 {
     if (!m_item)
         return;
+    if (!m_item->isvalid()) {
+        m_item = NULL;
+        m_item_distance = 0.0f;
+        return;
+    }
     float dx = centerx() - m_item->centerx();
     float dy = centery() - m_item->centery();
     m_item_distance = std::sqrt(dx*dx + dy*dy);

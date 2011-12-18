@@ -13,6 +13,7 @@ public:
 
     virtual ~Player();
     virtual void advance();
+    virtual void didFallOut();
 };
 
 }

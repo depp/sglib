@@ -1,6 +1,7 @@
 #include "item.hpp"
 #include "tileset.hpp"
 #include "walker.hpp"
+#include <stdio.h>
 using namespace LD22;
 
 Item::~Item()
@@ -13,12 +14,19 @@ void Item::draw(int delta, Tileset &tiles)
     tiles.drawWidget(x, y, Widget::Star);
 }
 
-
 void Item::advance()
 {
     if (m_state == SFree) {
+    free:
+        m_ys -= GRAVITY;
         Mover::advance();
+        if (m_y < -100)
+            destroy();
     } else {
+        if (!m_owner->isvalid()) {
+            m_state = SFree;
+            goto free;
+        }
         m_xs = 0;
         m_ys = 0;
         int div, lx = m_x, ly = m_y, tx, ty, nx, ny, dx, dy;

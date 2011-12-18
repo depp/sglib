@@ -1,5 +1,7 @@
 #include "other.hpp"
 #include "item.hpp"
+#include "screen.hpp"
+#include "area.hpp"
 using namespace LD22;
 
 Other::~Other()
@@ -13,9 +15,9 @@ void Other::advance()
         int ix = m_item->centerx(), iy = m_item->centery();
         int dx = ix - wx, dy = iy - wy;
         if (dx < -20)
-            m_xpush = -PUSH_SCALE;
+            m_xpush = -PUSH_SCALE /  3;
         else if (dx > 20)
-            m_xpush = PUSH_SCALE;
+            m_xpush = PUSH_SCALE / 3;
         else
             m_xpush = 0;
         if (dy > 80)
@@ -27,4 +29,10 @@ void Other::advance()
         m_ypush = 0;
     }
     Walker::advance();
+}
+
+void Other::didFallOut()
+{
+    Screen &scr = area().screen();
+    scr.win();
 }

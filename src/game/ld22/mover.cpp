@@ -1,7 +1,7 @@
 #include "mover.hpp"
 using namespace LD22;
 
-const static int MAX_SPEED = Mover::SPEED_SCALE * 64;
+const static int MAX_SPEED = SPEED_SCALE * 32;
 
 Mover::~Mover()
 { }

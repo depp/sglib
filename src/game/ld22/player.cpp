@@ -28,3 +28,9 @@ void Player::advance()
     if (m_item && m_item_distance < PICKUP_DISTANCE)
         pickupItem();
 }
+
+void Player::didFallOut()
+{
+    Screen &scr = area().screen();
+    scr.lose();
+}

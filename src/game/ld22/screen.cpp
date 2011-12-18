@@ -104,8 +104,6 @@ void Screen::advance()
     ScreenBase::advance();
     m_area->advance();
     m_timer++;
-    if (m_timer == 32)
-        win();
 }
 
 void Screen::lose()

@@ -9,6 +9,7 @@ class Actor {
     friend class Area;
 public:
     typedef enum {
+        ADefunct,
         ANone,
         AWalker,
         AItem
@@ -84,6 +85,21 @@ public:
     int centery() const
     {
         return m_y + m_h / 2;
+    }
+
+    bool isvalid()
+    {
+        return m_type != ADefunct;
+    }
+
+    // An object that is "destroyed" will be deleted after the end of
+    // the next update loop.  This means that after destroying an
+    // object, every other object has a chance to check the "isvalid"
+    // flag above.  A destroyed object will not receive any updates in
+    // the meantime and will not be drawn.
+    void destroy()
+    {
+        m_type = ADefunct;
     }
 };
 

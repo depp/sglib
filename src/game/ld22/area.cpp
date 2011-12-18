@@ -10,6 +10,7 @@
 #include "client/opengl.hpp"
 #include "client/texturefile.hpp"
 #include <cstring>
+#include <algorithm>
 using namespace LD22;
 
 Area::Area(Screen &screen)
@@ -32,22 +33,37 @@ void Area::draw(int delta)
 {
     Tileset &tiles = m_screen.tileset();
     tiles.drawTiles(m_tiles, delta);
-    std::vector<Actor *>::iterator i = m_actors.begin(), e = m_actors.end();
+    std::vector<Actor *>::iterator
+        b = m_actors.begin(), i = b, e = m_actors.end();
     for (; i != e; ++i) {
         Actor &a = **i;
-        a.draw(delta, tiles);
+        if (a.isvalid())
+            a.draw(delta, tiles);
     }
 }
 
+struct ActorDefunctOld {
+    bool operator()(Actor *p)
+    {
+        return !p->isvalid();
+    }
+};
+
 void Area::advance()
 {
-    std::vector<Actor *>::iterator i = m_actors.begin(), e = m_actors.end();
-    for (; i != e; ++i) {
+    ActorDefunctOld filt;
+    std::vector<Actor *>::iterator
+        b = m_actors.begin(), i, e = m_actors.end(), ne;
+    ne = std::remove_if(b, e, filt);
+    for (i = b; i != ne; ++i) {
         Actor &a = **i;
+        if (!a.isvalid())
+            continue;
         a.m_x0 = a.m_x;
         a.m_y0 = a.m_y;
         a.advance();
     }
+    m_actors.erase(ne, e);
 }
 
 void Area::load()
