@@ -11,6 +11,7 @@
 // #include "sys/path.hpp"
 // #include "sys/ifile.hpp"
 #include "tileset.hpp"
+#include "client/bitmapfont.hpp"
 #include <cstdlib>
 #include <stdio.h>
 using namespace LD22;
@@ -61,6 +62,7 @@ void ScreenBase::update(unsigned int ticks)
 void ScreenBase::loadLevel()
 {
     m_background.reset(Background::getBackground(m_level.background));
+    m_font.reset(new BitmapFont("font/terminus-8x16.png"));
 }
 
 void ScreenBase::draw()
@@ -76,6 +78,8 @@ void ScreenBase::draw()
 
     m_background->draw(m_delta);
     drawExtra(m_delta);
+
+    m_font->print(50, 50, "Hello, world\nline 2");
 
     m_letterbox.disable();
 }

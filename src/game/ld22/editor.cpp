@@ -107,6 +107,7 @@ void Editor::drawExtra(int delta)
 {
     tileset().drawTiles(level().tiles, delta);
 
+    glPushMatrix();
     glTranslatef(SCREEN_WIDTH, 0, 0);
     int w = EDITBAR_SIZE, h = SCREEN_WIDTH;
     glBegin(GL_QUADS);
@@ -115,6 +116,7 @@ void Editor::drawExtra(int delta)
     glVertex2s(w, h);
     glVertex2s(0, h);
     glEnd();
+    glPopMatrix();
 }
 
 bool Editor::translateMouse(const UI::MouseEvent &evt, int *x, int *y)

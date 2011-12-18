@@ -4,6 +4,7 @@
 #include "client/letterbox.hpp"
 #include "level.hpp"
 #include <memory>
+class BitmapFont;
 namespace LD22 {
 class Background;
 class Tileset;
@@ -26,6 +27,7 @@ class ScreenBase : public UI::Screen {
     // Loaded level structures
     std::auto_ptr<Background> m_background;
     std::auto_ptr<Tileset> m_tileset;
+    std::auto_ptr<BitmapFont> m_font;
 
 protected:
     void setSize(int w, int h)
@@ -65,6 +67,11 @@ public:
     Tileset &tileset()
     {
         return *m_tileset.get();
+    }
+
+    BitmapFont &font()
+    {
+        return *m_font.get();
     }
 
 private:

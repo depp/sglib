@@ -53,6 +53,9 @@ libmsys_a_SOURCES = \
 libmgfx_a_CFLAGS = $(common_CFLAGS)
 libmgfx_a_CXXFLAGS = $(common_CFLAGS)
 libmgfx_a_SOURCES = \
+	client/bitmapfont.cpp \
+	client/bitmapfont.hpp \
+	client/color.hpp \
 	client/color.hpp \
 	client/dummytexture.cpp \
 	client/dummytexture.hpp \
