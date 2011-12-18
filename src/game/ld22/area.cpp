@@ -183,7 +183,6 @@ void Area::removeOther()
 void Area::removePlayer()
 {
     if (m_timer >= 0) {
-        puts("  >>");
         m_players--;
         if (!m_players) {
             m_screen.lose();
