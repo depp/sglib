@@ -88,7 +88,7 @@ static const signed char WIDGET_INFO[Widget::MAX_WIDGET + 1][6] = {
     { 3, 4, 1, -2, -IOFF, -IOFF }
 };
 
-void Tileset::drawWidget(int x, int y, int which)
+void Tileset::drawWidget(int x, int y, int which, float scale)
 {
     if (which < 0 || which > Widget::MAX_WIDGET)
         return;
@@ -97,6 +97,12 @@ void Tileset::drawWidget(int x, int y, int which)
     float y0 = y + ifo[5], y1 = y0 + 64 * abs(ifo[3]);
     float u0 = 0.25f * ifo[0], u1 = u0 + 0.25f * ifo[2];
     float v0 = 0.25f * ifo[1], v1 = v0 + 0.25f * ifo[3];
+    float f = 0.5f * (1.0f - scale);
+    float dx = f * (x1 - x0), dy = f * (y1 - y0);
+    x0 += dx;
+    x1 -= dx;
+    y0 += dy;
+    y1 -= dy;
     glEnable(GL_TEXTURE_2D);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);

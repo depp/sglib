@@ -201,7 +201,7 @@ static void drawEntity(const Entity &e, Tileset &t)
         break;
 
     case Entity::Star:
-        t.drawWidget(e.x, e.y, Widget::Star);
+        t.drawWidget(e.x, e.y, Widget::Star, 1.0f);
         break;
 
     case Entity::Other:

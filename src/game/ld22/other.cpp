@@ -2,6 +2,7 @@
 #include "item.hpp"
 #include "screen.hpp"
 #include "area.hpp"
+#include "tileset.hpp"
 using namespace LD22;
 
 Other::~Other()
@@ -35,4 +36,13 @@ void Other::didFallOut()
 {
     Screen &scr = area().screen();
     scr.win();
+}
+
+void Other::draw(int delta, Tileset &tiles)
+{
+    int x, y;
+    Walker::draw(delta, tiles);
+    getDrawPos(&x, &y, delta);
+    tiles.drawWidget(x - 30, y + 40, Widget::ThoughtLeft, 1.0f);
+    tiles.drawWidget(x + 15, y + 100, Widget::Star, 0.6f);
 }

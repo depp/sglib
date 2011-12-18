@@ -32,7 +32,7 @@ public:
 
     void drawStick(int x, int y, int frame);
 
-    void drawWidget(int x, int y, int which);
+    void drawWidget(int x, int y, int which, float scale);
 };
 
 }
