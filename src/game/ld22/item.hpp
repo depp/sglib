@@ -12,7 +12,7 @@ public:
         SGrabbed
     } State;
 
-    static const int IWIDTH = 32, IHEIGHT = 32;
+    static const int IWIDTH = 48, IHEIGHT = 48;
 
     Item(int x, int y)
         : Mover(AItem), m_owner(0)

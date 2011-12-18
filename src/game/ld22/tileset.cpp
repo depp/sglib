@@ -74,16 +74,18 @@ void Tileset::drawStick(int x, int y, int frame)
     glDisable(GL_TEXTURE_2D);
 }
 
+static const int IOFF = (64 - ITEM_SIZE) / 2;
+
 static const signed char WIDGET_INFO[Widget::MAX_WIDGET + 1][6] = {
     { 2, 2, -2, -2, 0, 0 },
     { 0, 2, 2, -2, 0, 0 },
     { 2, 2, 2, -2, 0, 0 },
     { 4, 2, -2, -2, 0, 0 },
-    { 0, 3, 1, -1, -16, -16 },
-    { 1, 3, 1, -1, -16, -16 },
-    { 2, 3, 1, -1, -16, -16 },
-    { 2, 4, 1, -1, -16, -16 },
-    { 3, 4, 1, -2, -16, -16 }
+    { 0, 3, 1, -1, -IOFF, -IOFF },
+    { 1, 3, 1, -1, -IOFF, -IOFF },
+    { 2, 3, 1, -1, -IOFF, -IOFF },
+    { 2, 4, 1, -1, -IOFF, -IOFF },
+    { 3, 4, 1, -2, -IOFF, -IOFF }
 };
 
 void Tileset::drawWidget(int x, int y, int which)
