@@ -34,6 +34,7 @@ private:
     int m_animtime;
     bool m_animlock;
     int m_sprite;
+    bool m_isother;
 
 protected:
     // "Push": walking and jumping
@@ -42,8 +43,9 @@ protected:
     int m_xpush, m_ypush;
 
 public:
-    Walker()
-        : Mover(AWalker), m_xpush(0), m_ypush(0), m_item(0)
+    explicit Walker(bool isother)
+        : Mover(AWalker), m_isother(isother), m_xpush(0), m_ypush(0),
+          m_item(0)
     {
         m_w = STICK_WIDTH;
         m_h = STICK_HEIGHT;

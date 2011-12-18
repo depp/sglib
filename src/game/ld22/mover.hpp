@@ -12,7 +12,7 @@ protected:
     int m_xs, m_ys;
 
 public:
-    Mover(Type t)
+    explicit Mover(Type t)
         : Actor(t), m_xs(0), m_ys(0)
     { }
 

@@ -16,7 +16,7 @@ void Walker::draw(int delta, Tileset &tiles)
 {
     int x, y;
     getDrawPos(&x, &y, delta);
-    tiles.drawStick(x, y, m_sprite);
+    tiles.drawStick(x, y, m_sprite, m_isother);
 }
 
 void Walker::init()

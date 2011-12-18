@@ -46,8 +46,18 @@ void Tileset::drawTiles(const unsigned char t[TILE_HEIGHT][TILE_WIDTH],
     glDisable(GL_TEXTURE_2D);
 }
 
-void Tileset::drawStick(int x, int y, int frame)
+static const float STICK_COLOR[2][4] = {
+    { 0.0f, 0.0f, 0.0f, 1.0f },
+    { 0.2f, 0.2f, 0.7f, 1.0f }
+};
+
+void Tileset::drawStick(int x, int y, int frame, bool isOther)
 {
+    const float *color;
+    if (isOther)
+        color = STICK_COLOR[1];
+    else
+        color = STICK_COLOR[0];
     int u = frame & 7, v = (frame / 8) & 3;
     bool flip = frame & 0x80;
     float x0 = x + STICK_WIDTH/2 - 32, x1 = x0 + 64;
@@ -62,7 +72,9 @@ void Tileset::drawStick(int x, int y, int frame)
     }
     glEnable(GL_TEXTURE_2D);
     glEnable(GL_BLEND);
-    glBlendFunc(GL_DST_COLOR, GL_ZERO);
+    glPushAttrib(GL_COLOR_BUFFER_BIT);
+    glBlendColor(color[0], color[1], color[2], color[3]);
+    glBlendFunc(GL_CONSTANT_COLOR, GL_ONE_MINUS_SRC_COLOR);
     m_stick->bind();
     glBegin(GL_QUADS);
     glTexCoord2f(u0, v0); glVertex2f(x0, y0);
@@ -72,6 +84,7 @@ void Tileset::drawStick(int x, int y, int frame)
     glEnd();
     glDisable(GL_BLEND);
     glDisable(GL_TEXTURE_2D);
+    glPopAttrib();
 }
 
 static const int IOFF = (64 - ITEM_SIZE) / 2;

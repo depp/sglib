@@ -6,6 +6,7 @@ namespace LD22 {
 class Player : public Walker {
 public:
     Player(int x, int y)
+        : Walker(false)
     {
         m_x = x;
         m_y = y;

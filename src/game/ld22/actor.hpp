@@ -33,7 +33,7 @@ public:
         MoveNone
     };
 
-    Actor(Type t)
+    explicit Actor(Type t)
         : m_area(0), m_type(t)
     { }
 

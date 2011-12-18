@@ -197,7 +197,7 @@ static void drawEntity(const Entity &e, Tileset &t)
         break;
 
     case Entity::Player:
-        t.drawStick(e.x, e.y, 0);
+        t.drawStick(e.x, e.y, 0, false);
         break;
 
     case Entity::Star:
@@ -205,7 +205,7 @@ static void drawEntity(const Entity &e, Tileset &t)
         break;
 
     case Entity::Other:
-        t.drawStick(e.x, e.y, 0);
+        t.drawStick(e.x, e.y, 0, true);
         break;
     }
 }

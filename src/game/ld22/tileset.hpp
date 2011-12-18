@@ -30,7 +30,7 @@ public:
     void drawTiles(const unsigned char t[TILE_HEIGHT][TILE_WIDTH],
                    int delta) const;
 
-    void drawStick(int x, int y, int frame);
+    void drawStick(int x, int y, int frame, bool isOther);
 
     void drawWidget(int x, int y, int which, float scale);
 };
