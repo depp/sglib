@@ -44,6 +44,8 @@ public:
     void load();
     void clear();
 
+    bool trace(int x1, int y1, int x2, int y2);
+
     const std::vector<Actor *> &actors()
     {
         return m_actors;

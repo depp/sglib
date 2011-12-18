@@ -70,3 +70,9 @@ int Actor::moveTo(int x, int y)
         return r;
     }
 }
+
+bool Actor::visible(Actor *a)
+{
+    return m_area->trace(centerx(), centery(),
+                         a->centerx(), a->centery());
+}

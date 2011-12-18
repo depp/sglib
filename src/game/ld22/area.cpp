@@ -103,3 +103,27 @@ void Area::clear()
         delete *i;
     m_actors.clear();
 }
+
+bool Area::trace(int x1, int y1, int x2, int y2)
+{
+    int dx = x2 - x1, dy = y2 - y1;
+    int adx = abs(dx), ady = abs(dy);
+    int ad = adx > ady ? adx : ady;
+    int bits, n, i;
+    if (ad < 1)
+        return true;
+    if (ad > 1024)
+        return false;
+    for (bits = 0; (1 << bits) < ad; ++bits) { }
+    bits -= 4;
+    if (bits < 0)
+        bits = 1;
+    n = 1 << bits;
+    for (i = 0; i < n; ++i) {
+        int x = x1 + dx * (i + 1) / n;
+        int y = y1 + dy * (i + 1) / n;
+        if (getTile(x / TILE_SIZE, y / TILE_SIZE))
+            return false;
+    }
+    return true;
+}

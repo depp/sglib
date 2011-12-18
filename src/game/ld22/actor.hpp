@@ -101,6 +101,8 @@ public:
     {
         m_type = ADefunct;
     }
+
+    bool visible(Actor *a);
 };
 
 }

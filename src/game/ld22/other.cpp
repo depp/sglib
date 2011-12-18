@@ -3,7 +3,14 @@
 #include "screen.hpp"
 #include "area.hpp"
 #include "tileset.hpp"
+#include "sys/rand.hpp"
 using namespace LD22;
+
+static int lookInterval()
+{
+    static int LOOK_INTERVAL = 15;
+    return LOOK_INTERVAL + (Rand::girand() % LOOK_INTERVAL);
+}
 
 Other::~Other()
 { }
@@ -63,10 +70,13 @@ void Other::draw(int delta, Tileset &tiles)
 
 void Other::idle()
 {
-    scanItems();
-    if (m_item) {
-        setState(SAha);
-        return;
+    if (m_timer >= 0) {
+        scanItems();
+        if (m_item && visible(m_item)) {
+            setState(SAha);
+            return;
+        }
+        m_timer = -lookInterval();
     }
 }
 
@@ -75,6 +85,13 @@ void Other::chase()
     if (!m_item) {
         setState(SIdle);
         return;
+    }
+    if (m_timer >= 0) {
+        if (!visible(m_item)) {
+            setState(SIdle);
+            return;
+        }
+        m_timer = -lookInterval();
     }
     int wx = centerx(), wy = centery();
     int ix = m_item->centerx(), iy = m_item->centery();
