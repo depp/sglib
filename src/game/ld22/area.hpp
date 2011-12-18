@@ -12,7 +12,7 @@ class Thinker;
 class Area {
     Screen &m_screen;
     unsigned char m_tiles[TILE_HEIGHT][TILE_WIDTH];
-    std::vector<Actor *> m_actors;
+    std::vector<Actor *> m_actors, m_anew;
     std::vector<Thinker *> m_thinkers;
 
 public:
