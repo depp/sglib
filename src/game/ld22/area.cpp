@@ -133,6 +133,7 @@ void Area::load()
             break;
 
         case Entity::EndStar:
+            addActor(new Item(i->x, i->y, Item::EndStar));
             break;
 
         case Entity::EndWalker:

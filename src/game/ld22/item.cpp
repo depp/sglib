@@ -3,6 +3,7 @@
 #include "walker.hpp"
 #include "area.hpp"
 #include <stdio.h>
+#include <cmath>
 using namespace LD22;
 
 Item::~Item()
@@ -34,8 +35,25 @@ void Item::draw(int delta, Tileset &tiles)
     case Bomb:
         tiles.drawWidget(x, y, Widget::Bomb, 1.0f);
         break;
+
+    case EndStar:
+        if (!m_frame) {
+            tiles.drawWidget(x, y, Widget::Star, 1.0f);
+        }
+        break;
     }
 }
+
+void Item::init()
+{
+    if (m_itype == EndStar) {
+        m_locked = true;
+        m_state = SEndStar;
+        m_frame = 700;
+    }
+}
+
+static float hack_end = 0.0f;
 
 void Item::advance()
 {
@@ -45,6 +63,18 @@ void Item::advance()
         Mover::advance();
         if (m_y < -100)
             destroy();
+    } else if (m_state == SEndStar) {
+        if (m_frame)
+            m_frame--;
+        hack_end += 1.0f;
+        static const float
+            XT = 1.0f / 24, YT = 1.0f / 19,
+            XS = SCREEN_WIDTH * 0.8f/2,
+            XO = SCREEN_WIDTH * 0.5f,
+            YS = SCREEN_HEIGHT * 0.15f/2,
+            YO = SCREEN_HEIGHT * 0.75f;
+        m_x = XO + XS * sin(XT * hack_end);
+        m_y = YO + YS * sin(YT * hack_end);
     } else {
         if (!m_owner->isvalid() || m_owner->m_item != this) {
             m_locked = false;

@@ -12,12 +12,14 @@ public:
     typedef enum {
         SFree,
         SGrabbing,
-        SGrabbed
+        SGrabbed,
+        SEndStar
     } State;
 
     typedef enum {
         Star,
-        Bomb
+        Bomb,
+        EndStar
     } Type;
 
     static const int IWIDTH = 48, IHEIGHT = 48;
@@ -34,6 +36,7 @@ public:
 
     virtual ~Item();
     virtual void wasDestroyed();
+    virtual void init();
     virtual void draw(int delta, Tileset &tiles);
 
     virtual void advance();
