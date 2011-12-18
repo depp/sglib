@@ -5,7 +5,7 @@
 #include "client/ui/event.hpp"
 using namespace LD22;
 
-static const int TRANSITION_TIME = 32 * 5;
+static const int TRANSITION_TIME = 32 * 1;
 
 static const unsigned char KEY_MAP[] = {
     KEY_W, InUp,
