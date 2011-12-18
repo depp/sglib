@@ -9,22 +9,39 @@ Effect::~Effect()
 void Effect::draw(int delta, Tileset &tiles)
 {
     int x, y;
+    int s1, s2;
     getDrawPos(&x, &y, delta);
     switch (m_etype) {
     case ThinkStar:
-        tiles.drawWidget(x - 30, y + 40, Widget::ThoughtLeft, 1.0f);
-        tiles.drawWidget(x + 15, y + 100, Widget::Star, 0.6f);
-        break;
+        s1 = Widget::Star;
+        goto thinkOne;
 
     case ThinkStarBang:
-        break;
+        s1 = Widget::Star;
+        s2 = Widget::Bang;
+        goto thinkTwo;
 
     case ThinkStarQuestion:
-        break;
+        s1 = Widget::Star;
+        s2 = Widget::Question;
+        goto thinkTwo;
 
     case SayHeart:
+        tiles.drawWidget(x - 30, y + 40, Widget::SpeakRight, 1.0f);
         break;
     }
+    return;
+
+thinkOne:
+    tiles.drawWidget(x - 30, y + 40, Widget::ThoughtLeft, 1.0f);
+    tiles.drawWidget(x + 15, y + 100, s1, 0.8f);
+    return;
+
+thinkTwo:
+    tiles.drawWidget(x - 30, y + 40, Widget::ThoughtLeft, 1.0f);
+    tiles.drawWidget(x + 5, y + 100, s1, 0.6f);
+    tiles.drawWidget(x + 35, y + 100, s2, 0.6f);
+    return;
 }
 
 void Effect::init()
