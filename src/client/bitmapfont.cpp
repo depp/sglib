@@ -12,6 +12,8 @@ BitmapFont::~BitmapFont()
 
 void BitmapFont::print(int x, int y, const char *text)
 {
+    if (!text)
+        text = "(null)";
     int xp = x, yp = y;
     int xs = m_tex->width() / 16, ys = m_tex->height() / 16;
     float xt = (float) xs / m_tex->twidth();
