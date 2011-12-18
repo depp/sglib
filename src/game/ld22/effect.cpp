@@ -27,7 +27,13 @@ void Effect::draw(int delta, Tileset &tiles)
         goto thinkTwo;
 
     case SayHeart:
-        tiles.drawWidget(x - 30, y + 40, Widget::SpeakRight, 1.0f);
+        if (!m_right) {
+            tiles.drawWidget(x + 20, y + 25, Widget::SpeakLeft, 1.0f);
+            tiles.drawWidget(x + 55, y + 65, Widget::Heart, 0.75f);
+        } else {
+            tiles.drawWidget(x - 120, y + 25, Widget::SpeakRight, 1.0f);
+            tiles.drawWidget(x - 80, y + 65, Widget::Heart, 0.75f);
+        }
         break;
     }
     return;
@@ -66,6 +72,8 @@ void Effect::init()
     case ThinkStarQuestion: m_timer = 20; break;
     case SayHeart:          m_timer = 30; break;
     }
+    // Only effects actually flip
+    m_right = m_x >= SCREEN_WIDTH / 2;
 }
 
 void Effect::advance()

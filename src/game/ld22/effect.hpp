@@ -16,6 +16,7 @@ private:
     EType m_etype;
     Actor *m_track;
     int m_timer;
+    bool m_right;
 
 public:
 
