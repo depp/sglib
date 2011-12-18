@@ -79,7 +79,5 @@ void ScreenBase::draw()
     m_background->draw(m_delta);
     drawExtra(m_delta);
 
-    m_font->print(50, 50, "Hello, world\nline 2");
-
     m_letterbox.disable();
 }
