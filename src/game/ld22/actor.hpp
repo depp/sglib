@@ -10,9 +10,9 @@ class Actor {
 public:
     typedef enum {
         ADefunct,
-        ANone,
         AWalker,
-        AItem
+        AItem,
+        AEffect
     } Type;
 
 private:
@@ -20,12 +20,10 @@ private:
     int m_x0, m_y0;
     Type m_type;
 
-protected:
+public:
     // These must be initialized by subclass!
     // x, y are bottom left
     int m_x, m_y, m_w, m_h;
-
-public:
 
     enum {
         MoveFull,

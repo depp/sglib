@@ -26,7 +26,6 @@ public:
     virtual ~Other();
     virtual void advance();
     virtual void didFallOut();
-    virtual void draw(int delta, Tileset &tiles);
 
 private:
     void idle();

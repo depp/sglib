@@ -3,11 +3,11 @@
 #include "screen.hpp"
 #include "area.hpp"
 #include "tileset.hpp"
+#include "effect.hpp"
 #include "sys/rand.hpp"
 #include <stdlib.h>
 using namespace LD22;
 
-static int AHA_DELAY = 5;
 static int AHA_TIME = 15;
 
 static int lookInterval()
@@ -53,25 +53,6 @@ void Other::didFallOut()
     scr.win();
 }
 
-void Other::draw(int delta, Tileset &tiles)
-{
-    int x, y;
-    Walker::draw(delta, tiles);
-    getDrawPos(&x, &y, delta);
-
-    switch (m_state) {
-    default:
-        break;
-
-    case SAha:
-        if (m_timer > AHA_DELAY) {
-            tiles.drawWidget(x - 30, y + 40, Widget::ThoughtLeft, 1.0f);
-            tiles.drawWidget(x + 15, y + 100, Widget::Star, 0.6f);
-        }
-        break;
-    }
-}
-
 void Other::idle()
 {
     if (m_timer >= 0) {
@@ -79,6 +60,7 @@ void Other::idle()
         scanItems();
         if (itemVisible()) {
             setState(SAha);
+            area().addActor(new Effect(Effect::ThinkStar, this));
             return;
         }
         m_timer = -lookInterval();
@@ -139,7 +121,7 @@ void Other::aha()
         setState(SIdle);
         return;
     }
-    if (m_timer == AHA_DELAY + AHA_TIME) {
+    if (m_timer == AHA_TIME) {
         setState(SChase);
         return;
     }

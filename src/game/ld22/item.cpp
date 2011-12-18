@@ -88,7 +88,7 @@ void Item::setFree()
     if (!wallAt(m_x, m_y))
         return;
     // It's wedged!  Unwedge it...
-    puts("Wedged throw...");
+    // puts("Wedged throw...");
     // 40 pixels in any direction, increments of 8
     int x = m_x, y = m_y;
     for (int i = 1; i <= 5; ++i) {
@@ -99,10 +99,10 @@ void Item::setFree()
             if (!wallAt(nx, ny)) {
                 m_x = nx;
                 m_y = ny;
-                printf("Wedge resolved with move of %d\n", d);
+                // printf("Wedge resolved with move of %d\n", d);
                 return;
             }
         }
     }
-    puts("Wedge unresolved!");
+    // puts("Wedge unresolved!");
 }
