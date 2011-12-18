@@ -14,10 +14,12 @@ enum {
     Key1Left,
     Key1Right,
     Heart,
-    Bomb
+    Bomb,
+    Bang,
+    Question
 };
 
-static const int MAX_WIDGET = Bomb;
+static const int MAX_WIDGET = Question;
 };
 
 class Tileset {
