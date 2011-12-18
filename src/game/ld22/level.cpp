@@ -6,6 +6,15 @@
 #include "sys/ifile.hpp"
 using namespace LD22;
 
+const char *Entity::typeName(Type t)
+{
+    switch (t) {
+    case Null: return "null";
+    case Player: return "Player";
+    default: return "<unknown>";
+    }
+}
+
 static const int TILE_COUNT = TILE_WIDTH * TILE_HEIGHT;
 
 std::string Level::pathForLevel(int num)
@@ -19,16 +28,15 @@ void Level::clear()
 {
     std::memset(tiles, 0, TILE_COUNT);
     std::memset(tiles, 1, TILE_WIDTH);
-    playerx = SCREEN_WIDTH / 2 - Walker::WWIDTH / 2;
-    playery = TILE_SIZE;
     background = 0;
+    entity.clear();
 }
 
 enum {
     DATA_EOF,
     DATA_AREA,
     DATA_BACKGROUND,
-    DATA_PLAYER
+    DATA_ENTITY
 };
 
 void Level::load(int num)
@@ -61,12 +69,25 @@ void Level::load(int num)
             background = *p++;
             break;
 
-        case DATA_PLAYER:
-            if (e - p < 4)
+        case DATA_ENTITY:
+            if (e == p)
                 goto err;
-            playerx = (p[0] << 8) | p[1];
-            playery = (p[2] << 8) | p[3];
-            p += 4;
+            {
+                int num = *p;
+                p++;
+                if (e - p < 5 * num)
+                    goto err;
+                entity.resize(num);
+                for (int i = 0; i < num; ++i) {
+                    Entity &e = entity[i];
+                    if (*p > Entity::MAX_TYPE)
+                        goto err;
+                    e.type = (Entity::Type) *p;
+                    e.x = (p[1] << 8) | p[2];
+                    e.y = (p[3] << 8) | p[4];
+                    p += 5;
+                }
+            }
             break;
 
         default:
@@ -91,13 +112,16 @@ void Level::save(int num)
     fputc(DATA_BACKGROUND, f);
     fputc(background, f);
 
-    {
+    fputc(DATA_ENTITY, f);
+    std::vector<Entity>::const_iterator
+        i = entity.begin(), e = entity.end();
+    for (; i != e; ++i) {
         unsigned char buf[5];
-        buf[0] = DATA_PLAYER;
-        buf[1] = playerx >> 8;
-        buf[2] = playerx;
-        buf[3] = playery >> 8;
-        buf[4] = playery;
+        buf[0] = (int) i->type;
+        buf[1] = i->x >> 8;
+        buf[2] = i->x;
+        buf[3] = i->y >> 8;
+        buf[4] = i->y;
         fwrite(buf, 5, 1, f);
     }
 

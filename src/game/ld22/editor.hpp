@@ -10,13 +10,14 @@ namespace LD22 {
 class Editor : public ScreenBase {
     typedef enum {
         MBrush,
-        MPlayer
+        MEntity
     } Mode;
 
     Mode m_mode;
     int m_tile;
     int m_mx, m_my;
     int m_mouse;
+    int m_ent;
 
 protected:
     virtual void drawExtra(int delta);
@@ -38,6 +39,9 @@ private:
 
     void setMode(Mode m);
     void tileBrush(int x, int y);
+    void selectEntity(int x, int y, bool click);
+    void newEntity(int x, int y);
+    void deleteEntity();
 
     void open(int num);
     void save();

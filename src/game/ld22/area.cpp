@@ -51,5 +51,16 @@ void Area::load()
 {
     const Level &l = m_screen.level();
     std::memcpy(m_tiles, l.tiles, sizeof(m_tiles));
-    addActor(new Player(l.playerx, l.playery));
+    std::vector<Entity>::const_iterator
+        i = l.entity.begin(), e = l.entity.end();
+    for (; i != e; ++i) {
+        switch (i->type) {
+        case Entity::Null:
+            break;
+
+        case Entity::Player:
+            addActor(new Player(i->x, i->y));
+            break;
+        }
+    }
 }

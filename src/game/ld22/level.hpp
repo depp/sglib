@@ -5,10 +5,24 @@
 #include "defs.hpp"
 namespace LD22 {
 
+struct Entity {
+    typedef enum {
+        Null,
+        Player
+    } Type;
+
+    static const int MAX_TYPE = (int) Player + 1;
+    static const char *typeName(Type t);
+
+    Type type;
+    int x;
+    int y;
+};
+
 struct Level {
     unsigned char tiles[TILE_HEIGHT][TILE_WIDTH];
-    int playerx, playery;
     int background;
+    std::vector<Entity> entity;
 
     // Get the pathname for the given level number
     static std::string pathForLevel(int num);

@@ -6,6 +6,7 @@
 #include "client/ui/event.hpp"
 #include "sys/path.hpp"
 #include "client/bitmapfont.hpp"
+#include <stdlib.h>
 using namespace LD22;
 
 static const int EDITBAR_SIZE = 64;
@@ -61,7 +62,7 @@ void Editor::handleKeyDown(const UI::KeyEvent &evt)
         break;
 
     case KEY_2:
-        setMode(MPlayer);
+        setMode(MEntity);
         break;
 
     default:
@@ -71,17 +72,39 @@ void Editor::handleKeyDown(const UI::KeyEvent &evt)
 
 void Editor::handleMouseDown(const UI::MouseEvent &evt)
 {
-    int x, y;
+    int x, y, tx, ty;
     bool inbounds;
     inbounds = translateMouse(evt, &x, &y);
     if (!inbounds)
         return;
     if (inScreen(x, y)) {
-        int tx = x / TILE_SIZE, ty = y / TILE_SIZE;
-        m_mx = tx;
-        m_my = ty;
-        m_mouse = evt.button;
-        tileBrush(tx, ty);
+        switch (m_mode) {
+        case MBrush:
+            tx = x / TILE_SIZE;
+            ty = y / TILE_SIZE;
+            m_mx = tx;
+            m_my = ty;
+            m_mouse = evt.button;
+            tileBrush(tx, ty);
+            break;
+
+        case MEntity:
+            switch (evt.button) {
+            case UI::ButtonLeft:
+                m_mouse = m_ent >= 0 ? evt.button : -1;
+                selectEntity(x, y, true);
+                break;
+
+            case UI::ButtonRight:
+                newEntity(x, y);
+                break;
+
+            default:
+                m_ent = -1;
+                break;
+            }
+            break;
+        }
     } else {
         
     }
@@ -96,31 +119,33 @@ void Editor::handleMouseMove(const UI::MouseEvent &evt)
 {
     if (m_mouse < 0)
         return;
-    int x, y;
+    int x, y, tx, ty;
     bool inbounds;
     inbounds = translateMouse(evt, &x, &y);
     if (inScreen(x, y)) {
-        int tx = x / TILE_SIZE, ty = y / TILE_SIZE;
-        if (tx != m_mx || ty != m_my) {
-            m_mx = tx;
-            m_my = ty;
-            tileBrush(tx, ty);
+        switch (m_mode) {
+        case MBrush:
+            tx = x / TILE_SIZE;
+            ty = y / TILE_SIZE;
+            if (tx != m_mx || ty != m_my) {
+                m_mx = tx;
+                m_my = ty;
+                tileBrush(tx, ty);
+            }
+            break;
+
+        case MEntity:
+            if (m_ent >= 0) {
+                Entity &e = level().entity[m_ent];
+                e.x = x;
+                e.y = y;
+            }
+            break;
         }
     } else {
         m_mx = -1;
         m_my = -1;
     }
-}
-
-static void drawEntity(BitmapFont &f, int x, int y, const char *name)
-{
-    glBegin(GL_LINES);
-    glVertex2s(x + 10, y);
-    glVertex2s(x - 10, y);
-    glVertex2s(x, y + 10);
-    glVertex2s(x, y - 10);
-    glEnd();
-    f.print(x + 5, y + 5, name);
 }
 
 void Editor::drawExtra(int delta)
@@ -129,7 +154,37 @@ void Editor::drawExtra(int delta)
     Level &l = level();
     tileset().drawTiles(level().tiles, delta);
 
-    drawEntity(f, l.playerx, l.playery, "player");
+    std::vector<Entity>::const_iterator
+        s = l.entity.begin(), i = s, e = l.entity.end();
+    for (; i != e; ++i) {
+        int idx = i - s;
+        bool selected = idx == m_ent;
+        int x = i->x, y = i->y;
+        if (selected)
+            glLineWidth(5.0f);
+        else
+            glLineWidth(3.0f);
+        glBegin(GL_LINES);
+        glVertex2s(x + 10, y);
+        glVertex2s(x - 10, y);
+        glVertex2s(x, y + 10);
+        glVertex2s(x, y - 10);
+        glEnd();
+        glLineWidth(1.0f);
+        if (selected)
+            glColor3ub(255, 0, 0);
+        else
+            glColor3ub(0, 0, 0);
+        glBegin(GL_LINES);
+        glVertex2s(x + 9, y);
+        glVertex2s(x - 9, y);
+        glVertex2s(x, y + 9);
+        glVertex2s(x, y - 9);
+        glEnd();
+        glColor3ub(255, 255, 255);
+
+        f.print(x + 5, y + 5, Entity::typeName(i->type));
+    }
 
     glPushMatrix();
     glTranslatef(SCREEN_WIDTH, 0, 0);
@@ -144,7 +199,7 @@ void Editor::drawExtra(int delta)
     const char *mname = NULL;
     switch (m_mode) {
     case MBrush: mname = "brush"; break;
-    case MPlayer: mname = "player"; break;
+    case MEntity: mname = "entity"; break;
     }
     if (mname)
         f.print(5, 5, mname);
@@ -166,6 +221,7 @@ void Editor::setMode(Mode m)
 {
     m_mode = m;
     m_mouse = -1;
+    m_ent = -1;
 }
 
 void Editor::tileBrush(int x, int y)
@@ -180,6 +236,46 @@ void Editor::tileBrush(int x, int y)
     } else if (m_mouse == UI::ButtonRight) {
         l.tiles[y][x] = 0;
     }
+}
+
+void Editor::selectEntity(int x, int y, bool click)
+{
+    Level &l = level();
+    unsigned n, i, off;
+    if (click && m_ent >= 0) {
+        Entity &e = l.entity.at(m_ent);
+        if (abs(e.x - x) < 10 && abs(e.y - y) < 10)
+            return;
+    }
+    m_mx = x;
+    m_my = y;
+    n = l.entity.size();
+    off = n + (m_ent >= 0 ? m_ent : 0) - 1;
+    for (i = 0; i < n; ++i) {
+        int idx = (off - i) % n;
+        Entity &e = l.entity.at(idx);
+        if (abs(e.x - x) < 10 && abs(e.y - y) < 10) {
+            m_ent = idx;
+            return;
+        }
+    }
+    m_ent = -1;
+}
+
+void Editor::newEntity(int x, int y)
+{
+    Entity e;
+    e.type = Entity::Null;
+    e.x = x;
+    e.y = y;
+    Level &l = level();
+    m_ent = l.entity.size();
+    l.entity.push_back(e);
+}
+
+void Editor::deleteEntity()
+{
+    
 }
 
 void Editor::open(int num)
