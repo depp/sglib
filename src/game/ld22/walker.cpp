@@ -259,21 +259,11 @@ bool Walker::pickupItem()
     if (m_item->m_owner != this) {
         if (m_item->m_locked)
             return false;
-        dropItem();
         m_item->m_owner = this;
         m_item->m_state = Item::SGrabbing;
         m_item->m_frame = 0;
     }
     return true;
-}
-
-void Walker::dropItem()
-{
-    if (haveGrab()) {
-        m_item->m_owner = NULL;
-        m_item->m_state = Item::SFree;
-        m_item->m_locked = false;
-    }
 }
 
 bool Walker::haveGrab()

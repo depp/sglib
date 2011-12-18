@@ -19,9 +19,9 @@ void Player::advance()
     if (scr.getKey(InUp))
         dy += 1;
     if (scr.getKey(InThrow) && haveGrab()) {
-        dropItem();
         m_item->m_xs = m_xs * 2;
         m_item->m_ys = m_ys + SPEED_SCALE * 8;
+        m_item->setFree();
         // Don't pick it back up immediately
         m_pickuptimer = 32;
     }

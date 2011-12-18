@@ -35,6 +35,9 @@ public:
 
     virtual void advance();
 
+    // Release a grab, and make sure it's not stuck in a wall.
+    void setFree();
+
     Type m_itype;
 
     // These are also manipulated by Walker

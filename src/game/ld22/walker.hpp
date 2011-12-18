@@ -71,9 +71,6 @@ public:
     // Pick up m_item.
     bool pickupItem();
 
-    // Drop m_item: relinquish ownership, but do not set it to NULL.
-    void dropItem();
-
     // Return whether we have a valid grab
     bool haveGrab();
 

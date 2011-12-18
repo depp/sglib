@@ -74,3 +74,35 @@ void Item::advance()
         m_ys = dy * SPEED_SCALE;
     }
 }
+
+static signed char DIRECTION[8][2] = {
+    { 1, 0 }, { -1, 0 }, { 0, 1 }, { 0, -1 },
+    { 1, 1 }, { -1, -1 }, { -1, 1 }, { 1, -1 }
+};
+
+void Item::setFree()
+{
+    m_owner = NULL;
+    m_state = Item::SFree;
+    m_locked = false;
+    if (!wallAt(m_x, m_y))
+        return;
+    // It's wedged!  Unwedge it...
+    puts("Wedged throw...");
+    // 40 pixels in any direction, increments of 8
+    int x = m_x, y = m_y;
+    for (int i = 1; i <= 5; ++i) {
+        int d = i * 8;
+        for (int j = 0; j < 8; ++j) {
+            int nx = x + DIRECTION[j][0] * d;
+            int ny = y + DIRECTION[j][1] * d;
+            if (!wallAt(nx, ny)) {
+                m_x = nx;
+                m_y = ny;
+                printf("Wedge resolved with move of %d\n", d);
+                return;
+            }
+        }
+    }
+    puts("Wedge unresolved!");
+}
