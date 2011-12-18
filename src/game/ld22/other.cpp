@@ -97,6 +97,7 @@ void Other::chase()
         setState(SMunch);
         m_xpush = 0;
         m_ypush = 0;
+        area().addActor(new Effect(Effect::SayHeart, this));
         return;
     }
 
