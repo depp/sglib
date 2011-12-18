@@ -19,6 +19,7 @@ class Editor : public ScreenBase {
     int m_mx, m_my;
     int m_mouse;
     int m_ent, m_etype;
+    int m_levelno;
 
 protected:
     virtual void drawExtra(int delta);

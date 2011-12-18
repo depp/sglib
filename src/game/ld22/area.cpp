@@ -42,19 +42,19 @@ void Area::draw(int delta)
     }
 }
 
-struct ActorDefunctOld {
+struct ActorValid {
     bool operator()(Actor *p)
     {
-        return !p->isvalid();
+        return p->isvalid();
     }
 };
 
 void Area::advance()
 {
-    ActorDefunctOld filt;
+    ActorValid filt;
     std::vector<Actor *>::iterator
         b = m_actors.begin(), i, e = m_actors.end(), ne;
-    ne = std::remove_if(b, e, filt);
+    ne = std::stable_partition(b, e, filt);
     for (i = b; i != ne; ++i) {
         Actor &a = **i;
         if (!a.isvalid())
@@ -63,11 +63,14 @@ void Area::advance()
         a.m_y0 = a.m_y;
         a.advance();
     }
+    for (; i != e; ++i)
+        delete *i;
     m_actors.erase(ne, e);
 }
 
 void Area::load()
 {
+    clear();
     const Level &l = m_screen.level();
     std::memcpy(m_tiles, l.tiles, sizeof(m_tiles));
     std::vector<Entity>::const_iterator
@@ -90,4 +93,13 @@ void Area::load()
             break;
         }
     }
+}
+
+void Area::clear()
+{
+    std::vector<Actor *>::iterator
+        i = m_actors.begin(), e = m_actors.end();
+    for (; i != e; ++i)
+        delete *i;
+    m_actors.clear();
 }

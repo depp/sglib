@@ -71,6 +71,16 @@ void Editor::handleKeyDown(const UI::KeyEvent &evt)
         setMode(MBackground);
         break;
 
+    case KEY_F5:
+        if (m_levelno > 1)
+            open(m_levelno - 1);
+        break;
+
+    case KEY_F6:
+        if (m_levelno < 99)
+            open(m_levelno + 1);
+        break;
+
     case KEY_PageUp:
         incType(-1, false);
         break;
@@ -393,9 +403,10 @@ void Editor::open(int num)
         level().load(num);
     } catch (Path::file_not_found &) { }
     loadLevel();
+    m_levelno = num;
 }
 
 void Editor::save()
 {
-    level().save(1);
+    level().save(m_levelno);
 }

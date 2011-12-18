@@ -5,6 +5,8 @@
 #include "client/ui/event.hpp"
 using namespace LD22;
 
+static const int TRANSITION_TIME = 32 * 5;
+
 static const unsigned char KEY_MAP[] = {
     KEY_W, InUp,
     KP_8, InUp,
@@ -26,7 +28,7 @@ static const unsigned char KEY_MAP[] = {
 };
 
 Screen::Screen()
-    : m_key(KEY_MAP)
+    : m_key(KEY_MAP), m_levelno(0)
 {
     m_area.reset(new Area(*this));
 }
@@ -50,16 +52,7 @@ void Screen::handleEvent(const UI::Event &evt)
 
 void Screen::init()
 {
-    level().load(1);
-    loadLevel();
-    startGame();
-}
-
-void Screen::startGame()
-{
-    m_area->load();
-    m_state = SPlay;
-    m_timer = 0;
+    startLevel(1);
 }
 
 static void drawFade(int t, int r, int g, int b, int a, int maxt)
@@ -104,6 +97,20 @@ void Screen::advance()
     ScreenBase::advance();
     m_area->advance();
     m_timer++;
+    switch (m_state) {
+    case SLose:
+        if (m_timer == TRANSITION_TIME)
+            startLevel(m_levelno);
+        break;
+
+    case SWin:
+        if (m_timer == TRANSITION_TIME)
+            startLevel(m_levelno + 1);
+        break;
+
+    default:
+        break;
+    }
 }
 
 void Screen::lose()
@@ -120,4 +127,16 @@ void Screen::win()
         m_state = SWin;
         m_timer = 0;
     }
+}
+
+void Screen::startLevel(int num)
+{
+    printf("startLevel(%d)\n", num);
+    if (m_levelno != num)
+        level().load(num);
+    loadLevel();
+    m_area->load();
+    m_state = SPlay;
+    m_timer = 0;
+    m_levelno = num;
 }

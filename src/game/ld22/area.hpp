@@ -42,6 +42,7 @@ public:
     void draw(int delta);
     void advance();
     void load();
+    void clear();
 
     const std::vector<Actor *> &actors()
     {

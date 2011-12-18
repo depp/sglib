@@ -16,6 +16,7 @@ class Screen : public ScreenBase {
     std::auto_ptr<Area> m_area;
     State m_state;
     int m_timer;
+    int m_levelno;
 
 protected:
     virtual void drawExtra(int delta);
@@ -37,7 +38,7 @@ public:
     void win();
 
 private:
-    void startGame();
+    void startLevel(int num);
 };
 
 }
