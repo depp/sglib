@@ -113,6 +113,7 @@ void Level::save(int num)
     fputc(background, f);
 
     fputc(DATA_ENTITY, f);
+    fputc(entity.size(), f);
     std::vector<Entity>::const_iterator
         i = entity.begin(), e = entity.end();
     for (; i != e; ++i) {
