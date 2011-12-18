@@ -2,6 +2,7 @@
 #define GAME_LD22_SCREEN_HPP
 #include "screenbase.hpp"
 #include "client/ui/keymanager.hpp"
+#include "client/texture.hpp"
 namespace LD22 {
 class Area;
 
@@ -17,6 +18,7 @@ class Screen : public ScreenBase {
     State m_state;
     int m_timer;
     int m_levelno;
+    Texture::Ref m_passfail1, m_passfail2;
 
 protected:
     virtual void drawExtra(int delta);
