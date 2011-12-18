@@ -238,8 +238,6 @@ void Editor::drawExtra(int delta)
     }
 
     glPopMatrix();
-
-    tileset().drawWidget(10, 10, m_tile - 1);
 }
 
 bool Editor::translateMouse(const UI::MouseEvent &evt, int *x, int *y)
