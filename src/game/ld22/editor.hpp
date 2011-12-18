@@ -8,6 +8,12 @@ struct MouseEvent;
 namespace LD22 {
 
 class Editor : public ScreenBase {
+    typedef enum {
+        MBrush,
+        MPlayer
+    } Mode;
+
+    Mode m_mode;
     int m_tile;
     int m_mx, m_my;
     int m_mouse;
@@ -30,6 +36,7 @@ private:
 
     bool translateMouse(const UI::MouseEvent &evt, int *x, int *y);
 
+    void setMode(Mode m);
     void tileBrush(int x, int y);
 
     void open(int num);

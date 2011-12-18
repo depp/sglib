@@ -5,6 +5,7 @@
 #include "client/opengl.hpp"
 #include "client/ui/event.hpp"
 #include "sys/path.hpp"
+#include "client/bitmapfont.hpp"
 using namespace LD22;
 
 static const int EDITBAR_SIZE = 64;
@@ -15,7 +16,7 @@ static bool inScreen(int x, int y)
 }
 
 Editor::Editor()
-    : m_tile(0), m_mx(0), m_my(0), m_mouse(-1)
+    : m_mode(MBrush), m_tile(0), m_mx(0), m_my(0), m_mouse(-1)
 {
     setSize(SCREEN_WIDTH + EDITBAR_SIZE, SCREEN_HEIGHT);
 }
@@ -53,6 +54,14 @@ void Editor::handleKeyDown(const UI::KeyEvent &evt)
     switch (evt.key) {
     case KEY_F1:
         save();
+        break;
+
+    case KEY_1:
+        setMode(MBrush);
+        break;
+
+    case KEY_2:
+        setMode(MPlayer);
         break;
 
     default:
@@ -103,9 +112,24 @@ void Editor::handleMouseMove(const UI::MouseEvent &evt)
     }
 }
 
+static void drawEntity(BitmapFont &f, int x, int y, const char *name)
+{
+    glBegin(GL_LINES);
+    glVertex2s(x + 10, y);
+    glVertex2s(x - 10, y);
+    glVertex2s(x, y + 10);
+    glVertex2s(x, y - 10);
+    glEnd();
+    f.print(x + 5, y + 5, name);
+}
+
 void Editor::drawExtra(int delta)
 {
+    BitmapFont &f = font();
+    Level &l = level();
     tileset().drawTiles(level().tiles, delta);
+
+    drawEntity(f, l.playerx, l.playery, "player");
 
     glPushMatrix();
     glTranslatef(SCREEN_WIDTH, 0, 0);
@@ -116,6 +140,15 @@ void Editor::drawExtra(int delta)
     glVertex2s(w, h);
     glVertex2s(0, h);
     glEnd();
+
+    const char *mname = NULL;
+    switch (m_mode) {
+    case MBrush: mname = "brush"; break;
+    case MPlayer: mname = "player"; break;
+    }
+    if (mname)
+        f.print(5, 5, mname);
+
     glPopMatrix();
 }
 
@@ -127,6 +160,12 @@ bool Editor::translateMouse(const UI::MouseEvent &evt, int *x, int *y)
     *y = yy;
     return xx >= 0 && xx < SCREEN_WIDTH + EDITBAR_SIZE &&
         yy >= 0 && yy < SCREEN_HEIGHT;
+}
+
+void Editor::setMode(Mode m)
+{
+    m_mode = m;
+    m_mouse = -1;
 }
 
 void Editor::tileBrush(int x, int y)
