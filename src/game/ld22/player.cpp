@@ -9,7 +9,7 @@ Player::~Player()
 
 void Player::advance()
 {
-    Screen &scr = m_area->screen();
+    Screen &scr = area().screen();
     int dx = 0, dy = 0;
     if (scr.getKey(InRight))
         dx += 1;
@@ -21,7 +21,7 @@ void Player::advance()
     if (scr.getKey(InDown))
         dy -= 1;
     */
-    m_xpush = dx * 4;
-    m_ypush = dy * 8;
+    m_xpush = dx * PUSH_SCALE;
+    m_ypush = dy * PUSH_SCALE;
     Walker::advance();
 }

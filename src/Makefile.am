@@ -107,6 +107,8 @@ libmgfx_a_SOURCES = \
 	game/ld22/editor.hpp \
 	game/ld22/level.cpp \
 	game/ld22/level.hpp \
+	game/ld22/mover.cpp \
+	game/ld22/mover.hpp \
 	game/ld22/player.cpp \
 	game/ld22/player.hpp \
 	game/ld22/screen.cpp \

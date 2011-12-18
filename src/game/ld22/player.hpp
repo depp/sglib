@@ -6,8 +6,11 @@ namespace LD22 {
 class Player : public Walker {
 public:
     Player(int x, int y)
-        : Walker(x, y)
-    { }
+    {
+        m_x = x;
+        m_y = y;
+    }
+
     virtual ~Player();
     virtual void advance();
 };

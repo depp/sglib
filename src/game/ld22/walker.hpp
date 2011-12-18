@@ -1,10 +1,15 @@
 #ifndef GAME_LD22_WALKER_HPP
 #define GAME_LD22_WALKER_HPP
-#include "actor.hpp"
+#include "mover.hpp"
 namespace LD22 {
 
-/* An actor that walks around, is affected by gravity.  */
-class Walker : public Actor {
+// An stick figure actor that walks around, is affected by gravity.
+class Walker : public Mover {
+public:
+    // All push should be in -PUSH_SCALE .. +PUSH_SCALE
+    static const int PUSH_SCALE = 256;
+
+private:
     typedef enum {
         WFall,
         WStand
@@ -21,28 +26,26 @@ class Walker : public Actor {
         AWalkRight
     } WAnim;
 
-    static const int SPEED_SCALE = 256;
-    static const int GRAVITY = 128;
-    // Current velocity, updated by this class
-    int m_xspeed, m_yspeed;
-    // Updated by Walker
-    WState m_wstate;
 
+    WState m_wstate;
     WAnim m_anim;
     int m_animtime;
     bool m_animlock;
-
     int m_sprite;
 
 protected:
     // "Push": walking and jumping
     // subclass is responsible for updating
+    // These are desired speeds as a fraction of maximum
     int m_xpush, m_ypush;
 
 public:
-    Walker(int x, int y)
-        : Actor(x, y, STICK_WIDTH, STICK_HEIGHT)
-    { }
+    Walker()
+        : m_xpush(0), m_ypush(0)
+    {
+        m_w = STICK_WIDTH;
+        m_h = STICK_HEIGHT;
+    }
 
     virtual ~Walker();
     virtual void draw(int delta, Tileset &tiles);

@@ -18,13 +18,9 @@ void Walker::draw(int delta, Tileset &tiles)
 
 void Walker::init()
 {
-    m_xspeed = 0;
-    m_yspeed = 0;
-    m_xpush = 0;
     checkState();
 }
 
-#if 0
 static int clip(int x, int n)
 {
     if (x > n)
@@ -33,40 +29,45 @@ static int clip(int x, int n)
         return -n;
     return x;
 }
-#endif
 
-static int advanceSpeed(int speed, int nspeed, int traction)
+static int applyPush(int speed, int push, int scale, int traction)
 {
-    int d = nspeed - speed;
-    if (d < -traction)
-        d = -traction;
-    else if (d > traction)
-        d = traction;
-    return speed + d;
+    int p = clip(push, Walker::PUSH_SCALE);
+    int nspeed = p * scale * Mover::SPEED_SCALE / Walker::PUSH_SCALE;
+    return speed + clip(nspeed - speed, traction);
 }
 
 void Walker::advance()
 {
-    static const int MIN_WALK = SPEED_SCALE * 2;
-    static const int MIN_FALL = SPEED_SCALE * 2;
+    static const int
+        // physics
+        GRAVITY = SPEED_SCALE * 3/2,
+        SPEED_WALK = 12,
+        SPEED_JUMP = 18,
+        TRACTION_GROUND = SPEED_SCALE * 2,
+        TRACTION_AIR = SPEED_SCALE * 1,
+        // animation
+        MIN_WALK = SPEED_SCALE * 2,
+        MIN_FALL = SPEED_SCALE * 2;
 
     int traction = 0;
     WState prevstate = m_wstate;
-    int prevyspeed = m_yspeed;
+    int prevyspeed = m_ys;
     WAnim newanim = AStand;
     int atime;
     checkState();
 
     switch (m_wstate) {
     case WStand:
-        traction = SPEED_SCALE;
-        m_yspeed = m_ypush * SPEED_SCALE;
+        traction = TRACTION_GROUND;
+        if (m_ypush > 0)
+            m_ys = SPEED_JUMP * SPEED_SCALE;
         if (!m_animlock) {
             if (prevstate == WFall && prevyspeed < -MIN_FALL)
-                newanim = m_xspeed < 0 ? ALandLeft : ALandRight;
-            else if (m_xspeed < -MIN_WALK)
+                newanim = m_xs < 0 ? ALandLeft : ALandRight;
+            else if (m_xs < -MIN_WALK)
                 newanim = AWalkLeft;
-            else if (m_xspeed > MIN_WALK)
+            else if (m_xs > MIN_WALK)
                 newanim = AWalkRight;
             else
                 newanim = AStand;
@@ -77,12 +78,12 @@ void Walker::advance()
 
     case WFall:
         m_animlock = false;
-        traction = SPEED_SCALE / 4;
-        m_yspeed -= GRAVITY;
+        traction = TRACTION_AIR;
+        m_ys -= GRAVITY;
         newanim = AFall;
         break;
     }
-    m_xspeed = advanceSpeed(m_xspeed, m_xpush * SPEED_SCALE, traction);
+    m_xs = applyPush(m_xs, m_xpush, SPEED_WALK, traction);
 
     if (newanim == m_anim)
         atime = --m_animtime;
@@ -102,7 +103,7 @@ void Walker::advance()
         if (atime <= 0) {
             x = Rand::girand() % 16;
             m_sprite = 16 + (x >= 8 ? x - 8 + 0x80 : x);
-            m_animtime = m_yspeed > 0 ? 10 : 2;
+            m_animtime = m_ys > 0 ? 10 : 2;
         }
         break;
 
@@ -139,15 +140,14 @@ void Walker::advance()
     }
     m_anim = newanim;
 
-    moveTo(m_x + m_xspeed / SPEED_SCALE,
-           m_y + m_yspeed / SPEED_SCALE);
+    Mover::advance();
 }
 
 void Walker::checkState()
 {
-    if (m_yspeed <= 0 && wallAt(m_x, m_y - 1)) {
+    if (m_ys <= 0 && wallAt(m_x, m_y - 1)) {
         m_wstate = WStand;
-        m_yspeed = 0;
+        m_ys = 0;
     } else {
         m_wstate = WFall;
     }

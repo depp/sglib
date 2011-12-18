@@ -6,14 +6,24 @@ class Area;
 class Tileset;
 
 class Actor {
-public:
+    friend class Area;
+    Area *m_area;
+    int m_x0, m_y0;
+
+protected:
+    // These must be initialized by subclass!
     // x, y are bottom left
     int m_x, m_y, m_w, m_h;
-    int m_x0, m_y0;
-    Area *m_area;
 
-    Actor(int x, int y, int w, int h)
-        : m_x(x), m_y(y), m_w(w), m_h(h), m_area(0)
+public:
+    enum {
+        MoveFull,
+        MovePartial,
+        MoveNone
+    };
+
+    Actor()
+        : m_area(0)
     { }
 
     virtual ~Actor();
@@ -42,8 +52,14 @@ public:
     bool wallAt(int x, int y);
 
     // Move actor to new coordinates, or partway if something is hit.
-    // Returns true if the actor hits something and stops partway.
-    bool moveTo(int x, int y);
+    // Returns MoveFull, MovePartial, or MoveNone depending on how
+    // far the actor moved.
+    int moveTo(int x, int y);
+
+    Area &area()
+    {
+        return *m_area;
+    }
 };
 
 }

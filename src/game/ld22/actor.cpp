@@ -51,21 +51,22 @@ bool Actor::wallAt(int x, int y)
     return false;
 }
 
-bool Actor::moveTo(int x, int y)
+int Actor::moveTo(int x, int y)
 {
     if (!wallAt(x, y)) {
         m_x = x;
         m_y = y;
-        return false;
+        return MoveFull;
     } else {
         int x0 = m_x, y0 = m_y;
         int dx = x - x0, dy = y - y0;
         unsigned adx = dx > 0 ? dx : -dx;
         unsigned ady = dy > 0 ? dy : -dy;
         if (adx <= 1 && ady <= 1)
-            return true;
-        if (moveTo(x0 + dx/2, y0 + dy/2))
-            return true;
-        return moveTo(x, y);
+            return MoveNone;
+        int r = moveTo(x0 + dx/2, y0 + dy/2);
+        if (r == MoveFull)
+            r = moveTo(x, y);
+        return r;
     }
 }
