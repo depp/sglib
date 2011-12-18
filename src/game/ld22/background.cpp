@@ -228,18 +228,6 @@ public:
 
 }
 
-const char *Background::getBackgroundName(int n)
-{
-    switch (n) {
-    case EMPTY:
-    default:
-        return "Empty";
-
-    case MOUNTAINS:
-        return "Mountains";
-    }
-}
-
 Background::~Background()
 { }
 

@@ -13,7 +13,6 @@ public:
     };
     static const int MAX = COUNT - 1;
 
-    static const char *getBackgroundName(int n);
 
     Background(int which_)
         : which(which_)
