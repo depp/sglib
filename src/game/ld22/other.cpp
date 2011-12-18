@@ -27,6 +27,10 @@ void Other::advance()
     case SAha:
         aha();
         break;
+
+    case SMunch:
+        munch();
+        break;
     }
 
     Walker::advance();
@@ -75,6 +79,23 @@ void Other::chase()
     int wx = centerx(), wy = centery();
     int ix = m_item->centerx(), iy = m_item->centery();
     int dx = ix - wx, dy = iy - wy;
+
+    bool inReach = false;
+    if (m_item->m_owner) {
+        if (m_item_distance < PICKUP_DISTANCE * 3/2)
+            inReach = true;
+    } else {
+        if (m_item_distance < PICKUP_DISTANCE)
+            inReach = true;
+    }
+    if (inReach && pickupItem()) {
+        m_item->m_locked = true;
+        setState(SMunch);
+        m_xpush = 0;
+        m_ypush = 0;
+        return;
+    }
+
     if (dx < -20)
         m_xpush = -PUSH_SCALE;
     else if (dx > 20)
@@ -97,6 +118,11 @@ void Other::aha()
         setState(SChase);
         return;
     }
+}
+
+void Other::munch()
+{
+    
 }
 
 void Other::setState(State s)

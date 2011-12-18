@@ -23,7 +23,8 @@ void Item::advance()
         if (m_y < -100)
             destroy();
     } else {
-        if (!m_owner->isvalid()) {
+        if (!m_owner->isvalid() || m_owner->m_item != this) {
+            m_locked = false;
             m_state = SFree;
             goto free;
         }

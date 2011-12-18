@@ -250,6 +250,8 @@ bool Walker::pickupItem()
     if (!m_item)
         return false;
     if (m_item->m_owner != this) {
+        if (m_item->m_locked)
+            return false;
         m_item->m_owner = this;
         m_item->m_state = Item::SGrabbing;
         m_item->m_frame = 0;

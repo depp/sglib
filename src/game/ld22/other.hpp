@@ -7,7 +7,8 @@ class Other : public Walker {
     typedef enum {
         SIdle,
         SAha,
-        SChase
+        SChase,
+        SMunch
     } State;
 
     State m_state;
@@ -30,6 +31,7 @@ private:
     void idle();
     void chase();
     void aha();
+    void munch();
     void setState(State s);
 };
 

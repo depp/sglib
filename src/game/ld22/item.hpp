@@ -15,7 +15,8 @@ public:
     static const int IWIDTH = 48, IHEIGHT = 48;
 
     Item(int x, int y)
-        : Mover(AItem), m_owner(0), m_state(SFree), m_frame(0)
+        : Mover(AItem), m_owner(0), m_state(SFree), m_frame(0),
+          m_locked(false)
     {
         m_x = x;
         m_y = y;
@@ -33,6 +34,9 @@ public:
     Walker *m_owner;
     State m_state;
     int m_frame;
+
+    // Locked items can't be grabbed
+    bool m_locked;
 };
 
 }
