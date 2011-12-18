@@ -22,6 +22,7 @@ ScreenBase::ScreenBase()
     setSize(SCREEN_WIDTH, SCREEN_HEIGHT);
     m_background.reset(Background::getBackground(Background::EMPTY));
     m_tileset.reset(new Tileset);
+    m_font.reset(new BitmapFont("font/terminus-8x16.png"));
 }
 
 ScreenBase::~ScreenBase()
@@ -61,8 +62,9 @@ void ScreenBase::update(unsigned int ticks)
 
 void ScreenBase::loadLevel()
 {
-    m_background.reset(Background::getBackground(m_level.background));
-    m_font.reset(new BitmapFont("font/terminus-8x16.png"));
+    int b = m_level.background;
+    if (m_background->which != b)
+        m_background.reset(Background::getBackground(b));
 }
 
 void ScreenBase::draw()

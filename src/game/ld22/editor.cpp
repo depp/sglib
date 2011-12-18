@@ -6,6 +6,7 @@
 #include "client/ui/event.hpp"
 #include "sys/path.hpp"
 #include "client/bitmapfont.hpp"
+#include "background.hpp"
 #include <stdlib.h>
 using namespace LD22;
 
@@ -64,6 +65,10 @@ void Editor::handleKeyDown(const UI::KeyEvent &evt)
 
     case KEY_2:
         setMode(MEntity);
+        break;
+
+    case KEY_3:
+        setMode(MBackground);
         break;
 
     case KEY_PageUp:
@@ -134,6 +139,9 @@ void Editor::handleMouseDown(const UI::MouseEvent &evt)
                 break;
             }
             break;
+
+        case MBackground:
+            break;
         }
     } else {
         
@@ -170,6 +178,9 @@ void Editor::handleMouseMove(const UI::MouseEvent &evt)
                 e.x = x;
                 e.y = y;
             }
+            break;
+
+        case MBackground:
             break;
         }
     } else {
@@ -256,6 +267,10 @@ void Editor::drawExtra(int delta)
         f.print(5, 5, "entity");
         f.print(5, 25, Entity::typeName((Entity::Type) m_etype));
         break;
+
+    case MBackground:
+        f.print(5, 5, "background");
+        break;
     }
 
     glPopMatrix();
@@ -278,17 +293,20 @@ void Editor::setMode(Mode m)
     m_ent = -1;
 }
 
-static void incWrap(int &v, int minv, int maxv, int delta, bool max)
+static bool incWrap(int &v, int minv, int maxv, int delta, bool max)
 {
+    int vo = v, vn;
     if (max) {
-        v = delta > 0 ? maxv : minv;
+        vn = delta > 0 ? maxv : minv;
     } else {
-        v += delta;
-        if (v > maxv)
-            v = minv;
-        else if (v < minv)
-            v = maxv;
+        vn = vo + delta;
+        if (vn > maxv)
+            vn = minv;
+        else if (vn < minv)
+            vn = maxv;
     }
+    v = vn;
+    return vo != vn;
 }
 
 void Editor::incType(int delta, bool max)
@@ -300,6 +318,11 @@ void Editor::incType(int delta, bool max)
 
     case MEntity:
         incWrap(m_etype, 0, Entity::MAX_TYPE, delta, max);
+        break;
+
+    case MBackground:
+        incWrap(level().background, 0, Background::MAX, delta, max);
+        loadLevel();
         break;
     }
 }

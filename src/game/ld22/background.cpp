@@ -228,17 +228,25 @@ public:
 
 }
 
+const char *Background::getBackgroundName(int n)
+{
+    switch (n) {
+    case EMPTY:
+    default:
+        return "Empty";
+
+    case MOUNTAINS:
+        return "Mountains";
+    }
+}
+
 Background::~Background()
 { }
 
 Background *Background::getBackground(int which)
 {
     std::auto_ptr<Background> b;
-    int w = which % COUNT;
-    if (w < 0)
-        w += COUNT;
-
-    switch (w) {
+    switch (which) {
     case EMPTY:
     default:
         b.reset(new Bkgr::Empty);
@@ -248,7 +256,6 @@ Background *Background::getBackground(int which)
         b.reset(new Bkgr::Mountains);
         break;
     }
-
     b->init();
     return b.release();
 }

@@ -10,7 +10,8 @@ namespace LD22 {
 class Editor : public ScreenBase {
     typedef enum {
         MBrush,
-        MEntity
+        MEntity,
+        MBackground
     } Mode;
 
     Mode m_mode;

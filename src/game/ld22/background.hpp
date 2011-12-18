@@ -4,13 +4,16 @@ namespace LD22 {
 
 class Background {
 public:
-    int which;
+    const int which;
 
     enum {
         EMPTY,
-        MOUNTAINS
+        MOUNTAINS,
+        COUNT
     };
-    static const int COUNT = MOUNTAINS + 1;
+    static const int MAX = COUNT - 1;
+
+    static const char *getBackgroundName(int n);
 
     Background(int which_)
         : which(which_)
