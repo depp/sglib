@@ -25,7 +25,7 @@ void Area::addActor(Actor *a)
     m_actors.push_back(a);
     a->m_area = this;
     a->m_x0 = a->m_x;
-    a->m_y0 = a->m_x;
+    a->m_y0 = a->m_y;
     a->init();
 }
 
