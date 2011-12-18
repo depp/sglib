@@ -6,8 +6,16 @@ namespace LD22 {
 class Area;
 
 class Screen : public ScreenBase {
+    typedef enum {
+        SPlay,
+        SLose,
+        SWin
+    } State;
+
     UI::KeyManager m_key;
     std::auto_ptr<Area> m_area;
+    State m_state;
+    int m_timer;
 
 protected:
     virtual void drawExtra(int delta);
@@ -24,6 +32,9 @@ public:
     {
         return m_key.inputState(k);
     }
+
+    void lose();
+    void win();
 
 private:
     void startGame();

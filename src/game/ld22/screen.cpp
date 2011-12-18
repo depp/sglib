@@ -58,16 +58,68 @@ void Screen::init()
 void Screen::startGame()
 {
     m_area->load();
+    m_state = SPlay;
+    m_timer = 0;
+}
+
+static void drawFade(int t, int r, int g, int b, int a, int maxt)
+{
+    int aa;
+    if (t < 0) aa = 0;
+    else if (t >= maxt) aa = a;
+    else aa = t * a / maxt;
+    glEnable(GL_BLEND);
+    glDisable(GL_TEXTURE_2D);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glColor4ub(r, g, b, aa);
+    glBegin(GL_QUADS);
+    glVertex2s(0, 0);
+    glVertex2s(SCREEN_WIDTH, 0);
+    glVertex2s(SCREEN_WIDTH, SCREEN_HEIGHT);
+    glVertex2s(0, SCREEN_HEIGHT);
+    glEnd();
+    glDisable(GL_BLEND);
+    glColor3ub(255, 255, 255);
 }
 
 void Screen::drawExtra(int delta)
 {
     m_area->draw(delta);
+    switch (m_state) {
+    case SPlay:
+        break;
+
+    case SLose:
+        drawFade(m_timer, 200, 0, 0, 110, 15);
+        break;
+
+    case SWin:
+        drawFade(m_timer, 200, 200, 200, 150, 15);
+        break;
+    }
 }
 
 void Screen::advance()
 {
     ScreenBase::advance();
     m_area->advance();
+    m_timer++;
+    if (m_timer == 32)
+        win();
 }
 
+void Screen::lose()
+{
+    if (m_state == SPlay) {
+        m_state = SLose;
+        m_timer = 0;
+    }
+}
+
+void Screen::win()
+{
+    if (m_state == SPlay) {
+        m_state = SWin;
+        m_timer = 0;
+    }
+}
