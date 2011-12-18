@@ -63,8 +63,10 @@ void Walker::advance()
     switch (m_wstate) {
     case WStand:
         traction = TRACTION_GROUND;
-        if (m_ypush > 0)
-            m_ys = SPEED_JUMP * SPEED_SCALE;
+        if (m_ypush > 0) {
+            int yp = m_ypush > PUSH_SCALE ? PUSH_SCALE : m_ypush;
+            m_ys = yp * SPEED_JUMP * SPEED_SCALE / PUSH_SCALE;
+        }
         break;
 
     case WFall:

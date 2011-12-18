@@ -4,6 +4,7 @@
 #include "area.hpp"
 #include "tileset.hpp"
 #include "sys/rand.hpp"
+#include <stdlib.h>
 using namespace LD22;
 
 static int lookInterval()
@@ -119,10 +120,13 @@ void Other::chase()
         m_xpush = PUSH_SCALE;
     else
         m_xpush = 0;
-    if (dy > 80)
-        m_ypush = 1;
-    else
-        m_ypush = 0;
+    m_ypush = 0;
+    if (abs(dx) < 150) {
+        if (dy > 80)
+            m_ypush = PUSH_SCALE;
+        else if (dy > 20)
+            m_ypush = PUSH_SCALE / 2;
+    }
 }
 
 void Other::aha()
