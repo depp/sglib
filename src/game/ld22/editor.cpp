@@ -82,6 +82,18 @@ void Editor::handleKeyDown(const UI::KeyEvent &evt)
         incType(1, true);
         break;
 
+    case KEY_Delete:
+    case KEY_DeleteForward:
+        switch (m_mode) {
+        case MEntity:
+            deleteEntity();
+            break;
+
+        default:
+            break;
+        }
+        break;
+
     default:
         break;
     }
@@ -322,7 +334,11 @@ void Editor::newEntity(int x, int y)
 
 void Editor::deleteEntity()
 {
-    
+    if (m_ent < 0)
+        return;
+    Level &l = level();
+    l.entity.erase(l.entity.begin() + m_ent);
+    m_ent = -1;
 }
 
 void Editor::open(int num)
