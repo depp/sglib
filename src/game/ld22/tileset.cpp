@@ -51,7 +51,7 @@ void Tileset::drawStick(int x, int y, int frame)
     int u = frame & 7, v = (frame / 8) & 3;
     bool flip = frame & 0x80;
     float x0 = x + STICK_WIDTH/2 - 32, x1 = x0 + 64;
-    float y0 = y + STICK_WIDTH/2 - 32, y1 = y0 + 64;
+    float y0 = y + STICK_HEIGHT/2 - 32, y1 = y0 + 64;
     float u0 = u * 0.125f, u1 = u0 + 0.125f;
     float v1 = v * 0.25f, v0 = v1 + 0.25f;
     if (flip) {
