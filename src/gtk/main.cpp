@@ -168,8 +168,9 @@ int main(int argc, char *argv[])
     GTKWindow w;
 
     init(argc, argv);
+    int width = 768 + (gEditor ? 64 : 0), height = 480;
 
-    w.setSize(768, 480);
+    w.setSize(width, height);
     if (gEditor)
         w.setScreen(new LD22::Editor);
     else
@@ -177,7 +178,7 @@ int main(int argc, char *argv[])
 
     GtkWidget *window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     gtk_window_set_title(GTK_WINDOW(window), "Game");
-    gtk_window_set_default_size(GTK_WINDOW(window), 768, 480);
+    gtk_window_set_default_size(GTK_WINDOW(window), width, height);
     g_signal_connect_swapped(G_OBJECT(window), "destroy",
                              G_CALLBACK(gtk_main_quit), NULL);
 
