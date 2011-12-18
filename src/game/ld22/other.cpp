@@ -134,11 +134,13 @@ void Other::munch()
 
 void Other::setState(State s)
 {
-    switch (s) {
-    case SIdle: puts("idle"); break;
-    case SAha: puts("aha"); break;
-    case SChase: puts("chase"); break;
-    case SMunch: puts("munch"); break;
+    if (0) {
+        switch (s) {
+        case SIdle: puts("idle"); break;
+        case SAha: puts("aha"); break;
+        case SChase: puts("chase"); break;
+        case SMunch: puts("munch"); break;
+        }
     }
     m_state = s;
     m_timer = 0;
