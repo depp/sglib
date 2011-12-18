@@ -59,9 +59,9 @@ void Effect::init()
         Actor *a = *i;
         if (a->type() != AEffect || a == this)
             continue;
-        Effect &e = *static_cast<Effect *> (a);
-        if (e.m_track == m_track) {
-            e.destroy();
+        Effect &fx = *static_cast<Effect *> (a);
+        if (fx.m_track == m_track) {
+            fx.destroy();
             break;
         }
     }
