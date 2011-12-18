@@ -1,12 +1,14 @@
 #include "tileset.hpp"
 #include "client/opengl.hpp"
 #include "client/texturefile.hpp"
+#include <stdlib.h>
 using namespace LD22;
 
 Tileset::Tileset()
 {
     m_tile = TextureFile::open("sprite/tile.png");
     m_stick = TextureFile::open("sprite/stick.png");
+    m_widget = TextureFile::open("sprite/widget.png");
 }
 
 Tileset::~Tileset()
@@ -70,5 +72,39 @@ void Tileset::drawStick(int x, int y, int frame)
     glEnd();
     glDisable(GL_BLEND);
     glDisable(GL_TEXTURE_2D);
+}
 
+static const signed char WIDGET_INFO[Widget::MAX_WIDGET + 1][4] = {
+    { 2, 2, -2, -2 },
+    { 0, 2, 2, -2 },
+    { 2, 2, 2, -2 },
+    { 4, 2, -2, -2 },
+    { 0, 3, 1, -1 },
+    { 1, 3, 1, -1 },
+    { 2, 3, 1, -1 },
+    { 2, 4, 1, -1 },
+    { 3, 4, 1, -2 }
+};
+
+void Tileset::drawWidget(int x, int y, int which)
+{
+    if (which < 0 || which > Widget::MAX_WIDGET)
+        return;
+    const signed char *ifo = WIDGET_INFO[which];
+    float x0 = x, x1 = x0 + 64 * abs(ifo[2]);
+    float y0 = y, y1 = y0 + 64 * abs(ifo[3]);
+    float u0 = 0.25f * ifo[0], u1 = u0 + 0.25f * ifo[2];
+    float v0 = 0.25f * ifo[1], v1 = v0 + 0.25f * ifo[3];
+    glEnable(GL_TEXTURE_2D);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    m_widget->bind();
+    glBegin(GL_QUADS);
+    glTexCoord2f(u0, v0); glVertex2f(x0, y0);
+    glTexCoord2f(u0, v1); glVertex2f(x0, y1);
+    glTexCoord2f(u1, v1); glVertex2f(x1, y1);
+    glTexCoord2f(u1, v0); glVertex2f(x1, y0);
+    glEnd();
+    glDisable(GL_BLEND);
+    glDisable(GL_TEXTURE_2D);
 }
