@@ -72,7 +72,7 @@ void Editor::handleKeyDown(const UI::KeyEvent &evt)
 
 void Editor::handleMouseDown(const UI::MouseEvent &evt)
 {
-    int x, y, tx, ty;
+    int x, y, tx, ty, pe;
     bool inbounds;
     inbounds = translateMouse(evt, &x, &y);
     if (!inbounds)
@@ -91,8 +91,9 @@ void Editor::handleMouseDown(const UI::MouseEvent &evt)
         case MEntity:
             switch (evt.button) {
             case UI::ButtonLeft:
-                m_mouse = m_ent >= 0 ? evt.button : -1;
+                pe = m_ent;
                 selectEntity(x, y, true);
+                m_mouse = (pe >= 0 && pe == m_ent) ? UI::ButtonLeft : -1;
                 break;
 
             case UI::ButtonRight:
