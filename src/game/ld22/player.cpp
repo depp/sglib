@@ -24,4 +24,7 @@ void Player::advance()
     m_xpush = dx * PUSH_SCALE;
     m_ypush = dy * PUSH_SCALE;
     Walker::advance();
+    scanItems();
+    if (m_item && m_item_distance < PICKUP_DISTANCE)
+        pickupItem();
 }

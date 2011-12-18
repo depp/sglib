@@ -1,9 +1,12 @@
 #include "area.hpp"
 #include "walker.hpp"
 #include "tileset.hpp"
+#include "item.hpp"
 #include "client/texturefile.hpp"
 #include "sys/rand.hpp"
 #include <stdio.h>
+#include <cmath>
+#include <limits>
 using namespace LD22;
 
 Walker::~Walker()
@@ -162,4 +165,52 @@ void Walker::checkState()
     } else {
         m_wstate = WFall;
     }
+}
+
+void Walker::scanItems()
+{
+    const std::vector<Actor *> &v = area().actors();
+    std::vector<Actor *>::const_iterator i = v.begin(), e = v.end();
+    int x = centerx(), y = centery();
+    Item *ic = NULL;
+    float icd = std::numeric_limits<float>::infinity();
+    for (; i != e; ++i) {
+        if ((*i)->type() != AItem)
+            continue;
+        Item *it = static_cast<Item *> (*i);
+        int ix = it->centerx(), iy = it->centery();
+        float dx = ix - x, dy = iy - y, id = dx*dx + dy*dy;
+        if (id < icd) {
+            ic = it;
+            icd = id;
+        }
+    }
+    if (ic) {
+        m_item = ic;
+        m_item_distance = std::sqrt(icd);
+    } else {
+        m_item = NULL;
+        m_item_distance = 0.0f;
+    }
+}
+
+void Walker::updateItem()
+{
+    if (!m_item)
+        return;
+    float dx = centerx() - m_item->centerx();
+    float dy = centery() - m_item->centery();
+    m_item_distance = std::sqrt(dx*dx + dy*dy);
+}
+
+bool Walker::pickupItem()
+{
+    if (!m_item)
+        return false;
+    if (m_item->m_owner != this) {
+        m_item->m_owner = this;
+        m_item->m_state = Item::SGrabbing;
+        m_item->m_frame = 0;
+    }
+    return true;
 }

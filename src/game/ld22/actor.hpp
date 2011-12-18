@@ -7,8 +7,17 @@ class Tileset;
 
 class Actor {
     friend class Area;
+public:
+    typedef enum {
+        ANone,
+        AWalker,
+        AItem
+    } Type;
+
+private:
     Area *m_area;
     int m_x0, m_y0;
+    Type m_type;
 
 protected:
     // These must be initialized by subclass!
@@ -16,14 +25,15 @@ protected:
     int m_x, m_y, m_w, m_h;
 
 public:
+
     enum {
         MoveFull,
         MovePartial,
         MoveNone
     };
 
-    Actor()
-        : m_area(0)
+    Actor(Type t)
+        : m_area(0), m_type(t)
     { }
 
     virtual ~Actor();
@@ -59,6 +69,21 @@ public:
     Area &area()
     {
         return *m_area;
+    }
+
+    Type type() const
+    {
+        return m_type;
+    }
+
+    int centerx() const
+    {
+        return m_x + m_w / 2;
+    }
+
+    int centery() const
+    {
+        return m_y + m_h / 2;
     }
 };
 

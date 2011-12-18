@@ -42,6 +42,16 @@ public:
     void draw(int delta);
     void advance();
     void load();
+
+    const std::vector<Actor *> &actors()
+    {
+        return m_actors;
+    }
+
+    const std::vector<Thinker *> &thinkers()
+    {
+        return m_thinkers;
+    }
 };
 
 }

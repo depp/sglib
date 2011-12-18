@@ -74,16 +74,16 @@ void Tileset::drawStick(int x, int y, int frame)
     glDisable(GL_TEXTURE_2D);
 }
 
-static const signed char WIDGET_INFO[Widget::MAX_WIDGET + 1][4] = {
-    { 2, 2, -2, -2 },
-    { 0, 2, 2, -2 },
-    { 2, 2, 2, -2 },
-    { 4, 2, -2, -2 },
-    { 0, 3, 1, -1 },
-    { 1, 3, 1, -1 },
-    { 2, 3, 1, -1 },
-    { 2, 4, 1, -1 },
-    { 3, 4, 1, -2 }
+static const signed char WIDGET_INFO[Widget::MAX_WIDGET + 1][6] = {
+    { 2, 2, -2, -2, 0, 0 },
+    { 0, 2, 2, -2, 0, 0 },
+    { 2, 2, 2, -2, 0, 0 },
+    { 4, 2, -2, -2, 0, 0 },
+    { 0, 3, 1, -1, -16, -16 },
+    { 1, 3, 1, -1, -16, -16 },
+    { 2, 3, 1, -1, -16, -16 },
+    { 2, 4, 1, -1, -16, -16 },
+    { 3, 4, 1, -2, -16, -16 }
 };
 
 void Tileset::drawWidget(int x, int y, int which)
@@ -91,8 +91,8 @@ void Tileset::drawWidget(int x, int y, int which)
     if (which < 0 || which > Widget::MAX_WIDGET)
         return;
     const signed char *ifo = WIDGET_INFO[which];
-    float x0 = x, x1 = x0 + 64 * abs(ifo[2]);
-    float y0 = y, y1 = y0 + 64 * abs(ifo[3]);
+    float x0 = x + ifo[4], x1 = x0 + 64 * abs(ifo[2]);
+    float y0 = y + ifo[5], y1 = y0 + 64 * abs(ifo[3]);
     float u0 = 0.25f * ifo[0], u1 = u0 + 0.25f * ifo[2];
     float v0 = 0.25f * ifo[1], v1 = v0 + 0.25f * ifo[3];
     glEnable(GL_TEXTURE_2D);

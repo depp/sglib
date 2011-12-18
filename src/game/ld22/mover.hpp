@@ -15,8 +15,8 @@ protected:
     int m_xs, m_ys;
 
 public:
-    Mover()
-        : m_xs(0), m_ys(0)
+    Mover(Type t)
+        : Actor(t), m_xs(0), m_ys(0)
     { }
 
     virtual ~Mover();
