@@ -1,5 +1,6 @@
 #include "effect.hpp"
 #include "tileset.hpp"
+#include "area.hpp"
 using namespace LD22;
 
 Effect::~Effect()
@@ -28,6 +29,20 @@ void Effect::draw(int delta, Tileset &tiles)
 
 void Effect::init()
 {
+    // Destroy any effect on the same actor
+    const std::vector<Actor *> &v = area().actors();
+    std::vector<Actor *>::const_iterator i = v.begin(), e = v.end();
+    for (; i != e; ++i) {
+        Actor *a = *i;
+        if (a->type() != AEffect || a == this)
+            continue;
+        Effect &e = *static_cast<Effect *> (a);
+        if (e.m_track == m_track) {
+            e.destroy();
+            break;
+        }
+    }
+
     switch (m_etype) {
     case ThinkStar:         m_timer = 30; break;
     case ThinkStarBang:     m_timer = 20; break;
