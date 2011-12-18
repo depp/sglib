@@ -8,6 +8,7 @@
 #include "player.hpp"
 #include "item.hpp"
 #include "effect.hpp"
+#include "endwalk.hpp"
 #include "client/opengl.hpp"
 #include "client/texturefile.hpp"
 #include <cstring>
@@ -137,6 +138,7 @@ void Area::load()
             break;
 
         case Entity::EndWalker:
+            addActor(new EndWalk(i->x, i->y));
             break;
         }
     }

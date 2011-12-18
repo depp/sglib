@@ -16,7 +16,7 @@ void Walker::draw(int delta, Tileset &tiles)
 {
     int x, y;
     getDrawPos(&x, &y, delta);
-    tiles.drawStick(x, y, m_sprite, m_isother);
+    tiles.drawStick(x, y, m_sprite, m_wclass);
 }
 
 void Walker::init()
@@ -171,6 +171,12 @@ void Walker::checkState()
         m_ys = 0;
     } else {
         m_wstate = WFall;
+    }
+    if (m_bounded) {
+        if (m_y == 0) {
+            m_wstate = WStand;
+            m_ys = 0;
+        }
     }
 }
 

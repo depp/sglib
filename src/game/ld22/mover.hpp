@@ -10,9 +10,10 @@ public:
     // hits an obstacle.
     // Multiply by SPEED_SCALE.
     int m_xs, m_ys;
+    bool m_bounded;
 
     explicit Mover(Type t)
-        : Actor(t), m_xs(0), m_ys(0)
+        : Actor(t), m_xs(0), m_ys(0), m_bounded(false)
     { }
 
     virtual ~Mover();

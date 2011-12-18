@@ -107,6 +107,8 @@ libmgfx_a_SOURCES = \
 	game/ld22/editor.hpp \
 	game/ld22/effect.cpp \
 	game/ld22/effect.hpp \
+	game/ld22/endwalk.cpp \
+	game/ld22/endwalk.hpp \
 	game/ld22/item.cpp \
 	game/ld22/item.hpp \
 	game/ld22/level.cpp \

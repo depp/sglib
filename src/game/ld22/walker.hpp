@@ -34,17 +34,17 @@ private:
     int m_animtime;
     bool m_animlock;
     int m_sprite;
-    bool m_isother;
 
 protected:
+    int m_wclass;
     // "Push": walking and jumping
     // subclass is responsible for updating
     // These are desired speeds as a fraction of maximum
     int m_xpush, m_ypush;
 
 public:
-    explicit Walker(bool isother)
-        : Mover(AWalker), m_isother(isother), m_xpush(0), m_ypush(0),
+    explicit Walker(int wclass)
+        : Mover(AWalker), m_wclass(wclass), m_xpush(0), m_ypush(0),
           m_item(0)
     {
         m_w = STICK_WIDTH;

@@ -22,6 +22,22 @@ void Mover::advance()
     if (!dx && !dy)
         return;
     int nx = m_x + dx, ny = m_y + dy;
+    if (m_bounded) {
+        if (nx < 0) {
+            nx = 0;
+            m_xs = 0;
+        } else if (nx > SCREEN_WIDTH - m_w) {
+            nx = SCREEN_WIDTH - m_w;
+            m_xs = 0;
+        }
+        if (ny < 0) {
+            ny = 0;
+            m_ys = 0;
+        } else if (ny > SCREEN_HEIGHT - m_h) {
+            ny = SCREEN_HEIGHT - m_h;
+            m_ys = 0;
+        }
+    }
     if (moveTo(nx, ny) != MoveFull) {
         int r;
         if (dy) {

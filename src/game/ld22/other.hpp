@@ -4,6 +4,7 @@
 namespace LD22 {
 
 class Other : public Walker {
+protected:
     typedef enum {
         SIdle,
         SAha,
@@ -17,7 +18,7 @@ class Other : public Walker {
 
 public:
     Other(int x, int y)
-        : Walker(true), m_state(SIdle), m_timer(0), m_visfail(0)
+        : Walker(1), m_state(SIdle), m_timer(0), m_visfail(0)
     {
         m_x = x;
         m_y = y;
@@ -27,7 +28,7 @@ public:
     virtual void advance();
     virtual void wasDestroyed();
 
-private:
+protected:
     void idle();
     void chase();
     void aha();

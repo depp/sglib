@@ -46,18 +46,16 @@ void Tileset::drawTiles(const unsigned char t[TILE_HEIGHT][TILE_WIDTH],
     glDisable(GL_TEXTURE_2D);
 }
 
-static const float STICK_COLOR[2][4] = {
+static const float STICK_COLOR[3][4] = {
     { 0.0f, 0.0f, 0.0f, 1.0f },
-    { 0.2f, 0.2f, 0.7f, 1.0f }
+    { 0.2f, 0.2f, 0.7f, 1.0f },
+    { 0.8f, 0.9f, 1.0f, 1.0f }
 };
 
-void Tileset::drawStick(int x, int y, int frame, bool isOther)
+void Tileset::drawStick(int x, int y, int frame, int wclass)
 {
     const float *color;
-    if (isOther)
-        color = STICK_COLOR[1];
-    else
-        color = STICK_COLOR[0];
+    color = STICK_COLOR[wclass];
     int u = frame & 7, v = (frame / 8) & 3;
     bool flip = frame & 0x80;
     float x0 = x + STICK_WIDTH/2 - 32, x1 = x0 + 64;
@@ -82,9 +80,9 @@ void Tileset::drawStick(int x, int y, int frame, bool isOther)
     glTexCoord2f(u1, v1); glVertex2f(x1, y1);
     glTexCoord2f(u1, v0); glVertex2f(x1, y0);
     glEnd();
+    glPopAttrib();
     glDisable(GL_BLEND);
     glDisable(GL_TEXTURE_2D);
-    glPopAttrib();
 }
 
 static const int IOFF = (64 - ITEM_SIZE) / 2;
