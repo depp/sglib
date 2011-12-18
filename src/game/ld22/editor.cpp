@@ -160,6 +160,7 @@ void Editor::handleMouseMove(const UI::MouseEvent &evt)
     int x, y, tx, ty;
     bool inbounds;
     inbounds = translateMouse(evt, &x, &y);
+    (void) inbounds;
     if (inScreen(x, y)) {
         switch (m_mode) {
         case MBrush:

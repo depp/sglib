@@ -307,7 +307,7 @@ bool TextureFile::loadPNG()
     PNGStruct ps;
     int depth, ctype;
     png_uint_32 width, height;
-    uint32_t twidth, theight, i, rowbytes, chan;
+    uint32_t th, i, rowbytes, chan;
     bool color = false, alpha = false;
     unsigned char *data = NULL;
     std::vector<png_bytep> rows;
@@ -358,8 +358,7 @@ bool TextureFile::loadPNG()
         png_set_strip_16(ps.png);
 
     alloc(width, height, color, alpha);
-    twidth = this->twidth();
-    theight = this->theight();
+    th = this->theight();
     chan = channels();
     rowbytes = this->rowbytes();
     data = reinterpret_cast<unsigned char *>(buf());
@@ -369,7 +368,7 @@ bool TextureFile::loadPNG()
                    rowbytes - width * chan);
     } else
         i = height;
-    for (; i < theight; ++i)
+    for (; i < th; ++i)
         memset(data + rowbytes * i, 0, rowbytes);
     rows.resize(height);
     for (i = 0; i < height; ++i)
