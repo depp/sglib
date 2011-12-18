@@ -21,7 +21,7 @@ AC_SEARCH_LIBS([gluErrorString], [GLU])
 PKG_PROG_PKG_CONFIG(0.16)
 
 PKG_CHECK_MODULES(
-  [LIBPNG], [libpng12],
+  [LIBPNG], [libpng],
   [AC_DEFINE([HAVE_LIBPNG], [1], [LibPNG is available])])
 AC_SEARCH_LIBS(
   [jpeg_start_decompress], [jpeg],
