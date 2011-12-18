@@ -18,9 +18,13 @@ void Other::advance()
             m_xpush = PUSH_SCALE;
         else
             m_xpush = 0;
-        (void) dy;
+        if (dy > 80)
+            m_ypush = 1;
+        else
+            m_ypush = 0;
     } else {
         m_xpush = 0;
+        m_ypush = 0;
     }
     Walker::advance();
 }
