@@ -21,10 +21,10 @@ static void init(int argc, char *argv[])
             break;
         
         default:
-            fputs("Invalid usage\n", stderr);
-            exit(1);
+            goto stop;
         }
     }
+stop:
     
     pathInit(altpath);
     initTime();
