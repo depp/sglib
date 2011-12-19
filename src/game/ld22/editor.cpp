@@ -15,6 +15,7 @@ static const int EDITBAR_SIZE = 64;
 static bool inScreen(int x, int y)
 {
     return x < SCREEN_WIDTH;
+    (void) y;
 }
 
 Editor::Editor()
@@ -161,6 +162,7 @@ void Editor::handleMouseDown(const UI::MouseEvent &evt)
 void Editor::handleMouseUp(const UI::MouseEvent &evt)
 {
     m_mouse = -1;
+    (void) evt;
 }
 
 void Editor::handleMouseMove(const UI::MouseEvent &evt)

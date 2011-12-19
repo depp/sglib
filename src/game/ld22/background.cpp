@@ -266,6 +266,7 @@ public:
 
     virtual void draw(int delta)
     {
+        (void) delta;
         m_pic.draw();
     }
 };
