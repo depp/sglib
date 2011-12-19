@@ -77,6 +77,16 @@ static void getExeDir()
 void pathInit(const char *altpath)
 {
     getExeDir();
+    if (gDirs[0].path) {
+        unsigned l = gDirs[0].len;
+        char *b = (char *) malloc(l + 5);
+        assert(b != NULL);
+        memcpy(b, gDirs[0].path, l);
+        memcpy(b + l, "/data", 5);
+        free(const_cast<char *> (gDirs[0].path));
+        gDirs[0].path = b;
+        gDirs[0].len = l + 5;
+    }
     if (altpath) {
         gDirs[1].path = altpath;
         gDirs[1].len = strlen(altpath);
