@@ -28,12 +28,13 @@ void path_init(exe_options *opts)
     if (!i || i == 1)
         goto error;
     i--;
-    p = (wchar_t *) LocalAlloc(LMEM_FIXED, i * sizeof(wchar_t));
+    p = (wchar_t *) LocalAlloc(LMEM_FIXED, (i + 5) * sizeof(wchar_t));
     if (!p)
         goto error;
     wmemcpy(p, buf, i);
+    wmemcpy(p + i, L"\\data", 5);
     gDirs[0].path = p;
-    gDirs[0].len = i;
+    gDirs[0].len = i + 5;
 
     // Get the alternate path specified on the command line
     s = opts->alt_data_dir;
