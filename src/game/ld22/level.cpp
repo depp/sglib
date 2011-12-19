@@ -26,7 +26,12 @@ static const int TILE_COUNT = TILE_WIDTH * TILE_HEIGHT;
 std::string Level::pathForLevel(int num)
 {
     char buf[32];
+#if !defined(_WIN32)
     snprintf(buf, sizeof(buf), "level/%02d.dat", num);
+#else
+    _snprintf(buf, sizeof(buf), "level/%02d.dat", num);
+    buf[sizeof(buf)-1] = '\0';
+#endif
     return std::string(buf);
 }
 

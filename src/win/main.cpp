@@ -2,7 +2,8 @@
 
 #include "client/keyboard/keytable.h"
 #include "client/ui/event.hpp"
-#include "client/ui/menu.hpp"
+// #include "client/ui/menu.hpp"
+#include "game/ld22/screen.hpp"
 #include "client/ui/window.hpp"
 #include "sys/path.hpp"
 #include "sys/rand.hpp"
@@ -307,6 +308,8 @@ parseError:
         LocalFree(cmdLine);
 }
 
+void (APIENTRY *glBlendColor)(GLclampf, GLclampf, GLclampf, GLclampf);
+
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
                    LPSTR lpCmdLine, int iCmdShow)
 {
@@ -315,10 +318,17 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
     gWindow = &w;
     
     init();
-    w.setScreen(new UI::Menu);
+    w.setScreen(new LD22::Screen);
 
     if (!createWindow(L"Game", 768, 480))
         return 0;
+
+    glBlendColor = (void (APIENTRY *)(GLclampf, GLclampf, GLclampf, GLclampf))
+        wglGetProcAddress("glBlendColor");
+    if (!glBlendColor) {
+        errorBox("Can't get glBlendColor address.");
+        return 0;
+    }
 
     while (1) {
         while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {

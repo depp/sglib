@@ -13,7 +13,7 @@ void Actor::wasDestroyed()
 
 void Actor::draw(int delta, Tileset &tiles)
 {
-    (void) tiles;
+    // (void) tiles;
     drawHitBox(delta);
 }
 

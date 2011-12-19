@@ -141,17 +141,24 @@ IFile *Path::openIFile(std::string const &path)
         HANDLE h = CreateFileW(buf + off2, FILE_READ_DATA, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
         if (h == INVALID_HANDLE_VALUE) {
             DWORD e = GetLastError();
-            if (e != ERROR_FILE_NOT_FOUND)
+            if (e != ERROR_FILE_NOT_FOUND && e != ERROR_PATH_NOT_FOUND)
                 throw error_win(e);
-        }
-        try {
-            return new IFileWin(h);
-        } catch (std::exception &) {
-            CloseHandle(h);
-            throw;
+        } else {
+            try {
+                return new IFileWin(h);
+            } catch (std::exception &) {
+                CloseHandle(h);
+                throw;
+            }
         }
     }
 
 not_found:
-    throw error_win(ERROR_FILE_NOT_FOUND);
+    throw file_not_found();
+}
+
+FILE *Path::openOFile(std::string const &path)
+{
+    abort();
+    return NULL;
 }

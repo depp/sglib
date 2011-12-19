@@ -7,12 +7,19 @@
 #include <OpenGL/gl.h>
 #include <OpenGL/glu.h>
 
-#else
+#elif defined(_WIN32)
 
-#if defined(_WIN32)
 #include <WTypes.h>
 #include <wingdi.h>
-#endif
+#include <GL/gl.h>
+#include <GL/glu.h>
+
+#define GL_CONSTANT_COLOR 0x8001
+extern "C" {
+    extern void (APIENTRY *glBlendColor)(GLclampf, GLclampf, GLclampf, GLclampf);
+}
+
+#else
 
 /* GNU/Linux */
 #include <GL/gl.h>

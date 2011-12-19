@@ -268,6 +268,11 @@ failed:
     return success;
 }
 
+bool TextureFile::loadJPEG()
+{
+    return loadPNG();
+}
+
 #else /* !HAVE_COREGRAPHICS !_WIN32 */
 
 #if defined(HAVE_LIBPNG)
