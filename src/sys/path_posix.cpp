@@ -4,6 +4,7 @@
 #include "system_error.hpp"
 #include <errno.h>
 #include <sys/stat.h>
+#include <assert.h>
 
 struct path_dir {
     const char *path;
@@ -72,7 +73,6 @@ static void getExeDir()
 #error "Can't find executable on this platform"
 
 #endif
-
 
 void pathInit(const char *altpath)
 {
