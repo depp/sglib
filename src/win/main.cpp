@@ -304,8 +304,6 @@ parseError:
 
     path_init(&opts);
     Rand::global.seed();
-    if (cmdLine)
-        LocalFree(cmdLine);
 }
 
 void (APIENTRY *glBlendColor)(GLclampf, GLclampf, GLclampf, GLclampf);
