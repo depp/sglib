@@ -20,12 +20,23 @@ Skip level (cheat): F8
 Operating System Support
 ------------------------
 
-Windows: Requires MSVCP100.dll, whatever that means.  It runs on my
-computer which has Microsoft Visual Studio 2010 Express installed.
+Windows: Should work on Vista or Windows 7.  I am unsure about Windows
+XP.
 
 Mac OS X: Requires OS X 10.5 or higher, PowerPC or Intel processor.
 
-Linux: Building from source requires:
+Linux: Build source code and then copy "src/game-bin" to the folder
+containing the "data" directory, next to "game.exe" and "game.app".
+
+    $ tar Jxvf Lonely_Star_Source.tar.xz
+    $ cd Lonely_Star_Source
+    $ ./configure
+    $ make -j4
+    $ cp src/game-bin ..
+    $ cd ..
+    $ ./game-bin
+
+Building from source requires:
 
 * Gtk+ 2.0
 * GtkGLExt
