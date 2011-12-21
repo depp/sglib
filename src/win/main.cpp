@@ -315,31 +315,38 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
     WinWindow w;
     gWindow = &w;
     
-    init();
-    w.setScreen(new LD22::Screen);
+    try {
+        init();
+        w.setScreen(new LD22::Screen);
 
-    if (!createWindow(L"Game", 768, 480))
-        return 0;
+        if (!createWindow(L"Game", 768, 480))
+            return 0;
 
-    glBlendColor = (void (APIENTRY *)(GLclampf, GLclampf, GLclampf, GLclampf))
-        wglGetProcAddress("glBlendColor");
-    if (!glBlendColor) {
-        errorBox("Can't get glBlendColor address.");
-        return 0;
-    }
-
-    while (1) {
-        while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
-            if (msg.message == WM_QUIT)
-                goto done;
-            TranslateMessage(&msg);
-            DispatchMessage(&msg);
+        glBlendColor = (void (APIENTRY *)(GLclampf, GLclampf, GLclampf, GLclampf))
+            wglGetProcAddress("glBlendColor");
+        if (!glBlendColor) {
+            errorBox("Can't get glBlendColor address.");
+            return 0;
         }
 
-        if (!inactive) {
-            w.draw();
-            SwapBuffers(hDC);
+        while (1) {
+            while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
+                if (msg.message == WM_QUIT)
+                    goto done;
+                TranslateMessage(&msg);
+                DispatchMessage(&msg);
+            }
+
+            if (!inactive) {
+                w.draw();
+                SwapBuffers(hDC);
+            }
         }
+    } catch (std::exception &ex) {
+        killGLWindow();
+        char buf[256];
+        _snprintf(buf, sizeof(buf), "Exception: %s", ex.what());
+        errorBox(buf);
     }
 done:
     
