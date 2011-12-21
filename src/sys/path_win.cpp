@@ -25,10 +25,10 @@ void path_init(exe_options *opts)
     if (r == MAX_PATH)
         goto error;
     for (i = r; i > 0 && buf[i - 1] != L'\\'; --i) { }
-    if (!i || i == 1)
+    if (i <= 1)
         goto error;
     i--;
-    p = (wchar_t *) LocalAlloc(LMEM_FIXED, (i + 5) * sizeof(wchar_t));
+    p = (wchar_t *) malloc((i + 5) * sizeof(wchar_t));
     if (!p)
         goto error;
     wmemcpy(p, buf, i);
@@ -42,7 +42,7 @@ void path_init(exe_options *opts)
         i = wcslen(s);
         if (s[i-1] == '\\')
             i--;
-        p = (wchar_t *) LocalAlloc(LMEM_FIXED, i * sizeof(wchar_t));
+        p = (wchar_t *) malloc(i * sizeof(wchar_t));
         if (!p)
             goto error;
         wmemcpy(p, s, i);
