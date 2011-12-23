@@ -36,6 +36,8 @@ libmimp_a_SOURCES = \
 	impl/configfileread.c \
 	impl/dict.c \
 	impl/dict.h \
+	impl/error.c \
+	impl/error.h \
 	impl/hash.c \
 	impl/hash.h \
 	impl/lfile.c \
