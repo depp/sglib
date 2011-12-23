@@ -128,7 +128,45 @@ libmgfx_a_SOURCES = \
 	game/ld22/tileset.cpp \
 	game/ld22/tileset.hpp \
 	game/ld22/walker.cpp \
-	game/ld22/walker.hpp
+	game/ld22/walker.hpp \
+	game/tank/explosion.cpp \
+	game/tank/explosion.hpp \
+	game/tank/gamescreen.cpp \
+	game/tank/gamescreen.hpp \
+	game/tank/object.cpp \
+	game/tank/object.hpp \
+	game/tank/obstacle.cpp \
+	game/tank/obstacle.hpp \
+	game/tank/player.cpp \
+	game/tank/player.hpp \
+	game/tank/shot.cpp \
+	game/tank/shot.hpp \
+	game/tank/world.cpp \
+	game/tank/world.hpp \
+	game/space/entity.cpp \
+	game/space/entity.hpp \
+	game/space/gamescreen.cpp \
+	game/space/gamescreen.hpp \
+	game/space/main.cpp \
+	game/space/player.cpp \
+	game/space/player.hpp \
+	game/space/random.cpp \
+	game/space/random.hpp \
+	game/space/scenery.cpp \
+	game/space/scenery.hpp \
+	game/space/shapes.cpp \
+	game/space/shapes.hpp \
+	game/space/ship.cpp \
+	game/space/ship.hpp \
+	game/space/shot.cpp \
+	game/space/shot.hpp \
+	game/space/stars.cpp \
+	game/space/stars.hpp \
+	game/space/thinker.cpp \
+	game/space/thinker.hpp \
+	game/space/vector.hpp \
+	game/space/world.cpp \
+	game/space/world.hpp
 
 libmtype_a_CFLAGS = $(common_CFLAGS) @PANGOCAIRO_CFLAGS@
 libmtype_a_CXXFLAGS = $(common_CFLAGS) @PANGOCAIRO_CFLAGS@

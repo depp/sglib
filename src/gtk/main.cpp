@@ -1,10 +1,9 @@
 #include "sys/clock.hpp"
 #include "sys/rand.hpp"
-#include "game/ld22/screen.hpp"
-#include "game/ld22/editor.hpp"
 #include "client/opengl.hpp"
 #include "client/ui/event.hpp"
 #include "client/ui/window.hpp"
+#include "client/ui/menu.hpp"
 #include "client/keyboard/keycode.h"
 #include "client/keyboard/keytable.h"
 #include "sys/path_posix.hpp"
@@ -131,7 +130,7 @@ static gboolean handle_event(GtkWidget *widget, GdkEvent *event,
     }
 }
 
-static bool gEditor = false;
+// static bool gEditor = false;
 
 static void init(int argc, char *argv[])
 {
@@ -144,7 +143,7 @@ static void init(int argc, char *argv[])
     while ((opt = getopt(argc, argv, "ei:")) != -1) {
         switch (opt) {
         case 'e':
-            gEditor = true;
+            // gEditor = true;
             break;
 
         case 'i':
@@ -168,13 +167,16 @@ int main(int argc, char *argv[])
     GTKWindow w;
 
     init(argc, argv);
-    int width = 768 + (gEditor ? 64 : 0), height = 480;
+    int width = 768 /* + (gEditor ? 64 : 0) */, height = 480;
 
     w.setSize(width, height);
+    /*
     if (gEditor)
         w.setScreen(new LD22::Editor);
     else
         w.setScreen(new LD22::Screen);
+    */
+    w.setScreen(new UI::Menu);
 
     GtkWidget *window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     gtk_window_set_title(GTK_WINDOW(window), "Game");
