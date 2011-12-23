@@ -1,16 +1,16 @@
+#include "sys/clock.hpp"
 #include "sys/rand.hpp"
-#include "client/ui/menu.hpp"
+#include "client/opengl.hpp"
 #include "client/ui/event.hpp"
 #include "client/ui/window.hpp"
+#include "client/ui/menu.hpp"
 #include "client/keyboard/keycode.h"
-#include "client/keyboard/keyid.h"
 #include "client/keyboard/keytable.h"
-#include "sys/resource.hpp"
-#include "sys/config.hpp"
-#include "sys/path.hpp"
+#include "sys/path_posix.hpp"
 #include <gtk/gtk.h>
 #include <gtk/gtkgl.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 class GTKWindow : public UI::Window {
 public:
@@ -70,43 +70,15 @@ static gboolean update(gpointer user_data)
     return TRUE;
 }
 
-static int mapKey(int key)
-{
-    switch (key) {
-    case KEY_Escape:
-        return UI::KEscape;
-
-    case KEY_Space:
-    case KEY_Enter:
-        return UI::KSelect;
-
-    case KEY_Left:
-        return UI::KLeft;
-
-    case KEY_Right:
-        return UI::KRight;
-
-    case KEY_Down:
-        return UI::KDown;
-
-    case KEY_Up:
-        return UI::KUp;
-
-    default:
-        return -1;
-    }
-}
-
 static gboolean handle_key(GTKWindow *w, GdkEventKey *e, UI::EventType t)
 {
-    int code = e->hardware_keycode, hcode, gcode;
+    int code = e->hardware_keycode, hcode;
     if (code < 0 || code > 255)
-        return true;
+        return TRUE;
     hcode = EVDEV_NATIVE_TO_HID[code];
-    gcode = mapKey(hcode);
-    if (gcode < 0)
-        return true;
-    UI::KeyEvent uevt(t, gcode);
+    if (hcode == 255)
+        return TRUE;
+    UI::KeyEvent uevt(t, hcode);
     w->handleEvent(uevt);
     return TRUE;
 }
@@ -158,21 +130,57 @@ static gboolean handle_event(GtkWidget *widget, GdkEvent *event,
     }
 }
 
+// static bool gEditor = false;
+
+static void init(int argc, char *argv[])
+{
+    int opt;
+    const char *altpath = NULL;
+
+    gtk_init(&argc, &argv);
+    gtk_gl_init(&argc, &argv);
+
+    while ((opt = getopt(argc, argv, "ei:")) != -1) {
+        switch (opt) {
+        case 'e':
+            // gEditor = true;
+            break;
+
+        case 'i':
+            altpath = optarg;
+            break;
+
+        default:
+            fputs("Invalid usage\n", stderr);
+            exit(1);
+        }
+    }
+
+    pathInit(altpath);
+    initTime();
+    Rand::global.seed();
+}
+
 int main(int argc, char *argv[])
 {
     gboolean r;
     GTKWindow w;
 
-    gtk_init(&argc, &argv);
-    gtk_gl_init(&argc, &argv);
-    Path::init();
-    w.setSize(768, 480);
-    Rand::global.seed();
+    init(argc, argv);
+    int width = 768 /* + (gEditor ? 64 : 0) */, height = 480;
+
+    w.setSize(width, height);
+    /*
+    if (gEditor)
+        w.setScreen(new LD22::Editor);
+    else
+        w.setScreen(new LD22::Screen);
+    */
     w.setScreen(new UI::Menu);
 
     GtkWidget *window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     gtk_window_set_title(GTK_WINDOW(window), "Game");
-    gtk_window_set_default_size(GTK_WINDOW(window), 768, 480);
+    gtk_window_set_default_size(GTK_WINDOW(window), width, height);
     g_signal_connect_swapped(G_OBJECT(window), "destroy",
                              G_CALLBACK(gtk_main_quit), NULL);
 

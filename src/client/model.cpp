@@ -30,8 +30,14 @@ static const unsigned short kCubeLines[12][2] = {
     { 0, 4 }, { 1, 5 }, { 2, 6 }, { 3, 7 }
 };
 
-Model Model::kCube
-(1.0, 8, kCubeVertices, 12, kCubeTris, 12, kCubeLines);
+Model::Ref Model::cube()
+{
+    static Model *m;
+    if (!m)
+        m = new Model(1.0, 8, kCubeVertices, 12, kCubeTris, 12, kCubeLines);
+    m->incref();
+    return Ref(m);
+}
 
 static const short kPyramidVertices[8][3] = {
     { -1, -1, -1 }, { -1,  1, -1 }, {  1, -1, -1 }, {  1,  1, -1 },
@@ -49,8 +55,14 @@ static const unsigned short kPyramidLines[8][2] = {
     { 0, 4 }, { 1, 4 }, { 2, 4 }, { 3, 4 }
 };
 
-Model Model::kPyramid
-(1.0, 5, kPyramidVertices, 6, kPyramidTris, 8, kPyramidLines);
+Model::Ref Model::pyramid()
+{
+    static Model *m;
+    if (!m)
+        m = new Model(1.0, 5, kPyramidVertices, 6, kPyramidTris, 8, kPyramidLines);
+    m->incref();
+    return Ref(m);
+}
 
 struct ModelCompare {
     bool operator()(Model *x, Model *y)
@@ -75,11 +87,10 @@ Model::Ref Model::open(std::string const &path)
 
 void Model::draw(const Color tcolor, const Color lcolor) const
 {
-    if (!vcount_) {
-        if (this != &kCube)
-            kCube.draw(tcolor, lcolor);
+    // FIXME: draw placeholder
+    // (placeholder was cube)
+    if (!vcount_)
         return;
-    }
 
     glPushAttrib(GL_CURRENT_BIT | GL_ENABLE_BIT);
     glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT);

@@ -13,8 +13,8 @@ Ship::~Ship()
 
 void Ship::move(World &, double delta)
 {
-    location += velocity * delta;
-    angle += angular_velocity * delta;
+    location += velocity * (float) delta;
+    angle += angular_velocity * (float) delta;
     direction.v[0] = cosf(angle);
     direction.v[1] = sinf(angle);
 }
@@ -24,7 +24,7 @@ void Ship::draw()
     glPushAttrib(GL_CURRENT_BIT | GL_LIGHTING_BIT);
     glPushMatrix();
     glTranslatef(location.v[0], location.v[1], 0.0f);
-    glRotatef(angle * 180.0f * M_1_PI, 0.0f, 0.0f, 1.0f);
+    glRotatef(angle * (180.0f / (4.0f * atanf(1.0f))), 0.0f, 0.0f, 1.0f);
 
     glShadeModel(GL_SMOOTH);
     glBegin(GL_TRIANGLES);

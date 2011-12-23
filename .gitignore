@@ -27,5 +27,14 @@ Makefile.in
 /install-sh
 /missing
 
+# Microsoft Visual Studio
+*.sdf
+*.suo
+*.opensdf
+*.user
+/Debug
+/Release
+/ipch
+
 # Build directory, if used
 /build*

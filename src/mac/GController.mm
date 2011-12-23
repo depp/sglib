@@ -1,11 +1,10 @@
 #import "GController.h"
 #import "GDisplay.h"
-#import "sys/rand.hpp"
-#import "sys/path.hpp"
 #import "sys/clock.hpp"
-#import "client/ui/menu.hpp"
+#import "game/ld22/screen.hpp"
 
 static GController *gController;
+extern bool gEditor;
 
 @implementation GController
 
@@ -29,11 +28,7 @@ static GController *gController;
 
 - (void)applicationDidFinishLaunching:(NSNotification *)notification {
     (void)notification;
-    Path::init();
-    initTime();
-    Rand::global.seed();
-
-    UI::Screen *s = new UI::Menu;
+    UI::Screen *s = new LD22::Screen;
     GDisplay *d = [[[GDisplay alloc] initWithScreen:s] autorelease];
     [d showWindow:self];
 }

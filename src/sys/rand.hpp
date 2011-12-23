@@ -17,9 +17,9 @@ public:
     {
         uint64_t y = (uint64_t)x0 * A + c;
         x0 = x1;
-        x1 = y;
+        x1 = (uint32_t) y;
         c = y >> 32;
-        return y;
+        return (unsigned) y;
     }
 
     static unsigned int girand()

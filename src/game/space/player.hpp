@@ -2,6 +2,9 @@
 #define GAME_SPACE_PLAYER_HPP
 #include "thinker.hpp"
 #include "ship.hpp"
+namespace UI {
+class KeyManager;
+}
 namespace Space {
 class Ship;
 
@@ -15,17 +18,16 @@ enum {
 
 class Player : public Thinker {
     Ship *ship_;
-    unsigned int keys_;
+    const UI::KeyManager &keys_;
     double nextShotTime_;
 
 public:
-    Player();
+    Player(const UI::KeyManager &mgr);
     virtual ~Player();
     virtual void think(World &w, double delta);
 
     virtual void enterGame(World &w);
     virtual void leaveGame(World &w);
-    void setKey(int key, bool flag);
 
     vector location()
     {
@@ -33,10 +35,7 @@ public:
     }
 
 private:
-    bool keyPressed(int key) const
-    {
-        return keys_ & (1U << key);
-    }
+    bool keyPressed(int key) const;
 };
 
 } // namespace sparks

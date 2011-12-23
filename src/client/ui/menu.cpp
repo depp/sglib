@@ -1,5 +1,6 @@
 #include "menu.hpp"
 #include "button.hpp"
+#include "game/ld22/screen.hpp"
 #include "game/tank/gamescreen.hpp"
 #include "game/space/gamescreen.hpp"
 #include "event.hpp"
@@ -32,12 +33,14 @@ void UI::Menu::update(unsigned int)
 {
     if (!initted_) {
         initted_ = true;
-        static char const *const MENU_ITEMS[3] = {
+        static const int MSIZE = 4;
+        static char const *const MENU_ITEMS[4] = {
             "Tank game",
             "Space game",
+            "LD22",
             "Quit"
         };
-        for (int i = 0; i < 3; ++i) {
+        for (int i = 0; i < MSIZE; ++i) {
             menu_[i].setText(MENU_ITEMS[i]);
             menu_[i].setLoc(145, 345 - 50 * i);
             scene_.addObject(&menu_[i]);
@@ -49,6 +52,8 @@ void UI::Menu::update(unsigned int)
         menu_[1].setAction(Action(this, static_cast<Action::Method>
                                   (&Menu::spaceGame)));
         menu_[2].setAction(Action(this, static_cast<Action::Method>
+                                  (&Menu::ld22)));
+        menu_[3].setAction(Action(this, static_cast<Action::Method>
                                   (&Menu::quit)));
     }
 }
@@ -100,6 +105,11 @@ void UI::Menu::tankGame()
 void UI::Menu::spaceGame()
 {
     window().setScreen(new Space::GameScreen);
+}
+
+void UI::Menu::ld22()
+{
+    window().setScreen(new LD22::Screen);
 }
 
 void UI::Menu::quit()

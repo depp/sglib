@@ -21,6 +21,7 @@ private:
 
     void tankGame();
     void spaceGame();
+    void ld22();
     void quit();
 
     bool initted_;

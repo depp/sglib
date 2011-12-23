@@ -9,11 +9,11 @@ char const *system_error::what() const throw()
         if (what_.empty()) {
             char buf[256];
 #if defined(__GLIBC__)
-            char *r = strerror_r(errno_, buf, sizeof(buf));
+            char *r = strerror_r(code_, buf, sizeof(buf));
             if (r)
                 what_ = r;
 #else
-            int r = strerror_r(errno_, buf, sizeof(buf));
+            int r = strerror_r(code_, buf, sizeof(buf));
             if (!r)
                 what_ = buf;
 #endif

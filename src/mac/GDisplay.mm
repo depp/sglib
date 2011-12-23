@@ -45,41 +45,10 @@ void MacWindow::close()
 
 /* Event handling */
 
-static int mapKey(int key)
-{
-    switch (key) {
-    case 27: // Escape
-        return UI::KEscape;
-
-    case 32: // Space
-    case 13: // Return
-        return UI::KSelect;
-
-    case NSLeftArrowFunctionKey:
-        return UI::KLeft;
-
-    case NSUpArrowFunctionKey:
-        return UI::KUp;
-
-    case NSRightArrowFunctionKey:
-        return UI::KRight;
-
-    case NSDownArrowFunctionKey:
-        return UI::KDown;
-
-    default:
-        return -1;
-    }
-}
-
 void GDisplayKeyEvent(GDisplay *w, NSEvent *e, UI::EventType t)
 {
-    NSString *c = [e charactersIgnoringModifiers];
-    int keyChar = [c characterAtIndex:0];
-    int keyCode = mapKey(keyChar);
-    int ncode = [e keyCode] & 0x7F;
-    NSLog(@"Key %d %s", ncode, keyid_name_from_code(MAC_NATIVE_TO_HID[ncode]));
-    UI::KeyEvent uevent(t, keyCode);
+    int ncode = MAC_NATIVE_TO_HID[[e keyCode] & 0x7F];
+    UI::KeyEvent uevent(t, ncode);
     [w handleUIEvent:&uevent];
 }
 

@@ -11,10 +11,10 @@ public:
     template<class T> friend class SharedRef;
     typedef SharedRef<Model> Ref;
 
-    static Model kCube, kPyramid;
-
     virtual ~Model();
     static Ref open(std::string const &path);
+    static Ref pyramid();
+    static Ref cube();
 
     void draw(const Color tcolor, const Color lcolor) const;
     virtual std::string name() const;

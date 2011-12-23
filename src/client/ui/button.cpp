@@ -27,8 +27,8 @@ void UI::Button::draw()
 {
     glPushAttrib(GL_COLOR_BUFFER_BIT | GL_CURRENT_BIT);
 
-    float x1 = bounds_.x, x2 = bounds_.x + bounds_.width;
-    float y1 = bounds_.y, y2 = bounds_.y + bounds_.height;
+    float x1 = (float) bounds_.x, x2 = (float) bounds_.x + bounds_.width;
+    float y1 = (float) bounds_.y, y2 = (float) bounds_.y + bounds_.height;
 
     if (!state_)
         glColor3ub(32, 0, 0);

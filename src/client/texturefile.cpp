@@ -2,17 +2,23 @@
 #include "config.h"
 #endif
 
+#if defined(_WIN32)
+// Known Visual Studio bug: 621653
+#pragma warning (disable : 4005)
+#endif
+
 #include "texturefile.hpp"
 #include "sys/ifile.hpp"
 #include "sys/path.hpp"
 #include <stdlib.h>
 #include <stdio.h>
-#include <err.h>
-#include <stdint.h>
+// #include <err.h>
 #include <set>
 #include <memory>
 #include <vector>
 #include "opengl.hpp"
+
+static const unsigned MAX_SIZE = 2048;
 
 static const std::string filePrefix("file:");
 
@@ -68,6 +74,8 @@ bool TextureFile::loadTexture()
     std::string suffix(d, e);
     if (suffix == "png")
         return loadPNG();
+    else if (suffix == "jpg" || suffix == "jpeg")
+        return loadJPEG();
     return false;
 }
 
@@ -147,7 +155,125 @@ bool TextureFile::loadPNG()
     return imageToTexture(*this, img);
 }
 
-#else /* !HAVE_COREGRAPHICS */
+bool TextureFile::loadJPEG()
+{
+    CGDataProviderRef dp = getDataProvider(path_);
+    assert(dp);
+    CGImageRef img = CGImageCreateWithJPEGDataProvider(dp, NULL, false, kCGRenderingIntentDefault);
+    CGDataProviderRelease(dp);
+    assert(img);
+    return imageToTexture(*this, img);
+}
+
+#elif defined(_WIN32)
+#include <wincodec.h>
+
+#pragma comment(lib, "WindowsCodecs.lib")
+
+bool TextureFile::loadPNG()
+{
+    std::auto_ptr<IFile> f(Path::openIFile(path_));
+    Buffer buffer = f->readall();
+    f.reset();
+
+    HRESULT hr;
+    IWICImagingFactory *fac = NULL;
+    IWICStream *stream = NULL;
+    IWICBitmapDecoder *decoder = NULL;
+    IWICBitmapFrameDecode *frame = NULL;
+    WICPixelFormatGUID pixelFormat, targetFormat;
+    IWICComponentInfo *cinfo = NULL;
+    IWICPixelFormatInfo *pinfo = NULL;
+    IWICFormatConverter *converter = NULL;
+    UINT chanCount, iwidth, iheight;
+    bool color, alpha, success = false;
+    unsigned tw, th, tstride;
+
+    hr = CoCreateInstance(CLSID_WICImagingFactory, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&fac));
+    if (hr != S_OK)
+        goto failed;
+    hr = fac->CreateStream(&stream);
+    if (hr != S_OK)
+        goto failed;
+    hr = stream->InitializeFromMemory(buffer.getUC(), buffer.size());
+    if (hr != S_OK)
+        goto failed;
+    hr = fac->CreateDecoderFromStream(stream, NULL, WICDecodeMetadataCacheOnDemand, &decoder);
+    if (hr != S_OK)
+        goto failed;
+    hr = decoder->GetFrame(0, &frame);
+    if (hr != S_OK)
+        goto failed;
+    hr = frame->GetPixelFormat(&pixelFormat);
+    if (hr != S_OK)
+        goto failed;
+    hr = fac->CreateComponentInfo(pixelFormat, &cinfo);
+    if (hr != S_OK)
+        goto failed;
+    hr = cinfo->QueryInterface(IID_IWICPixelFormatInfo, (void **) &pinfo);
+    if (hr != S_OK)
+        goto failed;
+    hr = pinfo->GetChannelCount(&chanCount);
+    if (hr != S_OK)
+        goto failed;
+
+    switch (chanCount) {
+    case 1:
+        color = false;
+        alpha = false;
+        targetFormat = GUID_WICPixelFormat8bppGray;
+        break;
+
+    case 3:
+        color = true;
+        alpha = false;
+        targetFormat = GUID_WICPixelFormat24bppRGB;
+        break;
+
+    case 4:
+        color = true;
+        alpha = true;
+        targetFormat = GUID_WICPixelFormat32bppRGBA;
+        break;
+
+    default:
+        goto failed;
+    }
+
+    hr = fac->CreateFormatConverter(&converter);
+    if (hr != S_OK)
+        goto failed;
+    hr = converter->Initialize(frame, targetFormat, WICBitmapDitherTypeNone, NULL, 0, WICBitmapPaletteTypeCustom);
+    if (hr != S_OK)
+        goto failed;
+    hr = converter->GetSize(&iwidth, &iheight);
+    if (hr != S_OK)
+        goto failed;
+    
+    alloc(iwidth, iheight, color, alpha);
+    tw = twidth();
+    th = theight(); 
+    tstride = rowbytes();
+    converter->CopyPixels(NULL, tstride, th * tstride, (BYTE *) buf());
+    success = true;
+
+failed:
+    if (converter) converter->Release();
+    if (pinfo) pinfo->Release();
+    if (cinfo) cinfo->Release();
+    if (frame) frame->Release();
+    if (decoder) decoder->Release();
+    if (stream) stream->Release();
+    if (fac) fac->Release();
+    return success;
+}
+
+bool TextureFile::loadJPEG()
+{
+    return loadPNG();
+}
+
+#else /* !HAVE_COREGRAPHICS !_WIN32 */
 
 #if defined(HAVE_LIBPNG)
 #include <png.h>
@@ -186,7 +312,7 @@ bool TextureFile::loadPNG()
     PNGStruct ps;
     int depth, ctype;
     png_uint_32 width, height;
-    uint32_t twidth, theight, i, rowbytes, chan;
+    uint32_t th, i, rowbytes, chan;
     bool color = false, alpha = false;
     unsigned char *data = NULL;
     std::vector<png_bytep> rows;
@@ -237,8 +363,7 @@ bool TextureFile::loadPNG()
         png_set_strip_16(ps.png);
 
     alloc(width, height, color, alpha);
-    twidth = this->twidth();
-    theight = this->theight();
+    th = this->theight();
     chan = channels();
     rowbytes = this->rowbytes();
     data = reinterpret_cast<unsigned char *>(buf());
@@ -248,7 +373,7 @@ bool TextureFile::loadPNG()
                    rowbytes - width * chan);
     } else
         i = height;
-    for (; i < theight; ++i)
+    for (; i < th; ++i)
         memset(data + rowbytes * i, 0, rowbytes);
     rows.resize(height);
     for (i = 0; i < height; ++i)
@@ -260,6 +385,132 @@ bool TextureFile::loadPNG()
 
 #else /* !HAVE_LIBPNG */
 #error "Can't load PNG images"
+#endif
+
+#if defined(HAVE_LIBJPEG)
+#include <jpeglib.h>
+
+// These few methods for the input source are
+// basically lifted from the LibJPEG source code,
+// for a *later version* with a "memory source".
+
+static void jInitSource(j_decompress_ptr cinfo)
+{
+    (void) cinfo;
+}
+
+static void jTermSource(j_decompress_ptr cinfo)
+{
+    (void) cinfo;
+}
+
+static boolean jFillInputBuffer(j_decompress_ptr cinfo)
+{
+    static JOCTET buf[4];
+    // WARN
+    buf[0] = 0xff;
+    buf[1] = JPEG_EOI;
+    cinfo->src->next_input_byte = buf;
+    cinfo->src->bytes_in_buffer = 2;
+    return TRUE;
+}
+
+static void jSkipInputData(j_decompress_ptr cinfo, long num_bytes)
+{
+    struct jpeg_source_mgr *src = cinfo->src;
+    if (num_bytes > 0) {
+        while (num_bytes > (long) src->bytes_in_buffer) {
+            num_bytes -= (long) src->bytes_in_buffer;
+            (void) (*src->fill_input_buffer) (cinfo);
+        }
+        src->next_input_byte += (size_t) num_bytes;
+        src->bytes_in_buffer -= (size_t) num_bytes;
+    }
+}
+
+struct jStruct {
+    jStruct()
+    {
+        jpeg_create_decompress(&cinfo);
+    }
+
+    ~jStruct()
+    {
+        jpeg_destroy_decompress(&cinfo);
+    }
+
+    struct jpeg_decompress_struct cinfo;
+};
+
+// FIXME error handling
+bool TextureFile::loadJPEG()
+{
+    std::auto_ptr<IFile> f;
+    Buffer b;
+    jStruct jj;
+    struct jpeg_error_mgr jerr;
+    struct jpeg_source_mgr jsrc;
+    unsigned w, h, rb, i;
+    unsigned char *jdata = NULL, *jptr[1];
+    bool color;
+
+    f.reset(Path::openIFile(path_));
+    b = f->readall();
+    f.reset();
+    if (!b.size())
+        return false;
+
+    jj.cinfo.err = jpeg_std_error(&jerr);
+
+    jj.cinfo.src = &jsrc;
+    jsrc.next_input_byte = b.getUC();
+    jsrc.bytes_in_buffer = b.size();
+    jsrc.init_source =  jInitSource;
+    jsrc.fill_input_buffer = jFillInputBuffer;
+    jsrc.skip_input_data = jSkipInputData;
+    jsrc.resync_to_restart = jpeg_resync_to_restart;
+    jsrc.term_source = jTermSource;
+
+    jpeg_read_header(&jj.cinfo, TRUE);
+
+    w = jj.cinfo.image_width;
+    h = jj.cinfo.image_height;
+    if (w > MAX_SIZE || h > MAX_SIZE) {
+        fprintf(stderr, "%s: too big\n", path_.c_str());
+        return false;
+    }
+
+    switch (jj.cinfo.out_color_space) {
+    case JCS_GRAYSCALE:
+        color = false;
+        break;
+
+    case JCS_RGB:
+        color = true;
+        break;
+
+    default:
+        fprintf(stderr, "%s: unknown color space\n", path_.c_str());
+        return false;
+    }
+
+    jpeg_start_decompress(&jj.cinfo);
+
+    alloc(w, h, color, false);
+    rb = rowbytes();
+    jdata = reinterpret_cast<unsigned char *> (buf());
+    while ((unsigned) jj.cinfo.output_scanline < h) {
+        for (i = 0; i < 1; ++i)
+            jptr[i] = jdata + jj.cinfo.output_scanline * (rb + i);
+        jpeg_read_scanlines(&jj.cinfo, jptr, 1);
+    }
+
+    jpeg_finish_decompress(&jj.cinfo);
+    return true;
+}
+
+#else /* !HAVE_LIBJPEG */
+#error "Can't load JPEG images"
 #endif
 
 #endif

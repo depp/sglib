@@ -7,7 +7,7 @@ void Rand::seed()
 {
     std::time_t t;
     std::time(&t);
-    x0 = t;
+    x0 = (uint32_t) t;
     x1 = 0x038acaf3U;
     c = 0xa2cc5886U;
 }

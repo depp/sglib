@@ -2,15 +2,6 @@ AUTOMAKE_OPTIONS = 1.5 foreign subdir-objects nostdinc
 
 bin_PROGRAMS = game-bin
 noinst_LIBRARIES = libmimp.a libmsys.a libmgfx.a libmtype.a
-noinst_SCRIPTS = config.ini
-
-config.ini : config.ini.in Makefile
-	sed \
-		-e 's,@''builddir@,@abs_top_builddir@,g' \
-		-e 's,@''srcdir@,@abs_top_srcdir@,g' \
-		$(srcdir)/config.ini.in > $@.tmp
-	mv $@.tmp $@
-
 
 common_CFLAGS = @warning_cppflags@ -I@srcdir@ -I@builddir@
 
@@ -57,19 +48,14 @@ libmsys_a_SOURCES = \
 	sys/buffer.hpp \
 	sys/clock.hpp \
 	sys/clock.cpp \
-	sys/config.cpp \
-	sys/config.hpp \
-	sys/configfile.cpp \
-	sys/configfile.hpp \
-	sys/configfileread.rl \
 	sys/ifile.cpp \
 	sys/ifile.hpp \
 	sys/ifilereg.cpp \
 	sys/ifilereg.hpp \
 	sys/path.cpp \
 	sys/path.hpp \
-	sys/path_linux.cpp \
-	sys/path_xdg.cpp \
+	sys/path_posix.cpp \
+	sys/path_posix.hpp \
 	sys/rand.cpp \
 	sys/rand.hpp \
 	sys/resource.cpp \
@@ -83,6 +69,9 @@ libmsys_a_SOURCES = \
 libmgfx_a_CFLAGS = $(common_CFLAGS)
 libmgfx_a_CXXFLAGS = $(common_CFLAGS)
 libmgfx_a_SOURCES = \
+	client/bitmapfont.cpp \
+	client/bitmapfont.hpp \
+	client/color.hpp \
 	client/color.hpp \
 	client/dummytexture.cpp \
 	client/dummytexture.hpp \
@@ -91,6 +80,8 @@ libmgfx_a_SOURCES = \
 	client/keyboard/keyid.h \
 	client/keyboard/keytable.h \
 	client/keyboard/keytable_evdev.c \
+	client/letterbox.cpp \
+	client/letterbox.hpp \
 	client/model.cpp \
 	client/model.hpp \
 	client/opengl.hpp \
@@ -109,6 +100,8 @@ libmgfx_a_SOURCES = \
 	client/ui/button.hpp \
 	client/ui/event.hpp \
 	client/ui/geometry.hpp \
+	client/ui/keymanager.cpp \
+	client/ui/keymanager.hpp \
 	client/ui/menu.cpp \
 	client/ui/menu.hpp \
 	client/ui/mousemanager.cpp \
@@ -119,6 +112,53 @@ libmgfx_a_SOURCES = \
 	client/ui/widget.hpp \
 	client/ui/window.cpp \
 	client/ui/window.hpp \
+	game/ld22/actor.cpp \
+	game/ld22/actor.hpp \
+	game/ld22/area.cpp \
+	game/ld22/area.hpp \
+	game/ld22/background.cpp \
+	game/ld22/background.hpp \
+	game/ld22/defs.hpp \
+	game/ld22/editor.cpp \
+	game/ld22/editor.hpp \
+	game/ld22/effect.cpp \
+	game/ld22/effect.hpp \
+	game/ld22/endwalk.cpp \
+	game/ld22/endwalk.hpp \
+	game/ld22/item.cpp \
+	game/ld22/item.hpp \
+	game/ld22/level.cpp \
+	game/ld22/level.hpp \
+	game/ld22/mover.cpp \
+	game/ld22/mover.hpp \
+	game/ld22/other.cpp \
+	game/ld22/other.hpp \
+	game/ld22/player.cpp \
+	game/ld22/player.hpp \
+	game/ld22/screen.cpp \
+	game/ld22/screen.hpp \
+	game/ld22/screenbase.cpp \
+	game/ld22/screenbase.hpp \
+	game/ld22/thinker.cpp \
+	game/ld22/thinker.hpp \
+	game/ld22/tileset.cpp \
+	game/ld22/tileset.hpp \
+	game/ld22/walker.cpp \
+	game/ld22/walker.hpp \
+	game/tank/explosion.cpp \
+	game/tank/explosion.hpp \
+	game/tank/gamescreen.cpp \
+	game/tank/gamescreen.hpp \
+	game/tank/object.cpp \
+	game/tank/object.hpp \
+	game/tank/obstacle.cpp \
+	game/tank/obstacle.hpp \
+	game/tank/player.cpp \
+	game/tank/player.hpp \
+	game/tank/shot.cpp \
+	game/tank/shot.hpp \
+	game/tank/world.cpp \
+	game/tank/world.hpp \
 	game/space/entity.cpp \
 	game/space/entity.hpp \
 	game/space/gamescreen.cpp \
@@ -142,21 +182,7 @@ libmgfx_a_SOURCES = \
 	game/space/thinker.hpp \
 	game/space/vector.hpp \
 	game/space/world.cpp \
-	game/space/world.hpp \
-	game/tank/explosion.cpp \
-	game/tank/explosion.hpp \
-	game/tank/gamescreen.cpp \
-	game/tank/gamescreen.hpp \
-	game/tank/object.cpp \
-	game/tank/object.hpp \
-	game/tank/obstacle.cpp \
-	game/tank/obstacle.hpp \
-	game/tank/player.cpp \
-	game/tank/player.hpp \
-	game/tank/shot.cpp \
-	game/tank/shot.hpp \
-	game/tank/world.cpp \
-	game/tank/world.hpp
+	game/space/world.hpp
 
 libmtype_a_CFLAGS = $(common_CFLAGS) @PANGOCAIRO_CFLAGS@
 libmtype_a_CXXFLAGS = $(common_CFLAGS) @PANGOCAIRO_CFLAGS@
@@ -173,8 +199,3 @@ game_bin_LDFLAGS = @GTK_LIBS@ @GTKGLEXT_LIBS@ @PANGOCAIRO_LIBS@
 game_bin_LDADD = libmgfx.a libmtype.a libmsys.a
 game_bin_SOURCES = \
 	gtk/main.cpp
-
-SUFFIXES = .rl
-
-.rl.cpp:
-	$(RAGEL) $(RAGELFLAGS) -C $< -o $@

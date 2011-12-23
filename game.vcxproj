@@ -1,0 +1,158 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\client\bitmapfont.cpp" />
+    <ClCompile Include="src\client\dummytexture.cpp" />
+    <ClCompile Include="src\client\keyboard\keyid.c" />
+    <ClCompile Include="src\client\keyboard\keytable_win.c" />
+    <ClCompile Include="src\client\letterbox.cpp" />
+    <ClCompile Include="src\client\model.cpp" />
+    <ClCompile Include="src\client\texture.cpp" />
+    <ClCompile Include="src\client\texturefile.cpp" />
+    <ClCompile Include="src\client\ui\keymanager.cpp" />
+    <ClCompile Include="src\client\ui\screen.cpp" />
+    <ClCompile Include="src\client\ui\window.cpp" />
+    <ClCompile Include="src\game\ld22\actor.cpp" />
+    <ClCompile Include="src\game\ld22\area.cpp" />
+    <ClCompile Include="src\game\ld22\background.cpp" />
+    <ClCompile Include="src\game\ld22\editor.cpp" />
+    <ClCompile Include="src\game\ld22\effect.cpp" />
+    <ClCompile Include="src\game\ld22\endwalk.cpp" />
+    <ClCompile Include="src\game\ld22\item.cpp" />
+    <ClCompile Include="src\game\ld22\level.cpp" />
+    <ClCompile Include="src\game\ld22\mover.cpp" />
+    <ClCompile Include="src\game\ld22\other.cpp" />
+    <ClCompile Include="src\game\ld22\player.cpp" />
+    <ClCompile Include="src\game\ld22\screen.cpp" />
+    <ClCompile Include="src\game\ld22\screenbase.cpp" />
+    <ClCompile Include="src\game\ld22\thinker.cpp" />
+    <ClCompile Include="src\game\ld22\tileset.cpp" />
+    <ClCompile Include="src\game\ld22\walker.cpp" />
+    <ClCompile Include="src\sys\clock.cpp" />
+    <ClCompile Include="src\sys\error_win.cpp" />
+    <ClCompile Include="src\sys\ifile.cpp" />
+    <ClCompile Include="src\sys\path.cpp" />
+    <ClCompile Include="src\sys\path_win.cpp" />
+    <ClCompile Include="src\sys\rand.cpp" />
+    <ClCompile Include="src\sys\resource.cpp" />
+    <ClCompile Include="src\win\main.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\client\bitmapfont.hpp" />
+    <ClInclude Include="src\client\color.hpp" />
+    <ClInclude Include="src\client\dummytexture.hpp" />
+    <ClInclude Include="src\client\keyboard\keycode.h" />
+    <ClInclude Include="src\client\keyboard\keyid.h" />
+    <ClInclude Include="src\client\keyboard\keytable.h" />
+    <ClInclude Include="src\client\letterbox.hpp" />
+    <ClInclude Include="src\client\model.hpp" />
+    <ClInclude Include="src\client\opengl.hpp" />
+    <ClInclude Include="src\client\texture.hpp" />
+    <ClInclude Include="src\client\texturefile.hpp" />
+    <ClInclude Include="src\client\ui\event.hpp" />
+    <ClInclude Include="src\client\ui\geometry.hpp" />
+    <ClInclude Include="src\client\ui\keymanager.hpp" />
+    <ClInclude Include="src\client\ui\screen.hpp" />
+    <ClInclude Include="src\client\ui\window.hpp" />
+    <ClInclude Include="src\game\ld22\actor.hpp" />
+    <ClInclude Include="src\game\ld22\area.hpp" />
+    <ClInclude Include="src\game\ld22\background.hpp" />
+    <ClInclude Include="src\game\ld22\defs.hpp" />
+    <ClInclude Include="src\game\ld22\editor.hpp" />
+    <ClInclude Include="src\game\ld22\effect.hpp" />
+    <ClInclude Include="src\game\ld22\endwalk.hpp" />
+    <ClInclude Include="src\game\ld22\item.hpp" />
+    <ClInclude Include="src\game\ld22\level.hpp" />
+    <ClInclude Include="src\game\ld22\mover.hpp" />
+    <ClInclude Include="src\game\ld22\other.hpp" />
+    <ClInclude Include="src\game\ld22\player.hpp" />
+    <ClInclude Include="src\game\ld22\screen.hpp" />
+    <ClInclude Include="src\game\ld22\screenbase.hpp" />
+    <ClInclude Include="src\game\ld22\thinker.hpp" />
+    <ClInclude Include="src\game\ld22\tileset.hpp" />
+    <ClInclude Include="src\game\ld22\walker.hpp" />
+    <ClInclude Include="src\sys\buffer.hpp" />
+    <ClInclude Include="src\sys\clock.hpp" />
+    <ClInclude Include="src\sys\error_win.hpp" />
+    <ClInclude Include="src\sys\ifile.hpp" />
+    <ClInclude Include="src\sys\path.hpp" />
+    <ClInclude Include="src\sys\rand.hpp" />
+    <ClInclude Include="src\sys\resource.hpp" />
+    <ClInclude Include="src\sys\sharedref.hpp" />
+    <ClInclude Include="src\win\defs.h" />
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <Keyword>Win32Proj</Keyword>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+    <IncludePath>$(ProjectDir)src;$(IncludePath)</IncludePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+    <IncludePath>$(ProjectDir)src;$(IncludePath)</IncludePath>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <Optimization>Disabled</Optimization>
+      <ObjectFileName>$(IntDir)/%(RelativeDir)/</ObjectFileName>
+    </ClCompile>
+    <Link>
+      <TargetMachine>MachineX86</TargetMachine>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Windows</SubSystem>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <ObjectFileName>$(IntDir)/%(RelativeDir)/</ObjectFileName>
+    </ClCompile>
+    <Link>
+      <TargetMachine>MachineX86</TargetMachine>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Windows</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+  </ItemDefinitionGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

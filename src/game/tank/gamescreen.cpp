@@ -5,7 +5,36 @@
 #include "obstacle.hpp"
 #include "client/model.hpp"
 #include "client/ui/event.hpp"
+#include "client/keyboard/keycode.h"
+#include "player.hpp"
 namespace Tank {
+
+static const unsigned char KEY_MAP[] = {
+    KEY_W, KeyForward,
+    KP_8, KeyForward,
+    KEY_Up, KeyForward,
+
+    KEY_A, KeyLeft,
+    KP_4, KeyLeft,
+    KEY_Left, KeyLeft,
+
+    KEY_S, KeyBack,
+    KP_5, KeyBack,
+    KEY_Down, KeyBack,
+ 
+    KEY_D, KeyRight,
+    KP_6, KeyRight,
+    KEY_Right, KeyRight,
+
+    KP_0, KeyFire,
+    KEY_Space, KeyFire,
+
+    255
+};
+
+GameScreen::GameScreen()
+    : key_(KEY_MAP), world_(0)
+{ }
 
 GameScreen::~GameScreen()
 {
@@ -17,35 +46,12 @@ void GameScreen::handleEvent(UI::Event const &evt)
 {
     switch (evt.type) {
     case UI::KeyDown:
+        if (evt.keyEvent().key == KEY_Escape) {
+            window().setScreen(new UI::Menu);
+            break;
+        }
     case UI::KeyUp:
-        handleKey(evt.keyEvent());
-        break;
-    default:
-        break;
-    }
-}
-
-void GameScreen::handleKey(UI::KeyEvent const &evt)
-{
-    bool state = evt.type == UI::KeyDown;
-    switch (evt.key) {
-    case UI::KEscape:
-        window().setScreen(new UI::Menu);
-        break;
-    case UI::KUp:
-        input_.up = state;
-        break;
-    case UI::KDown:
-        input_.down = state;
-        break;
-    case UI::KLeft:
-        input_.left = state;
-        break;
-    case UI::KRight:
-        input_.right = state;
-        break;
-    case UI::KSelect:
-        input_.fire = state;
+        key_.handleKeyEvent(evt.keyEvent());
         break;
     default:
         break;
@@ -57,6 +63,7 @@ void GameScreen::update(unsigned int ticks)
     if (!world_) {
         world_ = new Tank::World;
         Tank::World &w = *world_;
+        Model::Ref pyramid = Model::pyramid(), cube = Model::cube();
 
         Tank::Object *obj;
         obj = new Tank::Obstacle(
@@ -66,17 +73,17 @@ void GameScreen::update(unsigned int ticks)
         w.addObject(obj);
         obj = new Tank::Obstacle(
             5.0f, -5.0f, 22.5f, 3.0f,
-            &Model::kPyramid, Color::maroon(), Color::red());
+            pyramid, Color::maroon(), Color::red());
         w.addObject(obj);
         obj = new Tank::Obstacle(
             -5.0f, 5.0f, 67.5f, 0.5f,
-            &Model::kCube, Color::olive(), Color::yellow());
+            cube, Color::olive(), Color::yellow());
         w.addObject(obj);
         obj = new Tank::Obstacle(
             -5.0f, -5.0f, 45.0f, 1.5f,
-            &Model::kPyramid, Color::maroon(), Color::red());
+            pyramid, Color::maroon(), Color::red());
         w.addObject(obj);
-        obj = new Tank::Player(0.0f, 0.0f, 0.0f, input_);
+        obj = new Tank::Player(0.0f, 0.0f, 0.0f, key_);
         w.addObject(obj);
         w.setPlayer(obj);
     }
