@@ -7,9 +7,11 @@
 #include "client/keyboard/keycode.h"
 #include "client/keyboard/keytable.h"
 #include "impl/lfile.h"
+#include "impl/cvar.h"
 #include <gtk/gtk.h>
 #include <gtk/gtkgl.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 
 static gint timer;
@@ -156,19 +158,14 @@ static gboolean handle_event(GtkWidget *widget, GdkEvent *event,
 static void init(int argc, char *argv[])
 {
     int opt;
-    const char *altpath = NULL;
 
     gtk_init(&argc, &argv);
     gtk_gl_init(&argc, &argv);
 
-    while ((opt = getopt(argc, argv, "ei:")) != -1) {
+    while ((opt = getopt(argc, argv, "d:")) != -1) {
         switch (opt) {
-        case 'e':
-            // gEditor = true;
-            break;
-
-        case 'i':
-            altpath = optarg;
+        case 'd':
+            sg_cvar_addarg(NULL, NULL, optarg);
             break;
 
         default:

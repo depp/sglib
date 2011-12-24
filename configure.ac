@@ -2,7 +2,7 @@ AC_PREREQ(2.61)
 AC_INIT([game], [0.1])
 AM_INIT_AUTOMAKE
 AC_CONFIG_SRCDIR([src/gtk/main.cpp])
-AC_CONFIG_FILES([Makefile src/Makefile])
+AC_CONFIG_FILES([Makefile src/Makefile tests/Makefile])
 AC_CONFIG_HEADERS([src/config.h])
 
 dnl AC_DEFINE(_GNU_SOURCE)

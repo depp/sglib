@@ -35,6 +35,8 @@ libmimp_a_SOURCES = \
 	impl/configfile.c \
 	impl/configfile.h \
 	impl/configfileread.c \
+	impl/cvar.c \
+	impl/cvar.h \
 	impl/dict.c \
 	impl/dict.h \
 	impl/error.c \
