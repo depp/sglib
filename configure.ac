@@ -7,6 +7,7 @@ AC_CONFIG_HEADERS([src/config.h])
 
 dnl AC_DEFINE(_GNU_SOURCE)
 AC_PROG_CXX
+AC_PROG_CC_C89
 AC_PROG_RANLIB
 
 dnl # From the changelog: "SDL 1.2.10 is a major release, featuring a

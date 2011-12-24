@@ -3,7 +3,8 @@ AUTOMAKE_OPTIONS = 1.5 foreign subdir-objects nostdinc
 bin_PROGRAMS = game-bin
 noinst_LIBRARIES = libmimp.a libmsys.a libmgfx.a libmtype.a
 
-common_CFLAGS = @warning_cppflags@ -I@srcdir@ -I@builddir@
+common_CXXFLAGS = @CXXWARN@ -I@srcdir@ -I@builddir@
+common_CFLAGS = @CWARN@ -I@srcdir@ -I@builddir@
 
 mac_sources = \
 	mac/GApplication.h \
@@ -45,7 +46,7 @@ libmimp_a_SOURCES = \
 	impl/lpath.c
 
 libmsys_a_CFLAGS = $(common_CFLAGS)
-libmsys_a_CXXFLAGS = $(common_CFLAGS)
+libmsys_a_CXXFLAGS = $(common_CXXFLAGS)
 libmsys_a_SOURCES = \
 	sys/autocf_osx.hpp \
 	sys/buffer.hpp \
@@ -66,7 +67,7 @@ libmsys_a_SOURCES = \
 	sys/system_error.hpp
 
 libmgfx_a_CFLAGS = $(common_CFLAGS)
-libmgfx_a_CXXFLAGS = $(common_CFLAGS)
+libmgfx_a_CXXFLAGS = $(common_CXXFLAGS)
 libmgfx_a_SOURCES = \
 	client/bitmapfont.cpp \
 	client/bitmapfont.hpp \
@@ -184,7 +185,7 @@ libmgfx_a_SOURCES = \
 	game/space/world.hpp
 
 libmtype_a_CFLAGS = $(common_CFLAGS) @PANGOCAIRO_CFLAGS@
-libmtype_a_CXXFLAGS = $(common_CFLAGS) @PANGOCAIRO_CFLAGS@
+libmtype_a_CXXFLAGS = $(common_CXXFLAGS) @PANGOCAIRO_CFLAGS@
 libmtype_a_SOURCES = \
 	client/type/font.hpp \
 	client/type/font_pango.cpp \
@@ -193,7 +194,8 @@ libmtype_a_SOURCES = \
 	client/type/rastertext.hpp \
 	client/type/rastertext_cairo.cpp
 
-game_bin_CXXFLAGS = $(common_CFLAGS) @GTK_CFLAGS@ @GTKGLEXT_CFLAGS@
+game_bin_CFLAGS = $(common_CFLAGS) @GTK_CFLAGS@ @GTKGLEXT_CFLAGS@
+game_bin_CXXFLAGS = $(common_CXXFLAGS) @GTK_CFLAGS@ @GTKGLEXT_CFLAGS@
 game_bin_LDFLAGS = @GTK_LIBS@ @GTKGLEXT_LIBS@ @PANGOCAIRO_LIBS@
 game_bin_LDADD = libmgfx.a libmtype.a libmsys.a libmimp.a
 game_bin_SOURCES = \

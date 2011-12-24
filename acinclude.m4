@@ -5,10 +5,13 @@ AC_DEFUN([ENABLE_WARNINGS],[
     [  --enable-warnings       enable warnings for GCC ],
     [enable_warnings=$enableval], [warnings=no])
   if test "x$enable_warnings" != xno ; then
-    [warning_cppflags="-Wall -Wextra -Wno-unused-parameter -Wno-sign-compare"]
+    [CWARN="-Wall -Wextra -Wno-sign-compare -Wwrite-strings -Wstrict-prototypes -Wmissing-prototypes"]
+    [CXXWARN="-Wall -Wextra -Wno-sign-compare"]
     if test "x$enable_warnings" != xyes ; then
-      [warning_cppflags="$warning_cppflags $enable_warnings"]
+      [CWARN="$CWARN $enable_warnings"]
+      [CXXWARN="$CXXWARN $enable_warnings"]
     fi
   fi
-  AC_SUBST([warning_cppflags])
+  AC_SUBST([CWARN])
+  AC_SUBST([CXXWARN])
 ])
