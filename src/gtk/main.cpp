@@ -12,6 +12,8 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+static gint timer;
+
 class GTKWindow : public UI::Window {
 public:
     GTKWindow()
@@ -23,13 +25,29 @@ public:
     bool updateSize;
 };
 
+static void quit()
+{
+    if (timer > 0) {
+        g_source_remove(timer);
+        timer = 0;
+    }
+    gtk_main_quit();
+}
+
 void GTKWindow::close()
 {
-    gtk_main_quit();
+    quit();
 }
 
 static const unsigned int MAX_FPS = 100;
 static const unsigned int MIN_FRAMETIME = 1000 / MAX_FPS;
+
+static gboolean handle_destroy(GtkWidget *widget, GdkEvent *event,
+                               gpointer user_data)
+{
+    quit();
+    return FALSE;
+}
 
 static gboolean handle_expose(GtkWidget *area, GTKWindow *w)
 {
@@ -183,7 +201,7 @@ int main(int argc, char *argv[])
     gtk_window_set_title(GTK_WINDOW(window), "Game");
     gtk_window_set_default_size(GTK_WINDOW(window), width, height);
     g_signal_connect_swapped(G_OBJECT(window), "destroy",
-                             G_CALLBACK(gtk_main_quit), NULL);
+                             G_CALLBACK(handle_destroy), NULL);
 
     GtkWidget *area = gtk_drawing_area_new();
     gtk_container_add(GTK_CONTAINER(window), area);
@@ -235,7 +253,7 @@ int main(int argc, char *argv[])
 
     gtk_widget_show_all(window);
 
-    g_timeout_add(10, update, area);
+    timer = g_timeout_add(10, update, area);
 
     gtk_main();
 
