@@ -45,7 +45,9 @@ libmimp_a_SOURCES = \
 	impl/hash.h \
 	impl/lfile.c \
 	impl/lfile.h \
-	impl/lpath.c
+	impl/lpath.c \
+	impl/strbuf.c \
+	impl/strbuf.h
 
 libmsys_a_CFLAGS = $(common_CFLAGS)
 libmsys_a_CXXFLAGS = $(common_CXXFLAGS)
