@@ -6,7 +6,7 @@
 #include "client/ui/menu.hpp"
 #include "client/keyboard/keycode.h"
 #include "client/keyboard/keytable.h"
-#include "sys/path_posix.hpp"
+#include "impl/lfile.h"
 #include <gtk/gtk.h>
 #include <gtk/gtkgl.h>
 #include <stdlib.h>
@@ -156,7 +156,8 @@ static void init(int argc, char *argv[])
         }
     }
 
-    pathInit(altpath);
+    sg_path_init();
+    // pathInit(altpath);
     initTime();
     Rand::global.seed();
 }

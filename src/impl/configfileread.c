@@ -34,25 +34,23 @@ configfile_read(struct configfile *f, const char *path)
     const unsigned char *restrict ptr, *end;
     const unsigned char *sptr = NULL, *nptr = NULL, *vptr = NULL;
     unsigned slen = 0, nlen = 0, vlen = 0, len;
-    struct lfile_contents fc;
+    struct sg_buffer fbuf;
     int r = 0, lineno, warning = 0, quoted, c;
     const char *msg;
     char *buf = NULL, *bptr, *sstr, *nstr, *vstr;
     size_t bufsize = 0, nbufsize;
 
-    r = lfile_readall(&fc, path, MAX_CONFIGFILE);
+    r = sg_file_get(path, 0, &fbuf, MAX_CONFIGFILE, NULL);
     if (r) {
-        if (r == ENOENT)
-            return 0;
-        if (r == -1) {
+        if (r > 0) {
             fprintf(stderr, "%s: config file too large, ignoring\n", path);
             return 0;
         }
-        return r;
+        return -1;
     }
 
-    ptr = fc.data;
-    end = ptr + fc.length;
+    ptr = fbuf.data;
+    end = ptr + fbuf.length;
     lineno = 1;
 
 initial:

@@ -3,13 +3,13 @@
 #endif
 
 #include "error.h"
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 static void
-error_clobber(const struct error_domain *dom, long code, const char *msg)
+sg_error_clobber(const struct sg_error_domain *dom,
+                 long code, const char *msg)
 {
     if (code)
         fprintf(stderr, "warning: error discarded: %s (%s %ld)\n",
@@ -20,18 +20,18 @@ error_clobber(const struct error_domain *dom, long code, const char *msg)
 }
 
 void
-error_set(struct error **err, const struct error_domain *dom,
-          long code, const char *fmt, ...)
+sg_error_set(struct sg_error **err, const struct sg_error_domain *dom,
+             long code, const char *fmt, ...)
 {
     va_list ap;
     va_start(ap, fmt);
-    error_setv(err, dom, code, fmt, ap);
+    sg_error_setv(err, dom, code, fmt, ap);
     va_end(ap);
 }
 
 void
-error_setv(struct error **err, const struct error_domain *dom,
-           long code, const char *fmt, va_list ap)
+sg_error_setv(struct sg_error **err, const struct sg_error_domain *dom,
+              long code, const char *fmt, va_list ap)
 {
     char buf[512];
     int r;
@@ -41,22 +41,22 @@ error_setv(struct error **err, const struct error_domain *dom,
     r = _vsnprintf(buf, sizeof(buf), fmt, ap);
     buf[sizeof(buf) - 1] = '\0';
 #endif
-    error_sets(err, dom, code, buf);
+    sg_error_sets(err, dom, code, buf);
 }
 
 void
-error_sets(struct error **err, const struct error_domain *dom,
-           long code, const char *msg)
+sg_error_sets(struct sg_error **err, const struct sg_error_domain *dom,
+              long code, const char *msg)
 {
-    struct error *e;
+    struct sg_error *e;
     size_t len;
     if (!err || *err) {
-        error_clobber(dom, code, msg);
+        sg_error_clobber(dom, code, msg);
         return;
     }
     if (msg) {
         len = strlen(msg);
-        e = malloc(sizeof(struct error) + len + 1);
+        e = malloc(sizeof(struct sg_error) + len + 1);
         if (!e) {
             fputs("error: out of memory in error handler\n", stderr);
             abort();
@@ -64,21 +64,24 @@ error_sets(struct error **err, const struct error_domain *dom,
         memcpy(e + 1, msg, len + 1);
         e->msg = (char *) (e + 1);
     } else {
-        e = malloc(sizeof(struct error));
+        e = malloc(sizeof(struct sg_error));
         e->msg = NULL;
     }
+    e->refcount = 1;
     e->domain = dom;
     e->code = code;
+    *err = e;
 }
 
 void
-error_move(struct error **dest, struct error **src)
+sg_error_move(struct sg_error **dest, struct sg_error **src)
 {
-    struct error *d = *dest, *s = *src;
+    struct sg_error *d = *dest, *s = *src;
     if (d) {
         if (s) {
-            error_clobber(s->domain, s->code, s->msg);
-            free(s);
+            sg_error_clobber(s->domain, s->code, s->msg);
+            if (--s->refcount == 0)
+                free(s);
             *src = NULL;
         }
     } else {
@@ -88,53 +91,63 @@ error_move(struct error **dest, struct error **src)
 }
 
 void
-error_clear(struct error **err)
+sg_error_clear(struct sg_error **err)
 {
-    struct error *e = *err;
-    if (e) {
+    struct sg_error *e = *err;
+    if (e && --e->refcount == 0) {
         free(e);
         *err = NULL;
     }
 }
 
-const struct error_domain ERROR_NOTFOUND = { "notfound" };
-
-const struct error_domain ERROR_NOMEM = { "nomem" };
+const struct sg_error_domain SG_ERROR_INVALPATH = { "invalpath" };
+const struct sg_error_domain SG_ERROR_NOTFOUND = { "notfound" };
+const struct sg_error_domain SG_ERROR_NOMEM = { "nomem" };
+const struct sg_error_domain SG_ERROR_DATA = { "data" };
 
 void
-error_set_notfound(struct error **err, const char *path)
+sg_error_notfound(struct sg_error **err, const char *path)
 {
-    error_set(err, &ERROR_NOTFOUND, 0,
-              "file not found: '%s'", path);
+    sg_error_set(err, &SG_ERROR_NOTFOUND, 0,
+                 "file not found: '%s'", path);
 }
 
 void
-error_set_nomem(struct error **err)
+sg_error_nomem(struct sg_error **err)
 {
-    error_sets(err, &ERROR_NOMEM, 0, NULL);
+    sg_error_sets(err, &SG_ERROR_NOMEM, 0, "out of memory");
 }
 
-const struct error_domain ERROR_ERRNO = { "errno" };
+const struct sg_error_domain SG_ERROR_ERRNO = { "errno" };
 
+#include <errno.h>
 #if 0 && defined(__GLIBC__)
 
 void
-error_errno(struct error **err, int code)
+sg_error_errno(struct sg_error **err, int code)
 {
     char buf[256], *r;
-    r = strerror_r(code, buf, sizeof(buf));
-    error_sets(err, &ERROR_ERRNO, code, r);
+    if (code == ENOMEM) {
+        sg_error_nomem(err);
+    } else {
+        r = strerror_r(code, buf, sizeof(buf));
+        error_sets(err, &SG_ERROR_ERRNO, code, r);
+    }
 }
 
 #else
 
 void
-error_errno(struct error **err, int code)
+sg_error_errno(struct sg_error **err, int code)
 {
     char buf[256];
     int r;
-    r = strerror_r(code, buf, sizeof(buf));
-    error_sets(err, &ERROR_ERRNO, code, r ? NULL : buf);
+    if (code == ENOMEM) {
+        sg_error_nomem(err);
+    } else {
+        r = strerror_r(code, buf, sizeof(buf));
+        sg_error_sets(err, &SG_ERROR_ERRNO, code, r ? NULL : buf);
+    }
 }
 
 #endif

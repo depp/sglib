@@ -8,8 +8,8 @@
 #endif
 
 #include "texturefile.hpp"
-#include "sys/ifile.hpp"
-#include "sys/path.hpp"
+#include "sys/file.hpp"
+// #include "sys/path.hpp"
 #include <stdlib.h>
 #include <stdio.h>
 // #include <err.h>
@@ -289,10 +289,10 @@ static void textureFileRead(png_structp pngp,
                             png_bytep data, png_size_t length) throw ()
 {
     try {
-        IFile *f = reinterpret_cast<IFile *>(png_get_io_ptr(pngp));
+        File &f = *reinterpret_cast<File *> (png_get_io_ptr(pngp));
         size_t pos = 0;
         while (pos < length) {
-            size_t amt = f->read(data + pos, length - pos);
+            size_t amt = f.read(data + pos, length - pos);
             if (amt == 0) {
                 fputs("Unexpected end of file\n", stderr);
                 longjmp(png_jmpbuf(pngp), 1);
@@ -308,7 +308,6 @@ static void textureFileRead(png_structp pngp,
 // FIXME error handling
 bool TextureFile::loadPNG()
 {
-    std::auto_ptr<IFile> f;
     PNGStruct ps;
     int depth, ctype;
     png_uint_32 width, height;
@@ -317,7 +316,7 @@ bool TextureFile::loadPNG()
     unsigned char *data = NULL;
     std::vector<png_bytep> rows;
 
-    f.reset(Path::openIFile(path_));
+    File f(path_.c_str(), 0);
 
     ps.png = png_create_read_struct_2(
         PNG_LIBPNG_VER_STRING,
@@ -333,7 +332,7 @@ bool TextureFile::loadPNG()
     if (setjmp(png_jmpbuf(ps.png)))
         return false;
 
-    png_set_read_fn(ps.png, f.get(), textureFileRead);
+    png_set_read_fn(ps.png, &f, textureFileRead);
 
     png_read_info(ps.png, ps.info);
     png_get_IHDR(ps.png, ps.info, &width, &height,
@@ -445,8 +444,6 @@ struct jStruct {
 // FIXME error handling
 bool TextureFile::loadJPEG()
 {
-    std::auto_ptr<IFile> f;
-    Buffer b;
     jStruct jj;
     struct jpeg_error_mgr jerr;
     struct jpeg_source_mgr jsrc;
@@ -454,9 +451,7 @@ bool TextureFile::loadJPEG()
     unsigned char *jdata = NULL, *jptr[1];
     bool color;
 
-    f.reset(Path::openIFile(path_));
-    b = f->readall();
-    f.reset();
+    FBuffer b(path_.c_str(), 0, -1);
     if (!b.size())
         return false;
 

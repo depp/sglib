@@ -2,8 +2,10 @@
 #include "walker.hpp"
 #include <cstring>
 #include <memory>
-#include "sys/path.hpp"
-#include "sys/ifile.hpp"
+// #include "sys/path.hpp"
+#include "sys/file.hpp"
+#include <stdio.h>
+#include <stdlib.h>
 using namespace LD22;
 
 const char *Entity::typeName(Type t)
@@ -53,9 +55,7 @@ enum {
 void Level::load(int num)
 {
     std::string path = pathForLevel(num);
-    std::auto_ptr<IFile> f(Path::openIFile(path));
-    Buffer b = f->readall();
-    f.reset();
+    FBuffer b(path.c_str(), 0, -1);
     const unsigned char *p = b.getUC(), *e = p + b.size();
 
     clear();
@@ -113,6 +113,7 @@ err:
 
 void Level::save(int num)
 {
+#if 0
     std::string path = pathForLevel(num);
     fprintf(stderr, "saving %s...\n", path.c_str());
     FILE *f = Path::openOFile(path);
@@ -145,4 +146,5 @@ void Level::save(int num)
     }
     fclose(f);
     fputs("save successful\n", stderr);
+#endif
 }

@@ -5,13 +5,14 @@
 extern "C" {
 #endif
 
-struct error {
-    const struct error_domain *domain;
+struct sg_error {
+    int refcount;
+    const struct sg_error_domain *domain;
     const char *msg;
     long code;
 };
 
-struct error_domain {
+struct sg_error_domain {
     char name[16];
 };
 
@@ -24,51 +25,56 @@ struct error_domain {
 
 /* Set error using a formatted message.  */
 void
-error_set(struct error **err, const struct error_domain *dom,
-          long code, const char *fmt, ...);
+sg_error_set(struct sg_error **err, const struct sg_error_domain *dom,
+             long code, const char *fmt, ...);
 
 /* Set error using a formatted message and a va_list.  */
 void
-error_setv(struct error **err, const struct error_domain *dom,
-           long code, const char *fmt, va_list ap);
+sg_error_setv(struct sg_error **err, const struct sg_error_domain *dom,
+              long code, const char *fmt, va_list ap);
 
 /* Set error using literal sting.  */
 void
-error_sets(struct error **err, const struct error_domain *dom,
-           long code, const char *msg);
+sg_error_sets(struct sg_error **err, const struct sg_error_domain *dom,
+              long code, const char *msg);
 
 /* Moving errors: When an error is moved, it is as if the destination
    error variable is set to a copy of the source error, and the source
    error is cleared.  Use this instead of assignment.  */
 void
-error_move(struct error **dest, struct error **src);
+sg_error_move(struct sg_error **dest, struct sg_error **src);
 
-/* Clear an error field.  */
 void
-error_clear(struct error **err);
+sg_error_clear(struct sg_error **err);
 
 /* ===== Error Domains ===== */
 
-/* A special domain for "file not found".  */
-extern const struct error_domain ERROR_NOTFOUND;
+/* A domain for "invalid pathname".  */
+extern const struct sg_error_domain SG_ERROR_INVALPATH;
 
-/* A special domain for "out of memory".  */
-extern const struct error_domain ERROR_NOMEM;
+/* A domain for "file not found".  */
+extern const struct sg_error_domain SG_ERROR_NOTFOUND;
+
+/* A domain for "out of memory".  */
+extern const struct sg_error_domain SG_ERROR_NOMEM;
+
+/* A domain for errors in data file formats.  */
+extern const struct sg_error_domain SG_ERROR_DATA;
 
 void
-error_set_notfound(struct error **err, const char *path);
+sg_error_notfound(struct sg_error **err, const char *path);
 
 void
-error_set_nomem(struct error **err);
+sg_error_nomem(struct sg_error **err);
 
 #if defined(_WIN32)
 /* Put Windows-specific error domains here */
 #endif
 
-const struct error_domain ERROR_ERRNO;
+extern const struct sg_error_domain SG_ERROR_ERRNO;
 
 void
-error_errno(struct error **err, int code);
+sg_error_errno(struct sg_error **err, int code);
 
 #ifdef __cplusplus
 }

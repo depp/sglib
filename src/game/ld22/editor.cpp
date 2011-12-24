@@ -4,9 +4,11 @@
 #include "client/keyboard/keycode.h"
 #include "client/opengl.hpp"
 #include "client/ui/event.hpp"
-#include "sys/path.hpp"
+// #include "sys/path.hpp"
 #include "client/bitmapfont.hpp"
 #include "background.hpp"
+#include "sys/error.hpp"
+#include <stdio.h>
 #include <stdlib.h>
 using namespace LD22;
 
@@ -415,7 +417,11 @@ void Editor::open(int num)
     level().clear();
     try {
         level().load(num);
-    } catch (Path::file_not_found &) { }
+    } catch (error &e) {
+        if (e.is_notfound())
+            return;
+        throw;
+    }
     loadLevel();
     m_levelno = num;
 }

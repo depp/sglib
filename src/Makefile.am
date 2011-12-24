@@ -41,7 +41,8 @@ libmimp_a_SOURCES = \
 	impl/hash.c \
 	impl/hash.h \
 	impl/lfile.c \
-	impl/lfile.h
+	impl/lfile.h \
+	impl/lpath.c
 
 libmsys_a_CFLAGS = $(common_CFLAGS)
 libmsys_a_CXXFLAGS = $(common_CFLAGS)
@@ -50,14 +51,10 @@ libmsys_a_SOURCES = \
 	sys/buffer.hpp \
 	sys/clock.hpp \
 	sys/clock.cpp \
-	sys/ifile.cpp \
-	sys/ifile.hpp \
-	sys/ifilereg.cpp \
-	sys/ifilereg.hpp \
-	sys/path.cpp \
-	sys/path.hpp \
-	sys/path_posix.cpp \
-	sys/path_posix.hpp \
+	sys/error.cpp \
+	sys/error.hpp \
+	sys/file.cpp \
+	sys/file.hpp \
 	sys/rand.cpp \
 	sys/rand.hpp \
 	sys/resource.cpp \
@@ -198,6 +195,6 @@ libmtype_a_SOURCES = \
 
 game_bin_CXXFLAGS = $(common_CFLAGS) @GTK_CFLAGS@ @GTKGLEXT_CFLAGS@
 game_bin_LDFLAGS = @GTK_LIBS@ @GTKGLEXT_LIBS@ @PANGOCAIRO_LIBS@
-game_bin_LDADD = libmgfx.a libmtype.a libmsys.a
+game_bin_LDADD = libmgfx.a libmtype.a libmsys.a libmimp.a
 game_bin_SOURCES = \
 	gtk/main.cpp

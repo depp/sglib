@@ -1,7 +1,6 @@
 #include "model.hpp"
 #include "color.hpp"
-#include "sys/path.hpp"
-#include "sys/ifile.hpp"
+#include "sys/file.hpp"
 #include <set>
 #include <vector>
 #include <memory>
@@ -9,6 +8,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <limits>
 
 static const short kCubeVertices[8][3] = {
     { -1, -1, -1 }, { -1, -1,  1 }, { -1,  1, -1 }, { -1,  1,  1 },
@@ -34,7 +34,8 @@ Model::Ref Model::cube()
 {
     static Model *m;
     if (!m)
-        m = new Model(1.0, 8, kCubeVertices, 12, kCubeTris, 12, kCubeLines);
+        m = new Model(1.0, 8, kCubeVertices,
+                      12, kCubeTris, 12, kCubeLines);
     m->incref();
     return Ref(m);
 }
@@ -59,7 +60,8 @@ Model::Ref Model::pyramid()
 {
     static Model *m;
     if (!m)
-        m = new Model(1.0, 5, kPyramidVertices, 6, kPyramidTris, 8, kPyramidLines);
+        m = new Model(1.0, 5, kPyramidVertices,
+                      6, kPyramidTris, 8, kPyramidLines);
     m->incref();
     return Ref(m);
 }
@@ -164,14 +166,16 @@ void Model::loadResource()
         }
         {
             unsigned char hdr[16];
-            std::auto_ptr<IFile> f(Path::openIFile(path_));
-            size_t amt = f->read(hdr, 16);
+            File f(path_.c_str(), 0);
+            int64_t l = f.length();
+            size_t amt;
+            if (l <= 16 || l > std::numeric_limits<size_t>::max())
+                goto invalid;
+            amt = f.read(hdr, 16);
             if (amt < 16 || memcmp(hdr, MODEL_HDR, 16))
                 goto invalid;
-            Buffer b = f->readall();
-            data_ = b.get();
-            datalen_ = b.size();
-            b.release();
+            data_ = malloc(l - 16);
+            datalen_ = l - 16;
         }
         std::vector<ModelChunk> chunks = readChunks(data_, datalen_);
         if (chunks.empty())
