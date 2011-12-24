@@ -113,6 +113,7 @@ err:
 
 void Level::save(int num)
 {
+    (void) num;
 #if 0
     std::string path = pathForLevel(num);
     fprintf(stderr, "saving %s...\n", path.c_str());

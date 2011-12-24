@@ -45,6 +45,9 @@ static const unsigned int MIN_FRAMETIME = 1000 / MAX_FPS;
 static gboolean handle_destroy(GtkWidget *widget, GdkEvent *event,
                                gpointer user_data)
 {
+    (void) widget;
+    (void) event;
+    (void) user_data;
     quit();
     return FALSE;
 }
