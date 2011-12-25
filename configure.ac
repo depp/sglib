@@ -9,6 +9,7 @@ dnl AC_DEFINE(_GNU_SOURCE)
 AC_PROG_CXX
 AC_PROG_CC_C89
 AC_PROG_RANLIB
+AC_PATH_PROGS([shell], [dash sh bash], [/bin/sh])
 
 dnl # From the changelog: "SDL 1.2.10 is a major release, featuring a
 dnl # revamp of the build system and many API improvements and bug fixes."

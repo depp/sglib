@@ -1,0 +1,6 @@
+#!@shell@
+SRCDIR="@abs_top_srcdir@"
+BUILDDIR="@abs_top_builddir@"
+GAME="@abs_top_builddir@"/src/game-bin
+
+exec "$GAME" -d path.data-path="$SRCDIR/data" "$@"

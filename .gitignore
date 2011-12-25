@@ -6,6 +6,7 @@
 *.tar.bz2
 *.tar.xz
 *.zip
+/run.sh
 
 # Apple's Xcode
 *.mode1v3
