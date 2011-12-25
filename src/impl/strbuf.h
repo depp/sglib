@@ -80,6 +80,18 @@ sg_strbuf_setlen(struct sg_strbuf *b, size_t len)
     *b->p = '\0';
 }
 
+/* Set the length of the string in the buffer.  This will expand the
+   string as necessary, and assumes that you have already reserved the
+   space and written the data.  */
+static inline void
+sg_strbuf_forcelen(struct sg_strbuf *b, size_t len)
+{
+    size_t l = b->e - b->s;
+    assert(len <= l);
+    b->p = b->s + len;
+    *b->p = '\0';
+}
+
 /* Strbuf I/O functions */
 
 /* Add a buffer to the strbuf.  */
@@ -132,6 +144,11 @@ sg_strbuf_joinstr(struct sg_strbuf *buf, const char *path)
 {
     sg_strbuf_joinmem(buf, path, strlen(path));
 }
+
+/* Change a path into the path containing it.  This is the same as
+   joining ".." to the buffer.  */
+void
+sg_strbuf_getdir(struct sg_strbuf *buf);
 
 #ifdef __cplusplus
 }

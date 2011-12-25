@@ -163,55 +163,56 @@ void
 sg_strbuf_joinmem(struct sg_strbuf *buf, const char *path, size_t len)
 {
     const char *p = path, *e = path + len, *q;
-    char *pp;
-    size_t l = sg_strbuf_len(buf);;
-    int isdot;
+    size_t l = sg_strbuf_len(buf), cl;
     if (p != e && *p == '/') {
         do p++; while (*p == '/' && p != e);
         sg_strbuf_clear(buf);
         sg_strbuf_putc(buf, '/');
-        isdot = 0;
     } else if (l == 0) {
         sg_strbuf_putc(buf, '.');
-        isdot = 1;
-    } else {
-        isdot = l == 1 && *buf->s == '.';
     }
-    while (p != e) {
-        for (q = p; q != e && *q != '/'; ++q);
-        if (*p == '.' && q == p + 1) {
-            /* Nothing */
-        } else if (*p == '.' && p[1] == '.' &&
-                   q == p + 2 && sg_strbuf_len(buf)) {
-            if (isdot) {
-                sg_strbuf_putc(buf, '.');
-                isdot = 0;
-            } else {
-                pp = buf->p - 1;
-                while (pp != buf->s && *pp != '/')
-                    --pp;
-                buf->p = pp;
-                if (pp == buf->s) {
-                    if (*pp == '/') {
-                        sg_strbuf_putc(buf, '/');
-                        isdot = 0;
-                    } else {
-                        sg_strbuf_putc(buf, '.');
-                        isdot = 1;
-                    }
-                } else {
-                    *pp = '\0';
-                    isdot = 0;
-                }
-            }
-        } else {
-            if (isdot)
-                sg_strbuf_clear(buf);
-            else if (buf->p != buf->e && buf->p[-1] != '/')
-                sg_strbuf_putc(buf, '/');
-            sg_strbuf_write(buf, p, q - p);
-            isdot = 0;
+    goto first;
+
+next:
+    for (p = q; p != e && *p == '/'; ++p) { }
+first:
+    if (p == e)
+        return;
+    for (q = p; q != e && *q != '/'; ++q) { }
+    cl = q - p;
+    if (cl <= 2) {
+        if (cl == 1 && p[0] == '.') {
+            goto next;
+        } else if (cl == 2 && p[0] == '.' && p[1] == '.') {
+            sg_strbuf_getdir(buf);
+            goto next;
         }
-        for (p = q; p != e && *p == '/'; ++p);
     }
+    if (*buf->s == '.' && buf->p == buf->s + 1)
+        sg_strbuf_clear(buf);
+    else if (buf->p[-1] != '/')
+        sg_strbuf_putc(buf, '/');
+    sg_strbuf_write(buf, p, q - p);
+    goto next;
+}
+
+void
+sg_strbuf_getdir(struct sg_strbuf *buf)
+{
+    char *pp;
+    size_t l = buf->p - buf->s;
+    if (l <= 1) {
+        if (l == 0 || *buf->s == '.') {
+            sg_strbuf_putc(buf, '.');
+            return;
+        }
+    }
+    pp = buf->p - 1;
+    while (pp != buf->s && *pp != '/')
+        --pp;
+    buf->p = pp;
+    if (pp == buf->s)
+        sg_strbuf_putc(buf, *pp == '/' ? '/' : '.');
+    else
+        *pp = '\0';
 }

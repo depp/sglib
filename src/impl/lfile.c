@@ -6,9 +6,9 @@
 #define SG_PATH_INITSZ 1
 #define _FILE_OFFSET_BITS 64
 
-
 #include "error.h"
 #include "lfile.h"
+#include "strbuf.h"
 #include <errno.h>
 #include <fcntl.h>
 #include <limits.h>
@@ -253,16 +253,21 @@ sg_path_add(struct sg_paths *p, const char *path, unsigned len,
 
 #if defined(__APPLE__)
 #include <CoreFoundation/CFBundle.h>
+#include <sys/param.h>
 
 /* Mac OS X implementation */
 static int
-sg_path_getexedir(char *buf, unsigned len)
+sg_path_getexepath(struct sg_strbuf *b)
 {
     CFBundleRef main;
     CFURLRef url = NULL;
     Boolean r;
     unsigned l;
     int ret = -1;
+    size_t rlen = PATH_MAX > 256 ? PATH_MAX : 256;
+
+    sg_strbuf_clear(b);
+    sg_strbuf_reserve(b, rlen - 1);
 
     main = CFBundleGetMainBundle();
     if (!main)
@@ -271,11 +276,11 @@ sg_path_getexedir(char *buf, unsigned len)
     if (!url)
         goto done;
     r = CFURLGetFileSystemRepresentation(
-        url, true, (UInt8 *) buf, len);
+        url, true, (UInt8 *) b->s, rlen);
     if (!r)
         goto done;
-    sg_path_add(p, buf, strlen(buf), writable);
-    ret = strlen(buf);
+    sg_strbuf_forcelen(b, strlen(b->s));
+    ret = 0;
 
 done:
     if (url)
@@ -284,18 +289,21 @@ done:
 }
 
 #elif defined(__linux__)
+#include <sys/param.h>
 
 /* Linux implementation */
 static int
-sg_path_getexedir(char *buf, unsigned len)
+sg_path_getexepath(struct sg_strbuf *b)
 {
     ssize_t sz;
-    sz = readlink("/proc/self/exe", buf, len);
-    if (sz <= 0)
+    size_t rlen = PATH_MAX > 256 ? PATH_MAX : 256;
+    sg_strbuf_clear(b);
+    sg_strbuf_reserve(b, rlen - 1);
+    sz = readlink("/proc/self/exe", b->s, rlen - 1);
+    if (sz < 0)
         return -1;
-    while (sz && buf[sz - 1] != '/')
-        sz--;
-    return sz;
+    sg_strbuf_forcelen(b, sz);
+    return 0;
 }
 
 #else
@@ -315,12 +323,15 @@ sg_path_getexedir(char *buf, unsigned len)
 void
 sg_path_init(void)
 {
-    char exedir[1024];
+    struct sg_strbuf buf;
     int r;
-    r = sg_path_getexedir(exedir, sizeof(exedir));
-    if (r > 0) {
-        sg_path_add(&sg_paths, exedir, r, 1);
+    sg_strbuf_init(&buf, 0);
+    r = sg_path_getexepath(&buf);
+    if (!r) {
+        sg_strbuf_getdir(&buf);
+        sg_path_add(&sg_paths, buf.s, sg_strbuf_len(&buf), 1);
     }
+    sg_strbuf_destroy(&buf);
 }
 
 int
