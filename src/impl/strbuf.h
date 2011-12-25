@@ -23,7 +23,8 @@ struct sg_strbuf {
 void
 sg_strbuf_init(struct sg_strbuf *b, size_t initsz);
 
-/* Destroy a string buffer and free associated memory.  */
+/* Destroy a string buffer and free associated memory.  The strbuf is
+   reset to a zero-length string.  */
 void
 sg_strbuf_destroy(struct sg_strbuf *b);
 
@@ -34,8 +35,8 @@ sg_strbuf_destroy(struct sg_strbuf *b);
 void
 sg_strbuf_attach(struct sg_strbuf *b, char *str, size_t len);
 
-/* Return the string in the buffer, destroying the buffer in the
-   process.  You are responsible for freeing the resulting string.  */
+/* Return the string in the buffer, which must be later freed with
+   free().  The strbuf is reset to a zero-length string.  */
 char *
 sg_strbuf_detach(struct sg_strbuf *b);
 
@@ -49,6 +50,10 @@ sg_strbuf_avail(struct sg_strbuf *b)
 /* Allocate available space in the buffer.  */
 void
 sg_strbuf_reserve(struct sg_strbuf *b, size_t len);
+
+/* Shrink the buffer to match the current contents.  */
+void
+sg_strbuf_compact(struct sg_strbuf *b);
 
 /* Set the string to the empty string, but don't free memory.  */
 static inline void

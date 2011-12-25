@@ -6,6 +6,7 @@
 #define SG_PATH_INITSZ 1
 #define _FILE_OFFSET_BITS 64
 
+#include "cvar.h"
 #include "error.h"
 #include "lfile.h"
 #include "strbuf.h"
@@ -15,8 +16,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/types.h>
 #include <unistd.h>
 
 void
@@ -207,31 +208,55 @@ done:
     return f;
 }
 
+/* Add a path to the given search paths.  If the path does not specify
+   a valid, accessible directory, then the path will be discarded.  If
+   the path is marked as writable, the directory will be created if
+   necessary.  */
 static void
-sg_path_add(struct sg_paths *p, const char *path, unsigned len,
-            int writable)
+sg_path_add(struct sg_paths *p, const char *path, size_t len, int writable)
 {
+    char *npath;
     unsigned nalloc, pos;
     struct sg_path *na;
-    char *npath;
+    int r;
+    size_t nlen;
 
+    /* By adding a trailing slash before we call access, we can ensure
+       that the path is a directory.  */
     if (!len) {
-        fprintf(stderr, "warning: sg_path_add: empty path\n");
+        npath = malloc(3);
+        if (!npath)
+            goto nomem;
+        nlen = 1;
+        npath[0] = '.';
+    } else {
+        nlen = len;
+        if (path[len] == '/')
+            nlen -= 1;
+        npath = malloc(nlen + 2);
+        if (!npath)
+            goto nomem;
+        memcpy(npath, path, nlen);
+    }
+    npath[nlen + 0] = '/';
+    npath[nlen + 1] = '\0';
+    len += 1;
+
+    r = access(npath, R_OK | X_OK);
+    if (r && !writable) {
+        fprintf(stderr, "path: %s [skipped]\n", npath);
+        free(npath);
         return;
     }
-    while (len && path[len - 1] == '/')
-        len--;
-    npath = malloc(len + 1);
-    if (!npath)
-        abort();
-    memcpy(npath, path, len);
-    npath[len] = '/';
-    len++;
+    fprintf(stderr, "path: %s\n", npath);
+
     if (p->acount >= p->alloc) {
         nalloc = p->alloc ? p->alloc * 2 : SG_PATH_INITSZ;
         na = realloc(p->a, sizeof(*na) * nalloc);
-        if (!na)
-            abort();
+        if (!na) {
+            free(npath);
+            goto nomem;
+        }
         p->a = na;
         p->alloc = nalloc;
     }
@@ -249,6 +274,10 @@ sg_path_add(struct sg_paths *p, const char *path, unsigned len,
             sizeof(*p->a) * (p->acount - pos - 1));
     p->a[pos].path = npath;
     p->a[pos].len = len;
+    return;
+
+nomem:
+    abort();
 }
 
 #if defined(__APPLE__)
@@ -323,15 +352,37 @@ sg_path_getexedir(char *buf, unsigned len)
 void
 sg_path_init(void)
 {
+    const char *p, *sep;
     struct sg_strbuf buf;
     int r;
+
+    r = sg_cvar_gets("path", "data-dir", &p);
+    if (!r)
+        p = "data";
+
     sg_strbuf_init(&buf, 0);
     r = sg_path_getexepath(&buf);
     if (!r) {
         sg_strbuf_getdir(&buf);
-        sg_path_add(&sg_paths, buf.s, sg_strbuf_len(&buf), 1);
+        sg_strbuf_joinstr(&buf, p);
+        sg_path_add(&sg_paths, buf.s, buf.e - buf.s, 0);
     }
     sg_strbuf_destroy(&buf);
+
+    r = sg_cvar_gets("path", "data-path", &p);
+    if (!r)
+        p = "";
+    while (*p) {
+        sep = strchr(p, ':');
+        if (!sep) {
+            if (*p)
+                sg_path_add(&sg_paths, p, strlen(p), 0);
+            break;
+        }
+        if (p != sep)
+            sg_path_add(&sg_paths, p, sep - p, 0);
+        p = sep + 1;
+    }
 }
 
 int

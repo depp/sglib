@@ -13,13 +13,13 @@ static char sg_strbuf_static[1];
 static void
 sg_strbuf_zero(struct sg_strbuf *b)
 {
-    b->s = b->p = b->e = NULL;
+    b->s = b->p = b->e = sg_strbuf_static;
 }
 
 void
 sg_strbuf_init(struct sg_strbuf *b, size_t initsz)
 {
-    b->s = b->p = b->e = sg_strbuf_static;
+    sg_strbuf_zero(b);
     if (initsz)
         sg_strbuf_reserve(b, initsz);
 }
@@ -43,10 +43,19 @@ char *
 sg_strbuf_detach(struct sg_strbuf *b)
 {
     char *p = b->s;
+    if (p == sg_strbuf_static) {
+        p = malloc(1);
+        if (!p)
+            abort();
+        *p = '\0';
+    }
     sg_strbuf_zero(b);
     return p;
 }
 
+/* If doubling the buffer gives us enough space, then double the
+   buffer.  Otherwise, allocate exactly as much space as
+   requested.  */
 void
 sg_strbuf_reserve(struct sg_strbuf *b, size_t len)
 {
@@ -71,6 +80,19 @@ sg_strbuf_reserve(struct sg_strbuf *b, size_t len)
     b->s = np;
     b->p = np + buflen;
     b->e = np + nsz - 1;
+}
+
+void
+sg_strbuf_compact(struct sg_strbuf *b)
+{
+    char *p;
+    size_t sz;
+    /* This is true for static allocations.  */
+    if (b->p == b->e)
+        return;
+    sz = b->p - b->s;
+    p = realloc(b->p, sz + 1);
+    b->e = b->p;
 }
 
 int
