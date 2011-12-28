@@ -2,7 +2,6 @@
 #include "walker.hpp"
 #include "tileset.hpp"
 #include "item.hpp"
-#include "client/texturefile.hpp"
 #include "sys/rand.hpp"
 #include <stdio.h>
 #include <cmath>

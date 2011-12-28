@@ -1,5 +1,32 @@
 #include "model.hpp"
 #include "color.hpp"
+
+void Model::draw(Color tcolor, Color lcolor) const
+{
+    (void) &tcolor;
+    (void) &lcolor;
+}
+
+Model::Ref Model::file(const char *path)
+{
+    (void) path;
+    return Ref(0);
+}
+
+Model::Ref Model::pyramid()
+{
+    return Ref(0);
+}
+
+Model::Ref Model::cube()
+{
+    return Ref(0);
+}
+
+#if 0
+
+#include "model.hpp"
+#include "color.hpp"
 #include "sys/file.hpp"
 #include <set>
 #include <vector>
@@ -247,3 +274,5 @@ Model::~Model()
         modelFiles.erase(i);
     free(data_);
 }
+
+#endif

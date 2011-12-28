@@ -1,7 +1,7 @@
 #include "window.hpp"
 #include "sys/clock.hpp"
 #include "client/opengl.hpp"
-#include "sys/resource.hpp"
+#include "impl/resource.h"
 #include <assert.h>
 #include <stdio.h>
 
@@ -35,7 +35,7 @@ void UI::Window::draw()
         return;
     unsigned time = getTime();
     screen_->update(time);
-    Resource::loadAll();
+    sg_resource_loadall();
     screen_->draw();
     GLenum err = glGetError();
     if (err != GL_NO_ERROR) {

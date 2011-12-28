@@ -7,6 +7,7 @@
 #include "client/ui/event.hpp"
 #include "client/keyboard/keycode.h"
 #include "player.hpp"
+#include <string>
 namespace Tank {
 
 static const unsigned char KEY_MAP[] = {
@@ -68,7 +69,7 @@ void GameScreen::update(unsigned int ticks)
         Tank::Object *obj;
         obj = new Tank::Obstacle(
             5.0f, 5.0f, 0.0f, 2.0f,
-            Model::open("model/house.egg3d"),
+            Model::file("model/house.egg3d"),
             Color::olive(), Color::yellow());
         w.addObject(obj);
         obj = new Tank::Obstacle(

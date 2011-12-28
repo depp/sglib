@@ -1,14 +1,13 @@
 #include "tileset.hpp"
 #include "client/opengl.hpp"
-#include "client/texturefile.hpp"
 #include <stdlib.h>
 using namespace LD22;
 
 Tileset::Tileset()
 {
-    m_tile = TextureFile::open("sprite/tile.png");
-    m_stick = TextureFile::open("sprite/stick.png");
-    m_widget = TextureFile::open("sprite/widget.png");
+    m_tile = Texture::file("sprite/tile.png");
+    m_stick = Texture::file("sprite/stick.png");
+    m_widget = Texture::file("sprite/widget.png");
 }
 
 Tileset::~Tileset()
@@ -132,7 +131,7 @@ void Tileset::drawWidget(int x, int y, int which, float scale)
 
 void Tileset::loadEnd()
 {
-    m_end = TextureFile::open("menu/fin.jpg");
+    m_end = Texture::file("menu/fin.jpg");
 }
 
 void Tileset::drawEnd(int x, int y, int which, float scale)

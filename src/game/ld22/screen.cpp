@@ -3,7 +3,6 @@
 #include "area.hpp"
 #include "client/keyboard/keycode.h"
 #include "client/ui/event.hpp"
-#include "client/texturefile.hpp"
 using namespace LD22;
 
 static const int TRANSITION_TIME = 32 * 1;
@@ -35,8 +34,8 @@ Screen::Screen()
     : m_key(KEY_MAP), m_levelno(0)
 {
     m_area.reset(new Area(*this));
-    m_passfail1 = TextureFile::open("menu/passfail1.jpg");
-    m_passfail2 = TextureFile::open("menu/passfail2.jpg");
+    m_passfail1 = Texture::file("menu/passfail1.jpg");
+    m_passfail2 = Texture::file("menu/passfail2.jpg");
 }
 
 Screen::~Screen()

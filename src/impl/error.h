@@ -61,11 +61,18 @@ extern const struct sg_error_domain SG_ERROR_NOMEM;
 /* A domain for errors in data file formats.  */
 extern const struct sg_error_domain SG_ERROR_DATA;
 
+/* Produce a "file not found" error for the given path.  */
 void
 sg_error_notfound(struct sg_error **err, const char *path);
 
+/* Produce a generic "out of memory" error.  */
 void
 sg_error_nomem(struct sg_error **err);
+
+/* Produce a "corrupt file" error for a file with the given format:
+   PNG, JPEG, etc.  */
+void
+sg_error_data(struct sg_error **err, const char *fmtname);
 
 #if defined(_WIN32)
 /* Put Windows-specific error domains here */

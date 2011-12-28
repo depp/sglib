@@ -1,29 +1,35 @@
 #ifndef CLIENT_MODEL_HPP
 #define CLIENT_MODEL_HPP
-#include "opengl.hpp"
-#include "sys/resource.hpp"
+// #include "opengl.hpp"
+// #include "sys/resource.hpp"
 #include "sys/sharedref.hpp"
-#include <string>
+// #include <string>
 struct Color;
 
-class Model : private Resource {
-public:
+class Model {
     template<class T> friend class SharedRef;
+
+protected:
+    void *m_ptr;
+
+    Model() : m_ptr(0) { }
+    Model(void *ptr) : m_ptr(ptr) { }
+
+    void incref() { }
+    void decref() { }
+    operator bool() const { return m_ptr != 0; }
+
+public:
     typedef SharedRef<Model> Ref;
 
-    virtual ~Model();
-    static Ref open(std::string const &path);
+    void draw(Color tcolor, Color lcolor) const;
+
+    static Ref file(const char *path);
     static Ref pyramid();
     static Ref cube();
+};
 
-    void draw(const Color tcolor, const Color lcolor) const;
-    virtual std::string name() const;
-    std::string const &path() const { return path_; }
-
-private:
-    virtual void loadResource();
-    virtual void unloadResource();
-
+/*
     Model(std::string const &path);
     Model(double scale,
           unsigned int vcount, short const vdata[][3],
@@ -55,6 +61,6 @@ private:
     unsigned int ltype_;
     unsigned int lcount_;
     void const *ldata_;
-};
+*/
 
 #endif

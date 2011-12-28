@@ -46,8 +46,17 @@ libmimp_a_SOURCES = \
 	impl/lfile.c \
 	impl/lfile.h \
 	impl/lpath.c \
+	impl/opengl.c \
+	impl/opengl.h \
+	impl/pixbuf.c \
+	impl/pixbuf.h \
+	impl/pixbuf_loadimage.c \
+	impl/resource.c \
+	impl/resource.h \
 	impl/strbuf.c \
-	impl/strbuf.h
+	impl/strbuf.h \
+	impl/texture.c \
+	impl/texture.h
 
 libmsys_a_CFLAGS = $(common_CFLAGS)
 libmsys_a_CXXFLAGS = $(common_CXXFLAGS)
@@ -62,8 +71,6 @@ libmsys_a_SOURCES = \
 	sys/file.hpp \
 	sys/rand.cpp \
 	sys/rand.hpp \
-	sys/resource.cpp \
-	sys/resource.hpp \
 	sys/sharedref.hpp \
 	sys/stringarray.cpp \
 	sys/stringarray.hpp \
@@ -77,8 +84,6 @@ libmgfx_a_SOURCES = \
 	client/bitmapfont.hpp \
 	client/color.hpp \
 	client/color.hpp \
-	client/dummytexture.cpp \
-	client/dummytexture.hpp \
 	client/keyboard/keycode.h \
 	client/keyboard/keyid.c \
 	client/keyboard/keyid.h \
@@ -97,8 +102,6 @@ libmgfx_a_SOURCES = \
 	client/scene/object.hpp \
 	client/texture.cpp \
 	client/texture.hpp \
-	client/texturefile.cpp \
-	client/texturefile.hpp \
 	client/ui/action.hpp \
 	client/ui/button.cpp \
 	client/ui/button.hpp \

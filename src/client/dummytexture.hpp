@@ -1,5 +1,6 @@
 #ifndef CLIENT_DUMMYTEXTURE_HPP
 #define CLIENT_DUMMYTEXTURE_HPP
+#error "Obsolete header"
 #include "texture.hpp"
 #include "color.hpp"
 

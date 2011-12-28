@@ -1,3 +1,5 @@
+#if 0
+
 #include "rastertext.hpp"
 #include "client/opengl.hpp"
 #include <stdlib.h>
@@ -66,3 +68,5 @@ void RasterText::draw()
     glEnd();
     glPopAttrib();
 }
+
+#endif

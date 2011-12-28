@@ -25,7 +25,7 @@ public:
     void setAction(Action const &action);
 
 private:
-    RasterText::Ref title_;
+    // RasterText::Ref title_;
     bool state_, hover_;
     int button_;
     Action action_;

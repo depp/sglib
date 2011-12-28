@@ -118,6 +118,12 @@ sg_error_nomem(struct sg_error **err)
     sg_error_sets(err, &SG_ERROR_NOMEM, 0, "out of memory");
 }
 
+void
+sg_error_data(struct sg_error **err, const char *fmtname)
+{
+    sg_error_set(err, &SG_ERROR_DATA, 0, "corrupt %s file", fmtname);
+}
+
 const struct sg_error_domain SG_ERROR_ERRNO = { "errno" };
 
 #include <errno.h>

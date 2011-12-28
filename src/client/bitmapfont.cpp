@@ -1,9 +1,8 @@
 #include "bitmapfont.hpp"
-#include "texturefile.hpp"
 
-BitmapFont::BitmapFont(const std::string &path)
+BitmapFont::BitmapFont(const char *path)
 {
-    m_tex = TextureFile::open(path);
+    m_tex = Texture::file(path);
 }
 
 BitmapFont::~BitmapFont()
@@ -15,7 +14,7 @@ void BitmapFont::print(int x, int y, const char *text)
     if (!text)
         text = "(null)";
     int xp = x, yp = y;
-    int xs = m_tex->width() / 16, ys = m_tex->height() / 16;
+    int xs = m_tex->iwidth() / 16, ys = m_tex->iheight() / 16;
     float xt = (float) xs / m_tex->twidth();
     float yt = (float) ys / m_tex->theight();
     int u, v;

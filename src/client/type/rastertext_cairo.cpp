@@ -1,3 +1,5 @@
+#if 0
+
 #include "rastertext.hpp"
 #include "font_pango.hpp"
 #include <cairo/cairo.h>
@@ -83,3 +85,5 @@ bool RasterText::loadTexture()
     cairo_surface_destroy(surf);
     return true;
 }
+
+#endif

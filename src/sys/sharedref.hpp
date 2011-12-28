@@ -1,89 +1,71 @@
 #ifndef SYS_SHAREDREF_HPP
 #define SYS_SHAREDREF_HPP
 
-template<class T>
+template<typename T>
 class SharedRef {
-    template<class TO> friend class SharedRef;
+    template<typename TO> friend class SharedRef;
+    T m_obj;
+
 public:
-    SharedRef() throw()
-        : ptr_(0)
+    SharedRef()
+    { }
+
+    SharedRef(const SharedRef &r)
+        : m_obj(r.m_obj)
+    {
+        m_obj.incref();
+    }
+
+    /* Consumes a reference.  */
+    SharedRef(const T &t)
+        : m_obj(t)
     { }
 
     ~SharedRef() throw()
     {
-        if (ptr_)
-            ptr_->decref();
-    }
-
-    SharedRef(T *p) throw()
-        : ptr_(p)
-    {
-        if (ptr_)
-            p->incref();
-    }
-
-    SharedRef(SharedRef const &r) throw()
-        : ptr_(r.ptr_)
-    {
-        if (ptr_)
-            ptr_->incref();
-    }
-
-    template<class TO>
-    SharedRef(SharedRef<TO> const &r) throw()
-        : ptr_(r.ptr_)
-    {
-        if (ptr_)
-            ptr_->incref();
+        m_obj.decref();
     }
 
     SharedRef &operator=(SharedRef const &r) throw()
     {
-        T *po = ptr_, *pn = r.ptr_;
-        if (pn)
-            pn->incref();
-        if (po)
-            po->decref();
-        ptr_ = pn;
+        T po = m_obj, pn = r.m_obj;
+        pn.incref();
+        po.incref();
+        m_obj = pn;
         return *this;
     }
 
     template <class TO>
     SharedRef &operator=(SharedRef<TO> const &r) throw()
     {
-        T *po = ptr_, *pn = r.ptr_;
-        if (pn)
-            pn->incref();
-        if (po)
-            po->decref();
-        ptr_ = pn;
+        T po = m_obj, pn = r.m_obj;
+        pn.incref();
+        po.incref();
+        m_obj = pn;
         return *this;
     }
 
-    T* operator->() const throw()
+    const T *operator->() const throw()
     {
-        return ptr_;
+        return &m_obj;
+    }
+
+    T *operator->() throw()
+    {
+        return &m_obj;
     }
 
     operator bool() const
     {
-        return ptr_;
+        return (bool) m_obj;
     }
 
     void clear()
     {
-        if (ptr_)
-            ptr_->decref();
-        ptr_ = 0;
+        T pn;
+        m_obj.decref();
+        m_obj = pn;
     }
-
-    T* get() const
-    {
-        return ptr_;
-    }
-
-private:
-    T *ptr_;
 };
 
 #endif

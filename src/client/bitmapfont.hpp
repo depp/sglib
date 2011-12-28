@@ -6,7 +6,7 @@ class BitmapFont {
     Texture::Ref m_tex;
 
 public:
-    BitmapFont(const std::string &path);
+    BitmapFont(const char *path);
     ~BitmapFont();
 
     void print(int x, int y, const char *text);

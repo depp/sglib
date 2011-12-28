@@ -1,5 +1,6 @@
 #ifndef CLIENT_TEXTUREFILE_HPP
 #define CLIENT_TEXTUREFILE_HPP
+#error "Obsolete header"
 #include "texture.hpp"
 
 class TextureFile : public Texture {

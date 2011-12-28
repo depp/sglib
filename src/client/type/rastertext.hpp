@@ -1,3 +1,5 @@
+
+#if 0
 #ifndef CLIENT_TYPE_RASTERTEXT_HPP
 #define CLIENT_TYPE_RASTERTEXT_HPP
 #include <string>
@@ -8,7 +10,11 @@
 /* Rasterized text texture.  The texture is grayscale with no
    alpha.  */
 class RasterText : public Texture {
-public:
+    template<class T> friend class SharedRef;
+
+private:
+    
+
     typedef SharedRef<RasterText> Ref;
     static Ref create();
 
@@ -41,4 +47,5 @@ private:
     float vx1_, vx2_, vy1_, vy2_, tx1_, tx2_, ty1_, ty2_;
 };
 
+#endif
 #endif

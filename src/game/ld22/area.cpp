@@ -10,7 +10,6 @@
 #include "effect.hpp"
 #include "endwalk.hpp"
 #include "client/opengl.hpp"
-#include "client/texturefile.hpp"
 #include <cstring>
 #include <algorithm>
 using namespace LD22;

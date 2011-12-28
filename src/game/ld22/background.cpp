@@ -1,9 +1,10 @@
 #include "background.hpp"
 #include "defs.hpp"
-#include "client/texturefile.hpp"
 #include "sys/rand.hpp"
+#include "client/texture.hpp"
 #include <memory>
 #include <stdio.h>
+#include <string>
 namespace LD22 {
 namespace Bkgr {
 
@@ -105,7 +106,7 @@ public:
 
     void init()
     {
-        m_tex = TextureFile::open("back/clouds.jpg");
+        m_tex = Texture::file("back/clouds.jpg");
         m_layer[0].data = LAYER1;
         m_layer[1].data = LAYER2;
         m_layer[2].data = LAYER3;
@@ -185,16 +186,16 @@ public:
 };
 
 class Picture {
-    std::string m_path;
+    const char *m_path;
     Texture::Ref m_tex;
 public:
-    Picture(const std::string &path)
+    Picture(const char *path)
         : m_path(path)
     { }
 
     void init()
     {
-        m_tex = TextureFile::open(m_path);        
+        m_tex = Texture::file(m_path);
     }
 
     void draw()

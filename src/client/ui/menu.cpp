@@ -5,7 +5,6 @@
 #include "game/space/gamescreen.hpp"
 #include "event.hpp"
 #include "window.hpp"
-#include "client/texturefile.hpp"
 #include "client/opengl.hpp"
 #include <stdio.h>
 
@@ -45,8 +44,8 @@ void UI::Menu::update(unsigned int)
             menu_[i].setLoc(145, 345 - 50 * i);
             scene_.addObject(&menu_[i]);
         }
-        texture_ = TextureFile::open("font/cp437-8x8.png");
-        texture2_ = TextureFile::open("font/cp437-8x8.png");
+        texture_ = Texture::file("font/cp437-8x8.png");
+        texture2_ = Texture::file("font/cp437-8x8.png");
         menu_[0].setAction(Action(this, static_cast<Action::Method>
                                   (&Menu::tankGame)));
         menu_[1].setAction(Action(this, static_cast<Action::Method>
