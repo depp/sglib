@@ -1,4 +1,4 @@
-#include "sys/clock.hpp"
+#include "impl/clock.h"
 #include "sys/rand.hpp"
 #include "client/opengl.hpp"
 #include "client/ui/event.hpp"
@@ -176,7 +176,7 @@ static void init(int argc, char *argv[])
 
     sg_path_init();
     // pathInit(altpath);
-    initTime();
+    sg_clock_init();
     Rand::global.seed();
 }
 

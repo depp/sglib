@@ -1,5 +1,5 @@
 #include "window.hpp"
-#include "sys/clock.hpp"
+#include "impl/clock.h"
 #include "client/opengl.hpp"
 #include "impl/resource.h"
 #include <assert.h>
@@ -33,7 +33,7 @@ void UI::Window::draw()
 {
     if (!screen_)
         return;
-    unsigned time = getTime();
+    unsigned time = sg_clock_get();
     screen_->update(time);
     sg_resource_loadall();
     screen_->draw();

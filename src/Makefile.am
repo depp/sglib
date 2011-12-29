@@ -35,6 +35,8 @@ libmimp_a_SOURCES = \
 	impl/configfile.c \
 	impl/configfile.h \
 	impl/configfileread.c \
+	impl/clock.c \
+	impl/clock.h \
 	impl/cvar.c \
 	impl/cvar.h \
 	impl/dict.c \
@@ -65,8 +67,6 @@ libmsys_a_CXXFLAGS = $(common_CXXFLAGS)
 libmsys_a_SOURCES = \
 	sys/autocf_osx.hpp \
 	sys/buffer.hpp \
-	sys/clock.hpp \
-	sys/clock.cpp \
 	sys/error.cpp \
 	sys/error.hpp \
 	sys/file.cpp \
