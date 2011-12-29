@@ -7,8 +7,19 @@ extern "C" {
 #endif
 struct sg_error;
 
+enum {
+    SG_MODEL_STATIC = 1U << 0
+};
+
+typedef enum {
+    SG_MODEL_CUBE,
+    SG_MODEL_PYRAMID
+} sg_model_static_t;
+
 struct sg_model {
     struct sg_resource r;
+
+    unsigned flags;
 
     double scale;
 
@@ -27,6 +38,9 @@ struct sg_model {
     unsigned lcount;
     void *ldata;
 };
+
+struct sg_model *
+sg_model_static(sg_model_static_t which, struct sg_error **err);
 
 int
 sg_model_load(struct sg_model *mp, struct sg_error **err);

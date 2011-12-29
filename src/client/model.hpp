@@ -26,8 +26,9 @@ public:
     void draw(Color tcolor, Color lcolor) const;
 
     static Ref file(const char *path);
-    static Ref pyramid();
-    static Ref cube();
+    static Ref mstatic(sg_model_static_t which);
+    static Ref pyramid() { return mstatic(SG_MODEL_PYRAMID); }
+    static Ref cube() { return mstatic(SG_MODEL_CUBE); }
 };
 
 #endif

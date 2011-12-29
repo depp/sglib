@@ -8,6 +8,120 @@
 #include <stdlib.h>
 #include <string.h>
 
+static const short CUBE_VERTEX[8][3] = {
+    { -1, -1, -1 }, { -1, -1,  1 }, { -1,  1, -1 }, { -1,  1,  1 },
+    {  1, -1, -1 }, {  1, -1,  1 }, {  1,  1, -1 }, {  1,  1,  1 }
+};
+
+static const unsigned short CUBE_TRI[12][3] = {
+    { 1, 3, 2 }, { 2, 0, 1 },
+    { 0, 2, 6 }, { 6, 4, 0 },
+    { 4, 6, 7 }, { 7, 5, 4 },
+    { 1, 5, 7 }, { 7, 3, 1 },
+    { 2, 3, 7 }, { 7, 6, 2 },
+    { 0, 4, 5 }, { 5, 1, 0 }
+};
+
+static const unsigned short CUBE_LINE[12][2] = {
+    { 0, 1 }, { 2, 3 }, { 4, 5 }, { 6, 7 },
+    { 0, 2 }, { 1, 3 }, { 4, 6 }, { 5, 7 },
+    { 0, 4 }, { 1, 5 }, { 2, 6 }, { 3, 7 }
+};
+
+static void
+sg_model_cube(struct sg_model *mp)
+{
+    mp->flags = SG_MODEL_STATIC;
+    mp->scale = 1.0;
+    mp->vtype = GL_SHORT;
+    mp->vcount = 8;
+    mp->vdata = (short *) CUBE_VERTEX;
+    mp->ttype = GL_UNSIGNED_SHORT;
+    mp->tcount = 12;
+    mp->tdata = (unsigned short *) CUBE_TRI;
+    mp->ltype = GL_UNSIGNED_SHORT;
+    mp->lcount = 12;
+    mp->ldata = (unsigned short *) CUBE_LINE;
+}
+
+static const short PYRAMID_VERTEX[5][3] = {
+    { -1, -1, -1 }, { -1,  1, -1 }, {  1, -1, -1 }, {  1,  1, -1 },
+    {  0,  0,  1 }
+};
+
+static const unsigned short PYRAMID_TRI[6][3] = {
+    { 0, 1, 3 }, { 3, 2, 0 },
+    { 0, 4, 1 }, { 1, 4, 3 },
+    { 3, 4, 2 }, { 2, 4, 0 }
+};
+
+static const unsigned short PYRAMID_LINE[8][2] = {
+    { 0, 1 }, { 2, 3 }, { 0, 2 }, { 1, 3 },
+    { 0, 4 }, { 1, 4 }, { 2, 4 }, { 3, 4 }
+};
+
+static void
+sg_model_pyramid(struct sg_model *mp)
+{
+    mp->flags = SG_MODEL_STATIC;
+    mp->scale = 1.0;
+    mp->vtype = GL_SHORT;
+    mp->vcount = 5;
+    mp->vdata = (short *) PYRAMID_VERTEX;
+    mp->ttype = GL_UNSIGNED_SHORT;
+    mp->tcount = 6;
+    mp->tdata = (unsigned short *) PYRAMID_TRI;
+    mp->ltype = GL_UNSIGNED_SHORT;
+    mp->lcount = 8;
+    mp->ldata = (unsigned short *) PYRAMID_LINE;
+}
+
+struct sg_model *
+sg_model_static(sg_model_static_t which, struct sg_error **err)
+{
+    void (*init)(struct sg_model *) = NULL;
+    const char *name = NULL;
+    struct sg_model *mp;
+    int r;
+
+    switch (which) {
+    case SG_MODEL_CUBE:
+        name = "static:cube";
+        init = sg_model_cube;
+        break;
+
+    case SG_MODEL_PYRAMID:
+        name = "static:pyramid";
+        init = sg_model_pyramid;
+        break;
+    }
+
+    if (!name)
+        abort();
+
+    mp = (struct sg_model *) sg_resource_find(SG_RSRC_MODEL, name);
+    if (mp) {
+        sg_resource_incref(&mp->r);
+        return mp;
+    }
+    mp = malloc(sizeof(*mp));
+    if (!mp) {
+        sg_error_nomem(err);
+        return NULL;
+    }
+    mp->r.type = SG_RSRC_MODEL;
+    mp->r.refcount = 1;
+    mp->r.flags = 0;
+    mp->r.name = (char *) name;
+    init(mp);
+    r = sg_resource_register(&mp->r, err);
+    if (r) {
+        free(mp);
+        return NULL;
+    }
+    return mp;
+}
+
 static unsigned char const MODEL_HDR[16] = "Egg3D Model\0\4\3\2\1";
 
 /* An array of model chunks is terminated with NULL data.  */
@@ -45,6 +159,7 @@ sg_model_readchunks(struct sg_modelchunk *chunk, unsigned maxchunk,
 static void
 sg_model_zero(struct sg_model *mp)
 {
+    mp->flags = 0;
     mp->scale = 1.0;
     mp->vtype = 0;
     mp->vcount = 0;
@@ -60,12 +175,14 @@ sg_model_zero(struct sg_model *mp)
 static void
 sg_model_unload(struct sg_model *mp)
 {
-    if (mp->vdata)
-        free(mp->vdata);
-    if (mp->tdata)
-        free(mp->tdata);
-    if (mp->ldata)
-        free(mp->ldata);
+    if (!(mp->flags & SG_MODEL_STATIC)) {
+        if (mp->vdata)
+            free(mp->vdata);
+        if (mp->tdata)
+            free(mp->tdata);
+        if (mp->ldata)
+            free(mp->ldata);
+    }
     sg_model_zero(mp);
 }
 
@@ -144,14 +261,16 @@ sg_model_load(struct sg_model *mp, struct sg_error **err)
     size_t maxsize = MODEL_MAXSIZE;
     int ret, r;
 
-    sg_model_unload(mp);
-    r = sg_file_get(mp->r.name, 0, &fbuf, maxsize, err);
-    if (r)
-        goto error;
-    r = sg_model_load2(mp, &fbuf, err);
-    sg_buffer_destroy(&fbuf);
-    if (r)
-        goto error;
+    if (!(mp->flags & SG_MODEL_STATIC)) {
+        sg_model_unload(mp);
+        r = sg_file_get(mp->r.name, 0, &fbuf, maxsize, err);
+        if (r)
+            goto error;
+        r = sg_model_load2(mp, &fbuf, err);
+        sg_buffer_destroy(&fbuf);
+        if (r)
+            goto error;
+    }
 
     fprintf(stderr, "loaded %s\n", mp->r.name);
     ret = 0;
