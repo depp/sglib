@@ -14,6 +14,7 @@
 #include "impl/opengl.h"
 #include "impl/rand.h"
 
+/* The Gtk headers generate a warning.  */
 #if defined(HAVE_DPUSH)
 #pragma GCC diagnostic push
 #endif
@@ -32,30 +33,8 @@ static gint sg_timer;
 static int sg_window_width, sg_window_height;
 static int sg_update_size;
 
-/*
-class GTKWindow : public UI::Window {
-public:
-    GTKWindow()
-        : updateSize(false)
-    { }
-
-    virtual void close();
-
-    bool updateSize;
-};
-
-static void quit()
-{
-
-}
-
-void GTKWindow::close()
-{
-    quit();
-}
-*/
-
-static void quit(void)
+static void
+quit(void)
 {
     if (sg_timer > 0) {
         g_source_remove(sg_timer);
@@ -109,8 +88,8 @@ sg_platform_return(void)
     exit(1);
 }
 
-static gboolean handle_destroy(GtkWidget *widget, GdkEvent *event,
-                               gpointer user_data)
+static gboolean
+handle_destroy(GtkWidget *widget, GdkEvent *event, void *user_data)
 {
     (void) widget;
     (void) event;
@@ -119,7 +98,8 @@ static gboolean handle_destroy(GtkWidget *widget, GdkEvent *event,
     return FALSE;
 }
 
-static gboolean handle_expose(GtkWidget *area)
+static gboolean
+handle_expose(GtkWidget *area)
 {
     struct sg_event_resize rsz;
     GtkAllocation a;
@@ -152,13 +132,15 @@ static gboolean handle_expose(GtkWidget *area)
     return TRUE;
 }
 
-static gboolean handle_configure(void)
+static gboolean
+handle_configure(void)
 {
     sg_update_size = 1;
     return TRUE;
 }
 
-static gboolean update(void *obj)
+static gboolean
+update(void *obj)
 {
     GtkWidget *area = GTK_WIDGET(obj);
     gdk_window_invalidate_rect(area->window, &area->allocation, FALSE);
@@ -166,7 +148,8 @@ static gboolean update(void *obj)
     return TRUE;
 }
 
-static gboolean handle_key(GdkEventKey *e, sg_event_type_t t)
+static gboolean
+handle_key(GdkEventKey *e, sg_event_type_t t)
 {
     int code = e->hardware_keycode, hcode;
     struct sg_event_key evt;
@@ -181,7 +164,8 @@ static gboolean handle_key(GdkEventKey *e, sg_event_type_t t)
     return TRUE;
 }
 
-static gboolean handle_motion(GdkEventMotion *e)
+static gboolean
+handle_motion(GdkEventMotion *e)
 {
     struct sg_event_mouse evt;
     evt.type = SG_EVENT_MMOVE;
@@ -192,7 +176,8 @@ static gboolean handle_motion(GdkEventMotion *e)
     return TRUE;
 }
 
-static gboolean handle_button(GdkEventButton *e, sg_event_type_t t)
+static gboolean
+handle_button(GdkEventButton *e, sg_event_type_t t)
 {
     struct sg_event_mouse evt;
     evt.type = t;
@@ -208,8 +193,8 @@ static gboolean handle_button(GdkEventButton *e, sg_event_type_t t)
     return TRUE;
 }
 
-static gboolean handle_event(GtkWidget *widget, GdkEvent *event,
-                             void *obj)
+static gboolean
+handle_event(GtkWidget *widget, GdkEvent *event, void *obj)
 {
     (void) obj;
     switch (event->type) {
@@ -256,7 +241,8 @@ static const int *const SG_GL_ATTRIB[] = {
     SG_GL_ATTRIB_1, SG_GL_ATTRIB_2, 0
 };
 
-static void init(int argc, char *argv[])
+static void
+init(int argc, char *argv[])
 {
     GtkWidget *window, *area;
     GdkScreen *screen;
@@ -328,7 +314,8 @@ static void init(int argc, char *argv[])
     sg_timer = g_timeout_add(10, update, area);
 }
 
-int main(int argc, char *argv[])
+int
+main(int argc, char *argv[])
 {
     init(argc, argv);
     gtk_main();
