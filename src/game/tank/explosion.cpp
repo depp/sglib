@@ -1,9 +1,10 @@
 #include "explosion.hpp"
-#include "sys/rand.hpp"
+#include "impl/rand.h"
 #include "client/color.hpp"
 #include "world.hpp"
 #include "client/opengl.hpp"
 #include <stdlib.h>
+#include <cmath>
 namespace Tank {
 
 struct Explosion::Type {
@@ -51,9 +52,9 @@ static void randvec(float v[3])
 {
     float x, y, z;
     do {
-        x = Rand::gfrand() * 2.0f - 1.0f;
-        y = Rand::gfrand() * 2.0f - 1.0f;
-        z = Rand::gfrand() * 2.0f - 1.0f;
+        x = sg_gfrand() * 2.0f - 1.0f;
+        y = sg_gfrand() * 2.0f - 1.0f;
+        z = sg_gfrand() * 2.0f - 1.0f;
     } while (x*x + y*y + z*z > 1.0f);
     v[0] = x; v[1] = y; v[2] = z;
 }

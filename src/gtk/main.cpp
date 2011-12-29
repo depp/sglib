@@ -1,5 +1,5 @@
 #include "impl/clock.h"
-#include "sys/rand.hpp"
+#include "impl/rand.h"
 #include "client/opengl.hpp"
 #include "client/ui/event.hpp"
 #include "client/ui/window.hpp"
@@ -177,7 +177,7 @@ static void init(int argc, char *argv[])
     sg_path_init();
     // pathInit(altpath);
     sg_clock_init();
-    Rand::global.seed();
+    sg_rand_seed(&sg_rand_global, 1);
 }
 
 int main(int argc, char *argv[])

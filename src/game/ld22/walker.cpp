@@ -2,7 +2,7 @@
 #include "walker.hpp"
 #include "tileset.hpp"
 #include "item.hpp"
-#include "sys/rand.hpp"
+#include "impl/rand.h"
 #include <stdio.h>
 #include <cmath>
 #include <limits>
@@ -114,15 +114,15 @@ void Walker::advance()
     switch (newanim) {
     case AStand:
         if (atime <= 0) {
-            x = Rand::girand() % 6;
+            x = sg_girand() % 6;
             m_sprite = 0 + (x >= 3 ? x - 3 + 0x80 : x);
-            m_animtime = 20 + (Rand::girand() % 40);
+            m_animtime = 20 + (sg_girand() % 40);
         }
         break;
 
     case AFall:
         if (atime <= 0) {
-            x = Rand::girand() % 16;
+            x = sg_girand() % 16;
             m_sprite = 16 + (x >= 8 ? x - 8 + 0x80 : x);
             m_animtime = m_ys > 0 ? 10 : 2;
         }

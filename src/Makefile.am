@@ -55,6 +55,8 @@ libmimp_a_SOURCES = \
 	impl/pixbuf.c \
 	impl/pixbuf.h \
 	impl/pixbuf_loadimage.c \
+	impl/rand.c \
+	impl/rand.h \
 	impl/resource.c \
 	impl/resource.h \
 	impl/strbuf.c \
@@ -71,8 +73,6 @@ libmsys_a_SOURCES = \
 	sys/error.hpp \
 	sys/file.cpp \
 	sys/file.hpp \
-	sys/rand.cpp \
-	sys/rand.hpp \
 	sys/sharedref.hpp \
 	sys/stringarray.cpp \
 	sys/stringarray.hpp \
