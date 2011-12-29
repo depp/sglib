@@ -4,8 +4,8 @@
 #include "client/ui/event.hpp"
 #include "client/ui/window.hpp"
 #include "client/ui/menu.hpp"
-#include "client/keyboard/keycode.h"
-#include "client/keyboard/keytable.h"
+#include "impl/kbd/keycode.h"
+#include "impl/kbd/keytable.h"
 #include "impl/lfile.h"
 #include "impl/cvar.h"
 #include <gtk/gtk.h>

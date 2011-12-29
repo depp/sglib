@@ -2,7 +2,7 @@
 #include "client/ui/menu.hpp"
 #include "client/ui/event.hpp"
 #include "client/ui/window.hpp"
-#include "client/keyboard/keycode.h"
+#include "impl/kbd/keycode.h"
 #include "world.hpp"
 #include "player.hpp"
 #include "scenery.hpp"

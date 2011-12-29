@@ -5,7 +5,7 @@
 #include "obstacle.hpp"
 #include "client/model.hpp"
 #include "client/ui/event.hpp"
-#include "client/keyboard/keycode.h"
+#include "impl/kbd/keycode.h"
 #include "player.hpp"
 #include <string>
 namespace Tank {

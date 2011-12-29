@@ -45,6 +45,11 @@ libmimp_a_SOURCES = \
 	impl/error.h \
 	impl/hash.c \
 	impl/hash.h \
+	impl/kbd/keycode.h \
+	impl/kbd/keyid.c \
+	impl/kbd/keyid.h \
+	impl/kbd/keytable.h \
+	impl/kbd/keytable_evdev.c \
 	impl/lfile.c \
 	impl/lfile.h \
 	impl/lpath.c \
@@ -86,11 +91,6 @@ libmgfx_a_SOURCES = \
 	client/bitmapfont.hpp \
 	client/color.hpp \
 	client/color.hpp \
-	client/keyboard/keycode.h \
-	client/keyboard/keyid.c \
-	client/keyboard/keyid.h \
-	client/keyboard/keytable.h \
-	client/keyboard/keytable_evdev.c \
 	client/letterbox.cpp \
 	client/letterbox.hpp \
 	client/model.cpp \
