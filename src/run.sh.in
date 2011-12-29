@@ -1,6 +1,24 @@
 #!@shell@
+
+# Run the game from the build tree, setting configuration variables so
+# the game can locate resources.  If the first argument is "gdb", then
+# GDB is invoked to run the game.
+
+# 'make' will substitute these variables
 SRCDIR="@abs_top_srcdir@"
 BUILDDIR="@abs_top_builddir@"
-GAME="@abs_top_builddir@"/src/game-bin
 
-exec "$GAME" -d path.data-path="$SRCDIR/data" "$@"
+GAME="$BUILDDIR/src/game-bin"
+PATHVAR="path.data-path=$SRCDIR/data"
+GDB=gdb
+
+case "$1" in
+    gdb)
+	shift
+	exec "$GDB" --args "$GAME" -d "$PATHVAR" "$@"
+	;;
+
+    *)
+	exec "$GAME" -d "$PATHVAR" "$@"
+	;;
+esac
