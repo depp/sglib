@@ -31,6 +31,8 @@ extern "C" {
 extern "C" {
 #endif
 
+struct sg_error;
+
 extern const struct sg_error_domain SG_ERROR_OPENGL;
 
 void
