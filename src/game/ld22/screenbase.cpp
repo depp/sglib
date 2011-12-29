@@ -69,7 +69,7 @@ void ScreenBase::loadLevel()
 
 void ScreenBase::draw()
 {
-    m_letterbox.setOSize(window().width(), window().height());
+    m_letterbox.setOSize(UI::Window::width, UI::Window::height);
     m_letterbox.enable();
 
     glMatrixMode(GL_PROJECTION);

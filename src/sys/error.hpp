@@ -26,6 +26,11 @@ public:
     {
         return m_ptr->domain == &SG_ERROR_NOTFOUND;
     }
+
+    sg_error *get() const
+    {
+        return m_ptr;
+    }
 };
 
 #endif

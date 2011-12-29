@@ -41,8 +41,10 @@ libmimp_a_SOURCES = \
 	impl/cvar.h \
 	impl/dict.c \
 	impl/dict.h \
+	impl/entry.h \
 	impl/error.c \
 	impl/error.h \
+	impl/event.h \
 	impl/hash.c \
 	impl/hash.h \
 	impl/kbd/keycode.h \
@@ -107,7 +109,6 @@ libmgfx_a_SOURCES = \
 	client/ui/action.hpp \
 	client/ui/button.cpp \
 	client/ui/button.hpp \
-	client/ui/event.hpp \
 	client/ui/geometry.hpp \
 	client/ui/keymanager.cpp \
 	client/ui/keymanager.hpp \
@@ -208,4 +209,4 @@ game_bin_CXXFLAGS = $(common_CXXFLAGS) @GTK_CFLAGS@ @GTKGLEXT_CFLAGS@
 game_bin_LDFLAGS = @GTK_LIBS@ @GTKGLEXT_LIBS@ @PANGOCAIRO_LIBS@
 game_bin_LDADD = libmgfx.a libmtype.a libmsys.a libmimp.a
 game_bin_SOURCES = \
-	gtk/main.cpp
+	gtk/main.c

@@ -48,7 +48,7 @@ void GameScreen::handleEvent(UI::Event const &evt)
     switch (evt.type) {
     case UI::KeyDown:
         if (evt.keyEvent().key == KEY_Escape) {
-            window().setScreen(new UI::Menu);
+            UI::Window::setScreen(new UI::Menu);
             break;
         }
     case UI::KeyUp:
@@ -93,7 +93,7 @@ void GameScreen::update(unsigned int ticks)
 
 void GameScreen::draw()
 {
-    world_->draw(window().width(), window().height());
+    world_->draw(UI::Window::width, UI::Window::height);
     /*
     curfr = framecount_;
     if (curfr == 64) {

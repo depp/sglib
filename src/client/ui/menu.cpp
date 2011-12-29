@@ -64,7 +64,7 @@ void UI::Menu::draw()
 
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    glOrtho(0.0, window().width(), 0.0, window().height(), -1.0, 1.0);
+    glOrtho(0.0, Window::width, 0.0, Window::height, -1.0, 1.0);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 
@@ -98,20 +98,20 @@ UI::Widget *UI::Menu::traceMouse(UI::Point pt)
 
 void UI::Menu::tankGame()
 {
-    window().setScreen(new Tank::GameScreen);
+    Window::setScreen(new Tank::GameScreen);
 }
 
 void UI::Menu::spaceGame()
 {
-    window().setScreen(new Space::GameScreen);
+    Window::setScreen(new Space::GameScreen);
 }
 
 void UI::Menu::ld22()
 {
-    window().setScreen(new LD22::Screen);
+    Window::setScreen(new LD22::Screen);
 }
 
 void UI::Menu::quit()
 {
-    window().close();
+    Window::close();
 }
