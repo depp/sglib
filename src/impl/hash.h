@@ -1,5 +1,5 @@
-#ifndef HASH_H
-#define HASH_H
+#ifndef IMPL_HASH_H
+#define IMPL_HASH_H
 #include <stddef.h>
 #ifdef __cplusplus
 extern "C" {
