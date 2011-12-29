@@ -1,3 +1,4 @@
+#include "sys/error.hpp"
 #include "model.hpp"
 #include "color.hpp"
 
@@ -5,12 +6,19 @@ void Model::draw(Color tcolor, Color lcolor) const
 {
     (void) &tcolor;
     (void) &lcolor;
+    if (!m_ptr)
+        return;
+    sg_model_draw(m_ptr);
 }
 
 Model::Ref Model::file(const char *path)
 {
-    (void) path;
-    return Ref(0);
+    sg_model *ptr;
+    sg_error *err = NULL;
+    ptr = sg_model_new(path, &err);
+    if (!ptr)
+        throw error(&err);
+    return Ref(ptr);
 }
 
 Model::Ref Model::pyramid()

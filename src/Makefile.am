@@ -46,6 +46,8 @@ libmimp_a_SOURCES = \
 	impl/lfile.c \
 	impl/lfile.h \
 	impl/lpath.c \
+	impl/model.c \
+	impl/model.h \
 	impl/opengl.c \
 	impl/opengl.h \
 	impl/pixbuf.c \

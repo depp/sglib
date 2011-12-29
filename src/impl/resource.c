@@ -1,11 +1,12 @@
 #include "dict.h"
 #include "error.h"
+#include "model.h"
 #include "resource.h"
 #include "texture.h"
 #include <assert.h>
 #include <stdlib.h>
 
-#define RTYPE_COUNT ((int) SG_RSRC_TEXTURE + 1)
+#define RTYPE_COUNT ((int) SG_RSRC_MODEL + 1)
 
 struct dict sg_resources[RTYPE_COUNT];
 
@@ -55,6 +56,10 @@ sg_resource_load(struct sg_resource *rs)
     switch (rs->type) {
     case SG_RSRC_TEXTURE:
         r = sg_texture_load((struct sg_texture *) rs, &err);
+        break;
+
+    case SG_RSRC_MODEL:
+        r = sg_model_load((struct sg_model *) rs, &err);
         break;
 
     default:

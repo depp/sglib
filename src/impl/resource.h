@@ -14,7 +14,8 @@ extern "C" {
 struct sg_error;
 
 typedef enum {
-    SG_RSRC_TEXTURE
+    SG_RSRC_TEXTURE,
+    SG_RSRC_MODEL
 } sg_resource_type_t;
 
 enum {
