@@ -13,20 +13,18 @@
 *.pbxuser
 
 # Autotools
-.Tpo
-.deps
-.dirstamp
-Makefile
-Makefile.in
-/aclocal.m4
-/autom4te.cache
-/autoscan.log
-/config.log
-/config.status
-/configure
-/depcomp
-/install-sh
-/missing
+#.Tpo
+#.deps
+#.dirstamp
+#/aclocal.m4
+#/autom4te.cache
+#/autoscan.log
+#/config.log
+#/config.status
+#/configure
+#/depcomp
+#/install-sh
+#/missing
 
 # Microsoft Visual Studio
 *.sdf
