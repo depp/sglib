@@ -3,9 +3,8 @@
 // Each display has a lock for accessing the OpenGL context and window object.  There is no need to obtain a lock, all calls are safe to call from the main thread and -update is safe to call from any thread.
 #import <Cocoa/Cocoa.h>
 #import <CoreVideo/CoreVideo.h>
-#import "client/ui/window.hpp"
-#import "client/ui/event.hpp"
 #import "GApplication.h"
+#import "impl/event.h"
 #import <pthread.h>
 
 @class GView;
@@ -19,7 +18,6 @@ typedef enum {
 
 @interface GDisplay : NSObject <NSLocking, GEventCapture> {
     // Always valid
-    UI::Window *uiwindow_;
     pthread_mutex_t lock_;
     BOOL modeChange_;
 
@@ -44,17 +42,15 @@ typedef enum {
     CGDirectDisplayID display_;
 }
 
-- (id)initWithScreen:(UI::Screen *)screen;
-
 - (void)setMode:(GDisplayMode)mode;
 - (void)showWindow:(id)sender;
 - (void)showFullScreen:(id)sender;
 
-- (void)handleUIEvent:(UI::Event *)event;
+- (void)handleUIEvent:(union sg_event *)event;
 
 // Safe to call from any thread (all other methods must be called from main thread)
 - (void)update;
 
 @end
 
-void GDisplayKeyEvent(GDisplay *w, NSEvent *e, UI::EventType t);
+void GDisplayKeyEvent(GDisplay *w, NSEvent *e, sg_event_type_t t);

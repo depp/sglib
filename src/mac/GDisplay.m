@@ -3,9 +3,10 @@
 #import "GView.h"
 #import "GWindow.h"
 #import "GController.h"
-#import "sys/resource.hpp"
-#import "client/keyboard/keyid.h"
-#import "client/keyboard/keytable.h"
+#import "impl/entry.h"
+#import "impl/kbd/keyid.h"
+#import "impl/kbd/keytable.h"
+#import "impl/resource.h"
 
 @interface GDisplay (Private)
 
@@ -26,7 +27,7 @@ static bool isWindowedMode(GDisplayMode mode)
 }
 
 /* C++ interface */
-
+#if 0
 class MacWindow : public UI::Window {
     GDisplay *window;
 
@@ -42,14 +43,16 @@ void MacWindow::close()
 {
     [window queueModeChange:GDisplayNone];
 }
-
+#endif
 /* Event handling */
 
-void GDisplayKeyEvent(GDisplay *w, NSEvent *e, UI::EventType t)
+void GDisplayKeyEvent(GDisplay *w, NSEvent *e, sg_event_type_t t)
 {
     int ncode = MAC_NATIVE_TO_HID[[e keyCode] & 0x7F];
-    UI::KeyEvent uevent(t, ncode);
-    [w handleUIEvent:&uevent];
+    struct sg_event_key evt;
+    evt.type = t;
+    evt.key = ncode;
+    [w handleUIEvent:(union sg_event *) &evt];
 }
 
 /* Rendering callback */
@@ -70,7 +73,7 @@ static CVReturn cvCallback(CVDisplayLinkRef displayLink, const CVTimeStamp *now,
 
 /* Private methods */
 
-static void handleMouse(GDisplay *d, NSEvent *e, UI::EventType t, int button)
+static void handleMouse(GDisplay *d, NSEvent *e, sg_event_type_t t, int button)
 {
     // FIXME need to translate if there are multiple screens
     if ([e window]) {
@@ -78,8 +81,12 @@ static void handleMouse(GDisplay *d, NSEvent *e, UI::EventType t, int button)
         return;
     }
     NSPoint pt = [e locationInWindow];
-    UI::MouseEvent uevent(t, button, pt.x, pt.y);
-    [d handleUIEvent:&uevent];
+    struct sg_event_mouse evt;
+    evt.type = t;
+    evt.button = button;
+    evt.x = pt.x;
+    evt.y = pt.y;
+    [d handleUIEvent:(union sg_event *) &evt];
 }
 
 @implementation GDisplay (Private)
@@ -133,7 +140,7 @@ static void handleMouse(GDisplay *d, NSEvent *e, UI::EventType t, int button)
         [prevContext_ release];
         prevContext_ = nil;
         if (!cxt)
-            Resource::resetGraphics();
+            sg_resource_dirtytype(SG_RSRC_TEXTURE);
     }
     if (!cxt) {
         cxt = [[NSOpenGLContext alloc] initWithFormat:fmt shareContext:nil];
@@ -216,7 +223,7 @@ static void handleMouse(GDisplay *d, NSEvent *e, UI::EventType t, int button)
 
 @implementation GDisplay
 
-- (id)initWithScreen:(UI::Screen *)screen {
+- (id)init {
     [super init];
 
     pthread_mutexattr_t attr;
@@ -229,9 +236,6 @@ static void handleMouse(GDisplay *d, NSEvent *e, UI::EventType t, int button)
     if (r) goto error;
     r = pthread_mutexattr_destroy(&attr);
     if (r) goto error;
-
-    uiwindow_ = new MacWindow(self);
-    uiwindow_->setScreen(screen);
 
     return self;
 
@@ -348,10 +352,9 @@ error:
         [self showWindow:sender];
 }
 
-- (void)handleUIEvent:(UI::Event *)event
-{
+- (void)handleUIEvent:(union sg_event *)event {
     [self lock];
-    uiwindow_->handleEvent(*event);
+    sg_game_event(event);
     [self unlock];
 }
 
@@ -366,9 +369,13 @@ error:
     if (frameChanged_) {
         [context_ update];
         glViewport(0, 0, width_, height_);
-        uiwindow_->setSize(width_, height_);
+        struct sg_event_resize evt;
+        evt.type = SG_EVENT_RESIZE;
+        evt.width = width_;
+        evt.height = height_;
+        sg_game_event((union sg_event *) &evt);
     }
-    uiwindow_->draw();
+    sg_game_draw(sg_clock_get());
     [context_ flushBuffer];
     [self unlock];
 }
@@ -394,34 +401,34 @@ error:
 - (BOOL)handleEvent:(NSEvent *)event {
     switch ([event type]) {
     case NSLeftMouseDown:
-        handleMouse(self, event, UI::MouseDown, UI::ButtonLeft);
+        handleMouse(self, event, SG_EVENT_MDOWN, SG_BUTTON_LEFT);
         return YES;
 
     case NSLeftMouseUp:
-        handleMouse(self, event, UI::MouseUp, UI::ButtonLeft);
+        handleMouse(self, event, SG_EVENT_MUP, SG_BUTTON_LEFT);
         return YES;
 
     case NSRightMouseDown:
-        handleMouse(self, event, UI::MouseDown, UI::ButtonRight);
+        handleMouse(self, event, SG_EVENT_MDOWN, SG_BUTTON_RIGHT);
         return YES;
 
     case NSRightMouseUp:
-        handleMouse(self, event, UI::MouseUp, UI::ButtonRight);
+        handleMouse(self, event, SG_EVENT_MUP, SG_BUTTON_RIGHT);
         return YES;
 
     case NSOtherMouseDown:
-        handleMouse(self, event, UI::MouseDown, UI::ButtonMiddle);
+        handleMouse(self, event, SG_EVENT_MDOWN, SG_BUTTON_MIDDLE);
         return YES;
 
     case NSOtherMouseUp:
-        handleMouse(self, event, UI::MouseUp, UI::ButtonMiddle);
+        handleMouse(self, event, SG_EVENT_MUP, SG_BUTTON_MIDDLE);
         return YES;
 
     case NSMouseMoved:
     case NSLeftMouseDragged:
     case NSRightMouseDragged:
     case NSOtherMouseDragged:
-        handleMouse(self, event, UI::MouseMove, -1);
+        handleMouse(self, event, SG_EVENT_MMOVE, -1);
         return YES;
 
     // case NSMouseEntered:
@@ -430,11 +437,11 @@ error:
     case NSKeyDown:
         if ([event modifierFlags] & NSCommandKeyMask)
             return NO;
-        GDisplayKeyEvent(self, event, UI::KeyDown);
+        GDisplayKeyEvent(self, event, SG_EVENT_KDOWN);
         return YES;
 
     case NSKeyUp:
-        GDisplayKeyEvent(self, event, UI::KeyUp);
+        GDisplayKeyEvent(self, event, SG_EVENT_KUP);
         return YES;
 
     // case NSFlagsChanged:

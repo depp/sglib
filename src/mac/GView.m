@@ -1,11 +1,15 @@
 #import "GView.h"
 #import "GDisplay.h"
 
-static void handleMouse(GView *v, NSEvent *e, UI::EventType t, int button)
+static void handleMouse(GView *v, NSEvent *e, sg_event_type_t t, int button)
 {
     NSPoint pt = [v convertPoint:[e locationInWindow] fromView:nil];
-    UI::MouseEvent uevent(t, button, pt.x, pt.y);
-    [v->display_ handleUIEvent:&uevent];
+    struct sg_event_mouse evt;
+    evt.type = t;
+    evt.button = button;
+    evt.x = pt.x;
+    evt.y = pt.y;
+    [v->display_ handleUIEvent:(union sg_event *) &evt];
 }
 
 @implementation GView
@@ -20,37 +24,37 @@ static void handleMouse(GView *v, NSEvent *e, UI::EventType t, int button)
 }
 
 - (void)mouseDown:(NSEvent *)theEvent {
-    handleMouse(self, theEvent, UI::MouseDown, UI::ButtonLeft);
+    handleMouse(self, theEvent, SG_EVENT_MDOWN, SG_BUTTON_LEFT);
 }
 
 - (void)rightMouseDown:(NSEvent *)theEvent {
-    handleMouse(self, theEvent, UI::MouseDown, UI::ButtonRight);
+    handleMouse(self, theEvent, SG_EVENT_MDOWN, SG_BUTTON_RIGHT);
 }
 
 // FIXME: add support for other buttons
 - (void)otherMouseDown:(NSEvent *)theEvent {
-    handleMouse(self, theEvent, UI::MouseDown, UI::ButtonMiddle);
+    handleMouse(self, theEvent, SG_EVENT_MDOWN, SG_BUTTON_MIDDLE);
 }
 
 - (void)mouseUp:(NSEvent *)theEvent {
-    handleMouse(self, theEvent, UI::MouseUp, UI::ButtonLeft);
+    handleMouse(self, theEvent, SG_EVENT_MUP, SG_BUTTON_LEFT);
 }
 
 - (void)rightMouseUp:(NSEvent *)theEvent {
-    handleMouse(self, theEvent, UI::MouseUp, UI::ButtonRight);
+    handleMouse(self, theEvent, SG_EVENT_MUP, SG_BUTTON_RIGHT);
 }
 
 // FIXME
 - (void)otherMouseUp:(NSEvent *)theEvent {
-    handleMouse(self, theEvent, UI::MouseUp, UI::ButtonMiddle);
+    handleMouse(self, theEvent, SG_EVENT_MUP, SG_BUTTON_MIDDLE);
 }
 
 - (void)mouseMoved:(NSEvent *)theEvent {
-    handleMouse(self, theEvent, UI::MouseMove, -1);
+    handleMouse(self, theEvent, SG_EVENT_MMOVE, -1);
 }
 
 - (void)mouseDragged:(NSEvent *)theEvent {
-    handleMouse(self, theEvent, UI::MouseMove, -1);
+    handleMouse(self, theEvent, SG_EVENT_MMOVE, -1);
 }
 
 - (void)scrollWheel:(NSEvent *)theEvent {
@@ -58,11 +62,11 @@ static void handleMouse(GView *v, NSEvent *e, UI::EventType t, int button)
 }
 
 - (void)rightMouseDragged:(NSEvent *)theEvent {
-    handleMouse(self, theEvent, UI::MouseMove, -1);
+    handleMouse(self, theEvent, SG_EVENT_MMOVE, -1);
 }
 
 - (void)otherMouseDragged:(NSEvent *)theEvent {
-    handleMouse(self, theEvent, UI::MouseMove, -1);
+    handleMouse(self, theEvent, SG_EVENT_MMOVE, -1);
 }
 
 - (void)mouseEntered:(NSEvent *)theEvent {
@@ -74,11 +78,11 @@ static void handleMouse(GView *v, NSEvent *e, UI::EventType t, int button)
 }
 
 - (void)keyDown:(NSEvent *)theEvent {
-    GDisplayKeyEvent(display_, theEvent, UI::KeyDown);
+    GDisplayKeyEvent(display_, theEvent, SG_EVENT_KDOWN);
 }
 
 - (void)keyUp:(NSEvent *)theEvent {
-    GDisplayKeyEvent(display_, theEvent, UI::KeyUp);
+    GDisplayKeyEvent(display_, theEvent, SG_EVENT_KUP);
 }
 
 - (void)flagsChanged:(NSEvent *)theEvent {
