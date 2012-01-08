@@ -16,13 +16,31 @@ CXXWARN = -Wall -Wextra -Wpointer-arith -Wno-sign-compare
 LDFLAGS =
 LIBS =
 
-GTK_CFLAGS := $(shell pkg-config --cflags gtk+-2.0 gtkglext-1.0)
-GTK_LIBS := $(shell pkg-config --libs gtk+-2.0 gtkglext-1.0)
-PNG_CFLAGS := $(shell pkg-config --cflags libpng)
-PNG_LIBS := $(shell pkg-config --libs libpng)
-JPEG_CFLAGS :=
-JPEG_LIBS := -ljpeg
-GL_LIBS := -lGL -lGLU
+ifeq ($(UNAME_S),Linux)
+	HAVE_GTK := $(shell sh -c 'pkg-config gtk+-2.0 gtkglext-1.0 2>/dev/null && echo yes')
+	ifdef HAVE_GTK
+		GTK_CFLAGS := $(shell pkg-config --cflags gtk+-2.0 gtkglext-1.0)
+		GTK_LIBS := $(shell pkg-config --libs gtk+-2.0 gtkglext-1.0)
+	endif
+	HAVE_LIBPNG := $(shell sh -c 'pkg-config libpng 2>/dev/null && echo yes')
+	ifdef HAVE_LIBPNG
+		PNG_CFLAGS := -DHAVE_LIBPNG $(shell pkg-config --cflags libpng)
+		PNG_LIBS := $(shell pkg-config --libs libpng)
+	endif
+	HAVE_LIBJPEG := yes
+	JPEG_CFLAGS := -DHAVE_LIBJPEG
+	JPEG_LIBS := -ljpeg
+	IMAGE_CFLAGS := $(PNG_CFLAGS) $(JPEG_CFLAGS)
+	IMAGE_LIBS := $(PNG_LIBS) $(JPEG_LIBS)
+	GL_LIBS := -lGL -lGLU
+endif
+ifeq ($(UNAME_S),Darwin)
+	HAVE_COCOA := yes
+	IMAGE_CFLAGS := -DHAVE_COREGRAPHICS -F/System/Library/Frameworks/ApplicationServices.framework/Frameworks
+	IMAGE_LIBS := -framework ApplicationServices
+	GL_LIBS := -framework OpenGL
+	COCOA_LIBS := -framework AppKit -framework Foundation -framework CoreVideo -framework Carbon
+endif
 
 -include ../config.mak
 
@@ -75,6 +93,8 @@ IMPL_OBJS += impl/error.o
 IMPL_OBJS += impl/hash.o
 IMPL_OBJS += impl/kbd/keyid.o
 IMPL_OBJS += impl/kbd/keytable_evdev.o
+IMPL_OBJS += impl/kbd/keytable_mac.o
+IMPL_OBJS += impl/kbd/keytable_win.o
 IMPL_OBJS += impl/lfile.o
 IMPL_OBJS += impl/lpath.o
 IMPL_OBJS += impl/model.o
@@ -85,8 +105,7 @@ IMPL_OBJS += impl/rand.o
 IMPL_OBJS += impl/resource.o
 IMPL_OBJS += impl/strbuf.o
 IMPL_OBJS += impl/texture.o
-impl/pixbuf_loadimage.o: BASE_CFLAGS += $(PNG_CFLAGS) $(JPEG_CFLAGS)
-impl/pixbuf_loadimage.o: BASE_CPPFLAGS += -DHAVE_LIBPNG -DHAVE_LIBJPEG
+impl/pixbuf_loadimage.o: BASE_CFLAGS += $(IMAGE_CFLAGS)
 
 SYS_OBJS =
 SYS_OBJS += sys/error.o
@@ -155,8 +174,9 @@ GAME_OBJS = $(GAME_LD22_OBJS) $(GAME_TANK_OBJS) $(GAME_SPACE_OBJS)
 
 C_OBJS = $(GTK_OBJS) $(IMPL_OBJS)
 CXX_OBJS = $(SYS_OBJS) $(CLIENT_OBJS) $(GAME_OBJS)
-OBJC_OBJS =
+OBJC_OBJS = $(MAC_OBJS)
 
+BASE_OBJS = $(IMPL_OBJS) $(CXX_OBJS)
 ALL_OBJS = $(C_OBJS) $(CXX_OBJS) $(OBJC_OBJS)
 
 ########################################
@@ -184,7 +204,7 @@ endif
 ifndef V
 	QUIET_CC   = @echo '   ' CC $<;
 	QUIET_CXX  = @echo '   ' CXX $<;
-	QUIET_OBJC = @echo '   ' CXX $<;
+	QUIET_OBJC = @echo '   ' OBJC $<;
 	QUIET_LINK = @echo '   ' LD $@;
 endif
 
@@ -199,18 +219,31 @@ $(CXX_OBJS): %.o: %.cpp $(dep_dirs_missing)
 $(OBJC_OBJS): %.o: %.m $(dep_dirs_missing)
 	$(QUIET_OBJC)$(CC) -o $@ -c $(dep_args) $(ALL_CPPFLAGS) $(ALL_OBJCFLAGS) $<
 
+ifdef HAVE_GTK
+targets += game-bin
+
 game-bin: BASE_LIBS += $(GTK_LIBS)
 game-bin: BASE_LIBS += $(GL_LIBS) $(PNG_LIBS) $(JPEG_LIBS)
 
-game-bin: $(ALL_OBJS)
-	$(QUIET_LINK)$(CXX) -o $@ $(ALL_OBJS) $(ALL_LIBS)
+game-bin: $(BASE_OBJS) $(GTK_OBJS)
+	$(QUIET_LINK)$(CXX) -o $@ $^ $(ALL_LIBS)
+endif
+
+ifdef HAVE_COCOA
+targets += game-mac
+
+game-mac: BASE_LIBS += $(GL_LIBS) $(COCOA_LIBS)
+
+game-mac: $(BASE_OBJS) $(MAC_OBJS)
+	$(QUIET_LINK)$(CXX) -o $@ $^ $(ALL_LIBS)
+endif
 
 ########################################
 
-all: game-bin
+all: $(targets)
 
 clean:
-	$(RM) game-bin $(ALL_OBJS)
+	$(RM) $(targets) $(ALL_OBJS)
 	$(RM) -r $(dep_dirs)
 
 .PHONY: all clean
