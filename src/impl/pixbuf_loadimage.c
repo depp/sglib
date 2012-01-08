@@ -8,6 +8,7 @@
 #include "lfile.h"
 #include "pixbuf.h"
 #include <stdlib.h>
+#include <string.h>
 
 #if defined(HAVE_COREGRAPHICS)
 #include <CoreGraphics/CoreGraphics.h>

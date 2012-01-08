@@ -11,7 +11,7 @@ public:
     explicit error(sg_error **e) throw();
 
     error(const error &e) throw()
-        : m_ptr(e.m_ptr)
+        : exception(e), m_ptr(e.m_ptr)
     {
         m_ptr->refcount++;
     }

@@ -288,20 +288,19 @@ nomem:
 static int
 sg_path_getexepath(struct sg_strbuf *b)
 {
-    CFBundleRef main;
+    CFBundleRef bundle;
     CFURLRef url = NULL;
     Boolean r;
-    unsigned l;
     int ret = -1;
     size_t rlen = PATH_MAX > 256 ? PATH_MAX : 256;
 
     sg_strbuf_clear(b);
     sg_strbuf_reserve(b, rlen - 1);
 
-    main = CFBundleGetMainBundle();
-    if (!main)
+    bundle = CFBundleGetMainBundle();
+    if (!bundle)
         goto done;
-    url = CFBundleCopyBundleURL(main);
+    url = CFBundleCopyBundleURL(bundle);
     if (!url)
         goto done;
     r = CFURLGetFileSystemRepresentation(

@@ -55,7 +55,7 @@ enum {
 void Level::load(int num)
 {
     std::string path = pathForLevel(num);
-    FBuffer b(path.c_str(), 0, -1);
+    FBuffer b(path.c_str(), 0, (size_t) -1);
     const unsigned char *p = b.getUC(), *e = p + b.size();
 
     clear();

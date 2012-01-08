@@ -38,7 +38,7 @@ configfile_read(struct configfile *f, const char *path)
     int r = 0, lineno, warning = 0, quoted, c;
     const char *msg;
     char *buf = NULL, *bptr, *sstr, *nstr, *vstr;
-    size_t bufsize = 0, nbufsize;
+    size_t bufsize = 0;
 
     r = sg_file_get(path, 0, &fbuf, MAX_CONFIGFILE, NULL);
     if (r) {
@@ -159,11 +159,11 @@ variable:
     len = slen + nlen + vlen + 4;
     if (bufsize < len) {
         if (!bufsize)
-            nbufsize = 64;
+            bufsize = 64;
         while (bufsize < len)
             bufsize *= 2;
         free(buf);
-        buf = malloc(nbufsize);
+        buf = malloc(bufsize);
         if (!buf) {
             r = ENOMEM;
             goto done;

@@ -6,27 +6,20 @@
 *.tar.bz2
 *.tar.xz
 *.zip
+.deps
 /run.sh
 
 # Apple's Xcode
 *.mode1v3
 *.pbxuser
 
-# Autotools
-.Tpo
-.deps
-.dirstamp
-Makefile
-Makefile.in
+# Autoconf
 /aclocal.m4
 /autom4te.cache
-/autoscan.log
 /config.log
+/config.mak
 /config.status
 /configure
-/depcomp
-/install-sh
-/missing
 
 # Microsoft Visual Studio
 *.sdf
