@@ -30,6 +30,18 @@ GL_LDFLAGS = -lGL -lGLU
 
 ########################################
 
+dep_check = $(shell $(CC) $(ALL_CFLAGS) \
+	-c -MF /dev/null -MMD -MP -x c /dev/null -o /dev/null 2>&1; \
+	echo $$?)
+
+ifeq ($(dep_check),0)
+COMPUTE_DEPS = yes
+else
+COMPUTE_DEPS = no
+endif
+
+########################################
+
 GTK_OBJS =
 GTK_OBJS += gtk/main.o
 
@@ -141,6 +153,26 @@ $(GTK_OBJS): BASE_CFLAGS += $(GTK_CFLAGS)
 
 ########################################
 
+ifeq ($(COMPUTE_DEPS),yes)
+dep_files := $(foreach f,$(ALL_OBJS),$(dir $f).deps/$(notdir $f).d)
+dep_dirs := $(addsuffix .deps,$(sort $(dir $(ALL_OBJS))))
+$(dep_dirs):
+	@mkdir -p $@
+dep_dirs_missing := $(filter-out $(wildcard $(dep_dirs)), $(dep_dirs))
+dep_files_present := $(wildcard $(dep_files))
+ifneq ($(dep_files_present),)
+include $(dep_files_present)
+endif
+
+dep_file = $(dir $@).deps/$(notdir $@).d
+dep_args = -MF $(dep_file) -MMD -MP
+else
+dep_dirs_missing =
+dep_args =
+endif
+
+########################################
+
 ifndef V
 	QUIET_CC   = @echo '   ' CC $<;
 	QUIET_CXX  = @echo '   ' CXX $<;
@@ -150,14 +182,17 @@ endif
 
 ########################################
 
-$(C_OBJS): %.o: %.c
-	$(QUIET_CC)$(CC) -o $@ -c $(ALL_CPPFLAGS) $(ALL_CFLAGS) $<
+$(C_OBJS): %.o: %.c $(dep_dirs_missing)
+	$(QUIET_CC)$(CC) -o $@ -c \
+		$(dep_args) $(ALL_CPPFLAGS) $(ALL_CFLAGS) $<
 
-$(CXX_OBJS): %.o: %.cpp
-	$(QUIET_CXX)$(CXX) -o $@ -c $(ALL_CPPFLAGS) $(ALL_CXXFLAGS) $<
+$(CXX_OBJS): %.o: %.cpp $(dep_dirs_missing)
+	$(QUIET_CXX)$(CXX) -o $@ -c \
+		$(dep_args) $(ALL_CPPFLAGS) $(ALL_CXXFLAGS) $<
 
-$(OBJC_OBJS): %.o: %.m
-	$(QUIET_OBJC)$(CC) -o $@ -c $(ALL_CPPFLAGS) $(ALL_OBJCFLAGS) $<
+$(OBJC_OBJS): %.o: %.m $(dep_dirs_missing)
+	$(QUIET_OBJC)$(CC) -o $@ -c \
+		$(dep_args) $(ALL_CPPFLAGS) $(ALL_OBJCFLAGS) $<
 
 game-bin: BASE_LDFLAGS += $(GTK_LDFLAGS)
 game-bin: BASE_LDFLAGS += $(GL_LDFLAGS) $(PNG_LDFLAGS) $(JPEG_LDFLAGS)
@@ -171,5 +206,6 @@ all: game-bin
 
 clean:
 	$(RM) game-bin $(ALL_OBJS)
+	$(RM) -r $(dep_dirs)
 
 .PHONY: all clean
