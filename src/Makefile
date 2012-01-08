@@ -1,32 +1,43 @@
 all:
 
-CWARN = -Wall -Wextra -Wpointer-arith -Wno-sign-compare \
-	-Wwrite-strings -Wstrict-prototypes -Wmissing-prototypes
-CXXWARN = -Wall -Wextra -Wpointer-arith -Wno-sign-compare
-CFLAGS = -g -O2
-CXXFLAGS = -g -O2
-
-ALL_CPPFLAGS = $(BASE_CPPFLAGS) $(CPPFLAGS)
-ALL_CFLAGS = $(BASE_CFLAGS) $(CWARN) $(CFLAGS)
-ALL_CXXFLAGS = $(BASE_CXXFLAGS) $(CXXWARN) $(CXXFLAGS)
-ALL_LDFLAGS = $(BASE_LDFLAGS) $(LDFLAGS)
+UNAME_S := $(shell sh -c 'uname -s 2>/dev/null || echo unknown')
+UNAME_M := $(shell sh -c 'uname -m 2>/dev/null || echo unknown')
 
 CC = gcc
 CXX = g++
 RM = rm -f
 
+CPPFLAGS =
+CFLAGS = -g -O2
+CXXFLAGS = -g -O2
+CWARN = -Wall -Wextra -Wpointer-arith -Wno-sign-compare \
+	-Wwrite-strings -Wstrict-prototypes -Wmissing-prototypes
+CXXWARN = -Wall -Wextra -Wpointer-arith -Wno-sign-compare
+LDFLAGS =
+LIBS =
+
+GTK_CFLAGS := $(shell pkg-config --cflags gtk+-2.0 gtkglext-1.0)
+GTK_LIBS := $(shell pkg-config --libs gtk+-2.0 gtkglext-1.0)
+PNG_CFLAGS := $(shell pkg-config --cflags libpng)
+PNG_LIBS := $(shell pkg-config --libs libpng)
+JPEG_CFLAGS :=
+JPEG_LIBS := -ljpeg
+GL_LIBS := -lGL -lGLU
+
+-include ../config.mak
+
+########################################
+
+ALL_CPPFLAGS = $(BASE_CPPFLAGS) $(CPPFLAGS)
+ALL_CFLAGS = $(BASE_CFLAGS) $(CWARN) $(CFLAGS)
+ALL_CXXFLAGS = $(BASE_CXXFLAGS) $(CXXWARN) $(CXXFLAGS)
+ALL_LDFLAGS = $(LDFLAGS)
+ALL_LIBS = $(BASE_LIBS) $(LIBS)
+
 BASE_CPPFLAGS = -I.
 BASE_CFLAGS =
 BASE_CXXFLAGS =
-BASE_LDFLAGS =
-
-GTK_CFLAGS = $(shell pkg-config --cflags gtk+-2.0 gtkglext-1.0)
-GTK_LDFLAGS = $(shell pkg-config --libs gtk+-2.0 gtkglext-1.0)
-PNG_CFLAGS = $(shell pkg-config --cflags libpng)
-PNG_LDFLAGS = $(shell pkg-config --libs libpng)
-JPEG_CFLAGS =
-JPEG_LDFLAGS = -ljpeg
-GL_LDFLAGS = -lGL -lGLU
+BASE_LIBS =
 
 ########################################
 
@@ -44,6 +55,7 @@ endif
 
 GTK_OBJS =
 GTK_OBJS += gtk/main.o
+$(GTK_OBJS): BASE_CFLAGS += $(GTK_CFLAGS)
 
 MAC_OBJS =
 MAC_OBJS += mac/GApplication.o
@@ -149,10 +161,6 @@ ALL_OBJS = $(C_OBJS) $(CXX_OBJS) $(OBJC_OBJS)
 
 ########################################
 
-$(GTK_OBJS): BASE_CFLAGS += $(GTK_CFLAGS)
-
-########################################
-
 ifeq ($(COMPUTE_DEPS),yes)
 dep_files := $(foreach f,$(ALL_OBJS),$(dir $f).deps/$(notdir $f).d)
 dep_dirs := $(addsuffix .deps,$(sort $(dir $(ALL_OBJS))))
@@ -183,22 +191,19 @@ endif
 ########################################
 
 $(C_OBJS): %.o: %.c $(dep_dirs_missing)
-	$(QUIET_CC)$(CC) -o $@ -c \
-		$(dep_args) $(ALL_CPPFLAGS) $(ALL_CFLAGS) $<
+	$(QUIET_CC)$(CC) -o $@ -c  $(dep_args) $(ALL_CPPFLAGS) $(ALL_CFLAGS) $<
 
 $(CXX_OBJS): %.o: %.cpp $(dep_dirs_missing)
-	$(QUIET_CXX)$(CXX) -o $@ -c \
-		$(dep_args) $(ALL_CPPFLAGS) $(ALL_CXXFLAGS) $<
+	$(QUIET_CXX)$(CXX) -o $@ -c $(dep_args) $(ALL_CPPFLAGS) $(ALL_CXXFLAGS) $<
 
 $(OBJC_OBJS): %.o: %.m $(dep_dirs_missing)
-	$(QUIET_OBJC)$(CC) -o $@ -c \
-		$(dep_args) $(ALL_CPPFLAGS) $(ALL_OBJCFLAGS) $<
+	$(QUIET_OBJC)$(CC) -o $@ -c $(dep_args) $(ALL_CPPFLAGS) $(ALL_OBJCFLAGS) $<
 
-game-bin: BASE_LDFLAGS += $(GTK_LDFLAGS)
-game-bin: BASE_LDFLAGS += $(GL_LDFLAGS) $(PNG_LDFLAGS) $(JPEG_LDFLAGS)
+game-bin: BASE_LIBS += $(GTK_LIBS)
+game-bin: BASE_LIBS += $(GL_LIBS) $(PNG_LIBS) $(JPEG_LIBS)
 
 game-bin: $(ALL_OBJS)
-	$(QUIET_LINK)$(CXX) -o $@ $(ALL_OBJS) $(ALL_LDFLAGS)
+	$(QUIET_LINK)$(CXX) -o $@ $(ALL_OBJS) $(ALL_LIBS)
 
 ########################################
 
