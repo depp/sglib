@@ -3,6 +3,8 @@ all:
 CWARN = -Wall -Wextra -Wpointer-arith -Wno-sign-compare \
 	-Wwrite-strings -Wstrict-prototypes -Wmissing-prototypes
 CXXWARN = -Wall -Wextra -Wpointer-arith -Wno-sign-compare
+CFLAGS = -g -O2
+CXXFLAGS = -g -O2
 
 ALL_CPPFLAGS = $(BASE_CPPFLAGS) $(CPPFLAGS)
 ALL_CFLAGS = $(BASE_CFLAGS) $(CWARN) $(CFLAGS)
