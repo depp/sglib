@@ -44,7 +44,7 @@ void ScreenBase::update(unsigned int ticks)
     } else {
         unsigned delta = ticks - m_tickref, frames;
         if (delta > LAG_THRESHOLD) {
-            fputs("===== LAG =====", stderr);
+            fputs("===== LAG =====\n", stderr);
             m_tickref = ticks;
             advance();
             m_delta = 0;
