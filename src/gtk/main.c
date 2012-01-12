@@ -247,6 +247,7 @@ init(int argc, char *argv[])
     GtkWidget *window, *area;
     GdkScreen *screen;
     GdkGLConfig *config;
+    GdkGeometry geom;
     int width = 640, height = 480, opt;
     unsigned mask, i;
     gboolean r;
@@ -269,15 +270,24 @@ init(int argc, char *argv[])
     sg_sys_init();
     sg_sys_getsize(&width, &height);
 
+    geom.min_width = 320;
+    geom.min_height = 180;
+    geom.min_aspect = 0.5;
+    geom.max_aspect = 2.0;
 
     window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+    area = gtk_drawing_area_new();
+    gtk_container_add(GTK_CONTAINER(window), area);
+
     gtk_window_set_title(GTK_WINDOW(window), "Game");
     gtk_window_set_default_size(GTK_WINDOW(window), width, height);
+    gtk_window_set_geometry_hints(
+        GTK_WINDOW(window), area, &geom,
+        GDK_HINT_MIN_SIZE | GDK_HINT_ASPECT);
+
     g_signal_connect_swapped(G_OBJECT(window), "destroy",
                              G_CALLBACK(handle_destroy), NULL);
 
-    area = gtk_drawing_area_new();
-    gtk_container_add(GTK_CONTAINER(window), area);
     gtk_widget_set_can_focus(area, TRUE);
     mask = GDK_EXPOSURE_MASK |
         GDK_KEY_PRESS_MASK | GDK_KEY_RELEASE_MASK |
