@@ -10,9 +10,7 @@
 #include "impl/event.h"
 #include "impl/kbd/keycode.h"
 #include "impl/kbd/keytable.h"
-// #include "impl/lfile.h"
 #include "impl/opengl.h"
-// #include "impl/rand.h"
 
 /* The Gtk headers generate a warning.  */
 #if defined(HAVE_DPUSH)
