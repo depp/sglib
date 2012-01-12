@@ -1,10 +1,10 @@
 #include "gamescreen.hpp"
 #include "client/ui/menu.hpp"
-#include "client/ui/window.hpp"
 #include "world.hpp"
 #include "obstacle.hpp"
 #include "client/model.hpp"
 #include "client/ui/event.hpp"
+#include "client/viewport.hpp"
 #include "impl/kbd/keycode.h"
 #include "player.hpp"
 #include <string>
@@ -48,7 +48,7 @@ void GameScreen::handleEvent(UI::Event const &evt)
     switch (evt.type) {
     case UI::KeyDown:
         if (evt.keyEvent().key == KEY_Escape) {
-            UI::Window::setScreen(new UI::Menu);
+            makeActive(new UI::Menu);
             break;
         }
     case UI::KeyUp:
@@ -91,9 +91,10 @@ void GameScreen::update(unsigned int ticks)
     world_->update(ticks);
 }
 
-void GameScreen::draw()
+void GameScreen::draw(Viewport &v, unsigned msec)
 {
-    world_->draw(UI::Window::width, UI::Window::height);
+    (void) msec;
+    world_->draw(v.width(), v.height());
     /*
     curfr = framecount_;
     if (curfr == 64) {

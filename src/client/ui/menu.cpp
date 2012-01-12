@@ -4,8 +4,8 @@
 #include "game/tank/gamescreen.hpp"
 #include "game/space/gamescreen.hpp"
 #include "event.hpp"
-#include "window.hpp"
 #include "client/opengl.hpp"
+#include "client/viewport.hpp"
 #include <stdio.h>
 
 UI::Menu::Menu()
@@ -57,14 +57,15 @@ void UI::Menu::update(unsigned int)
     }
 }
 
-void UI::Menu::draw()
+void UI::Menu::draw(Viewport &v, unsigned msec)
 {
+    (void) msec;
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    glOrtho(0.0, Window::width, 0.0, Window::height, -1.0, 1.0);
+    v.ortho();
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 
@@ -98,20 +99,20 @@ UI::Widget *UI::Menu::traceMouse(UI::Point pt)
 
 void UI::Menu::tankGame()
 {
-    Window::setScreen(new Tank::GameScreen);
+    makeActive(new Tank::GameScreen);
 }
 
 void UI::Menu::spaceGame()
 {
-    Window::setScreen(new Space::GameScreen);
+    makeActive(new Space::GameScreen);
 }
 
 void UI::Menu::ld22()
 {
-    Window::setScreen(new LD22::Screen);
+    makeActive(new LD22::Screen);
 }
 
 void UI::Menu::quit()
 {
-    Window::close();
+    Screen::quit();
 }

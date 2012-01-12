@@ -7,7 +7,7 @@
 // #include "client/keyboard/keycode.h"
 #include "client/opengl.hpp"
 #include "client/ui/event.hpp"
-#include "client/ui/window.hpp"
+#include "client/viewport.hpp"
 // #include "sys/path.hpp"
 // #include "sys/ifile.hpp"
 #include "tileset.hpp"
@@ -67,9 +67,10 @@ void ScreenBase::loadLevel()
         m_background.reset(Background::getBackground(b));
 }
 
-void ScreenBase::draw()
+void ScreenBase::draw(Viewport &v, unsigned msec)
 {
-    m_letterbox.setOSize(UI::Window::width, UI::Window::height);
+    (void) msec;
+    m_letterbox.setOSize(v.width(), v.height());
     m_letterbox.enable();
 
     glMatrixMode(GL_PROJECTION);

@@ -57,7 +57,7 @@ public:
     virtual ~ScreenBase();
 
     virtual void update(unsigned int ticks);
-    virtual void draw();
+    virtual void draw(Viewport &v, unsigned ticks);
 
     Level &level()
     {

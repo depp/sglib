@@ -130,7 +130,7 @@ CLIENT_OBJS += client/ui/menu.o
 CLIENT_OBJS += client/ui/mousemanager.o
 CLIENT_OBJS += client/ui/screen.o
 CLIENT_OBJS += client/ui/widget.o
-CLIENT_OBJS += client/ui/window.o
+CLIENT_OBJS += client/viewport.o
 
 GAME_LD22_OBJS =
 GAME_LD22_OBJS += game/ld22/actor.o

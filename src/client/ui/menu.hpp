@@ -14,7 +14,7 @@ public:
 
     virtual void handleEvent(Event const &evt);
     virtual void update(unsigned int ticks);
-    virtual void draw();
+    virtual void draw(Viewport &v, unsigned msec);
 
 private:
     virtual Widget *traceMouse(Point pt);

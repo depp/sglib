@@ -30,9 +30,13 @@ sg_game_getsize(int *width, int *height);
 void
 sg_game_event(union sg_event *evt);
 
-/* Draw the scene.  The OpenGL context will be valid.  */
+/* Draw the scene.  The OpenGL context will be valid.  The x, y,
+   width, and height parameters specify the current viewport, the game
+   should not draw outside this area.  The msecs parameter is the
+   number of milliseconds since an arbitrary time.  Note that msecs
+   overflows every 47 days.  */
 void
-sg_game_draw(unsigned msecs);
+sg_game_draw(int x, int y, int width, int height, unsigned msec);
 
 /* Called at most once before the process exits.  */
 void

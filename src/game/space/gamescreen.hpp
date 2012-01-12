@@ -16,7 +16,7 @@ public:
 
     virtual void handleEvent(UI::Event const &evt);
     virtual void update(unsigned int ticks);
-    virtual void draw();
+    virtual void draw(Viewport &v, unsigned msec);
 
 private:
     UI::KeyManager kmgr_;
