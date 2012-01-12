@@ -21,6 +21,7 @@ ifeq ($(UNAME_S),Linux)
 	ifdef HAVE_GTK
 		GTK_CFLAGS := $(shell pkg-config --cflags gtk+-2.0 gtkglext-1.0)
 		GTK_LIBS := $(shell pkg-config --libs gtk+-2.0 gtkglext-1.0)
+		GTK_LIBS += -Wl,--no-export-dynamic # Turned on by gmodule
 	endif
 	HAVE_LIBPNG := $(shell sh -c 'pkg-config libpng 2>/dev/null && echo yes')
 	ifdef HAVE_LIBPNG
