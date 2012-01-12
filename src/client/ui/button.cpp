@@ -48,19 +48,19 @@ void UI::Button::draw()
     else
         glColor3ub(64, 0, 0);
     glBegin(GL_LINE_LOOP);
-    glVertex2f(x1, y1);
-    glVertex2f(x1, y2);
-    glVertex2f(x2, y2);
-    glVertex2f(x2, y1);
+    glVertex2f(x1-0.5f, y1-0.5f);
+    glVertex2f(x1-0.5f, y2+0.5f);
+    glVertex2f(x2+0.5f, y2+0.5f);
+    glVertex2f(x2+0.5f, y1-0.5f);
     glEnd();
 
     if (hover_ || button_ == ButtonLeft) {
         glColor3ub(255, 255, 255);
         glBegin(GL_LINE_LOOP);
-        glVertex2f(x1 - 2.0f, y1 - 2.0f);
-        glVertex2f(x1 - 2.0f, y2 + 2.0f);
-        glVertex2f(x2 + 2.0f, y2 + 2.0f);
-        glVertex2f(x2 + 2.0f, y1 - 2.0f);
+        glVertex2f(x1 - 2.5f, y1 - 2.5f);
+        glVertex2f(x1 - 2.5f, y2 + 2.5f);
+        glVertex2f(x2 + 2.5f, y2 + 2.5f);
+        glVertex2f(x2 + 2.5f, y1 - 2.5f);
         glEnd();
     }
 
