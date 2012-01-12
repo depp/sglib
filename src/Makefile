@@ -33,6 +33,7 @@ ifeq ($(UNAME_S),Linux)
 	IMAGE_CFLAGS := $(PNG_CFLAGS) $(JPEG_CFLAGS)
 	IMAGE_LIBS := $(PNG_LIBS) $(JPEG_LIBS)
 	GL_LIBS := -lGL -lGLU
+	BASE_LDFLAGS := --Wl,--as-needed
 endif
 ifeq ($(UNAME_S),Darwin)
 	HAVE_COCOA := yes
@@ -49,7 +50,7 @@ endif
 ALL_CPPFLAGS = $(BASE_CPPFLAGS) $(CPPFLAGS)
 ALL_CFLAGS = $(BASE_CFLAGS) $(CWARN) $(CFLAGS)
 ALL_CXXFLAGS = $(BASE_CXXFLAGS) $(CXXWARN) $(CXXFLAGS)
-ALL_LDFLAGS = $(LDFLAGS)
+ALL_LDFLAGS = $(BASE_LDFLAGS) $(LDFLAGS)
 ALL_LIBS = $(BASE_LIBS) $(LIBS)
 
 BASE_CPPFLAGS = -I.
@@ -226,7 +227,7 @@ game-bin: BASE_LIBS += $(GTK_LIBS)
 game-bin: BASE_LIBS += $(GL_LIBS) $(PNG_LIBS) $(JPEG_LIBS)
 
 game-bin: $(BASE_OBJS) $(GTK_OBJS)
-	$(QUIET_LINK)$(CXX) -o $@ $^ $(ALL_LIBS)
+	$(QUIET_LINK)$(CXX) -o $@ $^ $(ALL_LDFLAGS) $(ALL_LIBS)
 endif
 
 ifdef HAVE_COCOA
@@ -235,7 +236,7 @@ targets += game-mac
 game-mac: BASE_LIBS += $(GL_LIBS) $(COCOA_LIBS)
 
 game-mac: $(BASE_OBJS) $(MAC_OBJS)
-	$(QUIET_LINK)$(CXX) -o $@ $^ $(ALL_LIBS)
+	$(QUIET_LINK)$(CXX) -o $@ $^ $(ALL_LDFLAGS) $(ALL_LIBS)
 endif
 
 ########################################
