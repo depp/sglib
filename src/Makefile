@@ -74,16 +74,16 @@ endif
 ########################################
 
 GTK_OBJS =
-GTK_OBJS += gtk/main.o
+GTK_OBJS += platform/gtk.o
 $(GTK_OBJS): BASE_CFLAGS += $(GTK_CFLAGS)
 
 MAC_OBJS =
-MAC_OBJS += mac/GApplication.o
-MAC_OBJS += mac/GController.o
-MAC_OBJS += mac/GDisplay.o
-MAC_OBJS += mac/GMain.o
-MAC_OBJS += mac/GView.o
-MAC_OBJS += mac/GWindow.o
+MAC_OBJS += platform/macosx/GApplication.o
+MAC_OBJS += platform/macosx/GController.o
+MAC_OBJS += platform/macosx/GDisplay.o
+MAC_OBJS += platform/macosx/GMain.o
+MAC_OBJS += platform/macosx/GView.o
+MAC_OBJS += platform/macosx/GWindow.o
 
 IMPL_OBJS =
 IMPL_OBJS += impl/configfile.o
