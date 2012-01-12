@@ -10,9 +10,9 @@
 #include "impl/event.h"
 #include "impl/kbd/keycode.h"
 #include "impl/kbd/keytable.h"
-#include "impl/lfile.h"
+// #include "impl/lfile.h"
 #include "impl/opengl.h"
-#include "impl/rand.h"
+// #include "impl/rand.h"
 
 /* The Gtk headers generate a warning.  */
 #if defined(HAVE_DPUSH)
@@ -119,10 +119,10 @@ handle_expose(GtkWidget *area)
             rsz.type = SG_EVENT_RESIZE;
             rsz.width = a.width;
             rsz.height = a.height;
-            sg_game_event((union sg_event *) &rsz);
+            sg_sys_event((union sg_event *) &rsz);
         }
     }
-    sg_game_draw(sg_clock_get());
+    sg_sys_draw();
 
     if (gdk_gl_drawable_is_double_buffered(drawable))
         gdk_gl_drawable_swap_buffers(drawable);
@@ -160,7 +160,7 @@ handle_key(GdkEventKey *e, sg_event_type_t t)
         return TRUE;
     evt.type = t;
     evt.key = hcode;
-    sg_game_event((union sg_event *) &evt);
+    sg_sys_event((union sg_event *) &evt);
     return TRUE;
 }
 
@@ -172,7 +172,7 @@ handle_motion(GdkEventMotion *e)
     evt.button = -1;
     evt.x = e->x;
     evt.y = sg_window_height - 1 - e->y;
-    sg_game_event((union sg_event *) &evt);
+    sg_sys_event((union sg_event *) &evt);
     return TRUE;
 }
 
@@ -189,7 +189,7 @@ handle_button(GdkEventButton *e, sg_event_type_t t)
     }
     evt.x = e->x;
     evt.y = sg_window_height - 1 - e->y;
-    sg_game_event((union sg_event *) &evt);
+    sg_sys_event((union sg_event *) &evt);
     return TRUE;
 }
 
@@ -266,11 +266,8 @@ init(int argc, char *argv[])
         }
     }
 
-    sg_path_init();
-    sg_clock_init();
-    sg_rand_seed(&sg_rand_global, 1);
-    sg_game_init();
-    sg_game_getsize(&width, &height);
+    sg_sys_init();
+    sg_sys_getsize(&width, &height);
 
 
     window = gtk_window_new(GTK_WINDOW_TOPLEVEL);

@@ -105,6 +105,7 @@ IMPL_OBJS += impl/pixbuf_loadimage.o
 IMPL_OBJS += impl/rand.o
 IMPL_OBJS += impl/resource.o
 IMPL_OBJS += impl/strbuf.o
+IMPL_OBJS += impl/sys.o
 IMPL_OBJS += impl/texture.o
 impl/pixbuf_loadimage.o: BASE_CFLAGS += $(IMAGE_CFLAGS)
 
