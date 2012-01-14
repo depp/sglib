@@ -1,0 +1,3 @@
+[submodule "src/base/keycode"]
+	path = src/base/keycode
+	url = ../keycode/
