@@ -1,6 +1,6 @@
 #ifndef SYS_FILE_HPP
 #define SYS_FILE_HPP
-#include "impl/lfile.h"
+#include "base/file.h"
 #include <cstring>
 
 class FBuffer;

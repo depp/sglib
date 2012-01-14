@@ -1,7 +1,7 @@
 #ifndef CLIENT_TEXTURE_HPP
 #define CLIENT_TEXTURE_HPP
-#include "impl/texture.h"
-#include "impl/opengl.h"
+#include "base/texture.h"
+#include "base/opengl.h"
 #include "sys/sharedref.hpp"
 struct sg_texture;
 

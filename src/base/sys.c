@@ -1,7 +1,7 @@
 #include "clock.h"
 #include "entry.h"
 #include "event.h"
-#include "lfile.h"
+#include "file.h"
 #include "rand.h"
 
 static int sg_vid_width, sg_vid_height;

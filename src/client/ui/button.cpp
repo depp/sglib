@@ -1,6 +1,6 @@
 #include "button.hpp"
 #include "event.hpp"
-#include "impl/opengl.h"
+#include "base/opengl.h"
 
 UI::Button::Button()
     : /* title_(), */ state_(false), hover_(false), button_(-1)

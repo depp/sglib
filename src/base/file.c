@@ -8,7 +8,7 @@
 
 #include "cvar.h"
 #include "error.h"
-#include "lfile.h"
+#include "file.h"
 #include "strbuf.h"
 #include <errno.h>
 #include <fcntl.h>

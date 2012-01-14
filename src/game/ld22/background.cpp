@@ -1,6 +1,6 @@
 #include "background.hpp"
 #include "defs.hpp"
-#include "impl/rand.h"
+#include "base/rand.h"
 #include "client/texture.hpp"
 #include <memory>
 #include <stdio.h>

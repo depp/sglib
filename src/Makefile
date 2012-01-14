@@ -92,32 +92,32 @@ MAC_OBJS += platform/macosx/GMain.o
 MAC_OBJS += platform/macosx/GView.o
 MAC_OBJS += platform/macosx/GWindow.o
 
-IMPL_OBJS =
-IMPL_OBJS += impl/configfile.o
-IMPL_OBJS += impl/configfileread.o
-IMPL_OBJS += impl/clock.o
-IMPL_OBJS += impl/cvar.o
-IMPL_OBJS += impl/dict.o
-IMPL_OBJS += impl/error.o
-IMPL_OBJS += impl/hash.o
-IMPL_OBJS += impl/kbd/keyid.o
-IMPL_OBJS += impl/kbd/keytable_evdev.o
-IMPL_OBJS += impl/kbd/keytable_mac.o
-IMPL_OBJS += impl/kbd/keytable_win.o
-IMPL_OBJS += impl/lfile.o
-IMPL_OBJS += impl/lpath.o
-IMPL_OBJS += impl/model.o
-IMPL_OBJS += impl/opengl.o
-IMPL_OBJS += impl/pixbuf.o
-IMPL_OBJS += impl/pixbuf_loadimage.o
-IMPL_OBJS += impl/rand.o
-IMPL_OBJS += impl/resource.o
-IMPL_OBJS += impl/strbuf.o
-IMPL_OBJS += impl/sys.o
-IMPL_OBJS += impl/texture.o
-IMPL_OBJS += impl/type.o
-impl/pixbuf_loadimage.o: BASE_CFLAGS += $(IMAGE_CFLAGS)
-impl/type.o: BASE_CFLAGS += $(TYPE_CFLAGS)
+CBASE_OBJS =
+CBASE_OBJS += base/configfile.o
+CBASE_OBJS += base/configfile_read.o
+CBASE_OBJS += base/clock.o
+CBASE_OBJS += base/cvar.o
+CBASE_OBJS += base/dict.o
+CBASE_OBJS += base/error.o
+CBASE_OBJS += base/hash.o
+CBASE_OBJS += base/kbd/keyid.o
+CBASE_OBJS += base/kbd/keytable_evdev.o
+CBASE_OBJS += base/kbd/keytable_mac.o
+CBASE_OBJS += base/kbd/keytable_win.o
+CBASE_OBJS += base/file.o
+CBASE_OBJS += base/file_path.o
+CBASE_OBJS += base/model.o
+CBASE_OBJS += base/opengl.o
+CBASE_OBJS += base/pixbuf.o
+CBASE_OBJS += base/pixbuf_loadimage.o
+CBASE_OBJS += base/rand.o
+CBASE_OBJS += base/resource.o
+CBASE_OBJS += base/strbuf.o
+CBASE_OBJS += base/sys.o
+CBASE_OBJS += base/texture.o
+CBASE_OBJS += base/type.o
+base/pixbuf_loadimage.o: BASE_CFLAGS += $(IMAGE_CFLAGS)
+base/type.o: BASE_CFLAGS += $(TYPE_CFLAGS)
 
 SYS_OBJS =
 SYS_OBJS += sys/error.o
@@ -184,11 +184,11 @@ GAME_SPACE_OBJS += game/space/world.o
 
 GAME_OBJS = $(GAME_LD22_OBJS) $(GAME_TANK_OBJS) $(GAME_SPACE_OBJS)
 
-C_OBJS = $(GTK_OBJS) $(IMPL_OBJS)
+C_OBJS = $(GTK_OBJS) $(CBASE_OBJS)
 CXX_OBJS = $(SYS_OBJS) $(CLIENT_OBJS) $(GAME_OBJS)
 OBJC_OBJS = $(MAC_OBJS)
 
-BASE_OBJS = $(IMPL_OBJS) $(CXX_OBJS)
+BASE_OBJS = $(CBASE_OBJS) $(CXX_OBJS)
 ALL_OBJS = $(C_OBJS) $(CXX_OBJS) $(OBJC_OBJS)
 
 ########################################

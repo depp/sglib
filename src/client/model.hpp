@@ -2,7 +2,7 @@
 #define CLIENT_MODEL_HPP
 // #include "opengl.hpp"
 // #include "sys/resource.hpp"
-#include "impl/model.h"
+#include "base/model.h"
 #include "sys/sharedref.hpp"
 // #include <string>
 struct Color;

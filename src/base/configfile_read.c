@@ -1,5 +1,5 @@
 #include "configfile.h"
-#include "lfile.h"
+#include "file.h"
 #include <stddef.h>
 #include <errno.h>
 #include <stdio.h>

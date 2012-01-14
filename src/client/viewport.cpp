@@ -1,5 +1,5 @@
 #include "viewport.hpp"
-#include "impl/opengl.h"
+#include "base/opengl.h"
 
 Viewport::Viewport(int x, int y, int width, int height)
     : m_x(x), m_y(y), m_width(width), m_height(height),

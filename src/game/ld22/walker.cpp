@@ -2,7 +2,7 @@
 #include "walker.hpp"
 #include "tileset.hpp"
 #include "item.hpp"
-#include "impl/rand.h"
+#include "base/rand.h"
 #include <stdio.h>
 #include <cmath>
 #include <limits>

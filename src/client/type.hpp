@@ -1,6 +1,6 @@
 #ifndef CLIENT_TYPE_HPP
 #define CLIENT_TYPE_HPP
-#include "impl/type.h"
+#include "base/type.h"
 
 class TextLayout {
     sg_layout *m_p;

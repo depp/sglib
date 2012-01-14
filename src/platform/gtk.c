@@ -3,14 +3,14 @@
 #define HAVE_DPUSH 1
 #endif
 
-#include "impl/clock.h"
-#include "impl/cvar.h"
-#include "impl/entry.h"
-#include "impl/error.h"
-#include "impl/event.h"
-#include "impl/kbd/keycode.h"
-#include "impl/kbd/keytable.h"
-#include "impl/opengl.h"
+#include "base/clock.h"
+#include "base/cvar.h"
+#include "base/entry.h"
+#include "base/error.h"
+#include "base/event.h"
+#include "base/kbd/keycode.h"
+#include "base/kbd/keytable.h"
+#include "base/opengl.h"
 
 /* The Gtk headers generate a warning.  */
 #if defined(HAVE_DPUSH)

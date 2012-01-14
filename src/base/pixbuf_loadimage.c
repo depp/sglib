@@ -5,7 +5,7 @@
 #define IMAGE_MAXSIZE (16 * 1024 * 1024)
 
 #include "error.h"
-#include "lfile.h"
+#include "file.h"
 #include "pixbuf.h"
 #include <stdlib.h>
 #include <string.h>

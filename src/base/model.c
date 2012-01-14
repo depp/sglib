@@ -1,7 +1,7 @@
 #define MODEL_MAXSIZE (256 * 1024)
 
 #include "error.h"
-#include "lfile.h"
+#include "file.h"
 #include "model.h"
 #include "opengl.h"
 #include <stdio.h>

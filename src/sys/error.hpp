@@ -1,6 +1,6 @@
 #ifndef SYS_ERROR_HPP
 #define SYS_ERROR_HPP
-#include "impl/error.h"
+#include "base/error.h"
 #include <stdexcept>
 
 class error : public std::exception {

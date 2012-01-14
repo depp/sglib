@@ -1,4 +1,4 @@
-#include "lfile.h"
+#include "file.h"
 #include "error.h"
 
 /* Return whether the given component is legal.  The input must be a

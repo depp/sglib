@@ -1,5 +1,5 @@
 #include "explosion.hpp"
-#include "impl/rand.h"
+#include "base/rand.h"
 #include "client/color.hpp"
 #include "world.hpp"
 #include "client/opengl.hpp"

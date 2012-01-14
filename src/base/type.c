@@ -1,6 +1,6 @@
-#include "impl/opengl.h"
-#include "impl/pixbuf.h"
-#include "impl/type.h"
+#include "opengl.h"
+#include "pixbuf.h"
+#include "type.h"
 #include <stdlib.h>
 #include <string.h>
 

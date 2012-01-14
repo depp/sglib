@@ -3,7 +3,7 @@
 #include "area.hpp"
 #include "tileset.hpp"
 #include "effect.hpp"
-#include "impl/rand.h"
+#include "base/rand.h"
 #include <stdlib.h>
 using namespace LD22;
 

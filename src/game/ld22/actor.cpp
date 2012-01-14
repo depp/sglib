@@ -2,7 +2,7 @@
 #include "area.hpp"
 #include "defs.hpp"
 #include "client/opengl.hpp"
-#include "impl/rand.h"
+#include "base/rand.h"
 using namespace LD22;
 
 Actor::~Actor()
