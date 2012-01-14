@@ -16,9 +16,15 @@ sg_sys_init(void)
 }
 
 void
-sg_sys_getsize(int *width, int *height)
+sg_sys_getinfo(struct sg_game_info *info)
 {
-    sg_game_getsize(width, height);
+    info->min_width = 320;
+    info->min_height = 180;
+    info->default_width = 1280;
+    info->default_height = 720;
+    info->min_aspect = SG_GAME_ASPECT_SCALE * 5 / 4;
+    info->max_aspect = SG_GAME_ASPECT_SCALE * 2;
+    sg_game_getinfo(info);
 }
 
 void

@@ -53,10 +53,9 @@ void sg_game_init(void)
     current_screen = new UI::Menu;
 }
 
-void sg_game_getsize(int *width, int *height)
+void sg_game_getinfo(struct sg_game_info *info)
 {
-    *width = 768;
-    *height = 480;
+    (void) info;
 }
 
 static void mouse_event(union sg_event *evt, EventType t)

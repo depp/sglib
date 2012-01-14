@@ -9,6 +9,20 @@ extern "C" {
 union sg_event;
 struct sg_error;
 
+#define SG_GAME_ASPECT_SCALE 0x10000
+
+struct sg_game_info {
+    /* Minimum window size */
+    int min_width, min_height;
+
+    /* Default window size */
+    int default_width, default_height;
+
+    /* Minimum and maximum aspect ratio, multiplied by
+       SG_GAME_ASPECT_SCALE (i.e., 16.16 fixed point) */
+    int min_aspect, max_aspect;
+};
+
 /* ===== Game exports =====
 
    These are provided by the game code.  These should NOT be called
@@ -20,10 +34,9 @@ struct sg_error;
 void
 sg_game_init(void);
 
-/* Get the default width and height of the game window.  Platforms are
-   free to ignore this information.  */
+/* Get information about the game.  */
 void
-sg_game_getsize(int *width, int *height);
+sg_game_getinfo(struct sg_game_info *info);
 
 /* Called for every event.  The OpenGL context may not be valid, you
    should not attempt to draw to the screen, load textures, etc.  */
@@ -53,9 +66,10 @@ sg_game_destroy(void);
 void
 sg_sys_init(void);
 
-/* Get the default width and height of the game window.  */
+/* Get information about the game.  Details not provided by the game
+   are filled in with sensible defaults.  */
 void
-sg_sys_getsize(int *width, int *height);
+sg_sys_getinfo(struct sg_game_info *info);
 
 /* Called for every event.  */
 void

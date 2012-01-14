@@ -246,9 +246,11 @@ init(int argc, char *argv[])
     GdkScreen *screen;
     GdkGLConfig *config;
     GdkGeometry geom;
-    int width = 640, height = 480, opt;
+    int opt;
     unsigned mask, i;
     gboolean r;
+    struct sg_game_info gameinfo;
+    double ascale = 1.0 / SG_GAME_ASPECT_SCALE;
 
     gtk_init(&argc, &argv);
     gtk_gl_init(&argc, &argv);
@@ -266,19 +268,24 @@ init(int argc, char *argv[])
     }
 
     sg_sys_init();
-    sg_sys_getsize(&width, &height);
+    sg_sys_getinfo(&gameinfo);
+    if (gameinfo.min_width < 128)
+        gameinfo.min_width = 128;
+    if (gameinfo.min_height < 128)
+        gameinfo.min_height = 128;
 
-    geom.min_width = 320;
-    geom.min_height = 180;
-    geom.min_aspect = 0.5;
-    geom.max_aspect = 2.0;
+    geom.min_width  = gameinfo.min_width;
+    geom.min_height = gameinfo.min_height;
+    geom.min_aspect = (double) gameinfo.min_aspect * ascale;
+    geom.max_aspect = (double) gameinfo.max_aspect * ascale;
 
     window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     area = gtk_drawing_area_new();
     gtk_container_add(GTK_CONTAINER(window), area);
 
     gtk_window_set_title(GTK_WINDOW(window), "Game");
-    gtk_window_set_default_size(GTK_WINDOW(window), width, height);
+    gtk_window_set_default_size(
+        GTK_WINDOW(window), gameinfo.default_width, gameinfo.default_height);
     gtk_window_set_geometry_hints(
         GTK_WINDOW(window), area, &geom,
         GDK_HINT_MIN_SIZE | GDK_HINT_ASPECT);
