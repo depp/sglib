@@ -116,6 +116,7 @@ CBASE_OBJS += base/strbuf.o
 CBASE_OBJS += base/sys.o
 CBASE_OBJS += base/texture.o
 CBASE_OBJS += base/type.o
+CBASE_OBJS += version.o
 base/pixbuf_loadimage.o: BASE_CFLAGS += $(IMAGE_CFLAGS)
 base/type.o: BASE_CFLAGS += $(TYPE_CFLAGS)
 
@@ -218,9 +219,14 @@ ifndef V
 	QUIET_CXX  = @echo '   ' CXX $<;
 	QUIET_OBJC = @echo '   ' OBJC $<;
 	QUIET_LINK = @echo '   ' LD $@;
+	QUIET_VERS = @echo '   ' VERSION;
 endif
 
 ########################################
+
+version.c: version-stamp
+version-stamp:
+	$(QUIET_VERS)sh ../scripts/version.sh .. ..
 
 $(C_OBJS): %.o: %.c $(dep_dirs_missing)
 	$(QUIET_CC)$(CC) -o $@ -c  $(dep_args) $(ALL_CPPFLAGS) $(ALL_CFLAGS) $<
