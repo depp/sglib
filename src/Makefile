@@ -41,7 +41,7 @@ ifeq ($(UNAME_S),Linux)
 	TYPE_CFLAGS = $(PANGO_CFLAGS)
 	TYPE_LIBS = $(PANGO_LIBS)
 	GL_LIBS := -lGL -lGLU
-	BASE_LDFLAGS := --Wl,--as-needed
+	BASE_LDFLAGS := -Wl,--gc-sections --Wl,--as-needed
 endif
 ifeq ($(UNAME_S),Darwin)
 	HAVE_COCOA := yes
@@ -243,7 +243,7 @@ targets += game-bin
 game-bin: BASE_LIBS += $(GTK_LIBS) $(GL_LIBS) $(IMAGE_LIBS) $(TYPE_LIBS)
 
 game-bin: $(BASE_OBJS) $(GTK_OBJS)
-	$(QUIET_LINK)$(CXX) -o $@ $^ $(ALL_LDFLAGS) $(ALL_LIBS)
+	$(QUIET_LINK)$(CXX) -o $@ $(ALL_LDFLAGS) $^ $(ALL_LIBS)
 endif
 
 ifdef HAVE_COCOA
@@ -252,7 +252,7 @@ targets += game-mac
 game-mac: BASE_LIBS += $(GL_LIBS) $(COCOA_LIBS)
 
 game-mac: $(BASE_OBJS) $(MAC_OBJS)
-	$(QUIET_LINK)$(CXX) -o $@ $^ $(ALL_LDFLAGS) $(ALL_LIBS)
+	$(QUIET_LINK)$(CXX) -o $@ $(ALL_LDFLAGS) $^ $(ALL_LIBS)
 endif
 
 ########################################
