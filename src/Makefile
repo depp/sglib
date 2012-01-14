@@ -33,6 +33,13 @@ ifeq ($(UNAME_S),Linux)
 	JPEG_LIBS := -ljpeg
 	IMAGE_CFLAGS := $(PNG_CFLAGS) $(JPEG_CFLAGS)
 	IMAGE_LIBS := $(PNG_LIBS) $(JPEG_LIBS)
+	HAVE_PANGO := $(shell sh -c 'pkg-config pangocairo 2>/dev/null && echo yes')
+	ifdef HAVE_PANGO
+		PANGO_CFLAGS := -DUSE_PANGOCAIRO $(shell pkg-config --cflags pangocairo)
+		PANGO_LIBS := $(shell pkg-config --libs pangocairo)
+	endif
+	TYPE_CFLAGS = $(PANGO_CFLAGS)
+	TYPE_LIBS = $(PANGO_LIBS)
 	GL_LIBS := -lGL -lGLU
 	BASE_LDFLAGS := --Wl,--as-needed
 endif
@@ -108,7 +115,9 @@ IMPL_OBJS += impl/resource.o
 IMPL_OBJS += impl/strbuf.o
 IMPL_OBJS += impl/sys.o
 IMPL_OBJS += impl/texture.o
+IMPL_OBJS += impl/type.o
 impl/pixbuf_loadimage.o: BASE_CFLAGS += $(IMAGE_CFLAGS)
+impl/type.o: BASE_CFLAGS += $(TYPE_CFLAGS)
 
 SYS_OBJS =
 SYS_OBJS += sys/error.o
@@ -225,8 +234,7 @@ $(OBJC_OBJS): %.o: %.m $(dep_dirs_missing)
 ifdef HAVE_GTK
 targets += game-bin
 
-game-bin: BASE_LIBS += $(GTK_LIBS)
-game-bin: BASE_LIBS += $(GL_LIBS) $(PNG_LIBS) $(JPEG_LIBS)
+game-bin: BASE_LIBS += $(GTK_LIBS) $(GL_LIBS) $(IMAGE_LIBS) $(TYPE_LIBS)
 
 game-bin: $(BASE_OBJS) $(GTK_OBJS)
 	$(QUIET_LINK)$(CXX) -o $@ $^ $(ALL_LDFLAGS) $(ALL_LIBS)

@@ -2,7 +2,7 @@
 #define CLIENT_UI_BUTTON_HPP
 #include "widget.hpp"
 #include "action.hpp"
-#include "client/type/rastertext.hpp"
+#include "client/type.hpp"
 #include <string>
 namespace UI {
 
@@ -26,6 +26,7 @@ public:
 
 private:
     // RasterText::Ref title_;
+    TextLayout title_;
     bool state_, hover_;
     int button_;
     Action action_;

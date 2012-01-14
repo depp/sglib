@@ -47,6 +47,11 @@ sg_pixbuf_set(struct sg_pixbuf *pbuf, sg_pixbuf_format_t format,
 int
 sg_pixbuf_alloc(struct sg_pixbuf *pbuf, struct sg_error **err);
 
+/* Allocate zeroed memory for the pixel buffer.  Returns 0 on success,
+   -1 on failure.  */
+int
+sg_pixbuf_calloc(struct sg_pixbuf *pbuf, struct sg_error **err);
+
 /* Load an image with the given path.  This will attempt to load
    ".png" and then ".jpg".  If the path already has an extension of
    ".png" or ".jpg", that extension will be tried before the others.

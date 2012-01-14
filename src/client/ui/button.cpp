@@ -22,7 +22,7 @@ void UI::Button::setLoc(int x, int y)
 void UI::Button::setText(std::string const &text)
 {
     (void) &text;
-    // title_->setText(text);
+    title_.setText(text.data(), text.size());
 }
 
 void UI::Button::draw()
@@ -71,8 +71,8 @@ void UI::Button::draw()
     glPushMatrix();
     glTranslatef(x1 + 5.0f, y1 + 10.0f, 0.0f);
     glEnable(GL_BLEND);
-    glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_COLOR);
-    // title_->draw();
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    title_.draw();
     glPopMatrix();
 
     glPopAttrib();

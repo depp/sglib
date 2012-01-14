@@ -121,3 +121,22 @@ sg_pixbuf_alloc(struct sg_pixbuf *pbuf, struct sg_error **err)
     }
     return 0;
 }
+
+int
+sg_pixbuf_calloc(struct sg_pixbuf *pbuf, struct sg_error **err)
+{
+    if (!pbuf->pwidth || !pbuf->pheight || !pbuf->rowbytes) {
+        sg_pixbuf_error(err, "can't allocate unsized image");
+        return -1;
+    }
+    if (pbuf->data) {
+        free(pbuf->data);
+        pbuf->data = NULL;
+    }
+    pbuf->data = calloc(pbuf->rowbytes * pbuf->pheight, 1);
+    if (!pbuf->data) {
+        sg_error_nomem(err);
+        return -1;
+    }
+    return 0;
+}
