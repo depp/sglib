@@ -8,8 +8,8 @@
 #include "base/entry.h"
 #include "base/error.h"
 #include "base/event.h"
-#include "base/kbd/keycode.h"
-#include "base/kbd/keytable.h"
+#include "base/keycode/keycode.h"
+#include "base/keycode/keytable.h"
 #include "base/opengl.h"
 
 /* The Gtk headers generate a warning.  */

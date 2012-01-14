@@ -1,7 +1,0 @@
-{
-  "ignore": [
-    "keytable_*.c",
-    "keyid.c",
-    "keycode.h"
-  ]
-}
