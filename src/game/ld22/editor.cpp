@@ -1,7 +1,7 @@
 #include "editor.hpp"
 #include "defs.hpp"
 #include "tileset.hpp"
-#include "base/kbd/keycode.h"
+#include "client/keycode.hpp"
 #include "client/opengl.hpp"
 #include "client/ui/event.hpp"
 // #include "sys/path.hpp"

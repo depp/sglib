@@ -2,7 +2,7 @@
 #include "area.hpp"
 #include "defs.hpp"
 #include "client/opengl.hpp"
-#include "base/rand.h"
+#include "client/rand.hpp"
 using namespace LD22;
 
 Actor::~Actor()
@@ -85,7 +85,7 @@ bool Actor::visible(Actor *a)
     int c[4], i;
     c[0] = centerx(); c[1] = centery();
     c[2] = a->centerx(); c[3] = a->centery();
-    unsigned r = sg_girand();
+    unsigned r = Rand::girand();
     for (i = 0; i < 4; ++i)
         c[i] += (int)((r >> (8*i)) & LOOK_OFFSET) - LOOK_OFFSET / 2;
     return m_area->trace(c[0], c[1], c[2], c[3]);

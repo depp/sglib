@@ -1,6 +1,6 @@
 #include "background.hpp"
 #include "defs.hpp"
-#include "base/rand.h"
+#include "client/rand.hpp"
 #include "client/texture.hpp"
 #include <memory>
 #include <stdio.h>
@@ -114,7 +114,7 @@ public:
         m_layer[1].count = 10;
         m_layer[2].count = 10;
         for (int i = 0; i < LAYERS; ++i)
-            m_layer[i].offset = sg_girand();
+            m_layer[i].offset = Rand::girand();
         m_layer[0].speed = 3;
         m_layer[1].speed = 6;
         m_layer[2].speed = 8;

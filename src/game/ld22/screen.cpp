@@ -1,7 +1,7 @@
 #include "defs.hpp"
 #include "screen.hpp"
 #include "area.hpp"
-#include "base/kbd/keycode.h"
+#include "client/keycode.hpp"
 #include "client/ui/event.hpp"
 using namespace LD22;
 

@@ -1,5 +1,5 @@
 #include "explosion.hpp"
-#include "base/rand.h"
+#include "client/rand.hpp"
 #include "client/color.hpp"
 #include "world.hpp"
 #include "client/opengl.hpp"
@@ -52,9 +52,9 @@ static void randvec(float v[3])
 {
     float x, y, z;
     do {
-        x = sg_gfrand() * 2.0f - 1.0f;
-        y = sg_gfrand() * 2.0f - 1.0f;
-        z = sg_gfrand() * 2.0f - 1.0f;
+        x = Rand::gfrand() * 2.0f - 1.0f;
+        y = Rand::gfrand() * 2.0f - 1.0f;
+        z = Rand::gfrand() * 2.0f - 1.0f;
     } while (x*x + y*y + z*z > 1.0f);
     v[0] = x; v[1] = y; v[2] = z;
 }

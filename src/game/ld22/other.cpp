@@ -3,7 +3,7 @@
 #include "area.hpp"
 #include "tileset.hpp"
 #include "effect.hpp"
-#include "base/rand.h"
+#include "client/rand.hpp"
 #include <stdlib.h>
 using namespace LD22;
 
@@ -12,7 +12,7 @@ static int AHA_TIME = 15;
 static int lookInterval()
 {
     static int LOOK_INTERVAL = 15;
-    return LOOK_INTERVAL + (sg_girand() % LOOK_INTERVAL);
+    return LOOK_INTERVAL + (Rand::girand() % LOOK_INTERVAL);
 }
 
 Other::~Other()
