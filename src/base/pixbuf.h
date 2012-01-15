@@ -19,12 +19,12 @@ struct sg_pixbuf {
     void *data;
     sg_pixbuf_format_t format;
     /* Dimensions of the image */
-    unsigned iwidth;
-    unsigned iheight;
+    int iwidth;
+    int iheight;
     /* Dimensions of the buffer */
-    unsigned pwidth;
-    unsigned pheight;
-    unsigned rowbytes;
+    int pwidth;
+    int pheight;
+    int rowbytes;
 };
 
 void
@@ -40,7 +40,7 @@ sg_pixbuf_destroy(struct sg_pixbuf *pbuf);
    requested format is unsupported.  */
 int
 sg_pixbuf_set(struct sg_pixbuf *pbuf, sg_pixbuf_format_t format,
-              unsigned width, unsigned height, struct sg_error **err);
+              int width, int height, struct sg_error **err);
 
 /* Allocate memory for the pixel buffer.  Returns 0 on success, -1 on
    failure.  */

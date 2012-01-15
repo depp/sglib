@@ -48,16 +48,17 @@ round_up_pow2(unsigned x)
 
 int
 sg_pixbuf_set(struct sg_pixbuf *pbuf, sg_pixbuf_format_t format,
-              unsigned width, unsigned height, struct sg_error **err)
+              int width, int height, struct sg_error **err)
 {
-    unsigned psz, w, h, npx;
+    int psz, w, h, npx;
     sg_pixbuf_format_t f;
 
-    if (width > MAX_DIM || height > MAX_DIM)
+    if (width > MAX_DIM || height > MAX_DIM ||
+        width < 0 || height < 0)
         goto toolarge;
     w = round_up_pow2(width);
     h = round_up_pow2(height);
-    if (w > UINT_MAX / h)
+    if (w > INT_MAX / h)
         goto toolarge;
 
     f = format;
@@ -83,7 +84,7 @@ sg_pixbuf_set(struct sg_pixbuf *pbuf, sg_pixbuf_format_t format,
     }
 
     npx = w * h;
-    if (npx > UINT_MAX / psz)
+    if (npx > INT_MAX / psz)
         goto toolarge;
 
     pbuf->format = f;
