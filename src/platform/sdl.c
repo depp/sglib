@@ -195,7 +195,7 @@ sdl_main(void)
 int
 main(int argc, char *argv[])
 {
-    fprintf(stderr, "version %s (LibSDL)\n", VERSION_STRING);
+    fprintf(stderr, "Version: %s (LibSDL)\n", VERSION_STRING);
     init(argc, argv);
     sdl_main();
     return 0;
