@@ -91,6 +91,10 @@ GTK_OBJS =
 GTK_OBJS += platform/gtk.o
 $(GTK_OBJS): BASE_CFLAGS += $(GTK_CFLAGS)
 
+SDL_OBJS =
+SDL_OBJS += platform/sdl.o
+$(SDL_OBJS): BASE_CFLAGS += $(SDL_CFLAGS)
+
 MAC_OBJS =
 MAC_OBJS += platform/macosx/GApplication.o
 MAC_OBJS += platform/macosx/GController.o
@@ -192,7 +196,7 @@ GAME_SPACE_OBJS += game/space/world.o
 
 GAME_OBJS = $(GAME_LD22_OBJS) $(GAME_TANK_OBJS) $(GAME_SPACE_OBJS)
 
-C_OBJS = $(GTK_OBJS) $(CBASE_OBJS)
+C_OBJS = $(GTK_OBJS) $(SDL_OBJS) $(CBASE_OBJS)
 CXX_OBJS = $(SYS_OBJS) $(CLIENT_OBJS) $(GAME_OBJS)
 OBJC_OBJS = $(MAC_OBJS)
 
@@ -250,6 +254,13 @@ targets += game-bin
 game-bin: BASE_LIBS += $(GTK_LIBS) $(OPENGL_LIBS) $(IMAGE_LIBS) $(TYPE_LIBS)
 
 game-bin: $(BASE_OBJS) $(GTK_OBJS)
+	$(QUIET_LINK)$(CXX) $(ALL_LDFLAGS) -o $@ $^ $(ALL_LIBS)
+endif
+
+ifdef HAVE_SDL
+targets += game-sdl
+game-sdl: BASE_LIBS += $(SDL_LIBS) $(OPENGL_LIBS) $(IMAGE_LIBS) $(TYPE_LIBS)
+game-sdl: $(BASE_OBJS) $(SDL_OBJS)
 	$(QUIET_LINK)$(CXX) $(ALL_LDFLAGS) -o $@ $^ $(ALL_LIBS)
 endif
 

@@ -1,5 +1,6 @@
 /game-bin
 /game-mac
+/game-sdl
 /config.h
 /config.h.in
 /stamp-h1

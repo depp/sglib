@@ -1,187 +1,192 @@
+#include "base/cvar.h"
+#include "base/entry.h"
+#include "base/error.h"
+#include "base/event.h"
 #include "SDL.h"
-#include "rand.hpp"
-#include "ui/menu.hpp"
-#include "ui/event.hpp"
-#include "ui/screen.hpp"
-#include "ui/window.hpp"
-#include "opengl.hpp"
-#include "sys/resource.hpp"
-#include "sys/config.hpp"
-#include "sys/path.hpp"
 #include <stdio.h>
+#include <getopt.h>
 
-unsigned getTime(void)
+static int sg_window_width, sg_window_height;
+
+void
+sg_platform_quit(void)
 {
-    return SDL_GetTicks();
+    SDL_Quit();
 }
 
-static const unsigned int MAX_FPS = 100;
-static const unsigned int MIN_FRAMETIME = 1000 / MAX_FPS;
-
-class SDLWindow : public UI::Window {
-public:
-    virtual void close();
-};
-
-void SDLWindow::close()
+void
+sg_platform_failf(const char *fmt, ...)
 {
-    
+    va_list ap;
+    va_start(ap, fmt);
+    sg_platform_failv(fmt, ap);
+    va_end(ap);
 }
 
-static SDLWindow *videoInit()
+void
+sg_platform_failv(const char *fmt, va_list ap)
 {
-    SDL_Surface *screen = NULL;
-    int flags;
-    SDLWindow *w;
+    vfprintf(stderr, fmt, ap);
+    SDL_Quit();
+}
 
-    w = new SDLWindow();
-
-    if (SDL_Init(SDL_INIT_VIDEO) < 0) {
-        fprintf(stderr, "Could not initialize SDL Video: %s\n",
-                SDL_GetError());
-        exit(1);
+void
+sg_platform_faile(struct sg_error *err)
+{
+    if (err) {
+        if (err->code)
+            fprintf(stderr, "error: %s (%s %ld)\n",
+                    err->msg, err->domain->name, err->code);
+        else
+            fprintf(stderr, "error: %s (%s)\n",
+                    err->msg, err->domain->name);
+    } else {
+        fputs("error: an unknown error occurred\n", stderr);
     }
-    flags = SDL_OPENGL | SDL_GL_DOUBLEBUFFER;
-    screen = SDL_SetVideoMode(768, 480, 32, flags);
-    if (!screen) {
-        fprintf(stderr, "Could not initialize video: %s\n",
-                SDL_GetError());
-        SDL_Quit();
-        exit(1);
-    }
-
-    printf("Vendor: %s\nRenderer: %s\nVersion: %s\n",
-           glGetString(GL_VENDOR), glGetString(GL_RENDERER),
-           glGetString(GL_VERSION));
-
-    w->setSize(768, 480);
-    return w;
+    SDL_Quit();
 }
 
-static void videoUpdate()
+__attribute__((noreturn))
+static void
+sdl_error(const char *what)
 {
-    SDL_GL_SwapBuffers();
-    GLenum err = glGetError();
-    if (err != GL_NO_ERROR) {
-        const GLubyte *s = gluErrorString(err);
-        fprintf(stderr, "GL Error: %s", s);
-    }
+    fprintf(stderr, "error: %s: %s\n", what, SDL_GetError());
+    exit(1);
 }
 
-static int mapKey(int key)
+static SDL_Surface *sdl_surface;
+
+static void
+init(int argc, char *argv[])
 {
-    switch (key) {
-    case SDLK_RETURN:
-    case SDLK_SPACE:
-    case SDLK_KP_ENTER:
-        return UI::KSelect;
+    struct sg_event_resize rsz;
+    struct sg_game_info gameinfo;
+    int opt;
 
-    case SDLK_ESCAPE:
-        return UI::KEscape;
+    while ((opt = getopt(argc, argv, "d:")) != -1) {
+        switch (opt) {
+        case 'd':
+            sg_cvar_addarg(NULL, NULL, optarg);
+            break;
 
-    case SDLK_KP4:
-    case SDLK_a:
-    case SDLK_LEFT:
-        return UI::KLeft;
+        default:
+            fputs("Invalid usage\n", stderr);
+            exit(1);
+        }
+    }
 
-    case SDLK_KP8:
-    case SDLK_w:
-    case SDLK_UP:
-        return UI::KUp;
+    if (SDL_Init(SDL_INIT_VIDEO))
+        sdl_error("could not initialize LibSDL");
 
-    case SDLK_KP6:
-    case SDLK_d:
-    case SDLK_RIGHT:
-        return UI::KRight;
+    sg_sys_init();
+    sg_sys_getinfo(&gameinfo);
+    sdl_surface = SDL_SetVideoMode(
+        gameinfo.default_width, gameinfo.default_height,
+        32, SDL_OPENGL);
+    if (!sdl_surface)
+        sdl_error("could not set video mode");
+    sg_window_width = sdl_surface->w;
+    sg_window_height = sdl_surface->h;
+    rsz.type = SG_EVENT_RESIZE;
+    rsz.width = sdl_surface->w;
+    rsz.height = sdl_surface->h;
+    sg_sys_event((union sg_event *) &rsz);
+}
 
-    case SDLK_KP5:
-    case SDLK_KP2:
-    case SDLK_s:
-    case SDLK_DOWN:
-        return UI::KDown;
+static void
+sdl_event_mousemove(SDL_MouseMotionEvent *e)
+{
+    struct sg_event_mouse ee;
+    ee.type = SG_EVENT_MMOVE;
+    ee.button = -1;
+    ee.x = e->x;
+    ee.y = sg_window_height - 1 - e->y;
+    sg_sys_event((union sg_event *) &ee);
+}
 
+static void
+sdl_event_mousebutton(SDL_MouseButtonEvent *e)
+{
+    struct sg_event_mouse ee;
+    ee.type = e->type == SDL_MOUSEBUTTONDOWN ?
+        SG_EVENT_MDOWN : SG_EVENT_MUP;
+    switch (e->button) {
+    case SDL_BUTTON_LEFT:   ee.button = SG_BUTTON_LEFT;   break;
+    case SDL_BUTTON_MIDDLE: ee.button = SG_BUTTON_MIDDLE; break;
+    case SDL_BUTTON_RIGHT:  ee.button = SG_BUTTON_RIGHT;  break;
     default:
-        return -1;
+        ee.button = SG_BUTTON_OTHER + e->button - 4;
+        break;
     }
+    ee.x = e->x;
+    ee.y = sg_window_height - 1 - e->y;
+    sg_sys_event((union sg_event *) &ee);
 }
 
-int main(int, char *[])
+static void
+sdl_event_key(SDL_KeyboardEvent *e)
 {
-    UI::Window *w;
-    Path::init();
-    if (SDL_Init(SDL_INIT_TIMER) < 0) {
-        fprintf(stderr, "Could not initialize SDL Timer: %s\n",
-                SDL_GetError());
-        exit(1);
-    }
-    Rand::global.seed();
-    w = videoInit();
-    w->setScreen(new UI::Menu);
+    struct sg_event_key ee;
+    ee.type = e->type == SDL_KEYDOWN ?
+        SG_EVENT_KDOWN : SG_EVENT_KUP;
+    ee.key = -1;
+    sg_sys_event((union sg_event *) &ee);
+}
 
-    unsigned int lastticks = SDL_GetTicks();
+static void
+sdl_event_resize(SDL_ResizeEvent *e)
+{
+    struct sg_event_resize ee;
+    sg_window_width = e->w;
+    sg_window_height = e->h;
+    ee.type = SG_EVENT_RESIZE;
+    ee.width = e->w;
+    ee.height = e->h;
+    sg_sys_event((union sg_event *) &ee);
+}
+
+static void
+sdl_main(void)
+{
+    SDL_Event e;
     while (1) {
-        SDL_Event e;
         while (SDL_PollEvent(&e)) {
             switch (e.type) {
             case SDL_QUIT:
-                goto quit;
+                return;
+
             case SDL_MOUSEMOTION:
-            {
-                SDL_MouseMotionEvent &m = e.motion;
-                int x = m.x, y = w->height() - 1 - m.y;
-                w->handleEvent(UI::MouseEvent(UI::MouseMove, -1, x, y));
+                sdl_event_mousemove(&e.motion);
                 break;
-            }
+
             case SDL_MOUSEBUTTONDOWN:
             case SDL_MOUSEBUTTONUP:
-            {
-                SDL_MouseButtonEvent &m = e.button;
-                UI::EventType t = e.type == SDL_MOUSEBUTTONDOWN ?
-                    UI::MouseDown : UI::MouseUp;
-                int button;
-                switch (m.button) {
-                case SDL_BUTTON_LEFT:
-                    button = UI::ButtonLeft;
-                    break;
-                case SDL_BUTTON_MIDDLE:
-                    button = UI::ButtonMiddle;
-                    break;
-                case SDL_BUTTON_RIGHT:
-                    button = UI::ButtonRight;
-                    break;
-                default:
-                    button = UI::ButtonOther + m.button - 4;
-                    break;
-                }
-                int x = m.x, y = w->height() - 1 - m.y;
-                w->handleEvent(UI::MouseEvent(t, button, x, y));
+                sdl_event_mousebutton(&e.button);
                 break;
-            }
+
             case SDL_KEYDOWN:
             case SDL_KEYUP:
-            {
-                SDL_KeyboardEvent &k = e.key;
-                UI::EventType t = e.type == SDL_KEYDOWN ?
-                    UI::KeyDown : UI::KeyUp;
-                w->handleEvent(UI::KeyEvent(t, mapKey(k.keysym.sym)));
+                sdl_event_key(&e.key);
                 break;
-            }
+
+            case SDL_VIDEORESIZE:
+                sdl_event_resize(&e.resize);
+                break;
+
             default:
                 break;
             }
         }
-        unsigned int ticks = SDL_GetTicks(), delta = ticks - lastticks;
-        if (delta < MIN_FRAMETIME) {
-            SDL_Delay(MIN_FRAMETIME - delta);
-            lastticks += MIN_FRAMETIME;
-            ticks = SDL_GetTicks();
-        } else
-            lastticks = ticks;
-        w->draw();
-        videoUpdate();
-    }
 
-quit:
-    SDL_Quit();
+        sg_sys_draw();
+        SDL_GL_SwapBuffers();
+    }
+}
+
+int
+main(int argc, char *argv[])
+{
+    init(argc, argv);
+    sdl_main();
     return 0;
 }
