@@ -247,7 +247,7 @@ sg_layoutct_calcbounds(struct sg_layout *lp, struct sg_layout_bounds *b)
         kCFAllocatorDefault, (const UInt8 *) lp->text, lp->textlen,
         kCFStringEncodingUTF8, false);
     white = CGColorCreateGenericGray(1.0f, 1.0f);
-    font = CTFontCreateWithName(CFSTR("Helvetica"), 14.0f, NULL);
+    font = CTFontCreateWithName(CFSTR("Helvetica"), 16.0f, NULL);
 
     keys[0] = kCTFontAttributeName;
     vals[0] = font;
@@ -341,6 +341,7 @@ sg_layoutpc_calcbounds(struct sg_layout *lp, struct sg_layout_bounds *b)
 {
     PangoContext *pc;
     PangoLayout *pl;
+    PangoFontDescription *pf;
     PangoRectangle ibounds, lbounds;
 
     pc = sg_layoutpc_sharedcontext(NULL);
@@ -352,6 +353,12 @@ sg_layoutpc_calcbounds(struct sg_layout *lp, struct sg_layout_bounds *b)
         lp->pango_layout = pl;
     }
 
+    pf = pango_font_description_new();
+    if (!pf)
+        abort();
+    pango_font_description_set_family(pf, "Serif");
+    pango_font_description_set_absolute_size(pf, 16 * PANGO_SCALE);
+    pango_layout_set_font_description(pl, pf);
     pango_layout_set_alignment(pl, PANGO_ALIGN_LEFT);
     pango_layout_set_text(pl, lp->text, lp->textlen);
     b->x = 0;
