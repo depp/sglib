@@ -219,8 +219,10 @@ sg_layoutct_dummycontext(void)
     static CGContextRef dummy_context;
     static unsigned char dummy_context_data;
     if (!dummy_context) {
-        CGColorSpaceRef color_space = CGColorSpaceCreateWithName(kCGColorSpaceGenericGray);
-        dummy_context = CGBitmapContextCreate(&dummy_context_data, 1, 1, 8, 1, color_space, 0);
+        CGColorSpaceRef color_space =
+            CGColorSpaceCreateWithName(kCGColorSpaceGenericGray);
+        dummy_context = CGBitmapContextCreate(
+            &dummy_context_data, 1, 1, 8, 1, color_space, 0);
         CGColorSpaceRelease(color_space);
         if (!dummy_context)
             abort();
@@ -241,7 +243,9 @@ sg_layoutct_calcbounds(struct sg_layout *lp, struct sg_layout_bounds *b)
     CTLineRef line = NULL;
     CGRect ibounds;
 
-    string = CFStringCreateWithBytes(kCFAllocatorDefault, (const UInt8 *) lp->text, lp->textlen, kCFStringEncodingUTF8, false);
+    string = CFStringCreateWithBytes(
+        kCFAllocatorDefault, (const UInt8 *) lp->text, lp->textlen,
+        kCFStringEncodingUTF8, false);
     white = CGColorCreateGenericGray(1.0f, 1.0f);
     font = CTFontCreateWithName(CFSTR("Helvetica"), 14.0f, NULL);
 
@@ -250,7 +254,9 @@ sg_layoutct_calcbounds(struct sg_layout *lp, struct sg_layout_bounds *b)
     keys[1] = kCTForegroundColorAttributeName;
     vals[1] = white;
 
-    attr = CFDictionaryCreate(kCFAllocatorDefault, (const void **) keys, (const void **) vals, 2, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
+    attr = CFDictionaryCreate(
+        kCFAllocatorDefault, (const void **) keys, (const void **) vals, 2,
+        &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
     attrstring = CFAttributedStringCreate(kCFAllocatorDefault, string, attr);
     line = CTLineCreateWithAttributedString(attrstring);
     ibounds = CTLineGetImageBounds(line, sg_layoutct_dummycontext());
@@ -276,7 +282,9 @@ sg_layoutct_render(struct sg_layout *lp, struct sg_pixbuf *pbuf,
     CTLineRef line = lp->ct_line;
     
     color_space = CGColorSpaceCreateWithName(kCGColorSpaceGenericGray);
-    context = CGBitmapContextCreate(pbuf->data, pbuf->pwidth, pbuf->pheight, 8, pbuf->rowbytes, color_space, 0);
+    context = CGBitmapContextCreate(
+        pbuf->data, pbuf->pwidth, pbuf->pheight, 8, pbuf->rowbytes,
+        color_space, 0);
     CGContextSetTextPosition(context, xoff, yoff);
     CTLineDraw(line, context);
 
