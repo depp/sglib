@@ -20,6 +20,7 @@
 #pragma GCC diagnostic ignored "-Wstrict-prototypes"
 #include <gtk/gtk.h>
 #include <gtk/gtkgl.h>
+#include <gdk/gdkkeysyms.h>
 #if defined(HAVE_DPUSH)
 #pragma GCC diagnostic pop
 #endif
@@ -31,6 +32,8 @@
 static gint sg_timer;
 static int sg_window_width, sg_window_height;
 static int sg_update_size;
+static int sg_is_fullscreen;
+static GtkWindow *sg_window;
 
 static void
 quit(void)
@@ -40,6 +43,15 @@ quit(void)
         sg_timer = 0;
     }
     gtk_main_quit();
+}
+
+static void
+toggle_fullscreen(void)
+{
+    if (!sg_is_fullscreen)
+        gtk_window_fullscreen(sg_window);
+    else
+        gtk_window_unfullscreen(sg_window);
 }
 
 void
@@ -152,6 +164,11 @@ handle_key(GdkEventKey *e, sg_event_type_t t)
 {
     int code = e->hardware_keycode, hcode;
     struct sg_event_key evt;
+    if (e->keyval == GDK_F11) {
+        if (e->type == GDK_KEY_PRESS)
+            toggle_fullscreen();
+        return TRUE;
+    }
     if (code < 0 || code > 255)
         return TRUE;
     hcode = EVDEV_NATIVE_TO_HID[code];
@@ -189,6 +206,18 @@ handle_button(GdkEventButton *e, sg_event_type_t t)
     evt.x = e->x;
     evt.y = sg_window_height - 1 - e->y;
     sg_sys_event((union sg_event *) &evt);
+    return TRUE;
+}
+
+static gboolean
+handle_window_state(GtkWidget *widget, GdkEvent *event, gpointer user_data)
+{
+    /* WITHDRAWN, ICONIFIED, MAXIMIZED, STICKY,
+       FULLSCREEN, ABOVE, BELOW */
+    GdkWindowState st = event->window_state.new_window_state;
+    (void) user_data;
+    (void) widget;
+    sg_is_fullscreen = (st & GDK_WINDOW_STATE_FULLSCREEN) ? 1 : 0;
     return TRUE;
 }
 
@@ -298,7 +327,8 @@ init(int argc, char *argv[])
     mask = GDK_EXPOSURE_MASK |
         GDK_KEY_PRESS_MASK | GDK_KEY_RELEASE_MASK |
         GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK |
-        GDK_POINTER_MOTION_MASK;
+        GDK_POINTER_MOTION_MASK |
+        GDK_STRUCTURE_MASK;
     gtk_widget_set_events(area, mask);
 
     gtk_widget_show(window);
@@ -321,10 +351,14 @@ init(int argc, char *argv[])
     }
 
     g_signal_connect(area, "event", G_CALLBACK(handle_event), NULL);
+    g_signal_connect(window, "window-state-event",
+                     G_CALLBACK(handle_window_state), NULL);
 
     gtk_widget_show_all(window);
 
     sg_timer = g_timeout_add(10, update, area);
+
+    sg_window = GTK_WINDOW(window);
 }
 
 int
