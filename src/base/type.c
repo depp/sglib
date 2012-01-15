@@ -301,7 +301,7 @@ static void
 sg_layoutpc_copyrect(struct sg_layout_rect *dest, PangoRectangle *src)
 {
     dest->x = src->x;
-    dest->y = src->y;
+    dest->y = -src->y - src->height;
     dest->width = src->width;
     dest->height = src->height;
 }
@@ -355,7 +355,7 @@ sg_layoutpc_calcbounds(struct sg_layout *lp, struct sg_layout_bounds *b)
     pango_layout_set_alignment(pl, PANGO_ALIGN_LEFT);
     pango_layout_set_text(pl, lp->text, lp->textlen);
     b->x = 0;
-    b->y = pango_layout_get_baseline(pl) / PANGO_SCALE;
+    b->y = -(pango_layout_get_baseline(pl) / PANGO_SCALE);
     pango_layout_get_pixel_extents(pl, &ibounds, &lbounds);
 
     sg_layoutpc_copyrect(&b->ibounds, &ibounds);
@@ -379,7 +379,7 @@ sg_layoutpc_render(struct sg_layout *lp, struct sg_pixbuf *pbuf,
     cr = cairo_create(surf);
     if (!cr)
         abort();
-    cairo_translate(cr, xoff, yoff);
+    cairo_translate(cr, xoff, pbuf->pheight - yoff);
 
     pc = sg_layoutpc_sharedcontext(cr);
     pl = lp->pango_layout;
