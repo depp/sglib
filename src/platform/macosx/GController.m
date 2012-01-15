@@ -4,6 +4,8 @@
 #import "base/cvar.h"
 #import "base/error.h"
 
+static GController *gController;
+
 void
 sg_platform_failf(const char *fmt, ...)
 {
@@ -39,11 +41,11 @@ sg_platform_faile(struct sg_error *err)
 void
 sg_platform_quit(void)
 {
-    abort();
+    // Don't [NSApp terminate:nil] here because that could deadlock
+    // The display thread could be waiting for the lock from our thread
+    // and then we'd wait for the display thread to terminate...
+    [NSApp performSelectorOnMainThread:@selector(terminate:) withObject:nil waitUntilDone:NO];
 }
-
-static GController *gController;
-extern bool gEditor;
 
 @implementation GController
 
