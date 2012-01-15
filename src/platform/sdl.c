@@ -8,10 +8,18 @@
 
 static int sg_window_width, sg_window_height;
 
+__attribute__((noreturn))
+static void
+quit(int status)
+{
+    SDL_Quit();
+    exit(status);
+}
+
 void
 sg_platform_quit(void)
 {
-    SDL_Quit();
+    quit(0);
 }
 
 void
@@ -27,7 +35,7 @@ void
 sg_platform_failv(const char *fmt, va_list ap)
 {
     vfprintf(stderr, fmt, ap);
-    SDL_Quit();
+    quit(1);
 }
 
 void
@@ -43,7 +51,7 @@ sg_platform_faile(struct sg_error *err)
     } else {
         fputs("error: an unknown error occurred\n", stderr);
     }
-    SDL_Quit();
+    quit(1);
 }
 
 __attribute__((noreturn))
@@ -51,7 +59,7 @@ static void
 sdl_error(const char *what)
 {
     fprintf(stderr, "error: %s: %s\n", what, SDL_GetError());
-    exit(1);
+    quit(1);
 }
 
 static SDL_Surface *sdl_surface;
