@@ -8,11 +8,13 @@
 #include <stdlib.h>
 #include <string.h>
 
-#if defined(HAVE_PANGOCAIRO)
+#if defined(HAVE_CORETEXT)
+#include <CoreText/CoreText.h>
+#include <CoreGraphics/CoreGraphics.h>
+#elif defined(HAVE_PANGOCAIRO)
 #include <pango/pango.h>
 #include <pango/pangocairo.h>
 #endif
-
 
 struct sg_layout {
     unsigned refcount;
@@ -24,7 +26,9 @@ struct sg_layout {
     float vx0, vx1, vy0, vy1;
     float tx0, tx1, ty0, ty1;
 
-#if defined(HAVE_PANGOCAIRO)
+#if defined(HAVE_CORETEXT)
+    CTLineRef ct_line;
+#elif defined(HAVE_PANGOCAIRO)
     PangoLayout *pango_layout;
 #endif
 };
@@ -39,8 +43,13 @@ struct sg_layout_bounds {
 };
 
 /* These defs are to give us more informative stack traces.  */
+#if defined(HAVE_CORETEXT)
+#define sg_layout_calcbounds sg_layoutct_calcbounds
+#define sg_layout_render sg_layoutct_render
+#elif defined(HAVE_PANGOCAIRO)
 #define sg_layout_calcbounds sg_layoutpc_calcbounds
 #define sg_layout_render sg_layoutpc_render
+#endif
 
 /* Calculate the bounds of the given layout.  */
 static void
@@ -62,7 +71,13 @@ sg_layout_new(void)
     lp->text = NULL;
     lp->textlen = 0;
     lp->texnum = 0;
+
+#if defined(HAVE_CORETEXT)
+    lp->ct_line = NULL;
+#elif defined(HAVE_PANGOCAIRO)
     lp->pango_layout = NULL;
+#endif
+
     return lp;
 }
 
@@ -182,7 +197,97 @@ sg_layout_draw(struct sg_layout *lp)
     glPopAttrib();
 }
 
-#if defined(HAVE_PANGOCAIRO)
+#if defined(HAVE_CORETEXT)
+
+static void
+sg_layoutct_copyrect(struct sg_layout_rect *dest, CGRect *src)
+{
+    int x1, x2, y1, y2;
+    x1 = floorf(CGRectGetMinX(*src));
+    y1 = floorf(CGRectGetMinY(*src));
+    x2 = ceilf(CGRectGetMaxX(*src));
+    y2 = ceilf(CGRectGetMaxY(*src));
+    dest->x = x1;
+    dest->y = y1;
+    dest->width = x2 - x1;
+    dest->height = y2 - y1;
+}
+
+static CGContextRef
+sg_layoutct_dummycontext(void)
+{
+    static CGContextRef dummy_context;
+    static unsigned char dummy_context_data;
+    if (!dummy_context) {
+        CGColorSpaceRef color_space = CGColorSpaceCreateWithName(kCGColorSpaceGenericGray);
+        dummy_context = CGBitmapContextCreate(&dummy_context_data, 1, 1, 8, 1, color_space, 0);
+        CGColorSpaceRelease(color_space);
+        if (!dummy_context)
+            abort();
+    }
+    return dummy_context;
+}
+
+static void
+sg_layoutct_calcbounds(struct sg_layout *lp, struct sg_layout_bounds *b)
+{
+    CFStringRef string = NULL;
+    CGColorRef white = NULL;
+    CTFontRef font = NULL;
+    CFStringRef keys[2];
+    CFTypeRef vals[2];
+    CFDictionaryRef attr = NULL;
+    CFAttributedStringRef attrstring = NULL;
+    CTLineRef line = NULL;
+    CGRect ibounds;
+
+    string = CFStringCreateWithBytes(kCFAllocatorDefault, (const UInt8 *) lp->text, lp->textlen, kCFStringEncodingUTF8, false);
+    white = CGColorCreateGenericGray(1.0f, 1.0f);
+    font = CTFontCreateWithName(CFSTR("Helvetica"), 14.0f, NULL);
+
+    keys[0] = kCTFontAttributeName;
+    vals[0] = font;
+    keys[1] = kCTForegroundColorAttributeName;
+    vals[1] = white;
+
+    attr = CFDictionaryCreate(kCFAllocatorDefault, (const void **) keys, (const void **) vals, 2, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
+    attrstring = CFAttributedStringCreate(kCFAllocatorDefault, string, attr);
+    line = CTLineCreateWithAttributedString(attrstring);
+    ibounds = CTLineGetImageBounds(line, sg_layoutct_dummycontext());
+    b->x = 0;
+    b->y = 0;
+    sg_layoutct_copyrect(&b->ibounds, &ibounds);
+
+    CFRelease(attrstring);
+    CFRelease(attr);
+    CFRelease(font);
+    CFRelease(white);
+    CFRelease(string);
+
+    lp->ct_line = line;
+}
+
+static void
+sg_layoutct_render(struct sg_layout *lp, struct sg_pixbuf *pbuf,
+                   int xoff, int yoff)
+{
+    CGColorSpaceRef color_space = NULL;
+    CGContextRef context = NULL;
+    CTLineRef line = lp->ct_line;
+    
+    color_space = CGColorSpaceCreateWithName(kCGColorSpaceGenericGray);
+    context = CGBitmapContextCreate(pbuf->data, pbuf->pwidth, pbuf->pheight, 8, pbuf->rowbytes, color_space, 0);
+    CGContextSetTextPosition(context, xoff, yoff);
+    CTLineDraw(line, context);
+
+    CFRelease(color_space);
+    CFRelease(context);
+    CFRelease(line);
+
+    lp->ct_line = NULL;
+}
+
+#elif defined(HAVE_PANGOCAIRO)
 
 static void
 sg_layoutpc_copyrect(struct sg_layout_rect *dest, PangoRectangle *src)

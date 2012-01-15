@@ -6,4 +6,4 @@
 #endif
 
 #define HAVE_COREGRAPHICS 1
-#undef HAVE_LIBPNG
+#define HAVE_CORETEXT 1

@@ -3,10 +3,10 @@
 #import "GView.h"
 #import "GWindow.h"
 #import "GController.h"
-#import "impl/entry.h"
-#import "impl/kbd/keyid.h"
-#import "impl/kbd/keytable.h"
-#import "impl/resource.h"
+#import "base/entry.h"
+#import "base/keycode/keyid.h"
+#import "base/keycode/keytable.h"
+#import "base/resource.h"
 
 @interface GDisplay (Private)
 
@@ -354,7 +354,7 @@ error:
 
 - (void)handleUIEvent:(union sg_event *)event {
     [self lock];
-    sg_game_event(event);
+    sg_sys_event(event);
     [self unlock];
 }
 
@@ -373,9 +373,9 @@ error:
         evt.type = SG_EVENT_RESIZE;
         evt.width = width_;
         evt.height = height_;
-        sg_game_event((union sg_event *) &evt);
+        sg_sys_event((union sg_event *) &evt);
     }
-    sg_game_draw(sg_clock_get());
+    sg_sys_draw();
     [context_ flushBuffer];
     [self unlock];
 }

@@ -4,7 +4,7 @@
 #import <Cocoa/Cocoa.h>
 #import <CoreVideo/CoreVideo.h>
 #import "GApplication.h"
-#import "impl/event.h"
+#import "base/event.h"
 #import <pthread.h>
 
 @class GView;

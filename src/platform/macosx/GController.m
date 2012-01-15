@@ -1,11 +1,8 @@
 #import "GController.h"
 #import "GDisplay.h"
-#import "impl/clock.h"
-#import "impl/cvar.h"
-#import "impl/entry.h"
-#import "impl/error.h"
-#import "impl/lfile.h"
-#import "impl/rand.h"
+#import "base/entry.h"
+#import "base/cvar.h"
+#import "base/error.h"
 
 void
 sg_platform_failf(const char *fmt, ...)
@@ -78,11 +75,7 @@ extern bool gEditor;
         value = [args objectForKey:key];
         sg_cvar_addarg(NULL, [key UTF8String], [value UTF8String]);
     }
-    
-    sg_path_init();
-    sg_clock_init();
-    sg_rand_seed(&sg_rand_global, 1);
-    sg_game_init();
+    sg_sys_init();
     GDisplay *d = [[[GDisplay alloc] init] autorelease];
     [d showWindow:self];
 }
