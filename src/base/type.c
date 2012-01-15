@@ -1,10 +1,14 @@
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include "opengl.h"
 #include "pixbuf.h"
 #include "type.h"
 #include <stdlib.h>
 #include <string.h>
 
-#if defined(USE_PANGOCAIRO)
+#if defined(HAVE_PANGOCAIRO)
 #include <pango/pango.h>
 #include <pango/pangocairo.h>
 #endif
@@ -20,7 +24,7 @@ struct sg_layout {
     float vx0, vx1, vy0, vy1;
     float tx0, tx1, ty0, ty1;
 
-#ifdef USE_PANGOCAIRO
+#if defined(HAVE_PANGOCAIRO)
     PangoLayout *pango_layout;
 #endif
 };
@@ -178,7 +182,7 @@ sg_layout_draw(struct sg_layout *lp)
     glPopAttrib();
 }
 
-#ifdef USE_PANGOCAIRO
+#if defined(HAVE_PANGOCAIRO)
 
 static void
 sg_layoutpc_copyrect(struct sg_layout_rect *dest, PangoRectangle *src)

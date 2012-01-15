@@ -1,5 +1,11 @@
 all:
 
+-include ../config.mak
+
+# Below are "sensible defaults" based on knowledge of specific
+# platforms.  The defaults are ignored if 'configure' is run.
+ifndef HAVE_CONFIG
+
 UNAME_S := $(shell sh -c 'uname -s 2>/dev/null || echo unknown')
 UNAME_M := $(shell sh -c 'uname -m 2>/dev/null || echo unknown')
 
@@ -13,6 +19,7 @@ CXXFLAGS = -g -O2
 CWARN = -Wall -Wextra -Wpointer-arith -Wno-sign-compare \
 	-Wwrite-strings -Wstrict-prototypes -Wmissing-prototypes
 CXXWARN = -Wall -Wextra -Wpointer-arith -Wno-sign-compare
+DEFS =
 LDFLAGS =
 LIBS =
 
@@ -35,7 +42,7 @@ ifeq ($(UNAME_S),Linux)
 	IMAGE_LIBS := $(PNG_LIBS) $(JPEG_LIBS)
 	HAVE_PANGO := $(shell sh -c 'pkg-config pangocairo 2>/dev/null && echo yes')
 	ifdef HAVE_PANGO
-		PANGO_CFLAGS := -DUSE_PANGOCAIRO $(shell pkg-config --cflags pangocairo)
+		PANGO_CFLAGS := -DHAVE_PANGOCAIRO $(shell pkg-config --cflags pangocairo)
 		PANGO_LIBS := $(shell pkg-config --libs pangocairo)
 	endif
 	TYPE_CFLAGS = $(PANGO_CFLAGS)
@@ -51,11 +58,11 @@ ifeq ($(UNAME_S),Darwin)
 	COCOA_LIBS := -framework AppKit -framework Foundation -framework CoreVideo -framework Carbon
 endif
 
--include ../config.mak
+endif
 
 ########################################
 
-ALL_CPPFLAGS = $(BASE_CPPFLAGS) $(CPPFLAGS)
+ALL_CPPFLAGS = $(DEFS) $(BASE_CPPFLAGS) $(CPPFLAGS)
 ALL_CFLAGS = $(BASE_CFLAGS) $(CWARN) $(CFLAGS)
 ALL_CXXFLAGS = $(BASE_CXXFLAGS) $(CXXWARN) $(CXXFLAGS)
 ALL_LDFLAGS = $(BASE_LDFLAGS) $(LDFLAGS)
