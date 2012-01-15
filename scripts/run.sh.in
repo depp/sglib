@@ -4,13 +4,32 @@
 # the game can locate resources.  If the first argument is "gdb", then
 # GDB is invoked to run the game.
 
+# A front-end is selected in order of preference, but can be
+# overridden with the FRONTEND environment variable.  Valid settings
+# are gtk, sdl, etc.
+
 # 'make' will substitute these variables
 SRCDIR="@SRCDIR@"
 BUILDDIR="@BUILDDIR@"
 
-GAME="$BUILDDIR/src/game-bin"
+GAMEDIR="$BUILDDIR/src"
 PATHVAR="path.data-path=$SRCDIR/data"
 GDB=gdb
+
+if test -z "$FRONTEND"
+then
+    for FRONTEND in gtk sdl
+    do
+	test -x "$GAMEDIR/game-$FRONTEND" && break
+    done
+fi
+
+GAME="$GAMEDIR/game-$FRONTEND"
+if test ! -x "$GAME"
+then
+    echo "error: game-$FRONTEND does not exist, did you run make?" >&2
+    exit 1
+fi
 
 case "$1" in
     gdb)

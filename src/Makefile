@@ -249,11 +249,11 @@ $(OBJC_OBJS): %.o: %.m $(dep_dirs_missing)
 	$(QUIET_OBJC)$(CC) -o $@ -c $(dep_args) $(ALL_CPPFLAGS) $(ALL_OBJCFLAGS) $<
 
 ifdef HAVE_GTK
-targets += game-bin
+targets += game-gtk
 
-game-bin: BASE_LIBS += $(GTK_LIBS) $(OPENGL_LIBS) $(IMAGE_LIBS) $(TYPE_LIBS)
+game-gtk: BASE_LIBS += $(GTK_LIBS) $(OPENGL_LIBS) $(IMAGE_LIBS) $(TYPE_LIBS)
 
-game-bin: $(BASE_OBJS) $(GTK_OBJS)
+game-gtk: $(BASE_OBJS) $(GTK_OBJS)
 	$(QUIET_LINK)$(CXX) $(ALL_LDFLAGS) -o $@ $^ $(ALL_LIBS)
 endif
 
