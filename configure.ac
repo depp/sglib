@@ -4,24 +4,39 @@ AC_CONFIG_SRCDIR([src/base/clock.c])
 AC_CONFIG_HEADERS([src/config.h])
 AC_CONFIG_FILES([config.mak])
 
-dnl CHECK_FRAMEWORK(framework, action if found, action if not found)
-dnl This will only ever work on Darwin / Mac OS X
-AC_DEFUN([CHECK_FRAMEWORK], [
-  AC_CACHE_CHECK([for the $1 framework], [my_cv_framework_$1], [
-    save_LIBS="$LIBS"
-    LIBS="$LIBS -framework $1"
+dnl Check if the linker supports the given flags
+dnl Don't call directly, use for implementing macros
+dnl CHECK_LDFLAGS(flag, check description,
+dnl               action if found, action if not found)
+AC_DEFUN([CHECK_LDFLAGS_BASE], [
+  AS_VAR_PUSHDEF([cachevar], [my_cv_ldflag_$1])
+  AC_CACHE_CHECK([$2], cachevar, [
+    save_LDFLAGS="$LDFLAGS"
+    LDFLAGS="$LDFLAGS $1"
     AC_LINK_IFELSE(
       [AC_LANG_PROGRAM([], [])],
-      [my_cv_framework_$1=yes],
-      [my_cv_framework_$1=no])
+      [AS_VAR_SET(cachevar, [yes])],
+      [AS_VAR_SET(cachevar, [no])])
+    LDFLAGS="$save_LDFLAGS"
   ])
-  LIBS="$save_LIBS"
-  if test "$my_framework_$1" = yes
-  then
-    m4_default([$2], [:])
-  else
-    m4_default([$3], [:])
-  fi
+  AS_IF([test x"AS_VAR_GET(cachevar)" = xyes], [$3], [$4])
+  AS_VAR_POPDEF([cachevar])
+])
+
+dnl Check if the linker supports the given flags
+dnl By default, add them to LDFLAGS if the linker does
+AC_DEFUN([CHECK_LDFLAGS], [
+  CHECK_LDFLAGS_BASE([$1], [whether the linker accepts $1],
+    [m4_default([$2], [LDFLAGS="$1 $LDFLAGS"])],
+    [m4_default([$3], [:])])
+])
+
+dnl Check if the given framework is available
+dnl By default, do nothing
+AC_DEFUN([CHECK_FRAMEWORK], [
+  CHECK_LDFLAGS_BASE([-framework $1], [for the $1 framework],
+    [m4_default([$2], [:])],
+    [m4_default([$3], [:])])
 ])
 
 AC_DEFUN([GET_UNAME], [
@@ -112,8 +127,8 @@ fi
 if test -z "$have_opengl" ; then
   AC_MSG_ERROR([cannot find OpenGL libraries])
 fi
-AC_SUBST([GL_LIBS])
-AC_SUBST([GL_CFLAGS])
+AC_SUBST([OPENGL_LIBS])
+AC_SUBST([OPENGL_CFLAGS])
 
 dnl Check for some way to load images
 if test -z "$have_image" ; then
@@ -185,6 +200,46 @@ else
 fi
 AC_SUBST([CWARN])
 AC_SUBST([CXXWARN])
+
+dnl Check for linker options we want
+dnl However, GNU binutils (at least) is very lax about command line
+dnl parameters, so we want to only give it exactly the parameters it
+dnl is supposed to support rather than let it guess what we mean.
+dnl So we target options to the linkers we know about.
+dnl The options we are checking for are not that important anyway.
+
+dnl Guess the linker vendor
+dnl Binutils lets us get away with -Wl,-v or -Wl,--version
+dnl Mac OS X makes us run ld directly
+ld_info=$($CC -Wl,--version 2>/dev/null) || \
+  ld_info=$(ld -v 2>/dev/null) || \
+  ld_info=unknown
+case "$ld_info" in
+  "GNU ld "*) ld_vendor=gnu ;;
+  "Low Level Virtual Machine "*) ld_vendor=llvm ;;
+  *)
+    case "$UNAME_S" in
+      Darwin) ld_vendor=apple ;;
+      *) ld_vendor=unknown ;;
+    esac
+    ;;
+esac
+
+dnl Add the options we want, depending on linker vendor
+case "$ld_vendor" in
+  gnu)
+    CHECK_LDFLAGS([-Wl,--gc-sections])
+    CHECK_LDFLAGS([-Wl,--as-needed])
+    ;;
+  apple)
+    CHECK_LDFLAGS([-Wl,-dead_strip])
+    CHECK_LDFLAGS([-Wl,-dead_strip_dylibs])
+    ;;
+esac
+
+dnl Remove -Wl,--export-dynamic from GTK_LIBS
+dnl It's part of 'gmodule', but we don't need it
+GTK_LIBS="$(echo " $GTK_LIBS " | sed 's/  *-Wl,--export-dynamic  */ /')"
 
 AC_OUTPUT
 

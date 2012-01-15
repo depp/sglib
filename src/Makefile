@@ -47,14 +47,14 @@ ifeq ($(UNAME_S),Linux)
 	endif
 	TYPE_CFLAGS = $(PANGO_CFLAGS)
 	TYPE_LIBS = $(PANGO_LIBS)
-	GL_LIBS := -lGL -lGLU
+	OPENGL_LIBS := -lGL -lGLU
 	BASE_LDFLAGS := -Wl,--gc-sections --Wl,--as-needed
 endif
 ifeq ($(UNAME_S),Darwin)
 	HAVE_COCOA := yes
 	IMAGE_CFLAGS := -DHAVE_COREGRAPHICS -F/System/Library/Frameworks/ApplicationServices.framework/Frameworks
 	IMAGE_LIBS := -framework ApplicationServices
-	GL_LIBS := -framework OpenGL
+	OPENGL_LIBS := -framework OpenGL
 	COCOA_LIBS := -framework AppKit -framework Foundation -framework CoreVideo -framework Carbon
 endif
 
@@ -247,19 +247,19 @@ $(OBJC_OBJS): %.o: %.m $(dep_dirs_missing)
 ifdef HAVE_GTK
 targets += game-bin
 
-game-bin: BASE_LIBS += $(GTK_LIBS) $(GL_LIBS) $(IMAGE_LIBS) $(TYPE_LIBS)
+game-bin: BASE_LIBS += $(GTK_LIBS) $(OPENGL_LIBS) $(IMAGE_LIBS) $(TYPE_LIBS)
 
 game-bin: $(BASE_OBJS) $(GTK_OBJS)
-	$(QUIET_LINK)$(CXX) -o $@ $(ALL_LDFLAGS) $^ $(ALL_LIBS)
+	$(QUIET_LINK)$(CXX) $(ALL_LDFLAGS) -o $@ $^ $(ALL_LIBS)
 endif
 
 ifdef HAVE_COCOA
 targets += game-mac
 
-game-mac: BASE_LIBS += $(GL_LIBS) $(COCOA_LIBS)
+game-mac: BASE_LIBS += $(COCOA_LIBS) $(OPENGL_LIBS) $(IMAGE_LIBS) $(TYPE_LIBS)
 
 game-mac: $(BASE_OBJS) $(MAC_OBJS)
-	$(QUIET_LINK)$(CXX) -o $@ $(ALL_LDFLAGS) $^ $(ALL_LIBS)
+	$(QUIET_LINK)$(CXX) $(ALL_LDFLAGS) -o $@ $^ $(ALL_LIBS)
 endif
 
 ########################################
