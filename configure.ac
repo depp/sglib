@@ -98,7 +98,7 @@ CHECK_FRONTEND([gtk], [Gtk+-2.0 / GtkGLExt], [
 
 dnl From the changelog: "SDL 1.2.10 is a major release, featuring a
 dnl revamp of the build system and many API improvements and bug fixes."
-CHECK_FRONTEND([sdl], [LibSDL], [
+CHECK_FRONTEND([sdl], [LibSDL (experimental)], [
   AM_PATH_SDL([1.2.10], [HAVE_SDL=yes])
 ])
 
