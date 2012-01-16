@@ -75,13 +75,23 @@ void
 sg_error_data(struct sg_error **err, const char *fmtname);
 
 #if defined(_WIN32)
-/* Put Windows-specific error domains here */
-#endif
+
+extern const struct sg_error_domain SG_ERROR_WINDOWS;
+
+void
+sg_error_win32(struct sg_error **err, unsigned long code);
+
+void
+sg_error_hresult(struct sg_error **err, long code);
+
+#else
 
 extern const struct sg_error_domain SG_ERROR_ERRNO;
 
 void
 sg_error_errno(struct sg_error **err, int code);
+
+#endif
 
 #ifdef __cplusplus
 }
