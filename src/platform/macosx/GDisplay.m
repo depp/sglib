@@ -243,6 +243,9 @@ static void handleMouse(GDisplay *d, NSEvent *e, sg_event_type_t t, int button)
     [c addObserver:self selector:@selector(applicationDidHide:) name:NSApplicationDidHideNotification object:NSApp];
     [c addObserver:self selector:@selector(applicationDidUnhide:) name:NSApplicationDidUnhideNotification object:NSApp];
 
+    minSize_ = NSMakeSize(320, 180);
+    defaultSize_ = NSMakeSize(1280, 720);
+
     return self;
 
 error:
@@ -254,6 +257,14 @@ error:
     pthread_mutex_destroy(&lock_);
     [[NSNotificationCenter defaultCenter] removeObserver:self];
     [super dealloc];
+}
+
+- (void)setDefaultSize:(NSSize)size {
+    defaultSize_ = size;
+}
+
+- (void)setMinSize:(NSSize)size {
+    minSize_ = size;
 }
 
 - (void)setMode:(GDisplayMode)mode {
@@ -295,7 +306,8 @@ error:
         NSUInteger style;
         NSWindow *w;
         if (mode == GDisplayWindow) {
-            r = NSMakeRect(0, 0, 768, 480);
+            r.origin = NSMakePoint(0, 0);
+            r.size = defaultSize_;
             style = NSTitledWindowMask | NSClosableWindowMask | NSMiniaturizableWindowMask | NSResizableWindowMask;
         } else {
             r = [s frame];
@@ -307,6 +319,8 @@ error:
         }
         w = [[GWindow alloc] initWithContentRect:r styleMask:style backing:NSBackingStoreBuffered defer:NO screen:s];
         nswindow_ = w;
+        if (mode == GDisplayWindow)
+            [w setContentMinSize:minSize_];
         [w setTitle:@"Game"];
         [w setDelegate:self];
         if (mode == GDisplayWindow) {

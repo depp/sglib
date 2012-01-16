@@ -68,8 +68,10 @@ sg_platform_quit(void)
 }
 
 - (void)applicationDidFinishLaunching:(NSNotification *)notification {
+    struct sg_game_info gameinfo;
+
     (void)notification;
-    
+
     NSDictionary *args = [[NSUserDefaults standardUserDefaults] volatileDomainForName:NSArgumentDomain];
     NSEnumerator *e = [args keyEnumerator];
     NSString *key, *value;
@@ -78,7 +80,10 @@ sg_platform_quit(void)
         sg_cvar_addarg(NULL, [key UTF8String], [value UTF8String]);
     }
     sg_sys_init();
+    sg_sys_getinfo(&gameinfo);
     GDisplay *d = [[[GDisplay alloc] init] autorelease];
+    [d setDefaultSize:NSMakeSize(gameinfo.default_width, gameinfo.default_height)];
+    [d setMinSize:NSMakeSize(gameinfo.min_width, gameinfo.min_height)];
     [d showWindow:self];
 }
 

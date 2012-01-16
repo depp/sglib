@@ -23,6 +23,7 @@ typedef enum {
 
     BOOL frameChanged_;
     int width_, height_;
+    NSSize minSize_, defaultSize_;
 
     // Mode is set first, and then OpenGL will be initialized by -[GDisplay update]
     GDisplayMode mode_;
@@ -42,6 +43,8 @@ typedef enum {
     CGDirectDisplayID display_;
 }
 
+- (void)setMinSize:(NSSize)size;
+- (void)setDefaultSize:(NSSize)size;
 - (void)setMode:(GDisplayMode)mode;
 - (void)showWindow:(id)sender;
 - (void)showFullScreen:(id)sender;
