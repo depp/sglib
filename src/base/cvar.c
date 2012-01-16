@@ -1,11 +1,19 @@
 #include "cvar.h"
 #include "configfile.h"
 
+#include <float.h>
 #include <limits.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#ifdef _MSC_VER
+#define INFINITY 1.0/0.0
+#define NAN 0.0/0.0
+#define isfinite(x) _finite(x)
+#define isnan(x) _isnan(x)
+#endif
 
 static struct configfile sg_cvar_conf, sg_cvar_arg;
 
@@ -222,10 +230,10 @@ sg_cvar_setd(const char *section, const char *name, double v)
         buf[sizeof(buf) - 1] = 0;
 #endif
         sg_cvar_sets(section, name, buf);
-    } else if (isinf(v)) {
-        sg_cvar_sets(section, name, v > 0 ? "+inf" : "-inf");
-    } else {
+    } else if (isnan(v)) {
         sg_cvar_sets(section, name, "nan");
+    } else {
+        sg_cvar_sets(section, name, v > 0 ? "+inf" : "-inf");
     }
 }
 
