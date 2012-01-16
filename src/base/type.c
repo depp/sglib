@@ -49,6 +49,9 @@ struct sg_layout_bounds {
 #elif defined(HAVE_PANGOCAIRO)
 #define sg_layout_calcbounds sg_layoutpc_calcbounds
 #define sg_layout_render sg_layoutpc_render
+#elif defined(_WIN32)
+#define sg_layout_calcbounds sg_layoutw_calcbounds
+#define sg_layout_render sg_layoutw_render
 #endif
 
 /* Calculate the bounds of the given layout.  */
@@ -401,4 +404,26 @@ sg_layoutpc_render(struct sg_layout *lp, struct sg_pixbuf *pbuf,
     cairo_surface_destroy(surf);
 }
 
+#elif defined(_WIN32)
+
+static void
+sg_layout_calcbounds(struct sg_layout *lp, struct sg_layout_bounds *b)
+{
+    b->x = 0;
+    b->y = 0;
+    b->ibounds.x = 0;
+    b->ibounds.y = 0;
+    b->ibounds.width = 16;
+    b->ibounds.height = 16;
+}
+
+/* Render the layout at the given location in a pixel buffer.  */
+static void
+sg_layout_render(struct sg_layout *lp, struct sg_pixbuf *pbuf,
+                 int xoff, int yoff)
+{
+
+}
+
 #endif
+
