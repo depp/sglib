@@ -14,12 +14,11 @@ public:
     };
     static const int MAX = COUNT - 1;
 
-
     Background(int which_)
         : which(which_)
     { }
 
-    virtual ~Background();    
+    virtual ~Background();
 
     virtual void init() = 0;
     virtual void advance() = 0;

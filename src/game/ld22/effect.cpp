@@ -121,4 +121,3 @@ void Effect::advance()
         }
     }
 }
-

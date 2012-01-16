@@ -280,7 +280,7 @@ sg_layoutct_render(struct sg_layout *lp, struct sg_pixbuf *pbuf,
     CGColorSpaceRef color_space = NULL;
     CGContextRef context = NULL;
     CTLineRef line = lp->ct_line;
-    
+
     color_space = CGColorSpaceCreateWithName(kCGColorSpaceGenericGray);
     context = CGBitmapContextCreate(
         pbuf->data, pbuf->pwidth, pbuf->pheight, 8, pbuf->rowbytes,

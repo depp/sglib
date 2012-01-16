@@ -225,7 +225,6 @@ void Walker::updateItem()
     m_item_distance = std::sqrt(dx*dx + dy*dy);
 }
 
-
 void Walker::getGrabPos(int *x, int *y)
 {
     int height;

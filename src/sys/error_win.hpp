@@ -2,7 +2,7 @@
 #define SYS_ERROR_WIN_HPP
 #include <stdexcept>
 #include <string>
- 
+
 class error_win : public std::exception {
 public:
     explicit error_win(int code) throw() : code_(code) { }

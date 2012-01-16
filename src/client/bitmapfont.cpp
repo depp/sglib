@@ -8,7 +8,6 @@ BitmapFont::BitmapFont(const char *path)
 BitmapFont::~BitmapFont()
 { }
 
-
 void BitmapFont::print(int x, int y, const char *text)
 {
     if (!text)

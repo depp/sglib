@@ -314,7 +314,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
     MSG msg;
     WinWindow w;
     gWindow = &w;
-    
+
     try {
         init();
         w.setScreen(new LD22::Screen);
@@ -349,7 +349,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
         errorBox(buf);
     }
 done:
-    
+
     killGLWindow();
     return 0;
 }

@@ -129,7 +129,7 @@ void Other::aha()
 
 void Other::munch()
 {
-    
+
 }
 
 void Other::setState(State s)

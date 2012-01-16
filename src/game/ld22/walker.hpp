@@ -28,7 +28,6 @@ private:
         AWalkRight
     } WAnim;
 
-
     WState m_wstate;
     WAnim m_anim;
     int m_animtime;

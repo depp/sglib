@@ -73,7 +73,7 @@ public:
 private:
     IFileWin(IFileWin const &);
     IFileWin &operator=(IFileWin const &);
-    
+
     HANDLE hdl_;
     int64_t off_;
 };

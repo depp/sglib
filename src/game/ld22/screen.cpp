@@ -19,7 +19,7 @@ static const unsigned char KEY_MAP[] = {
     KEY_S, InDown,
     KP_5, InDown,
     KEY_Down, InDown,
- 
+
     KEY_D, InRight,
     KP_6, InRight,
     KEY_Right, InRight,

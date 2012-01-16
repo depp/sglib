@@ -157,7 +157,7 @@ void Editor::handleMouseDown(const UI::MouseEvent &evt)
             break;
         }
     } else {
-        
+
     }
 }
 

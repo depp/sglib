@@ -7,7 +7,6 @@
 
 @end
 
-
 @interface GApplication : NSApplication {
     id <GEventCapture> evtDest_;
 }

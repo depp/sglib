@@ -79,7 +79,6 @@ bool TextureFile::loadTexture()
     return false;
 }
 
-
 #if defined(HAVE_COREGRAPHICS)
 #include <CoreGraphics/CoreGraphics.h>
 
@@ -124,7 +123,7 @@ static bool imageToTexture(TextureFile &tex, CGImageRef img)
     }
 
     tex.alloc(w, h, true, true);
-    size_t tw = tex.twidth(), th = tex.theight(); 
+    size_t tw = tex.twidth(), th = tex.theight();
     printf("tw = %zu, th = %zu\n", tw, th);
     CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
     assert(colorSpace);
@@ -249,10 +248,10 @@ bool TextureFile::loadPNG()
     hr = converter->GetSize(&iwidth, &iheight);
     if (hr != S_OK)
         goto failed;
-    
+
     alloc(iwidth, iheight, color, alpha);
     tw = twidth();
-    th = theight(); 
+    th = theight();
     tstride = rowbytes();
     converter->CopyPixels(NULL, tstride, th * tstride, (BYTE *) buf());
     success = true;

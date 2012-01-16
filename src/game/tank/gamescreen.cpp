@@ -22,7 +22,7 @@ static const unsigned char KEY_MAP[] = {
     KEY_S, KeyBack,
     KP_5, KeyBack,
     KEY_Down, KeyBack,
- 
+
     KEY_D, KeyRight,
     KP_6, KeyRight,
     KEY_Right, KeyRight,
