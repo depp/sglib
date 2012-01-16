@@ -19,6 +19,8 @@
 
 - (void)frameChanged:(NSNotification *)notification;
 
+- (void)stateChanged;
+
 @end
 
 static bool isWindowedMode(GDisplayMode mode)
@@ -26,24 +28,6 @@ static bool isWindowedMode(GDisplayMode mode)
     return mode == GDisplayWindow || mode == GDisplayFSWindow;
 }
 
-/* C++ interface */
-#if 0
-class MacWindow : public UI::Window {
-    GDisplay *window;
-
-public:
-    explicit MacWindow(GDisplay *w)
-        : window(w)
-    { }
-
-    void close();
-};
-
-void MacWindow::close()
-{
-    [window queueModeChange:GDisplayNone];
-}
-#endif
 /* Event handling */
 
 void GDisplayKeyEvent(GDisplay *w, NSEvent *e, sg_event_type_t t)
@@ -217,6 +201,24 @@ static void handleMouse(GDisplay *d, NSEvent *e, sg_event_type_t t, int button)
     [self unlock];
 }
 
+- (void)stateChanged {
+    unsigned status;
+    struct sg_event_status evt;
+    if ([NSApp isHidden]) {
+        status = 0;
+    } else if (mode_ == GDisplayWindow) {
+        if ([nswindow_ isMiniaturized])
+            status = 0;
+        else
+            status = SG_STATUS_VISIBLE;
+    } else {
+        status = SG_STATUS_VISIBLE | SG_STATUS_FULLSCREEN;
+    }
+    evt.type = SG_EVENT_STATUS;
+    evt.status = status;
+    sg_sys_event((union sg_event *) &evt);
+}
+
 @end
 
 /* Objective C interface */
@@ -237,6 +239,10 @@ static void handleMouse(GDisplay *d, NSEvent *e, sg_event_type_t t, int button)
     r = pthread_mutexattr_destroy(&attr);
     if (r) goto error;
 
+    NSNotificationCenter *c = [NSNotificationCenter defaultCenter];
+    [c addObserver:self selector:@selector(applicationDidHide:) name:NSApplicationDidHideNotification object:NSApp];
+    [c addObserver:self selector:@selector(applicationDidUnhide:) name:NSApplicationDidUnhideNotification object:NSApp];
+
     return self;
 
 error:
@@ -244,12 +250,11 @@ error:
     return nil;
 }
 
-/*
-- (void)reshape {
-    NSRect rect = [self bounds];
-    window_->setSize(NSWidth(rect), NSHeight(rect));
+- (void)dealloc {
+    pthread_mutex_destroy(&lock_);
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
+    [super dealloc];
 }
-*/
 
 - (void)setMode:(GDisplayMode)mode {
     if (mode == mode_ || modeChange_)
@@ -330,9 +335,11 @@ error:
         [NSApp startEventCapture:self];
     } else if (mode == GDisplayNone) {
         [[GController sharedInstance] removeDisplay:self];
+        return;
     }
 
     modeChange_ = NO;
+    [self stateChanged];
 }
 
 - (void)showWindow:(id)sender {
@@ -396,6 +403,31 @@ error:
     (void)notification;
     nswindow_ = nil;
     [self setMode:GDisplayNone];
+}
+
+- (void)windowDidDeminiaturize:(NSNotification *)notification {
+    (void) notification;
+    [self stateChanged];
+}
+
+- (void)windowDidExpose:(NSNotification *)notification {
+    (void) notification;
+    [self stateChanged];
+}
+
+- (void)windowDidMiniaturize:(NSNotification *)notification {
+    (void) notification;
+    [self stateChanged];
+}
+
+- (void)applicationDidHide:(NSNotification *)notification {
+    (void) notification;
+    [self stateChanged];
+}
+
+- (void)applicationDidUnhide:(NSNotification *)notification {
+    (void) notification;
+    [self stateChanged];
 }
 
 - (BOOL)handleEvent:(NSEvent *)event {
