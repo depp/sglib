@@ -5,45 +5,8 @@
 
 struct sg_rand_state sg_rand_global;
 
-#include <errno.h>
-#include <fcntl.h>
-#include <unistd.h>
-
 static int
-sg_rand_getentropy(unsigned *array, unsigned count)
-{
-    unsigned char *p = (unsigned char *) array;
-    size_t rem = count * sizeof(unsigned);
-    int fdes, e;
-    ssize_t amt;
-
-    fdes = open("/dev/urandom", O_RDONLY);
-    if (fdes < 0) {
-        e = errno;
-        if (e != ENOENT)
-            return -1;
-        fdes = open("/dev/random", O_RDONLY);
-        if (fdes < 0)
-            return -1;
-    }
-
-    amt = 0;
-    while (rem) {
-        amt = read(fdes, p, rem);
-        if (amt > 0) {
-            rem -= amt;
-            p += amt;
-        } else if (amt == 0) {
-            break;
-        } else if (amt < 0) {
-            break;
-        }
-    }
-
-    close(fdes);
-
-    return rem == 0 ? 0 : -1;
-}
+sg_rand_getentropy(unsigned *array, unsigned count);
 
 /* FIXME: Vet this PRNG.  */
 
@@ -114,3 +77,55 @@ sg_gfrand(void)
 {
     return sg_frand(&sg_rand_global);
 }
+
+#if defined(_WIN32)
+
+static int
+sg_rand_getentropy(unsigned *array, unsigned count)
+{
+    return -1;
+}
+
+#else
+
+#include <errno.h>
+#include <fcntl.h>
+#include <unistd.h>
+
+static int
+sg_rand_getentropy(unsigned *array, unsigned count)
+{
+    unsigned char *p = (unsigned char *) array;
+    size_t rem = count * sizeof(unsigned);
+    int fdes, e;
+    ssize_t amt;
+
+    fdes = open("/dev/urandom", O_RDONLY);
+    if (fdes < 0) {
+        e = errno;
+        if (e != ENOENT)
+            return -1;
+        fdes = open("/dev/random", O_RDONLY);
+        if (fdes < 0)
+            return -1;
+    }
+
+    amt = 0;
+    while (rem) {
+        amt = read(fdes, p, rem);
+        if (amt > 0) {
+            rem -= amt;
+            p += amt;
+        } else if (amt == 0) {
+            break;
+        } else if (amt < 0) {
+            break;
+        }
+    }
+
+    close(fdes);
+
+    return rem == 0 ? 0 : -1;
+}
+
+#endif
