@@ -8,6 +8,7 @@
 /* This gives us 64-bit file offsets on 32-bit Linux */
 #define _FILE_OFFSET_BITS 64
 
+#include "cvar.h"
 #include "error.h"
 #include "file.h"
 #include <limits.h>
@@ -20,7 +21,7 @@
 #define sg_path_i_init sg_path_w_init
 #else
 #define sg_file_i_open sg_file_u_open
-#define sg_path_i_init sg_path_w_init
+#define sg_path_i_init sg_path_u_init
 #endif
 
 #if defined(SG_PATH_UNICODE)
@@ -107,7 +108,7 @@ sg_file_open(const char *path, int flags, struct sg_error **e)
         p = pbuf + pmaxlen - a[i].len;
         memcpy(p, a[i].path, a[i].len * sizeof(pchar));
         r = sg_file_i_open(&f, p, flags, e);
-        if (r > 1)
+        if (r > 0)
             goto done;
         if (r < 0) {
             f = NULL;
@@ -129,6 +130,90 @@ nomem:
 done:
     free(pbuf);
     return f;
+}
+
+int
+sg_file_readall(struct sg_file *f, struct sg_buffer *fbuf, size_t maxsize)
+{
+    unsigned char *buf = NULL, *nbuf;
+    size_t len, nlen, pos;
+    int64_t flen;
+    int amt;
+    int (*read)(struct sg_file *f, void *buf, size_t amt);
+    read = f->read;
+
+    if (f->length) {
+        flen = f->length(f);
+        if (flen < 0)
+            return -1;
+        if (flen > maxsize)
+            goto toobig;
+        len = (size_t) flen + 1;
+    } else {
+        len = maxsize > SG_FILE_INITBUF ? SG_FILE_INITBUF : (maxsize + 1);
+    }
+
+    buf = malloc(len);
+    if (!buf)
+        goto nomem;
+    pos = 0;
+    while (1) {
+        amt = read(f, buf + pos, len - pos);
+        if (amt > 0) {
+            pos += amt;
+            if (pos > maxsize)
+                goto toobig;
+            if (pos >= len) {
+                nlen = len * 2;
+                if (!nlen)
+                    goto nomem;
+                nbuf = realloc(buf, nlen);
+                if (!nbuf)
+                    goto nomem;
+                buf = nbuf;
+                len = nlen;
+            }
+        } else if (amt == 0) {
+            break;
+        } else {
+            goto err;
+        }
+    }
+    buf[pos] = '\0';
+    if (pos + 1 < len)
+        buf = realloc(buf, pos + 1);
+    fbuf->data = buf;
+    fbuf->length = pos;
+    return 0;
+
+nomem:
+    sg_error_nomem(&f->err);
+    goto err;
+
+err:
+    free(buf);
+    return -1;
+
+toobig:
+    free(buf);
+    sg_error_sets(&f->err, &SG_ERROR_DATA, 0, "file too large");
+    return 1;
+}
+
+int
+sg_file_get(const char *path, int flags,
+            struct sg_buffer *fbuf, size_t maxsize, struct sg_error **e)
+{
+    struct sg_file *f;
+    int r;
+    f = sg_file_open(path, flags, e);
+    if (!f)
+        return -1;
+    r = sg_file_readall(f, fbuf, maxsize);
+    if (r)
+        sg_error_move(e, &f->err);
+    f->free(f);
+    return r;
 }
 
 /* Add a path to the given search paths.  */
@@ -170,6 +255,34 @@ sg_path_add(struct sg_paths *p, const char *path, size_t len, int flags)
 
 nomem:
     abort();
+}
+
+void
+sg_path_init(void)
+{
+    const char *p, *sep;
+    int r;
+
+    r = sg_cvar_gets("path", "data-dir", &p);
+    if (!r)
+        p = "data";
+
+    sg_path_add(&sg_paths, p, strlen(p), SG_PATH_EXEDIR);
+
+    r = sg_cvar_gets("path", "data-path", &p);
+    if (!r)
+        p = "";
+    while (*p) {
+        sep = strchr(p, ':');
+        if (!sep) {
+            if (*p)
+                sg_path_add(&sg_paths, p, strlen(p), 0);
+            break;
+        }
+        if (p != sep)
+            sg_path_add(&sg_paths, p, sep - p, 0);
+        p = sep + 1;
+    }
 }
 
 #ifdef _WIN32
@@ -304,7 +417,6 @@ sg_file_w_open(struct sg_file **f, const wchar_t *path, int flags,
     }
 }
 
-/* See MSDN "Naming Files, Paths, and Namespaces".  */
 static int
 sg_path_w_init(struct sg_path *p, const char *path, size_t len,
                int flags)
@@ -434,94 +546,9 @@ nomem:
     goto done;
 }
 
-int
-sg_file_readall(struct sg_file *f, struct sg_buffer *fbuf, size_t maxsize)
-{
-    unsigned char *buf = NULL, *nbuf;
-    size_t len, nlen, pos;
-    int64_t flen;
-    int amt;
-    int (*read)(struct sg_file *f, void *buf, size_t amt);
-    read = f->read;
-
-    if (f->length) {
-        flen = f->length(f);
-        if (flen < 0)
-            return -1;
-        if (flen > maxsize)
-            goto toobig;
-        len = (size_t) flen + 1;
-    } else {
-        len = maxsize > SG_FILE_INITBUF ? SG_FILE_INITBUF : (maxsize + 1);
-    }
-
-    buf = malloc(len);
-    if (!buf)
-        goto nomem;
-    pos = 0;
-    while (1) {
-        amt = read(f, buf + pos, len - pos);
-        if (amt > 0) {
-            pos += amt;
-            if (pos > maxsize)
-                goto toobig;
-            if (pos >= len) {
-                nlen = len * 2;
-                if (!nlen)
-                    goto nomem;
-                nbuf = realloc(buf, nlen);
-                if (!nbuf)
-                    goto nomem;
-                buf = nbuf;
-                len = nlen;
-            }
-        } else if (amt == 0) {
-            break;
-        } else {
-            goto err;
-        }
-    }
-    buf[pos] = '\0';
-    if (pos + 1 < len)
-        buf = realloc(buf, pos + 1);
-    fbuf->data = buf;
-    fbuf->length = pos;
-    return 0;
-
-nomem:
-    sg_error_nomem(&f->err);
-    goto err;
-
-err:
-    free(buf);
-    return -1;
-
-toobig:
-    free(buf);
-    sg_error_sets(&f->err, &SG_ERROR_DATA, 0, "file too large");
-    return 1;
-}
-
-int
-sg_file_get(const char *path, int flags,
-            struct sg_buffer *fbuf, size_t maxsize, struct sg_error **e)
-{
-    struct sg_file *f;
-    int r;
-    f = sg_file_open(path, flags, e);
-    if (!f)
-        return -1;
-    r = sg_file_readall(f, fbuf, maxsize);
-    if (r)
-        sg_error_move(e, &f->err);
-    f->free(f);
-    return r;
-}
-
 #else
 
 #include "cvar.h"
-#include "strbuf.h"
 #include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
@@ -658,48 +685,107 @@ sg_file_u_open(struct sg_file **f, const char *path, int flags,
     }
 }
 
+/* Return 1 for success, 0 for failure.  */
 static int
-sg_path_u_check(struct sg_path *p, const char *path, size_t len,
-                int writable)
+sg_path_getexepath(char **buf, size_t *len);
+
+static int
+sg_path_u_init(struct sg_path *p, const char *path, size_t len,
+               int flags)
 {
-    char *npath;
-    unsigned nalloc, pos;
-    struct sg_path *na;
-    int r;
-    size_t nlen;
+    char *dpath = NULL, *apath = NULL, *rpath = NULL, *bpath = NULL, *real;
+    size_t dlen, aalloc, rlen, blen;
+    int r, ret, bslash, pslash;
 
-    /* By adding a trailing slash before we call access, we can ensure
-       that the path is a directory.  */
-    if (!len) {
-        npath = malloc(3);
-        if (!npath)
-            goto nomem;
-        nlen = 1;
-        npath[0] = '.';
-    } else {
-        nlen = len;
-        if (path[len] == '/')
-            nlen -= 1;
-        npath = malloc(nlen + 2);
-        if (!npath)
-            goto nomem;
-        memcpy(npath, path, nlen);
-    }
-    npath[nlen + 0] = '/';
-    npath[nlen + 1] = '\0';
-    len += 1;
-
-    r = access(npath, R_OK | X_OK);
-    if (r && !writable) {
-        fprintf(stderr, "path: %s [skipped]\n", npath);
-        free(npath);
+    /* FIXME: log errors / warnings */
+    if (!len)
         return 0;
-    }
-    fprintf(stderr, "path: %s\n", npath);
+    if (memchr(path, '\0', len))
+        return 0;
 
-    p->path = npath;
-    p->len = len;
-    return 1;
+    pslash = path[len - 1] != '/';
+    if (path[0] == '/') {
+        rlen = len;
+        rpath = malloc(len + pslash + 1);
+        if (!rpath)
+            goto nomem;
+        memcpy(rpath, path, len);
+        if (pslash)
+            rpath[rlen++] = '/';
+    } else {
+        if (flags & SG_PATH_EXEDIR) {
+            r = sg_path_getexepath(&bpath, &blen);
+            if (!r)
+                goto error;
+            blen -= 1;
+            while (blen > 0 && bpath[blen-1] != '/')
+                blen--;
+            if (!blen)
+                goto error;
+        } else {
+            bpath = getcwd(0, 0);
+            if (!bpath)
+                goto error;
+            blen = strlen(bpath);
+            if (!blen)
+                goto error;
+        }
+        bslash = bpath[blen - 1] != '/';
+        rpath = malloc(blen + bslash + len + pslash + 1);
+        if (!rpath)
+            goto nomem;
+        memcpy(rpath, bpath, blen);
+        if (bslash)
+            rpath[blen] = '/';
+        memcpy(rpath + blen + bslash, path, len);
+        if (pslash)
+            rpath[blen + bslash + len] = '/';
+        rlen = blen + bslash + len + pslash;
+    }
+    rpath[rlen] = '\0';
+
+    aalloc = PATH_MAX > 0 ? PATH_MAX : 1024;
+    apath = malloc(aalloc);
+    if (!apath)
+        goto nomem;
+    real = realpath(rpath, apath);
+    if (real) {
+        dlen = strlen(real);
+        pslash = real[dlen - 1] != '/';
+        dpath = malloc(dlen + pslash + 1);
+        if (!dpath)
+            goto nomem;
+        memcpy(dpath, real, dlen);
+        if (pslash)
+            dpath[dlen++] = '/';
+        dpath[dlen] = '\0';
+        r = access(dpath, F_OK | X_OK);
+        if (r) {
+            ret = 0;
+        } else {
+            p->path = dpath;
+            p->len = dlen;
+            dpath = NULL;
+            ret = 1;
+        }
+    } else if (flags & SG_PATH_NODISCARD) {
+        p->path = rpath;
+        p->len = rlen;
+        ret = 1;
+    } else {
+        ret = 0;
+    }
+    if (ret)
+        fprintf(stderr, "path: %s\n", p->path);
+
+    free(dpath);
+    free(apath);
+    free(rpath);
+    free(bpath);
+    return ret;
+
+error:
+    abort();
 
 nomem:
     abort();
@@ -711,16 +797,14 @@ nomem:
 
 /* Mac OS X implementation */
 static int
-sg_path_getexepath(struct sg_strbuf *b)
+sg_path_getexepath(char **buf, size_t *len)
 {
+    size_t bsz = PATH_MAX > 0 ? PATH_MAX : 256;
     CFBundleRef bundle;
     CFURLRef url = NULL;
     Boolean r;
-    int ret = -1;
-    size_t rlen = PATH_MAX > 256 ? PATH_MAX : 256;
-
-    sg_strbuf_clear(b);
-    sg_strbuf_reserve(b, rlen - 1);
+    int ret = 0;
+    char *str = NULL;
 
     bundle = CFBundleGetMainBundle();
     if (!bundle)
@@ -728,17 +812,26 @@ sg_path_getexepath(struct sg_strbuf *b)
     url = CFBundleCopyBundleURL(bundle);
     if (!url)
         goto done;
+    str = malloc(bsz);
+    if (!str)
+        goto nomem;
     r = CFURLGetFileSystemRepresentation(
-        url, true, (UInt8 *) b->s, rlen);
+        url, true, (UInt8 *) str, bsz);
     if (!r)
         goto done;
-    sg_strbuf_forcelen(b, strlen(b->s));
-    ret = 0;
+    ret = 1;
+    *len = strlen(str);
+    *buf = str;
+    str = NULL;
 
 done:
     if (url)
         CFRelease(url);
+    free(str);
     return ret;
+
+nomem:
+    abort();
 }
 
 #elif defined(__linux__)
@@ -746,7 +839,7 @@ done:
 
 /* Linux implementation */
 static int
-sg_path_getexepath(struct sg_strbuf *b)
+sg_path_getexepath(char **buf, size_t *len)
 {
     ssize_t sz;
     size_t rlen = PATH_MAX > 256 ? PATH_MAX : 256;
@@ -772,41 +865,5 @@ sg_path_getexedir(char *buf, unsigned len)
 }
 
 #endif
-
-void
-sg_path_init(void)
-{
-    const char *p, *sep;
-    struct sg_strbuf buf;
-    int r;
-
-    r = sg_cvar_gets("path", "data-dir", &p);
-    if (!r)
-        p = "data";
-
-    sg_strbuf_init(&buf, 0);
-    r = sg_path_getexepath(&buf);
-    if (!r) {
-        sg_strbuf_getdir(&buf);
-        sg_strbuf_joinstr(&buf, p);
-        sg_path_add(&sg_paths, buf.s, buf.e - buf.s, 0);
-    }
-    sg_strbuf_destroy(&buf);
-
-    r = sg_cvar_gets("path", "data-path", &p);
-    if (!r)
-        p = "";
-    while (*p) {
-        sep = strchr(p, ':');
-        if (!sep) {
-            if (*p)
-                sg_path_add(&sg_paths, p, strlen(p), 0);
-            break;
-        }
-        if (p != sep)
-            sg_path_add(&sg_paths, p, sep - p, 0);
-        p = sep + 1;
-    }
-}
 
 #endif
