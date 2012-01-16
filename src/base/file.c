@@ -4,18 +4,527 @@
 
 #define SG_FILE_INITBUF 4096
 #define SG_PATH_INITSZ 1
+
+/* This gives us 64-bit file offsets on 32-bit Linux */
 #define _FILE_OFFSET_BITS 64
 
-#include "cvar.h"
 #include "error.h"
 #include "file.h"
+#include <limits.h>
+#include <stdlib.h>
+#include <string.h>
+
+#if defined(_WIN32)
+#define SG_PATH_UNICODE 1
+#define sg_file_i_open sg_file_w_open
+#define sg_path_i_init sg_path_w_init
+#else
+#define sg_file_i_open sg_file_u_open
+#define sg_path_i_init sg_path_w_init
+#endif
+
+#if defined(SG_PATH_UNICODE)
+typedef wchar_t pchar;
+#else
+typedef char pchar;
+#endif
+
+struct sg_path {
+    pchar *path;
+    size_t len;
+};
+
+struct sg_paths {
+    struct sg_path *a;
+    unsigned wcount, acount;
+    unsigned wmaxlen, amaxlen;
+    unsigned alloc;
+};
+
+/* Flags used by sg_path_add and sg_path_i_init.  */
+enum {
+    /* The path must be writable.  You should normally specify
+       SG_PATH_NODISCARD as well, in which case the directory
+       will be created if necessary.  */
+    SG_PATH_WRITABLE = 1 << 0,
+    /* Do not discard the path if it is not present.  */
+    SG_PATH_NODISCARD = 1 << 1,
+    /* The path is relative to the executable's directory.  */
+    SG_PATH_EXEDIR = 1 << 2
+};
+
+/* Returns >0 for success, 0 for file not found, <0 for error.  */
+static int
+sg_file_i_open(struct sg_file **f, const pchar *path, int flags,
+               struct sg_error **e);
+
+/* Initialize the given sg_path and return >0, return <0 if an
+   error occurred, or return 0 if the path should be discarded.  */
+static int
+sg_path_i_init(struct sg_path *p, const char *path, size_t len,
+               int flags);
+
+static struct sg_paths sg_paths;
+
+struct sg_file *
+sg_file_open(const char *path, int flags, struct sg_error **e)
+{
+    struct sg_file *f;
+    struct sg_path *a;
+    int nlen, r;
+    unsigned i, pcount, pmaxlen;
+    char nbuf[SG_MAX_PATH];
+    pchar *pbuf = NULL, *p;
+
+    flags = flags;
+    if (flags & SG_WRONLY)
+        flags |= SG_WRITABLE;
+
+    nlen = sg_path_norm(nbuf, path, e);
+    if (nlen < 0)
+        return NULL;
+
+    a = sg_paths.a;
+    if (flags & SG_LOCAL) {
+        pcount = sg_paths.wcount;
+        pmaxlen = sg_paths.wmaxlen;
+    } else {
+        pcount = sg_paths.acount;
+        pmaxlen = sg_paths.amaxlen;
+    }
+    if (!pcount)
+        goto notfound;
+    pbuf = malloc((pmaxlen + nlen + 1) * sizeof(pchar));
+    if (!pbuf)
+        goto nomem;
+#if defined(_WIN32)
+    for (i = 0; i <= (unsigned) nlen; ++i)
+        pbuf[pmaxlen + i] = nbuf[i] == '/' ? '\\' : nbuf[i];
+#else
+    memcpy(pbuf + pmaxlen, nbuf, nlen + 1);
+#endif
+    for (i = 0; i < pcount; ++i) {
+        p = pbuf + pmaxlen - a[i].len;
+        memcpy(p, a[i].path, a[i].len * sizeof(pchar));
+        r = sg_file_i_open(&f, p, flags, e);
+        if (r > 1)
+            goto done;
+        if (r < 0) {
+            f = NULL;
+            goto done;
+        }
+    }
+    goto notfound;
+
+notfound:
+    sg_error_notfound(e, nbuf);
+    f = NULL;
+    goto done;
+
+nomem:
+    sg_error_nomem(e);
+    f = NULL;
+    goto done;
+
+done:
+    free(pbuf);
+    return f;
+}
+
+/* Add a path to the given search paths.  */
+static void
+sg_path_add(struct sg_paths *p, const char *path, size_t len, int flags)
+{
+    struct sg_path npath, *na;
+    unsigned nalloc, pos;
+    int r;
+
+    r = sg_path_i_init(&npath, path, len, flags);
+    if (r <= 0)
+        return;
+
+    if (p->acount >= p->alloc) {
+        nalloc = p->alloc ? p->alloc * 2 : SG_PATH_INITSZ;
+        na = realloc(p->a, sizeof(*na) * nalloc);
+        if (!na) {
+            free(npath.path);
+            goto nomem;
+        }
+        p->a = na;
+        p->alloc = nalloc;
+    }
+    pos = p->acount;
+    if (len > p->amaxlen)
+        p->amaxlen = len;
+    p->acount += 1;
+    if (flags & SG_PATH_WRITABLE) {
+        pos = p->wcount;
+        if (len > p->wmaxlen)
+            p->wmaxlen = len;
+        p->wcount += 1;
+    }
+    memmove(p->a + pos + 1, p->a + pos,
+            sizeof(*p->a) * (p->acount - pos - 1));
+    memcpy(p->a + pos, &npath, sizeof(npath));
+    return;
+
+nomem:
+    abort();
+}
+
+#ifdef _WIN32
+#include <Windows.h>
+
+void
+sg_buffer_destroy(struct sg_buffer *fbuf)
+{
+    if (fbuf->data)
+        free(fbuf->data);
+}
+
+struct sg_file_w {
+    struct sg_file h;
+    HANDLE hdl;
+};
+
+static int
+sg_file_w_read(struct sg_file *f, void *buf, size_t amt)
+{
+    struct sg_file_w *w = (struct sg_file_w *) f;
+    DWORD ramt;
+    if (ReadFile(w->hdl, buf, amt > INT_MAX ? INT_MAX : amt, &ramt, NULL)) {
+        return ramt;
+    } else {
+        sg_error_win32(&w->h.err, GetLastError());
+        return -1;
+    }
+}
+
+static int
+sg_file_w_write(struct sg_file *f, const void *buf, size_t amt)
+{
+    struct sg_file_w *w = (struct sg_file_w *) f;
+    DWORD ramt;
+    if (WriteFile(w->hdl, buf, amt > INT_MAX ? INT_MAX : amt, &ramt, NULL)) {
+        return ramt;
+    } else {
+        sg_error_win32(&w->h.err, GetLastError());
+        return -1;
+    }
+}
+
+static int
+sg_file_w_close(struct sg_file *f)
+{
+    struct sg_file_w *w = (struct sg_file_w *) f;
+    if (w->hdl != INVALID_HANDLE_VALUE) {
+        CloseHandle(w->hdl);
+        w->hdl = INVALID_HANDLE_VALUE;
+    }
+    return 0;
+}
+
+static void
+sg_file_w_free(struct sg_file *f)
+{
+    struct sg_file_w *w = (struct sg_file_w *) f;
+    if (w->hdl != INVALID_HANDLE_VALUE)
+        CloseHandle(w->hdl);
+    free(w);
+}
+
+static int64_t
+sg_file_w_length(struct sg_file *f)
+{
+    struct sg_file_w *w = (struct sg_file_w *) f;
+    BY_HANDLE_FILE_INFORMATION ifo;
+    if (GetFileInformationByHandle(w->hdl, &ifo)) {
+        return ((int64_t) ifo.nFileSizeHigh << 32) | ifo.nFileSizeLow;
+    } else {
+        sg_error_win32(&w->h.err, GetLastError());
+        return -1;
+    }
+}
+
+static int64_t
+sg_file_w_seek(struct sg_file *f, int64_t off, int whence)
+{
+    struct sg_file_w *w = (struct sg_file_w *) f;
+    DWORD lo, hi, method, err;
+    switch (whence) {
+    case SEEK_SET: method = FILE_BEGIN; break;
+    case SEEK_CUR: method = FILE_CURRENT; break;
+    case SEEK_END: method = FILE_END; break;
+    default: method = (DWORD) -1; break;
+    }
+    lo = off & 0xffffffffu;
+    hi = off >> 32;
+    lo = SetFilePointer(w->hdl, lo, &hi, method);
+    if (lo == INVALID_SET_FILE_POINTER) {
+        err = GetLastError();
+        if (err) {
+            sg_error_win32(&w->h.err, GetLastError());
+            return -1;
+        }
+    }
+    return ((int64_t) hi << 32) | lo;
+}
+
+static int
+sg_file_w_open(struct sg_file **f, const wchar_t *path, int flags,
+               struct sg_error **e)
+{
+    struct sg_file_w *w;
+    HANDLE h;
+    DWORD ecode;
+    h = CreateFileW(path, FILE_READ_DATA, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (h != INVALID_HANDLE_VALUE) {
+        w = malloc(sizeof(*w));
+        if (!w) {
+            CloseHandle(h);
+            sg_error_nomem(e);
+            return -1;
+        }
+        w->h.refcount = 1;
+        w->h.read = sg_file_w_read;
+        w->h.write = sg_file_w_write;
+        w->h.close = sg_file_w_close;
+        w->h.free = sg_file_w_free;
+        w->h.length = sg_file_w_length;
+        w->h.seek = sg_file_w_seek;
+        w->hdl = h;
+        *f = &w->h;
+        return 1;
+    } else {
+        ecode = GetLastError();
+        if (ecode == ERROR_FILE_NOT_FOUND || ecode == ERROR_PATH_NOT_FOUND)
+            return 0;
+        sg_error_win32(e, ecode);
+        return -1;
+    }
+}
+
+/* See MSDN "Naming Files, Paths, and Namespaces".  */
+static int
+sg_path_w_init(struct sg_path *p, const char *path, size_t len,
+               int flags)
+{
+    /* Relative, absolute, executable, and working directory path.  */
+    wchar_t *rpath = NULL, *apath = NULL, *epath = NULL, *wpath = NULL;
+    size_t rlen, alen, elen, wlen;
+    int r, ret;
+    DWORD dr;
+    BOOL br;
+
+    /* FIXME: log errors / warnings */
+    if (!len)
+        return 0;
+    if (memchr(path, '\0', len))
+        return 0;
+
+    /* Convert relative path to Unicode.  */
+    r = MultiByteToWideChar(CP_UTF8, 0, path, len, NULL, 0);
+    if (!r)
+        goto error;
+    rpath = malloc(sizeof(wchar_t) * (r + 2));
+    if (!rpath)
+        goto nomem;
+    r = MultiByteToWideChar(CP_UTF8, 0, path, len, rpath, rlen);
+    if (!r)
+        goto error;
+    rlen = r;
+
+    /* Append backslash (if not present) and NUL.  */
+    if (rpath[rlen-1] != L'\\')
+        rpath[rlen++] = L'\\';
+    rpath[rlen] = L'\0';
+
+    if (flags & SG_PATH_EXEDIR) {
+        /* If we want something relative to the executable directory,
+           we change directory there and back afterwards.  */
+
+        /* Get executable directory path */
+        elen = MAX_PATH;
+        while (1) {
+            epath = malloc(sizeof(wchar_t) * elen);
+            if (!epath)
+                goto nomem;
+            dr = GetModuleFileNameW(NULL, epath, elen);
+            if (!dr)
+                goto error;
+            if (dr < elen)
+                elen = dr;
+            elen *= 2;
+            free(epath);
+        }
+        elen = dr;
+        while (elen > 0 && epath[elen - 1] != L'\\')
+            elen--;
+        epath[elen] = L'\0';
+
+        /* Save current path */
+        dr = GetCurrentDirectoryW(0, NULL);
+        if (!dr)
+            goto error;
+        wpath = malloc(sizeof(wchar_t) * dr);
+        if (!wpath)
+            goto nomem;
+        dr = GetCurrentDirectoryW(dr, wpath);
+        if (!dr)
+            goto error;
+        wlen = dr;
+
+        /* Change path */
+        br = SetCurrentDirectoryW(epath);
+        if (!br)
+            goto error;
+    }
+
+    dr = GetFullPathNameW(rpath, 0, NULL, NULL);
+    if (!dr)
+        goto error;
+    apath = malloc(sizeof(wchar_t) * dr);
+    dr = GetFullPathNameW(rpath, dr, apath, NULL);
+    if (!dr)
+        goto error;
+    alen = dr;
+
+    if (!(flags & SG_PATH_NODISCARD)) {
+        dr = GetFileAttributesW(apath);
+        if (dr == INVALID_FILE_ATTRIBUTES) {
+            dr = GetLastError();
+            if (dr == ERROR_FILE_NOT_FOUND || dr == ERROR_PATH_NOT_FOUND)
+                ret = 0;
+            else
+                goto errorcode;
+        } else if (!(dr & FILE_ATTRIBUTE_DIRECTORY)) {
+            ret = 0;
+        } else {
+            ret = 1;
+        }
+    } else {
+        ret = 1;
+    }
+
+    if (ret > 0) {
+        p->path = apath;
+        p->len = alen;
+        apath = NULL;
+    }
+
+done:
+    if (wpath)
+        SetCurrentDirectoryW(wpath);
+    free(rpath);
+    free(apath);
+    free(epath);
+    free(wpath);
+    return ret;
+
+error:
+    dr = GetLastError();
+    goto errorcode;
+
+errorcode:
+    abort();
+    goto done;
+    
+nomem:
+    abort();
+    goto done;
+}
+
+int
+sg_file_readall(struct sg_file *f, struct sg_buffer *fbuf, size_t maxsize)
+{
+    unsigned char *buf = NULL, *nbuf;
+    size_t len, nlen, pos;
+    int64_t flen;
+    int amt;
+    int (*read)(struct sg_file *f, void *buf, size_t amt);
+    read = f->read;
+
+    if (f->length) {
+        flen = f->length(f);
+        if (flen < 0)
+            return -1;
+        if (flen > maxsize)
+            goto toobig;
+        len = (size_t) flen + 1;
+    } else {
+        len = maxsize > SG_FILE_INITBUF ? SG_FILE_INITBUF : (maxsize + 1);
+    }
+
+    buf = malloc(len);
+    if (!buf)
+        goto nomem;
+    pos = 0;
+    while (1) {
+        amt = read(f, buf + pos, len - pos);
+        if (amt > 0) {
+            pos += amt;
+            if (pos > maxsize)
+                goto toobig;
+            if (pos >= len) {
+                nlen = len * 2;
+                if (!nlen)
+                    goto nomem;
+                nbuf = realloc(buf, nlen);
+                if (!nbuf)
+                    goto nomem;
+                buf = nbuf;
+                len = nlen;
+            }
+        } else if (amt == 0) {
+            break;
+        } else {
+            goto err;
+        }
+    }
+    buf[pos] = '\0';
+    if (pos + 1 < len)
+        buf = realloc(buf, pos + 1);
+    fbuf->data = buf;
+    fbuf->length = pos;
+    return 0;
+
+nomem:
+    sg_error_nomem(&f->err);
+    goto err;
+
+err:
+    free(buf);
+    return -1;
+
+toobig:
+    free(buf);
+    sg_error_sets(&f->err, &SG_ERROR_DATA, 0, "file too large");
+    return 1;
+}
+
+int
+sg_file_get(const char *path, int flags,
+            struct sg_buffer *fbuf, size_t maxsize, struct sg_error **e)
+{
+    struct sg_file *f;
+    int r;
+    f = sg_file_open(path, flags, e);
+    if (!f)
+        return -1;
+    r = sg_file_readall(f, fbuf, maxsize);
+    if (r)
+        sg_error_move(e, &f->err);
+    f->free(f);
+    return r;
+}
+
+#else
+
+#include "cvar.h"
 #include "strbuf.h"
 #include <errno.h>
 #include <fcntl.h>
-#include <limits.h>
 #include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -113,107 +622,45 @@ sg_file_u_seek(struct sg_file *f, int64_t off, int whence)
     return -1;
 }
 
-struct sg_path {
-    char *path;
-    size_t len;
-};
-
-struct sg_paths {
-    struct sg_path *a;
-    unsigned wcount, acount;
-    unsigned wmaxlen, amaxlen;
-    unsigned alloc;
-};
-
-static struct sg_paths sg_paths;
-
-struct sg_file *
-sg_file_open(const char *path, int flags, struct sg_error **e)
+static int
+sg_file_u_open(struct sg_file **f, const char *path, int flags,
+               struct sg_error **e)
 {
-    struct sg_file *f;
+    int fdes, ecode;
     struct sg_file_u *u;
-    struct sg_path *a;
-    int nlen, fdes, fdflags, ecode;
-    unsigned i, pcount, pmaxlen;
-    char nbuf[SG_MAX_PATH];
-    char *pbuf = NULL, *p;
-
-    flags = flags;
     if (flags & SG_WRONLY)
-        flags |= SG_WRITABLE;
-
-    nlen = sg_path_norm(nbuf, path, e);
-    if (nlen < 0)
-        return NULL;
-
-    a = sg_paths.a;
-    if (flags & SG_LOCAL) {
-        pcount = sg_paths.wcount;
-        pmaxlen = sg_paths.wmaxlen;
-    } else {
-        pcount = sg_paths.acount;
-        pmaxlen = sg_paths.amaxlen;
-    }
-    if (flags & SG_WRONLY)
-        fdflags = O_WRONLY;
+        fdes = open(path, O_WRONLY, 0666);
     else
-        fdflags = O_RDONLY;
-    if (!pcount)
-        goto notfound;
-    pbuf = malloc(pmaxlen + nlen + 1);
-    if (!pbuf)
-        goto nomem;
-    memcpy(pbuf + pmaxlen, nbuf, nlen + 1);
-    for (i = 0; i < pcount; ++i) {
-        p = pbuf + pmaxlen - a[i].len;
-        memcpy(p, a[i].path, a[i].len);
-        fdes = open(p, fdflags);
-        if (fdes >= 0) {
-            u = malloc(sizeof(*u));
-            if (!u)
-                goto nomem;
-            u->h.refcount = 1;
-            u->h.read = sg_file_u_read;
-            u->h.write = sg_file_u_write;
-            u->h.close = sg_file_u_close;
-            u->h.free = sg_file_u_free;
-            u->h.length = sg_file_u_length;
-            u->h.seek = sg_file_u_seek;
-            u->fdes = fdes;
-            f = &u->h;
-            goto done;
-        } else {
-            ecode = errno;
-            if (ecode != ENOENT) {
-                sg_error_errno(e, ecode);
-                f = NULL;
-                goto done;
-            }
+        fdes = open(path, O_RDONLY);
+    if (fdes >= 0) {
+        u = malloc(sizeof(*u));
+        if (!u) {
+            close(fdes);
+            sg_error_nomem(e);
+            return -1;
         }
+        u->h.refcount = 1;
+        u->h.read = sg_file_u_read;
+        u->h.write = sg_file_u_write;
+        u->h.close = sg_file_u_close;
+        u->h.free = sg_file_u_free;
+        u->h.length = sg_file_u_length;
+        u->h.seek = sg_file_u_seek;
+        u->fdes = fdes;
+        *f = &u->h;
+        return 1;
+    } else {
+        ecode = errno;
+        if (ecode == ENOENT)
+            return 0;
+        sg_error_errno(e, ecode);
+        return -1;
     }
-    goto notfound;
-
-notfound:
-    sg_error_notfound(e, nbuf);
-    f = NULL;
-    goto done;
-
-nomem:
-    sg_error_nomem(e);
-    f = NULL;
-    goto done;
-
-done:
-    free(pbuf);
-    return f;
 }
 
-/* Add a path to the given search paths.  If the path does not specify
-   a valid, accessible directory, then the path will be discarded.  If
-   the path is marked as writable, the directory will be created if
-   necessary.  */
-static void
-sg_path_add(struct sg_paths *p, const char *path, size_t len, int writable)
+static int
+sg_path_u_check(struct sg_path *p, const char *path, size_t len,
+                int writable)
 {
     char *npath;
     unsigned nalloc, pos;
@@ -246,35 +693,13 @@ sg_path_add(struct sg_paths *p, const char *path, size_t len, int writable)
     if (r && !writable) {
         fprintf(stderr, "path: %s [skipped]\n", npath);
         free(npath);
-        return;
+        return 0;
     }
     fprintf(stderr, "path: %s\n", npath);
 
-    if (p->acount >= p->alloc) {
-        nalloc = p->alloc ? p->alloc * 2 : SG_PATH_INITSZ;
-        na = realloc(p->a, sizeof(*na) * nalloc);
-        if (!na) {
-            free(npath);
-            goto nomem;
-        }
-        p->a = na;
-        p->alloc = nalloc;
-    }
-    pos = p->acount;
-    if (len > p->amaxlen)
-        p->amaxlen = len;
-    p->acount += 1;
-    if (writable) {
-        pos = p->wcount;
-        if (len > p->wmaxlen)
-            p->wmaxlen = len;
-        p->wcount += 1;
-    }
-    memmove(p->a + pos + 1, p->a + pos,
-            sizeof(*p->a) * (p->acount - pos - 1));
-    p->a[pos].path = npath;
-    p->a[pos].len = len;
-    return;
+    p->path = npath;
+    p->len = len;
+    return 1;
 
 nomem:
     abort();
@@ -384,86 +809,4 @@ sg_path_init(void)
     }
 }
 
-int
-sg_file_readall(struct sg_file *f, struct sg_buffer *fbuf, size_t maxsize)
-{
-    unsigned char *buf = NULL, *nbuf;
-    size_t len, nlen, pos;
-    int64_t flen;
-    int amt;
-    int (*read)(struct sg_file *f, void *buf, size_t amt);
-    read = f->read;
-
-    if (f->length) {
-        flen = f->length(f);
-        if (flen < 0)
-            return -1;
-        if (flen > maxsize)
-            goto toobig;
-        len = flen + 1;
-    } else {
-        len = maxsize > SG_FILE_INITBUF ? SG_FILE_INITBUF : (maxsize + 1);
-    }
-
-    buf = malloc(len);
-    if (!buf)
-        goto nomem;
-    pos = 0;
-    while (1) {
-        amt = read(f, buf + pos, len - pos);
-        if (amt > 0) {
-            pos += amt;
-            if (pos > maxsize)
-                goto toobig;
-            if (pos >= len) {
-                nlen = len * 2;
-                if (!nlen)
-                    goto nomem;
-                nbuf = realloc(buf, nlen);
-                if (!nbuf)
-                    goto nomem;
-                buf = nbuf;
-                len = nlen;
-            }
-        } else if (amt == 0) {
-            break;
-        } else {
-            goto err;
-        }
-    }
-    buf[pos] = '\0';
-    if (pos + 1 < len)
-        buf = realloc(buf, pos + 1);
-    fbuf->data = buf;
-    fbuf->length = pos;
-    return 0;
-
-nomem:
-    sg_error_nomem(&f->err);
-    goto err;
-
-err:
-    free(buf);
-    return -1;
-
-toobig:
-    free(buf);
-    sg_error_sets(&f->err, &SG_ERROR_DATA, 0, "file too large");
-    return 1;
-}
-
-int
-sg_file_get(const char *path, int flags,
-            struct sg_buffer *fbuf, size_t maxsize, struct sg_error **e)
-{
-    struct sg_file *f;
-    int r;
-    f = sg_file_open(path, flags, e);
-    if (!f)
-        return -1;
-    r = sg_file_readall(f, fbuf, maxsize);
-    if (r)
-        sg_error_move(e, &f->err);
-    f->free(f);
-    return r;
-}
+#endif
