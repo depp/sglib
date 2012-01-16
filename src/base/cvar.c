@@ -9,8 +9,10 @@
 #include <string.h>
 
 #ifdef _MSC_VER
-#define INFINITY 1.0/0.0
-#define NAN 0.0/0.0
+static const unsigned uinfinity = 0x7f800000u;
+static const unsigned unan = 0x7fc00000;
+#define INFINITY (*(const float *) &uinfinity)
+#define NAN (*(const float *) &unan)
 #define isfinite(x) _finite(x)
 #define isnan(x) _isnan(x)
 #endif
