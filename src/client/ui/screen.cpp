@@ -102,6 +102,9 @@ void sg_game_event(union sg_event *evt)
 
         case SG_EVENT_RESIZE:
             break;
+
+        case SG_EVENT_STATUS:
+            break;
         }
     } catch (error &err) {
         handle_error(err);

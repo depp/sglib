@@ -57,8 +57,8 @@ sg_game_destroy(void);
 
 /* ===== System exports =====
 
-   These provide a thin layer around the game export functions.  This
-   provides some simple common functionality.  */
+   These provide a thin layer around the game export functions, or
+   provide a thin layer around platform functionality.  */
 
 /* Initialize all library subsystems and the game.  This should be
    called after the command line arguments are parsed and passed to
@@ -82,6 +82,13 @@ sg_sys_draw(void);
 /* Perform any cleanup necessary before the process exits.  */
 void
 sg_sys_destroy(void);
+
+/* Get information about the current window: whether it is hidden,
+   fullscreen, or windowed; and what the dimensions are.  The
+   dimensions may be nonsensical if the window is hidden.  Any
+   parameter may be NULL.  */
+void
+sg_sys_getwindow(unsigned *status, int *width, int *height);
 
 /* ===== Platform exports =====
 

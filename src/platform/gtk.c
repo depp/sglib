@@ -32,7 +32,7 @@
 static gint sg_timer;
 static int sg_window_width, sg_window_height;
 static int sg_update_size;
-static int sg_is_fullscreen;
+static unsigned sg_gtk_status;
 static GtkWindow *sg_window;
 
 static void
@@ -48,10 +48,12 @@ quit(void)
 static void
 toggle_fullscreen(void)
 {
-    if (!sg_is_fullscreen)
-        gtk_window_fullscreen(sg_window);
-    else
-        gtk_window_unfullscreen(sg_window);
+    if (sg_gtk_status & SG_STATUS_VISIBLE) {
+        if (sg_gtk_status & SG_STATUS_FULLSCREEN)
+            gtk_window_unfullscreen(sg_window);
+        else
+            gtk_window_fullscreen(sg_window);
+    }
 }
 
 void
@@ -209,15 +211,67 @@ handle_button(GdkEventButton *e, sg_event_type_t t)
     return TRUE;
 }
 
+#if 0
+
+struct wstate {
+    GdkWindowState flag;
+    char name[12];
+};
+
+static void
+print_wstate_flags(GdkWindowState st, GdkWindowState ch)
+{
+    static const struct wstate FLAGS[] = {
+        { GDK_WINDOW_STATE_WITHDRAWN,  "withdrawn" },
+        { GDK_WINDOW_STATE_ICONIFIED,  "iconified" },
+        { GDK_WINDOW_STATE_MAXIMIZED,  "maximized" },
+        { GDK_WINDOW_STATE_STICKY,     "sticky" },
+        { GDK_WINDOW_STATE_FULLSCREEN, "fullscreen" },
+        { GDK_WINDOW_STATE_ABOVE,      "above" },
+        { GDK_WINDOW_STATE_BELOW,      "below" },
+        { 0, "" }
+    };
+    int i;
+    fputs("Window state:", stderr);
+    for (i = 0; FLAGS[i].flag; ++i) {
+        if ((FLAGS[i].flag & ch) == 0)
+            continue;
+        fputc(' ', stderr);
+        fputc(FLAGS[i].flag & st ? '+' : '-', stderr);
+        fputs(FLAGS[i].name, stderr);
+    }
+    fputc('\n', stderr);
+}
+
+#else
+#define print_wstate_flags(x,y) (void)0
+#endif
+
 static gboolean
 handle_window_state(GtkWidget *widget, GdkEvent *event, gpointer user_data)
 {
     /* WITHDRAWN, ICONIFIED, MAXIMIZED, STICKY,
        FULLSCREEN, ABOVE, BELOW */
     GdkWindowState st = event->window_state.new_window_state;
+    int fullscreen, shown;
+    unsigned status;
+    struct sg_event_status evt;
     (void) user_data;
     (void) widget;
-    sg_is_fullscreen = (st & GDK_WINDOW_STATE_FULLSCREEN) ? 1 : 0;
+    print_wstate_flags(st, event->window_state.changed_mask);
+    fullscreen = (st & GDK_WINDOW_STATE_FULLSCREEN) != 0;
+    shown = !(st & (GDK_WINDOW_STATE_ICONIFIED | GDK_WINDOW_STATE_WITHDRAWN));
+    if (!shown) {
+        status = 0;
+    } else {
+        status = SG_STATUS_VISIBLE;
+        if (fullscreen)
+            status |= SG_STATUS_FULLSCREEN;
+    }
+    evt.type = SG_EVENT_STATUS;
+    evt.status = status;
+    sg_sys_event((union sg_event *) &evt);
+    sg_gtk_status = status;
     return TRUE;
 }
 
