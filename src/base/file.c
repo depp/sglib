@@ -438,13 +438,13 @@ sg_path_w_init(struct sg_path *p, const char *path, size_t len,
     r = MultiByteToWideChar(CP_UTF8, 0, path, len, NULL, 0);
     if (!r)
         goto error;
-    rpath = malloc(sizeof(wchar_t) * (r + 2));
+    rlen = r;
+    rpath = malloc(sizeof(wchar_t) * (rlen + 2));
     if (!rpath)
         goto nomem;
     r = MultiByteToWideChar(CP_UTF8, 0, path, len, rpath, rlen);
     if (!r)
         goto error;
-    rlen = r;
 
     /* Append backslash (if not present) and NUL.  */
     if (rpath[rlen-1] != L'\\')
