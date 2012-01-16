@@ -1,5 +1,5 @@
-#ifndef IMPL_CVAR_H
-#define IMPL_CVAR_H
+#ifndef BASE_CVAR_H
+#define BASE_CVAR_H
 #ifdef __cplusplus
 extern "C" {
 #endif

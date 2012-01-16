@@ -1,5 +1,5 @@
-#ifndef IMPL_DICT_H
-#define IMPL_DICT_H
+#ifndef BASE_DICT_H
+#define BASE_DICT_H
 #ifdef __cplusplus
 extern "C" {
 #endif

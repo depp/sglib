@@ -1,5 +1,5 @@
-#ifndef IMPL_TYPE_H
-#define IMPL_TYPE_H
+#ifndef BASE_TYPE_H
+#define BASE_TYPE_H
 #ifdef __cplusplus
 extern "C" {
 #endif

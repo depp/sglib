@@ -1,5 +1,5 @@
-#ifndef IMPL_EVENT_H
-#define IMPL_EVENT_H
+#ifndef BASE_EVENT_H
+#define BASE_EVENT_H
 #ifdef __cplusplus
 extern "C" {
 #endif

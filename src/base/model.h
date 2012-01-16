@@ -1,5 +1,5 @@
-#ifndef IMPL_MODEL_H
-#define IMPL_MODEL_H
+#ifndef BASE_MODEL_H
+#define BASE_MODEL_H
 #include "resource.h"
 #include <stddef.h>
 #ifdef __cplusplus

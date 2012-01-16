@@ -1,5 +1,5 @@
-#ifndef IMPL_RAND_H
-#define IMPL_RAND_H
+#ifndef BASE_RAND_H
+#define BASE_RAND_H
 #ifdef __cplusplus
 extern "C" {
 #endif

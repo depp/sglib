@@ -1,5 +1,5 @@
-#ifndef IMPL_CLOCK_H
-#define IMPL_CLOCK_H
+#ifndef BASE_CLOCK_H
+#define BASE_CLOCK_H
 #ifdef __cplusplus
 extern "C" {
 #endif

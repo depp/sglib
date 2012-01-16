@@ -1,5 +1,5 @@
-#ifndef IMPL_RESOURCE_H
-#define IMPL_RESOURCE_H
+#ifndef BASE_RESOURCE_H
+#define BASE_RESOURCE_H
 #ifdef __cplusplus
 extern "C" {
 #endif

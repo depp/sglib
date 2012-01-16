@@ -1,0 +1,3 @@
+{
+  "ignore": ["keycode.hpp", "opengl.hpp"]
+}

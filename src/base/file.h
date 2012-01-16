@@ -1,5 +1,5 @@
-#ifndef IMPL_LFILE_H
-#define IMPL_LFILE_H
+#ifndef BASE_FILE_H
+#define BASE_FILE_H
 #include <stddef.h>
 #include <stdint.h>
 #ifdef __cplusplus

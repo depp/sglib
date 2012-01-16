@@ -1,5 +1,5 @@
-#ifndef IMPL_ERROR_H
-#define IMPL_ERROR_H
+#ifndef BASE_ERROR_H
+#define BASE_ERROR_H
 #include <stdarg.h>
 #ifdef __cplusplus
 extern "C" {

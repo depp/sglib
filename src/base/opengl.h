@@ -1,5 +1,5 @@
-#ifndef IMPL_OPENGL_H
-#define IMPL_OPENGL_H
+#ifndef BASE_OPENGL_H
+#define BASE_OPENGL_H
 
 #if defined(__APPLE__)
 

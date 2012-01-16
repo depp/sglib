@@ -1,5 +1,5 @@
-#ifndef IMPL_ENTRY_H
-#define IMPL_ENTRY_H
+#ifndef BASE_ENTRY_H
+#define BASE_ENTRY_H
 /* Entry points: the layer that connects library code, game code, and
    platform code.  */
 #include <stdarg.h>

@@ -1,5 +1,5 @@
-#ifndef IMPL_PIXBUF_H
-#define IMPL_PIXBUF_H
+#ifndef BASE_PIXBUF_H
+#define BASE_PIXBUF_H
 #ifdef __cplusplus
 extern "C" {
 #endif

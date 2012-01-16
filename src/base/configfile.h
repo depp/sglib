@@ -1,5 +1,5 @@
-#ifndef IMPL_CONFIGFILE_H
-#define IMPL_CONFIGFILE_H
+#ifndef BASE_CONFIGFILE_H
+#define BASE_CONFIGFILE_H
 #include "dict.h"
 #ifdef __cplusplus
 extern "C" {

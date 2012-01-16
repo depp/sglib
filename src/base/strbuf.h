@@ -1,5 +1,5 @@
-#ifndef IMPL_STRBUF_H
-#define IMPL_STRBUF_H
+#ifndef BASE_STRBUF_H
+#define BASE_STRBUF_H
 #include <assert.h>
 #include <stdarg.h>
 #include <stddef.h>

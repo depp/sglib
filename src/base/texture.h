@@ -1,5 +1,5 @@
-#ifndef IMPL_TEXTURE_H
-#define IMPL_TEXTURE_H
+#ifndef BASE_TEXTURE_H
+#define BASE_TEXTURE_H
 #include "resource.h"
 #ifdef __cplusplus
 extern "C" {
