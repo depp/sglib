@@ -253,7 +253,14 @@ done:
 
 #else
 
-#error "Can't load PNG images."
+/* #warning "Can't load PNG images." */
+
+static int
+sg_pixbuf_loadpng(struct sg_pixbuf *pbuf, struct sg_buffer *fbuf,
+                  struct sg_error **err)
+{
+    return -1;
+}
 
 #endif
 
@@ -378,7 +385,14 @@ done:
 
 #else
 
-#error "Can't load JPEG files."
+/* #warning "Can't load JPEG files." */
+
+static int
+sg_pixbuf_loadjpeg(struct sg_pixbuf *pbuf, struct sg_buffer *fbuf,
+                   struct sg_error **err)
+{
+    return -1;
+}
 
 #endif
 
