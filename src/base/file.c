@@ -846,15 +846,21 @@ nomem:
 static int
 sg_path_getexepath(char **buf, size_t *len)
 {
+    char *str;
     ssize_t sz;
-    size_t rlen = PATH_MAX > 256 ? PATH_MAX : 256;
-    sg_strbuf_clear(b);
-    sg_strbuf_reserve(b, rlen - 1);
-    sz = readlink("/proc/self/exe", b->s, rlen - 1);
-    if (sz < 0)
-        return -1;
-    sg_strbuf_forcelen(b, sz);
-    return 0;
+    size_t rlen = PATH_MAX > 0 ? PATH_MAX : 1024;
+    str = malloc(rlen);
+    if (!str)
+        return 0;
+    sz = readlink("/proc/self/exe", str, rlen);
+    if (sz > 0) {
+        *buf = str;
+        *len = sz;
+        return 1;
+    } else {
+        free(str);
+        return 0;
+    }
 }
 
 #else
