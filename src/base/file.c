@@ -775,6 +775,7 @@ sg_path_u_init(struct sg_path *p, const char *path, size_t len,
     } else if (flags & SG_PATH_NODISCARD) {
         p->path = rpath;
         p->len = rlen;
+        rpath = NULL;
         ret = 1;
     } else {
         ret = 0;
