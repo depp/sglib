@@ -131,7 +131,17 @@ CBASE_OBJS += base/sys.o
 CBASE_OBJS += base/texture.o
 CBASE_OBJS += base/type.o
 CBASE_OBJS += version.o
-base/pixbuf_loadimage.o: BASE_CFLAGS += $(IMAGE_CFLAGS)
+
+ifdef HAVE_LIBPNG
+CBASE_OBJS += base/pixbuf_libpng.o
+base/pixbuf_libpng.o: BASE_CFLAGS += $(LIBPNG_CFLAGS)
+endif
+
+ifdef HAVE_LIBJPEG
+CBASE_OBJS += base/pixbuf_libjpeg.o
+base/pixbuf_libjpeg.o: BASE_CFLAGS += $(LIBJPEG_CFLAGS)
+endif
+
 base/type.o: BASE_CFLAGS += $(TYPE_CFLAGS)
 
 SYS_OBJS =
