@@ -1,37 +1,54 @@
-#include "defs.h"
-
-#include "client/keyboard/keytable.h"
-#include "client/ui/event.hpp"
-// #include "client/ui/menu.hpp"
-#include "game/ld22/screen.hpp"
-#include "client/ui/window.hpp"
-#include "sys/path.hpp"
-#include "sys/rand.hpp"
-#include "sys/error_win.hpp"
+#include "base/cvar.h"
+#include "base/entry.h"
+#include "base/event.h"
+#include "base/keycode/keytable.h"
+#include <Windows.h>
 #include <gl\gl.h>
 #include <gl\glu.h>
+#include <string.h>
+#include "base/opengl.h"
 
 #pragma comment(lib, "opengl32.lib")
 #pragma comment(lib, "glu32.lib")
 
-class WinWindow : public UI::Window {
-public:
-    virtual void close();
-};
-
-void WinWindow::close()
+static void
+quit()
 {
     PostQuitMessage(0);
+}
+
+void
+sg_platform_quit(void)
+{
+    quit();
+}
+
+void
+sg_platform_faile(struct sg_error *e)
+{
+    abort();
+}
+
+void
+sg_platform_failf(const char *fmt, ...)
+{
+    va_list ap;
+    va_start(ap, fmt);
+    sg_platform_failv(fmt, ap);
+    va_end(ap);
+}
+
+void
+sg_platform_failv(const char *fmt, va_list ap)
+{
+    abort();
 }
 
 static HDC hDC;
 static HGLRC hRC;
 static HWND hWnd;
 static HINSTANCE hInstance;
-
-static bool inactive;
-
-static WinWindow *gWindow;
+static int inactive;
 
 static LRESULT CALLBACK wndProc(HWND, UINT, WPARAM, LPARAM);
 
@@ -45,14 +62,20 @@ static void serrorBox(const char *str)
     MessageBoxA(NULL, str, "SHUTDOWN ERROR", MB_OK | MB_ICONINFORMATION);
 }
 
+static int sg_height;
+
 static void handleResize(int width, int height)
 {
+    struct sg_event_resize e;
     if (!height)
         height = 1;
     if (!width)
         width = 1;
-    glViewport(0, 0, width, height);
-    gWindow->setSize(width, height);
+    e.type = SG_EVENT_RESIZE;
+    e.width = width;
+    e.height = height;
+    sg_height = height;
+    sg_sys_event((union sg_event *) &e);
 }
 
 static void killGLWindow()
@@ -73,15 +96,33 @@ static void killGLWindow()
         serrorBox("Could not release window.");
     hWnd = NULL;
 
-    if (!UnregisterClass(L"OpenGL", hInstance))
+    if (!UnregisterClassW(L"OpenGL", hInstance))
         serrorBox("Could not unregister class");
     hInstance = NULL;
 }
 
+static PIXELFORMATDESCRIPTOR pfd = {
+    sizeof(PIXELFORMATDESCRIPTOR),
+    1,
+    PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER,
+    PFD_TYPE_RGBA,
+    32,
+    0, 0, 0, 0, 0, 0, // color bits
+    0, // alpha
+    0, // shift
+    0, 0, 0, 0, 0, // accumulation
+    16, // depth buffer
+    0, // stencil
+    0, // auxiliary
+    PFD_MAIN_PLANE, // drawing layer
+    0, //reserved
+    0, 0, 0 // layer masks
+};
+
 BOOL createWindow(LPCWSTR title, int width, int height)
 {
     GLuint pixelFormat;
-    WNDCLASS wc;
+    WNDCLASSEXW wc;
     DWORD dwExStyle;
     DWORD dwStyle;
     RECT windowRect;
@@ -92,6 +133,7 @@ BOOL createWindow(LPCWSTR title, int width, int height)
     windowRect.bottom = height;
 
     hInstance = GetModuleHandle(NULL);
+    wc.cbSize = sizeof(wc);
     wc.style = CS_HREDRAW | CS_VREDRAW | CS_OWNDC;
     wc.lpfnWndProc = (WNDPROC) wndProc;
     wc.cbClsExtra = 0;
@@ -102,8 +144,9 @@ BOOL createWindow(LPCWSTR title, int width, int height)
     wc.hbrBackground = NULL;
     wc.lpszMenuName = NULL;
     wc.lpszClassName = L"OpenGL";
+    wc.hIconSm = NULL;
 
-    if (!RegisterClass(&wc)) {
+    if (!RegisterClassExW(&wc)) {
         errorBox("Failed to register window class.");
         return FALSE;
     }
@@ -113,33 +156,15 @@ BOOL createWindow(LPCWSTR title, int width, int height)
     dwStyle |= WS_CLIPSIBLINGS | WS_CLIPCHILDREN;
 
     AdjustWindowRectEx(&windowRect, dwStyle, FALSE, dwExStyle);
-    hWnd = CreateWindowEx(dwExStyle, L"OpenGL", title, dwStyle, 0, 0,
-                          windowRect.right - windowRect.left,
-                          windowRect.bottom - windowRect.top,
-                          NULL, NULL, hInstance, NULL);
+    hWnd = CreateWindowExW(dwExStyle, L"OpenGL", title, dwStyle, 0, 0,
+                           windowRect.right - windowRect.left,
+                           windowRect.bottom - windowRect.top,
+                           NULL, NULL, hInstance, NULL);
     if (!hWnd) {
         killGLWindow();
         errorBox("Window creation error.");
         return FALSE;
     }
-
-    static PIXELFORMATDESCRIPTOR pfd = {
-        sizeof(PIXELFORMATDESCRIPTOR),
-        1,
-        PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER,
-        PFD_TYPE_RGBA,
-        32,
-        0, 0, 0, 0, 0, 0, // color bits
-        0, // alpha
-        0, // shift
-        0, 0, 0, 0, 0, // accumulation
-        16, // depth buffer
-        0, // stencil
-        0, // auxiliary
-        PFD_MAIN_PLANE, // drawing layer
-        0, //reserved
-        0, 0, 0 // layer masks
-    };
 
     hDC = GetDC(hWnd);
     if (!hDC) {
@@ -182,22 +207,28 @@ BOOL createWindow(LPCWSTR title, int width, int height)
     return TRUE;
 }
 
-static void handleKey(int code, UI::EventType t)
+static void handleKey(int code, sg_event_type_t t)
 {
+    struct sg_event_key e;
+    int hcode;
     if (code < 0 || code > 255)
         return;
-    int hcode = WIN_NATIVE_TO_HID[code];
+    hcode = WIN_NATIVE_TO_HID[code];
     if (hcode == 255)
         return;
-    UI::KeyEvent e(t, hcode);
-    gWindow->handleEvent(e);
+    e.type = t;
+    e.key = hcode;
+    sg_sys_event((union sg_event *) &e);
 }
 
-static void handleMouse(int param, UI::EventType t, int button)
+static void handleMouse(int param, sg_event_type_t t, int button)
 {
-    int x = LOWORD(param), y = HIWORD(param);
-    UI::MouseEvent e(t, button, x, gWindow->height() - 1 - y);
-    gWindow->handleEvent(e);
+    struct sg_event_mouse e;
+    e.type = t;
+    e.x = LOWORD(param);
+    e.y = sg_height - 1 - HIWORD(param);
+    e.button = button;
+    sg_sys_event((union sg_event *) &e);
 }
 
 static LRESULT CALLBACK wndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -220,39 +251,39 @@ static LRESULT CALLBACK wndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
         return 0;
 
     case WM_KEYDOWN:
-        handleKey(wParam, UI::KeyDown);
+        handleKey(wParam, SG_EVENT_KDOWN);
         return 0;
 
     case WM_KEYUP:
-        handleKey(wParam, UI::KeyUp);
+        handleKey(wParam, SG_EVENT_KUP);
         return 0;
 
     case WM_LBUTTONDOWN:
-        handleMouse(lParam, UI::MouseDown, UI::ButtonLeft);
+        handleMouse(lParam, SG_EVENT_MDOWN, SG_BUTTON_LEFT);
         return 0;
 
     case WM_RBUTTONDOWN:
-        handleMouse(lParam, UI::MouseDown, UI::ButtonRight);
+        handleMouse(lParam, SG_EVENT_MDOWN, SG_BUTTON_RIGHT);
         return 0;
 
     case WM_MBUTTONDOWN:
-        handleMouse(lParam, UI::MouseDown, UI::ButtonMiddle);
+        handleMouse(lParam, SG_EVENT_MDOWN, SG_BUTTON_MIDDLE);
         return 0;
 
     case WM_LBUTTONUP:
-        handleMouse(lParam, UI::MouseUp, UI::ButtonLeft);
+        handleMouse(lParam, SG_EVENT_MUP, SG_BUTTON_LEFT);
         return 0;
 
     case WM_RBUTTONUP:
-        handleMouse(lParam, UI::MouseUp, UI::ButtonRight);
+        handleMouse(lParam, SG_EVENT_MUP, SG_BUTTON_RIGHT);
         return 0;
 
     case WM_MBUTTONUP:
-        handleMouse(lParam, UI::MouseUp, UI::ButtonMiddle);
+        handleMouse(lParam, SG_EVENT_MUP, SG_BUTTON_MIDDLE);
         return 0;
 
     case WM_MOUSEMOVE:
-        handleMouse(lParam, UI::MouseMove, -1);
+        handleMouse(lParam, SG_EVENT_MMOVE, -1);
         return 0;
 
     case WM_SIZE:
@@ -263,47 +294,121 @@ static LRESULT CALLBACK wndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
     return DefWindowProc(hWnd, uMsg, wParam, lParam);
 }
 
-static void init()
-{
-    exe_options opts;
-    opts.alt_data_dir= NULL;
-    LPWSTR cmdLine = GetCommandLine();
-    if (cmdLine && *cmdLine) {
-        int argc, i;
-        LPWSTR *argv = CommandLineToArgvW(cmdLine, &argc);
-        if (!argv)
-            throw error_win(GetLastError());
-        for (i = 1; i < argc; ++i) {
-            wchar_t *s = argv[i];
-            if (s[0] == L'/') {
-                switch (s[1]) {
-                case L'I':
-                    if (!s[2]) {
-                        if (i + 1 >= argc)
-                            goto parseError;
-                        i++;
-                        s = argv[i];
-                    } else {
-                        s += 2;
-                    }
-                    opts.alt_data_dir = s;
-                    break;
+struct cmdline {
+    wchar_t *cmd;
+    wchar_t **wargv;
+    char *arg;
+    size_t alloc;
+    int argc;
+    int idx;
+};
 
-                default:
-                    goto parseError;
+static void
+cmdline_init(struct cmdline *c)
+{
+    c->arg = NULL;
+    c->alloc = 0;
+    c->idx = 1;
+    c->cmd = GetCommandLineW();
+    if (c->cmd && *c->cmd) {
+        c->wargv = CommandLineToArgvW(c->cmd, &c->argc);
+        if (!c->wargv)
+            abort();
+    } else {
+        c->wargv = NULL;
+        c->argc = 0;
+    }
+}
+
+static void
+cmdline_destroy(struct cmdline *c)
+{
+    LocalFree(c->wargv);
+    free(c->arg);
+}
+
+static char *
+cmdline_next(struct cmdline *c)
+{
+    wchar_t *warg;
+    size_t wlen;
+    int r;
+    size_t len;
+    if (c->idx >= c->argc)
+        return NULL;
+    warg = c->wargv[c->idx++];
+    wlen = wcslen(warg);
+    r = WideCharToMultiByte(CP_UTF8, 0, warg, wlen, NULL, 0, NULL, NULL);
+    if (!r)
+        abort();
+    len = r;
+    if (len + 1 > c->alloc) {
+        if (!c->alloc)
+            c->alloc = 256;
+        while (len + 1 > c->alloc)
+            c->alloc *= 2;
+        free(c->arg);
+        c->arg = malloc(c->alloc);
+        if (!c->arg)
+            abort();
+    }
+    r = WideCharToMultiByte(CP_UTF8, 0, warg, wlen, c->arg, c->alloc, NULL, NULL);
+    if (!r)
+        abort();
+    c->arg[len] = '\0';
+    return c->arg;
+}
+
+static void
+cmdline_parse(void)
+{
+    struct cmdline c;
+    char *arg;
+    cmdline_init(&c);
+    while ((arg = cmdline_next(&c))) {
+        if (arg[0] == '/') {
+            switch (arg[1]) {
+            case 'D':
+                if (!arg[2]) {
+                    arg = cmdline_next(&c);
+                    if (!arg)
+                        goto parseError;
+                } else {
+                    arg += 2;
                 }
-            } else {
+                sg_cvar_addarg(NULL, NULL, arg);
+                break;
+
+            default:
                 goto parseError;
             }
-        }
-        if (false) {
-parseError:
-            errorBox("Invalid command line options");
+        } else {
+            goto parseError;
         }
     }
+done:
+    cmdline_destroy(&c);
+    return;
 
-    path_init(&opts);
-    Rand::global.seed();
+parseError:
+    errorBox("Invalid command line options");
+    goto done;
+}
+
+static void
+init(void)
+{
+    cmdline_parse();
+    sg_sys_init();
+
+    if (!createWindow(L"Game", 768, 480))
+        exit(0);
+    glBlendColor = (void (APIENTRY *)(GLclampf, GLclampf, GLclampf, GLclampf))
+        wglGetProcAddress("glBlendColor");
+    if (!glBlendColor) {
+        errorBox("Can't get glBlendColor address.");
+        exit(1);
+    }
 }
 
 void (APIENTRY *glBlendColor)(GLclampf, GLclampf, GLclampf, GLclampf);
@@ -312,41 +417,22 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
                    LPSTR lpCmdLine, int iCmdShow)
 {
     MSG msg;
-    WinWindow w;
-    gWindow = &w;
 
-    try {
-        init();
-        w.setScreen(new LD22::Screen);
+    init();
 
-        if (!createWindow(L"Game", 768, 480))
-            return 0;
-
-        glBlendColor = (void (APIENTRY *)(GLclampf, GLclampf, GLclampf, GLclampf))
-            wglGetProcAddress("glBlendColor");
-        if (!glBlendColor) {
-            errorBox("Can't get glBlendColor address.");
-            return 0;
+    while(1) {
+        while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
+            if (msg.message == WM_QUIT)
+                goto done;
+            TranslateMessage(&msg);
+            DispatchMessage(&msg);
         }
 
-        while (1) {
-            while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
-                if (msg.message == WM_QUIT)
-                    goto done;
-                TranslateMessage(&msg);
-                DispatchMessage(&msg);
-            }
-
-            if (!inactive) {
-                w.draw();
-                SwapBuffers(hDC);
-            }
+        if (!inactive) {
+            glClear(GL_COLOR_BUFFER_BIT);
+            sg_sys_draw();
+            SwapBuffers(hDC);
         }
-    } catch (std::exception &ex) {
-        killGLWindow();
-        char buf[256];
-        _snprintf(buf, sizeof(buf), "Exception: %s", ex.what());
-        errorBox(buf);
     }
 done:
 
