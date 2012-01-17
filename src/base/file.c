@@ -872,7 +872,7 @@ sg_path_getexedir(char *buf, unsigned len)
 {
     (void) buf;
     (void) len;
-    return -1;
+    return 0;
 }
 
 #endif
