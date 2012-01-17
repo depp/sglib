@@ -1,3 +1,4 @@
+#include "pixbuf.h"
 #include <CoreGraphics/CoreGraphics.h>
 
 static void releaseData(void *info, const void *data, size_t size)
@@ -8,9 +9,9 @@ static void releaseData(void *info, const void *data, size_t size)
 }
 
 static CGDataProviderRef
-getDataProvider(struct sg_buffer *fbuf)
+getDataProvider(const void *data, size_t length)
 {
-    return CGDataProviderCreateWithData(fbuf->data, fbuf->data, fbuf->length, releaseData);
+    return CGDataProviderCreateWithData(NULL, data, length, releaseData);
 }
 
 static int
@@ -70,11 +71,11 @@ error:
     return -1;
 }
 
-static int
-sg_pixbuf_loadpng(struct sg_pixbuf *pbuf, struct sg_buffer *fbuf,
+int
+sg_pixbuf_loadpng(struct sg_pixbuf *pbuf, const void *data, size_t length,
                   struct sg_error **err)
 {
-    CGDataProviderRef dp = getDataProvider(fbuf);
+    CGDataProviderRef dp = getDataProvider(data, length);
     assert(dp);
     CGImageRef img = CGImageCreateWithPNGDataProvider(dp, NULL, false, kCGRenderingIntentDefault);
     CGDataProviderRelease(dp);
@@ -82,11 +83,11 @@ sg_pixbuf_loadpng(struct sg_pixbuf *pbuf, struct sg_buffer *fbuf,
     return imageToPixbuf(pbuf, img, err);
 }
 
-static int
-sg_pixbuf_loadjpeg(struct sg_pixbuf *pbuf, struct sg_buffer *fbuf,
+int
+sg_pixbuf_loadjpeg(struct sg_pixbuf *pbuf, const void *data, size_t length,
                    struct sg_error **err)
 {
-    CGDataProviderRef dp = getDataProvider(fbuf);
+    CGDataProviderRef dp = getDataProvider(data, length);
     assert(dp);
     CGImageRef img = CGImageCreateWithJPEGDataProvider(dp, NULL, false, kCGRenderingIntentDefault);
     CGDataProviderRelease(dp);
