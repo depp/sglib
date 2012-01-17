@@ -19,9 +19,11 @@
 #define SG_PATH_UNICODE 1
 #define sg_file_i_open sg_file_w_open
 #define sg_path_i_init sg_path_w_init
+#define SG_PATH_SEP ';'
 #else
 #define sg_file_i_open sg_file_u_open
 #define sg_path_i_init sg_path_u_init
+#define SG_PATH_SEP ':'
 #endif
 
 #if defined(SG_PATH_UNICODE)
@@ -239,13 +241,13 @@ sg_path_add(struct sg_paths *p, const char *path, size_t len, int flags)
         p->alloc = nalloc;
     }
     pos = p->acount;
-    if (len > p->amaxlen)
-        p->amaxlen = len;
+    if (npath.len > p->amaxlen)
+        p->amaxlen = npath.len;
     p->acount += 1;
     if (flags & SG_PATH_WRITABLE) {
         pos = p->wcount;
-        if (len > p->wmaxlen)
-            p->wmaxlen = len;
+        if (npath.len > p->wmaxlen)
+            p->wmaxlen = npath.len;
         p->wcount += 1;
     }
     memmove(p->a + pos + 1, p->a + pos,
@@ -273,7 +275,7 @@ sg_path_init(void)
     if (!r)
         p = "";
     while (*p) {
-        sep = strchr(p, ':');
+        sep = strchr(p, SG_PATH_SEP);
         if (!sep) {
             if (*p)
                 sg_path_add(&sg_paths, p, strlen(p), 0);
@@ -464,8 +466,10 @@ sg_path_w_init(struct sg_path *p, const char *path, size_t len,
             dr = GetModuleFileNameW(NULL, epath, elen);
             if (!dr)
                 goto error;
-            if (dr < elen)
+            if (dr < elen) {
                 elen = dr;
+                break;
+            }
             elen *= 2;
             free(epath);
         }
