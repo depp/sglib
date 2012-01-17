@@ -142,7 +142,10 @@ CBASE_OBJS += base/pixbuf_libjpeg.o
 base/pixbuf_libjpeg.o: BASE_CFLAGS += $(LIBJPEG_CFLAGS)
 endif
 
-base/type.o: BASE_CFLAGS += $(TYPE_CFLAGS)
+ifdef HAVE_PANGO
+CBASE_OBJS += base/type_pango.o
+base/type_pango.o: BASE_CFLAGS += $(PANGO_CFLAGS)
+endif
 
 SYS_OBJS =
 SYS_OBJS += sys/error.o

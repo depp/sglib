@@ -168,13 +168,13 @@ AC_SUBST([IMAGE_LIBS])
 
 dnl Check for some way to render type
 if test -z "$have_type" ; then
-  PKG_CHECK_MODULES([PANGOCAIRO], [pangocairo], [
+  PKG_CHECK_MODULES([PANGO], [pangocairo], [
     AC_DEFINE([HAVE_PANGOCAIRO], [1], [PangoCairo is available])
     have_type='Pango with Cairo backend'
-    TYPE_CFLAGS="$PANGOCAIRO_CFLAGS"
-    TYPE_LIBS="$PANGOCAIRO_LIBS"
+    HAVE_PANGO=yes
+    TYPE_LIBS="$PANGO_LIBS"
   ], [
-    PKG_CHECK_MODULES([PANGO], [pango], [
+    PKG_CHECK_MODULES([PANGOOTHER], [pango], [
       AC_MSG_WARN([Pango is installed but does not have the Cairo backend])
     ], [:])
   ])
@@ -182,7 +182,8 @@ fi
 if test -z "$have_type" ; then
   AC_MSG_ERROR([cannot render type, try installing Pango])
 fi
-AC_SUBST([TYPE_CFLAGS])
+AC_SUBST([HAVE_PANGO])
+AC_SUBST([PANGO_CFLAGS])
 AC_SUBST([TYPE_LIBS])
 
 dnl Enable warnings with --enable-warnings
