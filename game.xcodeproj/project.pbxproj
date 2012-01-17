@@ -97,6 +97,7 @@
 		38FC2D6614C59BFD002E9D02 /* file_posix.c in Sources */ = {isa = PBXBuildFile; fileRef = 38FC2D6114C59BFD002E9D02 /* file_posix.c */; };
 		38FC2D6714C59BFD002E9D02 /* file_read.c in Sources */ = {isa = PBXBuildFile; fileRef = 38FC2D6214C59BFD002E9D02 /* file_read.c */; };
 		38FC2D7414C59C2D002E9D02 /* pixbuf_coregraphics.c in Sources */ = {isa = PBXBuildFile; fileRef = 38FC2D7114C59C2D002E9D02 /* pixbuf_coregraphics.c */; };
+		38FC2D9514C5A433002E9D02 /* type_coretext.c in Sources */ = {isa = PBXBuildFile; fileRef = 38FC2D8C14C5A422002E9D02 /* type_coretext.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -302,6 +303,10 @@
 		38FC2D7114C59C2D002E9D02 /* pixbuf_coregraphics.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = pixbuf_coregraphics.c; sourceTree = "<group>"; };
 		38FC2D7214C59C2D002E9D02 /* pixbuf_libjpeg.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = pixbuf_libjpeg.c; sourceTree = "<group>"; };
 		38FC2D7314C59C2D002E9D02 /* pixbuf_libpng.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = pixbuf_libpng.c; sourceTree = "<group>"; };
+		38FC2D8C14C5A422002E9D02 /* type_coretext.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = type_coretext.c; sourceTree = "<group>"; };
+		38FC2D8D14C5A422002E9D02 /* type_impl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = type_impl.h; sourceTree = "<group>"; };
+		38FC2D8E14C5A422002E9D02 /* type_pango.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = type_pango.c; sourceTree = "<group>"; };
+		38FC2D8F14C5A422002E9D02 /* type_win.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = type_win.c; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -524,6 +529,10 @@
 				385269B314C2FEA700CD7C74 /* texture.h */,
 				385269B414C2FEA700CD7C74 /* type.c */,
 				385269B514C2FEA700CD7C74 /* type.h */,
+				38FC2D8C14C5A422002E9D02 /* type_coretext.c */,
+				38FC2D8D14C5A422002E9D02 /* type_impl.h */,
+				38FC2D8E14C5A422002E9D02 /* type_pango.c */,
+				38FC2D8F14C5A422002E9D02 /* type_win.c */,
 			);
 			path = base;
 			sourceTree = "<group>";
@@ -796,6 +805,7 @@
 				38FC2D6614C59BFD002E9D02 /* file_posix.c in Sources */,
 				38FC2D6714C59BFD002E9D02 /* file_read.c in Sources */,
 				38FC2D7414C59C2D002E9D02 /* pixbuf_coregraphics.c in Sources */,
+				38FC2D9514C5A433002E9D02 /* type_coretext.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

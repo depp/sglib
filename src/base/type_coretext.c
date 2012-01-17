@@ -1,3 +1,4 @@
+#include "pixbuf.h"
 #include "type_impl.h"
 #include <CoreText/CoreText.h>
 #include <CoreGraphics/CoreGraphics.h>
