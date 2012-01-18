@@ -1,4 +1,5 @@
 /* Windows file / path code.  */
+#include "error.h"
 #include "file_impl.h"
 #include "file.h"
 
@@ -99,9 +100,9 @@ sg_file_w_seek(struct sg_file *f, int64_t off, int whence)
     return ((int64_t) hi << 32) | lo;
 }
 
-static int
-sg_file_w_open(struct sg_file **f, const wchar_t *path, int flags,
-               struct sg_error **e)
+int
+sg_file_tryopen(struct sg_file **f, const wchar_t *path, int flags,
+                struct sg_error **e)
 {
     struct sg_file_w *w;
     HANDLE h;
@@ -133,8 +134,9 @@ sg_file_w_open(struct sg_file **f, const wchar_t *path, int flags,
     }
 }
 
-static int
-sg_path_w_init(struct sg_path *p, const char *path, size_t len,
+int
+sg_path_getdir(pchar **abspath, size_t *abslen,
+               const char *relpath, size_t rellen,
                int flags)
 {
     /* Relative, absolute, executable, and working directory path.  */
@@ -145,20 +147,20 @@ sg_path_w_init(struct sg_path *p, const char *path, size_t len,
     BOOL br;
 
     /* FIXME: log errors / warnings */
-    if (!len)
+    if (!rellen)
         return 0;
-    if (memchr(path, '\0', len))
+    if (memchr(relpath, '\0', rellen))
         return 0;
 
     /* Convert relative path to Unicode.  */
-    r = MultiByteToWideChar(CP_UTF8, 0, path, len, NULL, 0);
+    r = MultiByteToWideChar(CP_UTF8, 0, relpath, rellen, NULL, 0);
     if (!r)
         goto error;
     rlen = r;
     rpath = malloc(sizeof(wchar_t) * (rlen + 2));
     if (!rpath)
         goto nomem;
-    r = MultiByteToWideChar(CP_UTF8, 0, path, len, rpath, rlen);
+    r = MultiByteToWideChar(CP_UTF8, 0, relpath, rellen, rpath, rlen);
     if (!r)
         goto error;
 
@@ -237,8 +239,8 @@ sg_path_w_init(struct sg_path *p, const char *path, size_t len,
     }
 
     if (ret > 0) {
-        p->path = apath;
-        p->len = alen;
+        *abspath = apath;
+        *abslen = alen;
         apath = NULL;
     }
 
