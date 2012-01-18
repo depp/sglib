@@ -180,9 +180,6 @@
     <ClCompile Include="src\base\error.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\base\file.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\base\file_path.c">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -234,17 +231,17 @@
     <ClCompile Include="src\sys\file.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\base\file_read.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\base\file_win.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\base\file_norm.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\client\ui\window.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\sys\resource.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\sys\rand.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\client\ui\screen.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -266,13 +263,7 @@
     <ClInclude Include="src\client\color.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\sys\clock.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\client\texture.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\sys\ifile.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\sys\buffer.hpp">
@@ -281,22 +272,7 @@
     <ClInclude Include="src\sys\sharedref.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\sys\path.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\client\keyboard\keyid.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\client\keyboard\keycode.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\client\keyboard\keytable.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\sys\error_win.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\win\defs.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\game\ld22\actor.hpp">
@@ -516,6 +492,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\sys\file.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\base\file_impl.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

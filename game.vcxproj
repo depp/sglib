@@ -17,8 +17,10 @@
     <ClCompile Include="src\base\cvar.c" />
     <ClCompile Include="src\base\dict.c" />
     <ClCompile Include="src\base\error.c" />
-    <ClCompile Include="src\base\file.c" />
+    <ClCompile Include="src\base\file_norm.c" />
     <ClCompile Include="src\base\file_path.c" />
+    <ClCompile Include="src\base\file_read.c" />
+    <ClCompile Include="src\base\file_win.c" />
     <ClCompile Include="src\base\hash.c" />
     <ClCompile Include="src\base\keycode\keyid.c" />
     <ClCompile Include="src\base\keycode\keytable_win.c" />
@@ -95,6 +97,7 @@
     <ClInclude Include="src\base\error.h" />
     <ClInclude Include="src\base\event.h" />
     <ClInclude Include="src\base\file.h" />
+    <ClInclude Include="src\base\file_impl.h" />
     <ClInclude Include="src\base\hash.h" />
     <ClInclude Include="src\base\keycode\keycode.h" />
     <ClInclude Include="src\base\keycode\keyid.h" />
@@ -109,9 +112,6 @@
     <ClInclude Include="src\base\type.h" />
     <ClInclude Include="src\client\bitmapfont.hpp" />
     <ClInclude Include="src\client\color.hpp" />
-    <ClInclude Include="src\client\keyboard\keycode.h" />
-    <ClInclude Include="src\client\keyboard\keyid.h" />
-    <ClInclude Include="src\client\keyboard\keytable.h" />
     <ClInclude Include="src\client\keycode.hpp" />
     <ClInclude Include="src\client\letterbox.hpp" />
     <ClInclude Include="src\client\model.hpp" />
@@ -131,7 +131,6 @@
     <ClInclude Include="src\client\ui\mousemanager.hpp" />
     <ClInclude Include="src\client\ui\screen.hpp" />
     <ClInclude Include="src\client\ui\widget.hpp" />
-    <ClInclude Include="src\client\ui\window.hpp" />
     <ClInclude Include="src\client\viewport.hpp" />
     <ClInclude Include="src\game\ld22\actor.hpp" />
     <ClInclude Include="src\game\ld22\area.hpp" />
@@ -170,16 +169,10 @@
     <ClInclude Include="src\game\tank\shot.hpp" />
     <ClInclude Include="src\game\tank\world.hpp" />
     <ClInclude Include="src\sys\buffer.hpp" />
-    <ClInclude Include="src\sys\clock.hpp" />
     <ClInclude Include="src\sys\error.hpp" />
     <ClInclude Include="src\sys\error_win.hpp" />
     <ClInclude Include="src\sys\file.hpp" />
-    <ClInclude Include="src\sys\ifile.hpp" />
-    <ClInclude Include="src\sys\path.hpp" />
-    <ClInclude Include="src\sys\rand.hpp" />
-    <ClInclude Include="src\sys\resource.hpp" />
     <ClInclude Include="src\sys\sharedref.hpp" />
-    <ClInclude Include="src\win\defs.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <Keyword>Win32Proj</Keyword>
