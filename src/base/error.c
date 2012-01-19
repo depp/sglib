@@ -124,6 +124,73 @@ sg_error_data(struct sg_error **err, const char *fmtname)
     sg_error_set(err, &SG_ERROR_DATA, 0, "corrupt %s file", fmtname);
 }
 
+#ifdef _WIN32
+#include <Windows.h>
+
+extern const struct sg_error_domain SG_ERROR_WINDOWS = { "windows" };
+
+void
+sg_error_win32(struct sg_error **err, unsigned long code)
+{
+    struct sg_error *e = NULL;
+    LPWSTR wtext = NULL;
+    LPSTR atext = NULL;
+    int l1, l2, l3;
+
+    l1 = FormatMessageW(
+        FORMAT_MESSAGE_ALLOCATE_BUFFER |
+        FORMAT_MESSAGE_FROM_SYSTEM |
+        FORMAT_MESSAGE_IGNORE_INSERTS,
+        NULL,
+        code,
+        MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+        (LPWSTR) &wtext,
+        0, NULL);
+    if (!l1)
+        goto error;
+    l2 = WideCharToMultiByte(CP_UTF8, 0, wtext, l1, NULL, 0, NULL, NULL);
+    if (!l2)
+        goto error;
+    atext = malloc(l2);
+    if (!atext)
+        goto error;
+    l3 = WideCharToMultiByte(CP_UTF8, 0, wtext, l1, atext, l2, NULL, NULL);
+    if (!l3)
+        goto error;
+    LocalFree(wtext);
+    if (!err || *err) {
+        sg_error_clobber(&SG_ERROR_WINDOWS, code, atext);
+        free(atext);
+        return;
+    }
+    e = malloc(sizeof(*e));
+    if (!e)
+        goto error;
+    e->refcount = 1;
+    e->domain = &SG_ERROR_WINDOWS;
+    e->msg = atext;
+    e->code = code;
+    *err = e;
+    return;
+
+error:
+    if (wtext)
+        LocalFree(wtext);
+    free(e);
+    free(atext);
+    abort();
+}
+
+/*
+void
+sg_error_hresult(struct sg_error **err, long code)
+{
+
+}
+*/
+
+#else
+
 const struct sg_error_domain SG_ERROR_ERRNO = { "errno" };
 
 #include <errno.h>
@@ -155,5 +222,7 @@ sg_error_errno(struct sg_error **err, int code)
         sg_error_sets(err, &SG_ERROR_ERRNO, code, r ? NULL : buf);
     }
 }
+
+#endif
 
 #endif

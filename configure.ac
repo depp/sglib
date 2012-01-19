@@ -141,37 +141,40 @@ if test -z "$have_image" ; then
   ])
 fi
 if test -z "$have_image" ; then
-  PKG_CHECK_MODULES([PNG], [libpng], [
+  PKG_CHECK_MODULES([LIBPNG], [libpng], [
     AC_DEFINE([HAVE_LIBPNG], [1], [LibPNG is available])
-    have_libpng=yes
+    HAVE_LIBPNG=yes
   ], [:])
   AC_CHECK_LIB([jpeg], [jpeg_start_decompress], [
     AC_DEFINE([HAVE_LIBJPEG], [1], [LibJPEG is available])
-    JPEG_CFLAGS=
-    JPEG_LIBS=-ljpeg
-    have_libjpeg=yes
+    LIBJPEG_CFLAGS=
+    LIBJPEG_LIBS=-ljpeg
+    HAVE_LIBJPEG=yes
   ])
-  if test -n "$have_libpng" && test -n "$have_libjpeg" ; then
+  if test -n "$HAVE_LIBPNG" && test -n "$HAVE_LIBJPEG" ; then
     have_image='LibPNG, LibJPEG'
-    IMAGE_CFLAGS="$PNG_CFLAGS $JPEG_CFLAGS"
-    IMAGE_LIBS="$PNG_LIBS $JPEG_LIBS"
+    IMAGE_LIBS="$LIBPNG_LIBS $LIBJPEG_LIBS"
   fi
 fi
 if test -z "$have_image" ; then
   AC_MSG_ERROR([cannot load images, try installing LibPNG and LibJPEG])
 fi
-AC_SUBST([IMAGE_CFLAGS])
+AC_SUBST([HAVE_COREGRAPHICS])
+AC_SUBST([HAVE_LIBPNG])
+AC_SUBST([HAVE_LIBJPEG])
+AC_SUBST([LIBPNG_CFLAGS])
+AC_SUBST([LIBJPEG_CFLAGS])
 AC_SUBST([IMAGE_LIBS])
 
 dnl Check for some way to render type
 if test -z "$have_type" ; then
-  PKG_CHECK_MODULES([PANGOCAIRO], [pangocairo], [
+  PKG_CHECK_MODULES([PANGO], [pangocairo], [
     AC_DEFINE([HAVE_PANGOCAIRO], [1], [PangoCairo is available])
     have_type='Pango with Cairo backend'
-    TYPE_CFLAGS="$PANGOCAIRO_CFLAGS"
-    TYPE_LIBS="$PANGOCAIRO_LIBS"
+    HAVE_PANGO=yes
+    TYPE_LIBS="$PANGO_LIBS"
   ], [
-    PKG_CHECK_MODULES([PANGO], [pango], [
+    PKG_CHECK_MODULES([PANGOOTHER], [pango], [
       AC_MSG_WARN([Pango is installed but does not have the Cairo backend])
     ], [:])
   ])
@@ -179,7 +182,8 @@ fi
 if test -z "$have_type" ; then
   AC_MSG_ERROR([cannot render type, try installing Pango])
 fi
-AC_SUBST([TYPE_CFLAGS])
+AC_SUBST([HAVE_PANGO])
+AC_SUBST([PANGO_CFLAGS])
 AC_SUBST([TYPE_LIBS])
 
 dnl Enable warnings with --enable-warnings

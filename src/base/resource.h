@@ -1,5 +1,6 @@
 #ifndef BASE_RESOURCE_H
 #define BASE_RESOURCE_H
+#include "defs.h"
 #ifdef __cplusplus
 extern "C" {
 #endif

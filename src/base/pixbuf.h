@@ -1,5 +1,6 @@
 #ifndef BASE_PIXBUF_H
 #define BASE_PIXBUF_H
+#include <stddef.h>
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -60,6 +61,16 @@ sg_pixbuf_calloc(struct sg_pixbuf *pbuf, struct sg_error **err);
 int
 sg_pixbuf_loadimage(struct sg_pixbuf *pbuf, const char *path,
                     struct sg_error **err);
+
+/* Load a PNG image from the given buffer.  */
+int
+sg_pixbuf_loadpng(struct sg_pixbuf *pbuf, const void *data, size_t len,
+                  struct sg_error **err);
+
+/* Load a JPEG image from the given buffer.  */
+int
+sg_pixbuf_loadjpeg(struct sg_pixbuf *pbuf, const void *data, size_t len,
+                   struct sg_error **err);
 
 #ifdef __cplusplus
 }

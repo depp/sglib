@@ -115,8 +115,11 @@ CBASE_OBJS += base/keycode/keyid.o
 CBASE_OBJS += base/keycode/keytable_evdev.o
 CBASE_OBJS += base/keycode/keytable_mac.o
 CBASE_OBJS += base/keycode/keytable_win.o
-CBASE_OBJS += base/file.o
+CBASE_OBJS += base/file_norm.o
 CBASE_OBJS += base/file_path.o
+CBASE_OBJS += base/file_posix.o
+CBASE_OBJS += base/file_read.o
+#CBASE_OBJS += base/file_win.o
 CBASE_OBJS += base/model.o
 CBASE_OBJS += base/opengl.o
 CBASE_OBJS += base/pixbuf.o
@@ -128,8 +131,21 @@ CBASE_OBJS += base/sys.o
 CBASE_OBJS += base/texture.o
 CBASE_OBJS += base/type.o
 CBASE_OBJS += version.o
-base/pixbuf_loadimage.o: BASE_CFLAGS += $(IMAGE_CFLAGS)
-base/type.o: BASE_CFLAGS += $(TYPE_CFLAGS)
+
+ifdef HAVE_LIBPNG
+CBASE_OBJS += base/pixbuf_libpng.o
+base/pixbuf_libpng.o: BASE_CFLAGS += $(LIBPNG_CFLAGS)
+endif
+
+ifdef HAVE_LIBJPEG
+CBASE_OBJS += base/pixbuf_libjpeg.o
+base/pixbuf_libjpeg.o: BASE_CFLAGS += $(LIBJPEG_CFLAGS)
+endif
+
+ifdef HAVE_PANGO
+CBASE_OBJS += base/type_pango.o
+base/type_pango.o: BASE_CFLAGS += $(PANGO_CFLAGS)
+endif
 
 SYS_OBJS =
 SYS_OBJS += sys/error.o

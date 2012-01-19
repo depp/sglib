@@ -1,150 +1,176 @@
-#include "file.h"
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
+#define SG_PATH_INITSZ 1
+
+#include "cvar.h"
 #include "error.h"
+#include "file.h"
+#include "file_impl.h"
+#include <stdlib.h>
+#include <string.h>
 
-/* Return whether the given component is legal.  The input must be a
-   lowercase string containing no illegal characters.  */
-static int
-sg_path_checkpart(const char *p, size_t len)
-{
-    if (!len)
-        return 0;
-    if (p[len-1] == ' ')
-        return 0;
-    if (len > 3 && p[3] == '.')
-        len = 3;
-    else if (len > 4 && p[4] == '.')
-        len = 4;
-    switch (*p) {
-    case ' ': case '.':
-        return 0;
-    case 'a':
-        if (len == 3 && p[1] == 'u' && p[2] == 'x')
-            return 0;
-        break;
-    case 'c':
-        if (len == 4 && p[1] == 'o' && p[2] == 'm' &&
-            (p[3] >= '0' && p[3] <= '9'))
-            return 0;
-        if (len == 3 && p[1] == 'o' && p[2] == 'n')
-            return 0;
-        break;
-    case 'l':
-        if (len == 4 && p[1] == 'p' && p[2] == 't' &&
-            (p[3] >= '0' && p[3] <= '9'))
-            return 0;
-        break;
-    case 'n':
-        if (len == 3 && p[1] == 'u' && p[2] == 'l')
-            return 0;
-        break;
-    case 'p':
-        if (len == 3 && p[1] == 'r' && p[2] == 'n')
-            return 0;
-        break;
-    default:
-        break;
-    }
-    return 1;
-}
-
-/* Table for normalizing characters in pathnames */
-static const unsigned char SG_PATH_NORM[256] = {
-    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-    ' ','!',0,'#','$','%','&','\'','(',')',0,'+',',','-','.',0,
-    '0','1','2','3','4','5','6','7','8','9',0,';',0,'=',0,0,
-    '@','a','b','c','d','e','f','g','h','i','j','k','l','m','n','o',
-    'p','q','r','s','t','u','v','w','x','y','z','[',0,']','^','_',
-    '`','a','b','c','d','e','f','g','h','i','j','k','l','m','n','o',
-    'p','q','r','s','t','u','v','w','x','y','z','{',0,'}','~',0,
-    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+struct sg_path {
+    pchar *path;
+    size_t len;
 };
 
-int
-sg_path_norm(char *buf, const char *path, struct sg_error **err)
+struct sg_paths {
+    struct sg_path *a;
+    unsigned wcount, acount;
+    unsigned wmaxlen, amaxlen;
+    unsigned alloc;
+};
+
+static struct sg_paths sg_paths;
+
+/* Copy the normalized path 'src' to the destination 'dst', converting
+   normalized directory separators to platform directory separators
+   (e.g., turn backslashes backwards on Windows).  */
+static void
+sg_path_copy(pchar *dest, const char *src, size_t len)
 {
-    /* 's' points to the start of the current component: either 'buf'
-       or the character after a '/' */
-    char const *p = path;
-    char *pp = buf, *s = buf, *e = buf + SG_MAX_PATH;
-    unsigned int ci, co;
-    while (*p == '/')
-        p++;
+#if SG_PATH_DIRSEP != '/'
+    size_t i;
+    for (i = 0; i < len; ++i)
+        dest[i] = src[i] == '/' ? SG_PATH_DIRSEP : src[i];
+#elif defined(SG_PATH_UNICODE)
+    size_t i;
+    for (i = 0; i < len; ++i)
+        dest[i] = src[i];
+#else
+    memcpy(dest, src, len);
+#endif
+}   
 
-next_char:
-    ci = (unsigned char)*p++;
-    co = SG_PATH_NORM[ci];
-    if (co) {
-        *pp++ = co;
-        if (pp == e)
-            goto inval_path;
-        goto next_char;
+struct sg_file *
+sg_file_open(const char *path, int flags, struct sg_error **e)
+{
+    struct sg_file *f;
+    struct sg_path *a;
+    int nlen, r;
+    unsigned i, pcount, pmaxlen;
+    char nbuf[SG_MAX_PATH];
+    pchar *pbuf = NULL, *p;
+
+    flags = flags;
+    if (flags & SG_WRONLY)
+        flags |= SG_WRITABLE;
+
+    nlen = sg_path_norm(nbuf, path, e);
+    if (nlen < 0)
+        return NULL;
+
+    a = sg_paths.a;
+    if (flags & SG_LOCAL) {
+        pcount = sg_paths.wcount;
+        pmaxlen = sg_paths.wmaxlen;
+    } else {
+        pcount = sg_paths.acount;
+        pmaxlen = sg_paths.amaxlen;
     }
-    switch (pp - s) {
-    case 0:
-        goto empty;
-    case 1:
-        if (s[0] == '.') {
-            pp = s;
-            goto empty;
+    if (!pcount)
+        goto notfound;
+    pbuf = malloc((pmaxlen + nlen + 1) * sizeof(pchar));
+    if (!pbuf)
+        goto nomem;
+    sg_path_copy(pbuf + pmaxlen, nbuf, nlen);
+    pbuf[pmaxlen + nlen] = '\0';
+    for (i = 0; i < pcount; ++i) {
+        p = pbuf + pmaxlen - a[i].len;
+        memcpy(p, a[i].path, a[i].len * sizeof(pchar));
+        r = sg_file_tryopen(&f, p, flags, e);
+        if (r > 0)
+            goto done;
+        if (r < 0) {
+            f = NULL;
+            goto done;
         }
-        goto nonempty;
-    case 2:
-        if (s[0] == '.' && s[1] == '.') {
-            if (s == buf)
-                goto inval_path;
-            s -= 2;
-            while (s != buf && s[-1] != '/')
-                s--;
-            pp = s;
-            goto empty;
+    }
+    goto notfound;
+
+notfound:
+    sg_error_notfound(e, nbuf);
+    f = NULL;
+    goto done;
+
+nomem:
+    sg_error_nomem(e);
+    f = NULL;
+    goto done;
+
+done:
+    free(pbuf);
+    return f;
+}
+
+/* Add a path to the given search paths.  Return >0 on success, 0 if
+   the path is discarded, and <0 if some other error occurred.  */
+static int
+sg_path_add(struct sg_paths *p, const char *path, size_t len, int flags)
+{
+    struct sg_path npath, *na;
+    unsigned nalloc, pos;
+    int r;
+
+    r = sg_path_getdir(&npath.path, &npath.len, path, len, flags);
+    if (r <= 0)
+        return r;
+
+    if (p->acount >= p->alloc) {
+        nalloc = p->alloc ? p->alloc * 2 : SG_PATH_INITSZ;
+        na = realloc(p->a, sizeof(*na) * nalloc);
+        if (!na) {
+            free(npath.path);
+            goto nomem;
         }
-        goto nonempty;
-    default:
-        goto nonempty;
+        p->a = na;
+        p->alloc = nalloc;
     }
-
-nonempty:
-    if (!sg_path_checkpart(s, pp - s))
-        goto inval_part;
-    switch (ci) {
-    case '\0':
-        *pp = '\0';
-        return pp - buf;
-    case '/': case '\\':
-        *pp++ = '/';
-        if (pp == e)
-            goto inval_path;
-        s = pp;
-        goto next_char;
-    default:
-        goto inval_char;
+    pos = p->acount;
+    if (npath.len > p->amaxlen)
+        p->amaxlen = npath.len;
+    p->acount += 1;
+    if (flags & SG_PATH_WRITABLE) {
+        pos = p->wcount;
+        if (npath.len > p->wmaxlen)
+            p->wmaxlen = npath.len;
+        p->wcount += 1;
     }
+    memmove(p->a + pos + 1, p->a + pos,
+            sizeof(*p->a) * (p->acount - pos - 1));
+    memcpy(p->a + pos, &npath, sizeof(npath));
+    return 1;
 
-empty:
-    switch (ci) {
-    case '\0':
-        if (pp != buf)
-            pp--;
-        *pp = '\0';
-        return pp - buf;
-    case '/': case '\\':
-        goto next_char;
-    default:
-        goto inval_char;
+nomem:
+    abort();
+}
+
+void
+sg_path_init(void)
+{
+    const char *p, *sep;
+    int r;
+
+    r = sg_cvar_gets("path", "data-dir", &p);
+    if (!r)
+        p = "data";
+
+    sg_path_add(&sg_paths, p, strlen(p), SG_PATH_EXEDIR);
+
+    r = sg_cvar_gets("path", "data-path", &p);
+    if (!r)
+        p = "";
+    while (*p) {
+        sep = strchr(p, SG_PATH_PATHSEP);
+        if (!sep) {
+            if (*p)
+                sg_path_add(&sg_paths, p, strlen(p), 0);
+            break;
+        }
+        if (p != sep)
+            sg_path_add(&sg_paths, p, sep - p, 0);
+        p = sep + 1;
     }
-
-inval_path: goto inval;
-inval_part: goto inval;
-inval_char: goto inval;
-inval:
-    sg_error_sets(err, &SG_ERROR_INVALPATH, 0, "invalid path");
-    return -1;
 }

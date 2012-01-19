@@ -3,6 +3,7 @@
 /* Entry points: the layer that connects library code, game code, and
    platform code.  */
 #include <stdarg.h>
+#include "defs.h"
 #ifdef __cplusplus
 extern "C" {
 #endif

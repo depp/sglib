@@ -15,9 +15,13 @@
 #include <GL/glu.h>
 
 #define GL_CONSTANT_COLOR 0x8001
+#ifdef __cplusplus
 extern "C" {
-    extern void (APIENTRY *glBlendColor)(GLclampf, GLclampf, GLclampf, GLclampf);
+#endif
+extern void (APIENTRY *glBlendColor)(GLclampf, GLclampf, GLclampf, GLclampf);
+#ifdef __cplusplus
 }
+#endif
 
 #else
 
