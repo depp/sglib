@@ -1,6 +1,8 @@
 #include "pixbuf.h"
 #include <wincodec.h>
 
+#pragma comment(lib, "WindowsCodecs.lib")
+
 static int
 sg_pixbuf_loadwincodec(struct sg_pixbuf *pbuf, const void *data, size_t len,
                        struct sg_error **err)
@@ -73,7 +75,7 @@ sg_pixbuf_loadwincodec(struct sg_pixbuf *pbuf, const void *data, size_t len,
         goto failed;
     
     r = sg_pixbuf_set(pbuf, pfmt, iwidth, iheight, err);
-    if (!r)
+    if (r)
         goto done;
     r = sg_pixbuf_alloc(pbuf, err);
     if (r)
