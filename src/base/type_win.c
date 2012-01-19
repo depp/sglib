@@ -1,3 +1,8 @@
+#include "type_impl.h"
+
+void
+sg_layout_impl_free(struct sg_layout_impl *li)
+{ }
 
 void
 sg_layout_calcbounds(struct sg_layout *lp, struct sg_layout_bounds *b)
@@ -10,10 +15,7 @@ sg_layout_calcbounds(struct sg_layout *lp, struct sg_layout_bounds *b)
     b->ibounds.height = 16;
 }
 
-/* Render the layout at the given location in a pixel buffer.  */
 void
 sg_layout_render(struct sg_layout *lp, struct sg_pixbuf *pbuf,
                  int xoff, int yoff)
-{
-
-}
+{ }

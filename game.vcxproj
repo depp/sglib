@@ -35,6 +35,7 @@
     <ClCompile Include="src\base\sys.c" />
     <ClCompile Include="src\base\texture.c" />
     <ClCompile Include="src\base\type.c" />
+    <ClCompile Include="src\base\type_win.c" />
     <ClCompile Include="src\client\bitmapfont.cpp" />
     <ClCompile Include="src\client\letterbox.cpp" />
     <ClCompile Include="src\client\model.cpp" />
@@ -111,6 +112,7 @@
     <ClInclude Include="src\base\strbuf.h" />
     <ClInclude Include="src\base\texture.h" />
     <ClInclude Include="src\base\type.h" />
+    <ClInclude Include="src\base\type_impl.h" />
     <ClInclude Include="src\client\bitmapfont.hpp" />
     <ClInclude Include="src\client\color.hpp" />
     <ClInclude Include="src\client\keycode.hpp" />
