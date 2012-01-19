@@ -28,6 +28,7 @@
     <ClCompile Include="src\base\opengl.c" />
     <ClCompile Include="src\base\pixbuf.c" />
     <ClCompile Include="src\base\pixbuf_loadimage.c" />
+    <ClCompile Include="src\base\pixbuf_wincodec.cpp" />
     <ClCompile Include="src\base\rand.c" />
     <ClCompile Include="src\base\resource.c" />
     <ClCompile Include="src\base\strbuf.c" />
