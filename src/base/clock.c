@@ -142,7 +142,7 @@ sg_clock_getdate(char *date)
     t = tv.tv_sec;
     gmtime_r(&t, &tm);
     return sg_clock_fmtdate(
-        date, tm.tm_year, tm.tm_mon, tm.tm_day,
+        date, tm.tm_year, tm.tm_mon, tm.tm_mday,
         tm.tm_hour, tm.tm_min, tm.tm_sec, tv.tv_usec / 1000);
 }
 
