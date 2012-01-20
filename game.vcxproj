@@ -35,7 +35,6 @@
     <ClCompile Include="src\base\sys.c" />
     <ClCompile Include="src\base\texture.c" />
     <ClCompile Include="src\base\type.c" />
-    <ClCompile Include="src\base\type_win.c" />
     <ClCompile Include="src\client\bitmapfont.cpp" />
     <ClCompile Include="src\client\letterbox.cpp" />
     <ClCompile Include="src\client\model.cpp" />
@@ -88,6 +87,7 @@
     <ClCompile Include="src\sys\error.cpp" />
     <ClCompile Include="src\sys\error_win.cpp" />
     <ClCompile Include="src\sys\file.cpp" />
+    <ClCompile Include="src\base\type_uniscribe.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\base\clock.h" />
