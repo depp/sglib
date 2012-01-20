@@ -98,6 +98,8 @@
 		38FC2D6714C59BFD002E9D02 /* file_read.c in Sources */ = {isa = PBXBuildFile; fileRef = 38FC2D6214C59BFD002E9D02 /* file_read.c */; };
 		38FC2D7414C59C2D002E9D02 /* pixbuf_coregraphics.c in Sources */ = {isa = PBXBuildFile; fileRef = 38FC2D7114C59C2D002E9D02 /* pixbuf_coregraphics.c */; };
 		38FC2D9514C5A433002E9D02 /* type_coretext.c in Sources */ = {isa = PBXBuildFile; fileRef = 38FC2D8C14C5A422002E9D02 /* type_coretext.c */; };
+		38FE66B314CA128600EAE6BA /* log_console.c in Sources */ = {isa = PBXBuildFile; fileRef = 38FE66AF14CA128600EAE6BA /* log_console.c */; };
+		38FE66B414CA128600EAE6BA /* log.c in Sources */ = {isa = PBXBuildFile; fileRef = 38FE66B114CA128600EAE6BA /* log.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -307,6 +309,10 @@
 		38FC2D8D14C5A422002E9D02 /* type_impl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = type_impl.h; sourceTree = "<group>"; };
 		38FC2D8E14C5A422002E9D02 /* type_pango.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = type_pango.c; sourceTree = "<group>"; };
 		38FC2D8F14C5A422002E9D02 /* type_win.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = type_win.c; sourceTree = "<group>"; };
+		38FE66AF14CA128600EAE6BA /* log_console.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = log_console.c; sourceTree = "<group>"; };
+		38FE66B014CA128600EAE6BA /* log_impl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = log_impl.h; sourceTree = "<group>"; };
+		38FE66B114CA128600EAE6BA /* log.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = log.c; sourceTree = "<group>"; };
+		38FE66B214CA128600EAE6BA /* log.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = log.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -508,6 +514,10 @@
 				3852698B14C2FEA700CD7C74 /* hash.c */,
 				3852698C14C2FEA700CD7C74 /* hash.h */,
 				3852698D14C2FEA700CD7C74 /* keycode */,
+				38FE66AF14CA128600EAE6BA /* log_console.c */,
+				38FE66B014CA128600EAE6BA /* log_impl.h */,
+				38FE66B114CA128600EAE6BA /* log.c */,
+				38FE66B214CA128600EAE6BA /* log.h */,
 				385269A414C2FEA700CD7C74 /* model.c */,
 				385269A514C2FEA700CD7C74 /* model.h */,
 				385269A614C2FEA700CD7C74 /* opengl.c */,
@@ -806,6 +816,8 @@
 				38FC2D6714C59BFD002E9D02 /* file_read.c in Sources */,
 				38FC2D7414C59C2D002E9D02 /* pixbuf_coregraphics.c in Sources */,
 				38FC2D9514C5A433002E9D02 /* type_coretext.c in Sources */,
+				38FE66B314CA128600EAE6BA /* log_console.c in Sources */,
+				38FE66B414CA128600EAE6BA /* log.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
