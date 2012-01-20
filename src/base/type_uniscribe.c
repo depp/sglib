@@ -55,11 +55,31 @@ sg_layout_getimpl(struct sg_layout *lp)
 static void
 sg_layout_initdc(struct sg_layout_impl *li)
 {
-    if (!li->dc) {
-        li->dc = CreateCompatibleDC(NULL);
-        if (!li->dc)
-            abort();
-    }
+    LOGFONTW f;
+    HFONT fh;
+    if (li->dc)
+        return;
+    li->dc = CreateCompatibleDC(NULL);
+    if (!li->dc)
+        abort();
+    f.lfHeight = -16;
+    f.lfWidth = 0;
+    f.lfEscapement = 0;
+    f.lfOrientation = 0;
+    f.lfWeight = 500;
+    f.lfItalic = 0;
+    f.lfUnderline = 0;
+    f.lfStrikeOut = 0;
+    f.lfCharSet = ANSI_CHARSET;
+    f.lfOutPrecision = OUT_OUTLINE_PRECIS;
+    f.lfClipPrecision = CLIP_DEFAULT_PRECIS;
+    f.lfQuality = CLEARTYPE_QUALITY;
+    f.lfPitchAndFamily = DEFAULT_PITCH;
+    wcscpy(f.lfFaceName, L"Arial");
+    fh = CreateFontIndirectW(&f);
+    if (!fh)
+        abort();
+    SelectObject(li->dc, fh);
 }
 
 static void
