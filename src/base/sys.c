@@ -4,6 +4,7 @@
 #include "file.h"
 #include "log.h"
 #include "rand.h"
+#include "version.h"
 #include <stdio.h>
 
 static unsigned sg_status;
@@ -12,7 +13,10 @@ static int sg_vid_width, sg_vid_height;
 void
 sg_sys_init(void)
 {
+    struct sg_logger *log;
     sg_log_init();
+    log = sg_logger_get("sys");
+    sg_logf(log, LOG_INFO, "Version: %s", VERSION_STRING);
     sg_path_init();
     sg_clock_init();
     sg_rand_seed(&sg_rand_global, 1);
