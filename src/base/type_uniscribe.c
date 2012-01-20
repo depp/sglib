@@ -23,6 +23,7 @@ struct sg_layout_impl {
     int nitems;
     SCRIPT_ITEM *items;
     int *itemglyphs;
+    int *itemoffsets;
 
     /* Glyph info */
     int nglyphs;
@@ -110,6 +111,7 @@ sg_layout_calcbounds(struct sg_layout *lp, struct sg_layout_bounds *b)
     HRESULT hr;
     SCRIPT_ITEM *items; /* [nitems+1] */
     int *itemglyphs; /* [nitems+1] glyph ranges for each item */
+    int *itemoffsets; /* [nitems] offsets for each item */
     int nitems, aitems, curitem;
     WORD *glyphs; /* [nglyphs] Glyphs */
     WORD *clusters; /* [wtextlen] glyph index for each character */
@@ -120,7 +122,7 @@ sg_layout_calcbounds(struct sg_layout *lp, struct sg_layout_bounds *b)
     ABC abc;
     TEXTMETRIC metrics;
     BOOL br;
-    int i, width;
+    int curpos;
 
     li = sg_layout_getimpl(lp);
 
@@ -203,6 +205,10 @@ alloc_glyphs:
     itemglyphs[curitem] = curglyph;
     nglyphs = curglyph;
 
+    curpos = 0;
+    itemoffsets = malloc(sizeof(*itemoffsets) * nitems);
+    if (!itemoffsets)
+        abort();
     offsets = malloc(sizeof(*offsets) * nglyphs);
     if (!offsets)
         abort();
@@ -211,6 +217,7 @@ alloc_glyphs:
         abort();
     curitem = 0;
     for (; curitem < nitems; ++curitem) {
+        itemoffsets[curitem] = curpos;
         hr = ScriptPlace(
             dc,
             &sg_uniscribe_cache,
@@ -221,17 +228,15 @@ alloc_glyphs:
             advance + itemglyphs[curitem],
             offsets + itemglyphs[curitem],
             &abc);
+        curpos += abc.abcA + abc.abcB + abc.abcC;
         if (FAILED(hr))
             abort();
     }
 
-    width = 0;
-    for (i = 0; i < nglyphs; ++i)
-        width += advance[i];
-
     li->nitems = nitems;
     li->items = items;
     li->itemglyphs = itemglyphs;
+    li->itemoffsets = itemoffsets;
     li->nglyphs = nglyphs;
     li->glyphs = glyphs;
     li->offsets = offsets;
@@ -241,7 +246,7 @@ alloc_glyphs:
     b->y = 0;
     b->ibounds.x = 0;
     b->ibounds.y = -metrics.tmDescent;
-    b->ibounds.width = width;
+    b->ibounds.width = curpos;
     b->ibounds.height = metrics.tmHeight;
 }
 
@@ -253,7 +258,7 @@ sg_layout_render(struct sg_layout *lp, struct sg_pixbuf *pbuf,
     HDC dc;
     int nitems, curitem;
     SCRIPT_ITEM *items;
-    int *itemglyphs;
+    int *itemglyphs, *itemoffsets;
     WORD *glyphs;
     int *advance;
     GOFFSET *offsets;
@@ -270,6 +275,7 @@ sg_layout_render(struct sg_layout *lp, struct sg_pixbuf *pbuf,
     nitems = li->nitems;
     items = li->items;
     itemglyphs = li->itemglyphs;
+    itemoffsets = li->itemoffsets;
     glyphs = li->glyphs;
     advance = li->advance;
     offsets = li->offsets;
@@ -278,7 +284,7 @@ sg_layout_render(struct sg_layout *lp, struct sg_pixbuf *pbuf,
         hr = ScriptTextOut(
             dc,
             &sg_uniscribe_cache,
-            0,
+            itemoffsets[curitem],
             0,
             ETO_CLIPPED,
             NULL,
