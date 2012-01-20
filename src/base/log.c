@@ -55,6 +55,8 @@ sg_log_term(void)
 static sg_log_level_t
 sg_logger_conflevel(const char *name, size_t namelen)
 {
+    (void) name;
+    (void) namelen;
     return LOG_INHERIT;
 }
 
@@ -87,9 +89,9 @@ sg_logger_get(const char *name)
     if (!len)
         return &lp->head;
     for (off = 0; off < len; ++off) {
-        if (!(name[off] >= 'a' && name[off] <= 'z' ||
-              name[off] >= 'A' && name[off] <= 'Z' ||
-              name[off] >= '0' && name[off] <= '9' ||
+        if (!((name[off] >= 'a' && name[off] <= 'z') ||
+              (name[off] >= 'A' && name[off] <= 'Z') ||
+              (name[off] >= '0' && name[off] <= '9') ||
               name[off] == '-' || name[off] == '.' || name[off] == '_'))
             abort();
     }
