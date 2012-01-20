@@ -60,7 +60,7 @@ sg_logger_conflevel(const char *name, size_t namelen)
     return LOG_INHERIT;
 }
 
-struct sg_logger_obj *
+static struct sg_logger_obj *
 sg_logger_new(struct sg_logger_obj *parent,
               const char *name, size_t namelen)
 {
@@ -123,11 +123,13 @@ static void
 sg_dologmem(struct sg_logger *logger, sg_log_level_t level,
             const char *msg, size_t len)
 {
+    struct sg_log_listener *p;
     struct sg_logger_obj *lp = (struct sg_logger_obj *) logger;
     struct sg_log_msg m;
     const char *levelname;
     char date[SG_DATE_LEN];
     int datelen, levellen;
+    int i;
 
     datelen = sg_clock_getdate(date);
     if ((int) level < 0)
@@ -146,6 +148,15 @@ sg_dologmem(struct sg_logger *logger, sg_log_level_t level,
     m.msg = msg;
     m.msglen = len;
     m.levelval = level;
+
+    for (i = 0; i < MAX_LISTENERS; ++i) {
+        p = sg_listeners[i];
+        if (p) {
+            sg_listeners[i] = NULL;
+            p->msg(p, &m);
+            sg_listeners[i] = p;
+        }
+    }
 }
 
 static void
