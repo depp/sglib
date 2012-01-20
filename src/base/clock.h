@@ -4,6 +4,9 @@
 extern "C" {
 #endif
 
+/* The minimum buffer size for sg_clock_getdate.  */
+#define SG_DATE_LEN 24
+
 /* Initialize the timer, setting the current time to zero.  */
 void
 sg_clock_init(void);
@@ -12,6 +15,12 @@ sg_clock_init(void);
    This will wrap every 2^32 ms, a little less than 50 days.  */
 unsigned
 sg_clock_get(void);
+
+/* Get the current UTC date and time as an ISO-8601 string.  The
+   number of characters written is returned.  The string will not be
+   nul-terminated.  */
+int
+sg_clock_getdate(char *date);
 
 #ifdef __cplusplus
 }

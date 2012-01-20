@@ -2,6 +2,7 @@
 #include "entry.h"
 #include "event.h"
 #include "file.h"
+#include "log.h"
 #include "rand.h"
 #include <stdio.h>
 
@@ -11,6 +12,7 @@ static int sg_vid_width, sg_vid_height;
 void
 sg_sys_init(void)
 {
+    sg_log_init();
     sg_path_init();
     sg_clock_init();
     sg_rand_seed(&sg_rand_global, 1);
