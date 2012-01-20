@@ -278,8 +278,8 @@ sg_layout_render(struct sg_layout *lp, struct sg_pixbuf *pbuf,
         hr = ScriptTextOut(
             dc,
             &sg_uniscribe_cache,
-            xoff,
-            pbuf->iheight - yoff - li->ascent,
+            0,
+            0,
             ETO_CLIPPED,
             NULL,
             &items[curitem].a,
@@ -295,7 +295,8 @@ sg_layout_render(struct sg_layout *lp, struct sg_pixbuf *pbuf,
     }
 
     sptr = li->data;
-    dptr = pbuf->data;
+    dptr = (unsigned char *) pbuf->data +
+        xoff + (pbuf->pheight - yoff - li->ascent) * pbuf->rowbytes;
     irb = w * 4;
     orb = pbuf->rowbytes;
     for (y = 0; y < h; ++y) {
