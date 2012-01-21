@@ -20,6 +20,9 @@
 		382D219011D98E62009C8EF5 /* AppKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 382D218F11D98E62009C8EF5 /* AppKit.framework */; };
 		382D224611D98E6A009C8EF5 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 382D224511D98E6A009C8EF5 /* Foundation.framework */; };
 		382D22C711D98E80009C8EF5 /* ApplicationServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 382D22C611D98E80009C8EF5 /* ApplicationServices.framework */; };
+		384C894614CB561E00EBDB6A /* version.c in Sources */ = {isa = PBXBuildFile; fileRef = 384C894514CB561E00EBDB6A /* version.c */; };
+		384C894814CB563800EBDB6A /* log_network.c in Sources */ = {isa = PBXBuildFile; fileRef = 384C894714CB563800EBDB6A /* log_network.c */; };
+		384C894E14CB565800EBDB6A /* net.c in Sources */ = {isa = PBXBuildFile; fileRef = 384C894D14CB565800EBDB6A /* net.c */; };
 		385269B714C2FEA700CD7C74 /* clock.c in Sources */ = {isa = PBXBuildFile; fileRef = 3852697B14C2FEA700CD7C74 /* clock.c */; };
 		385269B814C2FEA700CD7C74 /* configfile.c in Sources */ = {isa = PBXBuildFile; fileRef = 3852697D14C2FEA700CD7C74 /* configfile.c */; };
 		385269B914C2FEA700CD7C74 /* configfile_read.c in Sources */ = {isa = PBXBuildFile; fileRef = 3852697F14C2FEA700CD7C74 /* configfile_read.c */; };
@@ -166,6 +169,10 @@
 		382D218F11D98E62009C8EF5 /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = /System/Library/Frameworks/AppKit.framework; sourceTree = "<absolute>"; };
 		382D224511D98E6A009C8EF5 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = /System/Library/Frameworks/Foundation.framework; sourceTree = "<absolute>"; };
 		382D22C611D98E80009C8EF5 /* ApplicationServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ApplicationServices.framework; path = /System/Library/Frameworks/ApplicationServices.framework; sourceTree = "<absolute>"; };
+		384C894514CB561E00EBDB6A /* version.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = version.c; sourceTree = "<group>"; };
+		384C894714CB563800EBDB6A /* log_network.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = log_network.c; sourceTree = "<group>"; };
+		384C894C14CB565800EBDB6A /* net.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = net.h; sourceTree = "<group>"; };
+		384C894D14CB565800EBDB6A /* net.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = net.c; sourceTree = "<group>"; };
 		3852089E117434FD00640971 /* Game.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Game.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		385208A1117434FD00640971 /* Game-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Game-Info.plist"; sourceTree = "<group>"; };
 		3852697B14C2FEA700CD7C74 /* clock.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = clock.c; sourceTree = "<group>"; };
@@ -468,6 +475,7 @@
 		385208A911743F4100640971 /* src */ = {
 			isa = PBXGroup;
 			children = (
+				384C894514CB561E00EBDB6A /* version.c */,
 				3852697914C2FEA700CD7C74 /* base */,
 				38A2E8601499D08300A820A9 /* client */,
 				382C270D12119CA10048F4BF /* game */,
@@ -516,10 +524,13 @@
 				3852698D14C2FEA700CD7C74 /* keycode */,
 				38FE66AF14CA128600EAE6BA /* log_console.c */,
 				38FE66B014CA128600EAE6BA /* log_impl.h */,
+				384C894714CB563800EBDB6A /* log_network.c */,
 				38FE66B114CA128600EAE6BA /* log.c */,
 				38FE66B214CA128600EAE6BA /* log.h */,
 				385269A414C2FEA700CD7C74 /* model.c */,
 				385269A514C2FEA700CD7C74 /* model.h */,
+				384C894C14CB565800EBDB6A /* net.h */,
+				384C894D14CB565800EBDB6A /* net.c */,
 				385269A614C2FEA700CD7C74 /* opengl.c */,
 				385269A714C2FEA700CD7C74 /* opengl.h */,
 				385269A814C2FEA700CD7C74 /* pixbuf.c */,
@@ -818,6 +829,9 @@
 				38FC2D9514C5A433002E9D02 /* type_coretext.c in Sources */,
 				38FE66B314CA128600EAE6BA /* log_console.c in Sources */,
 				38FE66B414CA128600EAE6BA /* log.c in Sources */,
+				384C894614CB561E00EBDB6A /* version.c in Sources */,
+				384C894814CB563800EBDB6A /* log_network.c in Sources */,
+				384C894E14CB565800EBDB6A /* net.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
