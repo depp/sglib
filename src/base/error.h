@@ -93,6 +93,11 @@ sg_error_errno(struct sg_error **err, int code);
 
 #endif
 
+extern const struct sg_error_domain SG_ERROR_GETADDRINFO;
+
+void
+sg_error_gai(struct sg_error **err, int code);
+
 #ifdef __cplusplus
 }
 #endif

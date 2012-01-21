@@ -29,6 +29,9 @@ sg_log_listen(struct sg_log_listener *listener);
 void
 sg_log_console_init(void);
 
+void
+sg_log_network_init(void);
+
 #ifdef __cplusplus
 }
 #endif
