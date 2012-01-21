@@ -1,8 +1,8 @@
 #include "configfile.h"
 #include "file.h"
+#include "log.h"
 #include <stddef.h>
 #include <errno.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -31,6 +31,7 @@ static int is_value(int c)
 int
 configfile_read(struct configfile *f, const char *path)
 {
+    static struct sg_logger *logger;
     const unsigned char *restrict ptr, *end;
     const unsigned char *sptr = NULL, *nptr = NULL, *vptr = NULL;
     unsigned slen = 0, nlen = 0, vlen = 0, len;
@@ -43,7 +44,9 @@ configfile_read(struct configfile *f, const char *path)
     r = sg_file_get(path, 0, &fbuf, MAX_CONFIGFILE, NULL);
     if (r) {
         if (r > 0) {
-            fprintf(stderr, "%s: config file too large, ignoring\n", path);
+            logger = sg_logger_get("config");
+            sg_logf(logger, LOG_ERROR,
+                    "%s: config file too large, ignoring", path);
             return 0;
         }
         return -1;
@@ -254,8 +257,11 @@ badchar:
     goto error;
 
 error:
-    fprintf(stderr, "%s:%d: %s\n", path, lineno, msg);
+    if (!logger)
+        logger = sg_logger_get("config");
+    sg_logf(logger, LOG_ERROR, "%s:%d: %s", path, lineno, msg);
     if (++warning == MAX_WARNING) {
+        sg_logf(logger, LOG_ERROR, "%s: too many errors, aborting");
         r = -1;
         goto done;
     }
