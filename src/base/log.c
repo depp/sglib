@@ -1,4 +1,5 @@
 #include "clock.h"
+#include "cvar.h"
 #include "log.h"
 #include "log_impl.h"
 #include <stddef.h>
@@ -8,11 +9,11 @@
 
 #define LOG_BUFSZ 256
 #define MAX_LISTENERS 4
+#define LOG_INHERIT ((sg_log_level_t) -1)
 
 struct sg_logger_obj {
     struct sg_logger head;
     sg_log_level_t level;
-    sg_log_level_t ilevel;
     char *name;
     size_t namelen;
     struct sg_logger_obj *child, *next;
@@ -35,11 +36,40 @@ sg_log_listen(struct sg_log_listener *listener)
             "Too many log listeners, log listener dropped.");
 }
 
+static sg_log_level_t
+sg_logger_conflevel(const char *name, size_t len)
+{
+    const char *v;
+    char buf[128];
+    int r;
+    if (!len) {
+        name = "root";
+        len = 4;
+    }
+    if (len > sizeof(buf) - 1)
+        return LOG_INHERIT;
+    memcpy(buf, name, len);
+    buf[len] = '\0';
+    r = sg_cvar_gets("log.level", buf, &v);
+    if (r) {
+        if (!strcmp(v, "debug"))
+            return LOG_DEBUG;
+        if (!strcmp(v, "info"))
+            return LOG_INFO;
+        if (!strcmp(v, "warn"))
+            return LOG_WARN;
+        if (!strcmp(v, "error"))
+            return LOG_ERROR;
+    }
+    return LOG_INHERIT;
+}
+
 void
 sg_log_init(void)
 {
-    sg_logger_root.head.level = LOG_WARN;
-    sg_logger_root.level = LOG_WARN;
+    sg_log_level_t level = sg_logger_conflevel(NULL, 0);
+    sg_logger_root.head.level = level == LOG_INHERIT ? LOG_WARN : level;
+    sg_logger_root.level = level;
     sg_log_console_init();
 }
 
@@ -52,25 +82,18 @@ sg_log_term(void)
             sg_listeners[i]->destroy(sg_listeners[i]);
 }
 
-static sg_log_level_t
-sg_logger_conflevel(const char *name, size_t namelen)
-{
-    (void) name;
-    (void) namelen;
-    return LOG_INHERIT;
-}
-
 static struct sg_logger_obj *
 sg_logger_new(struct sg_logger_obj *parent,
               const char *name, size_t namelen)
 {
     struct sg_logger_obj *np;
+    sg_log_level_t level;
     np = malloc(sizeof(*np) + namelen);
     if (!np)
         abort();
-    np->level = sg_logger_conflevel(name, namelen);
-    np->ilevel = parent->level;
-    np->head.level = np->level == LOG_INHERIT ? np->ilevel : np->level;
+    level = sg_logger_conflevel(name, namelen);
+    np->head.level = level == LOG_INHERIT ? parent->head.level : level;
+    np->level = level;
     np->name = (char *) (np + 1);
     np->namelen = namelen;
     np->child = NULL;

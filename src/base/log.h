@@ -23,12 +23,10 @@ typedef enum {
     LOG_DEBUG, /* Fine-graned information */
     LOG_INFO,  /* Runtime events, e.g., application progress */
     LOG_WARN,  /* Potentially harmful situations */
-    LOG_ERROR, /* Runtime errors */
+    LOG_ERROR  /* Runtime errors */
 
     /* There is no "FATAL" level.  Any logger expected to respond to a
        fatal error should respond to a non-fatal erorr as well.  */
-
-    LOG_INHERIT = -1
 } sg_log_level_t;
 
 
