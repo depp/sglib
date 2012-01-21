@@ -7,9 +7,13 @@
 #include <gl\glu.h>
 #include <string.h>
 #include "base/opengl.h"
+#include "version.h"
 
 #pragma comment(lib, "opengl32.lib")
 #pragma comment(lib, "glu32.lib")
+
+/* FIXME: Make this work on Windows */
+const char VERSION_STRING[] = "<version unavailable>";
 
 static void
 quit()
