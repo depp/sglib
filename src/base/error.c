@@ -230,3 +230,14 @@ sg_error_errno(struct sg_error **err, int code)
 #endif
 
 #endif
+
+#include <netdb.h>
+
+const struct sg_error_domain SG_ERROR_GETADDRINFO = { "getaddrinfo" };
+
+void
+sg_error_gai(struct sg_error **err, int code)
+{
+    const char *desc = gai_strerror(code);
+    sg_error_sets(err, &SG_ERROR_GETADDRINFO, code, desc);
+}

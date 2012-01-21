@@ -71,6 +71,7 @@ sg_log_init(void)
     sg_logger_root.head.level = level == LOG_INHERIT ? LOG_WARN : level;
     sg_logger_root.level = level;
     sg_log_console_init();
+    sg_log_network_init();
 }
 
 void
