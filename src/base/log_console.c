@@ -1,12 +1,27 @@
 #include "log_impl.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+
+static char sg_log_prevdate[10];
 
 static void
 sg_log_console_msg(struct sg_log_listener *h, struct sg_log_msg *m)
 {
+    const char *date = m->date;
+    size_t datelen = m->datelen;
+    if (datelen >= 10 && (date[10] == 'T' || date[10] == ' ')) {
+        if (memcmp(date, sg_log_prevdate, 10)) {
+            memcpy(sg_log_prevdate, date, 10);
+        } else {
+            date += 11;
+            datelen -= 11;
+        }
+    }
+    
     (void) h;
-    fwrite(m->date, 1, m->datelen, stderr);
+    
+    fwrite(date, 1, datelen, stderr);
     putc(' ', stderr);
     fwrite(m->level, 1, m->levellen, stderr);
     fputs(": ", stderr);
