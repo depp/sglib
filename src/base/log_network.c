@@ -14,8 +14,8 @@
 #define NO_SOCKET SOCKET_ERROR
 #else
 #include <unistd.h>
-#define SOCKET int;
-#define closesocket close;
+#define SOCKET int
+#define closesocket close
 #define SOCKET_VALID(s) ((s) >= 0)
 #define NO_SOCKET (-1)
 #endif
