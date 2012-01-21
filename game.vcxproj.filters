@@ -252,6 +252,12 @@
     <ClCompile Include="src\base\log_console.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\base\log_network.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\base\net.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\client\ui\screen.hpp">
@@ -516,6 +522,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\base\log_impl.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\base\net.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -26,7 +26,9 @@
     <ClCompile Include="src\base\keycode\keytable_win.c" />
     <ClCompile Include="src\base\log.c" />
     <ClCompile Include="src\base\log_console.c" />
+    <ClCompile Include="src\base\log_network.c" />
     <ClCompile Include="src\base\model.c" />
+    <ClCompile Include="src\base\net.c" />
     <ClCompile Include="src\base\opengl.c" />
     <ClCompile Include="src\base\pixbuf.c" />
     <ClCompile Include="src\base\pixbuf_loadimage.c" />
@@ -109,6 +111,7 @@
     <ClInclude Include="src\base\log.h" />
     <ClInclude Include="src\base\log_impl.h" />
     <ClInclude Include="src\base\model.h" />
+    <ClInclude Include="src\base\net.h" />
     <ClInclude Include="src\base\opengl.h" />
     <ClInclude Include="src\base\pixbuf.h" />
     <ClInclude Include="src\base\rand.h" />

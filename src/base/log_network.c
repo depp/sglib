@@ -7,11 +7,22 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
+
+#if defined(_WIN32)
+#pragma comment(lib, "Ws2_32.lib")
+#define SOCKET_VALID(s) ((s) != SOCKET_ERROR)
+#define NO_SOCKET SOCKET_ERROR
+#else
 #include <unistd.h>
+#define SOCKET int;
+#define closesocket close;
+#define SOCKET_VALID(s) ((s) >= 0)
+#define NO_SOCKET (-1)
+#endif
 
 struct sg_log_network {
     struct sg_log_listener h;
-    int sock;
+    SOCKET sock;
     char *name;
 };
 
@@ -29,11 +40,11 @@ sg_log_network_msg(struct sg_log_listener *llp, struct sg_log_msg *msg)
     struct sg_log_network *lp = (struct sg_log_network *) llp;
     char buf[512];
     size_t len = 0, pos;
-    ssize_t r;
-    int sock = lp->sock;
+    int r;
+    SOCKET sock = lp->sock;
     struct sg_error *err = NULL;
 
-    if (sock < 0)
+    if (!SOCKET_VALID(sock))
         return;
 
     PUT(msg->date, msg->datelen);
@@ -53,23 +64,30 @@ sg_log_network_msg(struct sg_log_listener *llp, struct sg_log_msg *msg)
 
     pos = 0;
     while (pos < len) {
-        r = write(sock, buf + pos, len - pos);
-        if (r < 0) {
-            sg_error_errno(&err, errno);
-            sg_logf(sg_logger_get(NULL), LOG_ERROR,
-                    "logging to %s failed: %s",
-                    lp->name, err->msg);
-            sg_error_clear(&err);
-            close(sock);
-            lp->sock = -1;
-            return;
-        }
+        r = send(sock, buf + pos, len - pos, 0);
+        if (r < 0)
+            goto error_errno;
         pos += r;
     }
     return;
 
 overflow:
     sg_logs(sg_logger_get(NULL), LOG_WARN, "log message too long");
+    return;
+
+error_errno:
+#if !defined(_WIN32)
+    sg_error_errno(&err, errno);
+#else
+    sg_error_win32(&err, WSAGetLastError());
+#endif
+    sg_logf(sg_logger_get(NULL), LOG_ERROR,
+            "logging to %s failed: %s",
+            lp->name, err->msg);
+    sg_error_clear(&err);
+    closesocket(sock);
+    lp->sock = NO_SOCKET;
+    return;
 }
 
 #undef PUT
@@ -79,7 +97,7 @@ sg_log_network_destroy(struct sg_log_listener *llp)
 {
     struct sg_log_network *lp = (struct sg_log_network *) llp;
     if (lp->sock >= 0)
-        close(lp->sock);
+        closesocket(lp->sock);
     free(lp->name);
     free(lp);
 }
@@ -94,17 +112,19 @@ sg_log_network_init(void)
     struct sg_addr addr;
     char *addrname = NULL;
     int r;
-    int sock = -1;
+    int sock = NO_SOCKET;
 
     r = sg_cvar_gets("log", "netaddr", &addrstr);
     if (!r) return;
+    if (!sg_net_init())
+        return;
     r = sg_net_getaddr(&addr, addrstr, &err);
     if (r) goto error;
     addrname = sg_net_getname(&addr, &err);
     if (r) goto error;
     sg_logf(logger, LOG_INFO, "connecting to %s", addrname);
     sock = socket(addr.addr.addr.sa_family, SOCK_STREAM, 0);
-    if (sock < 0) goto error_errno;
+    if (!SOCKET_VALID(sock)) goto error_errno;
     r = connect(sock, &addr.addr.addr, addr.len);
     if (r < 0) goto error_errno;
     lp = malloc(sizeof(*lp));
@@ -121,16 +141,19 @@ error_nomem:
     goto error;
 
 error_errno:
+#if !defined(_WIN32)
     sg_error_errno(&err, errno);
+#else
+    sg_error_win32(&err, WSAGetLastError());
+#endif
     goto error;
 
 error:
-    if (sock >= 0)
-        close(sock);
+    if (SOCKET_VALID(sock))
+        closesocket(sock);
     sg_logf(sg_logger_get(NULL), LOG_ERROR,
             "logging to %s failed: %s",
             addrname ? addrname : addrstr, err->msg);
     sg_error_clear(&err);
     free(addrname);
-    close(sock);
 }

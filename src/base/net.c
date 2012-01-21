@@ -1,18 +1,51 @@
 #include "error.h"
 #include "net.h"
 
-#include <arpa/inet.h>
 #include <assert.h>
 #include <errno.h>
-#include <netdb.h>
 #include <stdlib.h>
 #include <string.h>
+
+#if !defined(_WIN32)
+#include <arpa/inet.h>
+#include <netdb.h>
+#endif
+
+#if !defined(WIN32)
+
+int
+sg_net_init(void)
+{
+    return 1;
+}
+
+#else
+
+int
+sg_net_init(void)
+{
+    static int initted;
+    WSADATA d;
+    int r;
+
+    if (initted)
+        return initted - 1;
+    r = WSAStartup(MAKEWORD(2, 2), &d);
+    if (r) {
+        initted = 1;
+        return 0;
+    }
+    initted = 2;
+    return 1;
+}
+
+#endif
 
 int
 sg_net_getaddr(struct sg_addr *addr, const char *str,
                struct sg_error **err)
 {
-    uint16_t *port;
+    unsigned short *port;
     char strin[NI_MAXHOST], *end;
     const char *p, *host;
     struct addrinfo *a, *ap, hint;
@@ -31,12 +64,10 @@ sg_net_getaddr(struct sg_addr *addr, const char *str,
         memcpy(strin, str + 1, len);
         strin[len] = '\0';
         r = inet_pton(AF_INET6, strin, &addr->addr.in6.sin6_addr);
-        if (r == 0) {
+        if (r == 0)
             goto invalid;
-        } else if (r < 0) {
-            sg_error_errno(err, errno);
-            return -1;
-        }
+        if (r < 0)
+            goto error_errno;
         addr->len = sizeof(struct sockaddr_in6);
         addr->addr.in6.sin6_family = AF_INET6;
         p += 1;
@@ -58,12 +89,10 @@ sg_net_getaddr(struct sg_addr *addr, const char *str,
                 break;
         if (!host[i]) {
             r = inet_pton(AF_INET, host, &addr->addr.in.sin_addr);
-            if (r == 0) {
+            if (r == 0)
                 goto invalid;
-            } else if (r < 0) {
-                sg_error_errno(err, errno);
-                return -1;
-            }
+            if (r < 0)
+                goto error_errno;
             addr->len = sizeof(struct sockaddr_in);
             addr->addr.in.sin_family = AF_INET;
             port = &addr->addr.in.sin_port;
@@ -110,12 +139,20 @@ sg_net_getaddr(struct sg_addr *addr, const char *str,
     v = strtoul(p + 1, &end, 10);
     if (v > 0xffff || *end)
         goto invalid;
-    *port = htons(v);
+    *port = htons((unsigned short) v);
     return 0;
 
 invalid:
     sg_error_sets(err, &SG_ERROR_GETADDRINFO, 0,
                   "Invalid address");
+    return -1;
+
+error_errno:
+#if !defined(_WIN32)
+    sg_error_errno(err, errno);
+#else
+    sg_error_win32(err, WSAGetLastError());
+#endif
     return -1;
 }
 
@@ -149,10 +186,8 @@ sg_net_getname(struct sg_addr *addr, struct sg_error **err)
         in = &addr->addr.in;
         if (in->sin_addr.s_addr != ntohl(INADDR_ANY)) {
             r = inet_ntop(AF_INET, &in->sin_addr, p, sizeof(name) - 12);
-            if (!r) {
-                sg_error_errno(err, errno);
-                return NULL;
-            }
+            if (!r)
+                goto error_errno;
             p += strlen(p);
         } else {
             *p++ = '*';
@@ -166,10 +201,8 @@ sg_net_getname(struct sg_addr *addr, struct sg_error **err)
                    sizeof(struct in6_addr))) {
             *p++ = '[';
             r = inet_ntop(AF_INET6, &in6->sin6_addr, p, sizeof(name) - 12);
-            if (!r) {
-                sg_error_errno(err, errno);
-                return NULL;
-            }
+            if (!r)
+                goto error_errno;
             p += strlen(p);
             *p++ = ']';
         } else {
@@ -194,4 +227,12 @@ sg_net_getname(struct sg_addr *addr, struct sg_error **err)
     memcpy(namep, name, len);
     namep[len] = '\0';
     return namep;
+
+error_errno:
+#if !defined(_WIN32)
+    sg_error_errno(err, errno);
+#else
+    sg_error_win32(err, WSAGetLastError());
+#endif
+    return NULL;
 }
