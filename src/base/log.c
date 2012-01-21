@@ -106,11 +106,12 @@ sg_logger_new(struct sg_logger_obj *parent,
 struct sg_logger *
 sg_logger_get(const char *name)
 {
-    size_t len = strlen(name), clen, off = 0;
+    size_t len, clen, off = 0;
     char *q;
     struct sg_logger_obj *lp = &sg_logger_root, *np;
-    if (!len)
+    if (!name || !*name)
         return &lp->head;
+    len = strlen(name);
     for (off = 0; off < len; ++off) {
         if (!((name[off] >= 'a' && name[off] <= 'z') ||
               (name[off] >= 'A' && name[off] <= 'Z') ||

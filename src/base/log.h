@@ -45,8 +45,8 @@ sg_log_init(void);
 void
 sg_log_term(void);
 
-/* Get a logger with the given name.  The result should not be
-   freed.  */
+/* Get a logger with the given name.  The result should not be freed.
+   If the name is NULL or empty, the root logger is returned.  */
 struct sg_logger *
 sg_logger_get(const char *name);
 
