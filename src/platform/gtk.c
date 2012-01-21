@@ -11,7 +11,6 @@
 #include "base/keycode/keycode.h"
 #include "base/keycode/keytable.h"
 #include "base/opengl.h"
-#include "version.h"
 
 /* The Gtk headers generate a warning.  */
 #if defined(HAVE_DPUSH)
@@ -418,7 +417,6 @@ init(int argc, char *argv[])
 int
 main(int argc, char *argv[])
 {
-    fprintf(stderr, "Version: %s (Gtk)\n", VERSION_STRING);
     init(argc, argv);
     gtk_main();
     return 0;

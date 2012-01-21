@@ -246,6 +246,12 @@
     <ClCompile Include="src\base\type_uniscribe.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\base\log.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\base\log_console.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\client\ui\screen.hpp">
@@ -504,6 +510,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\base\type_impl.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\base\log.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\base\log_impl.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -2,19 +2,26 @@
 #include "entry.h"
 #include "event.h"
 #include "file.h"
+#include "log.h"
 #include "rand.h"
-#include <stdio.h>
+#include "version.h"
 
 static unsigned sg_status;
 static int sg_vid_width, sg_vid_height;
+static struct sg_logger *sg_log_video;
 
 void
 sg_sys_init(void)
 {
+    struct sg_logger *log;
+    sg_log_init();
+    log = sg_logger_get("init");
+    sg_logf(log, LOG_INFO, "Version: %s", VERSION_STRING);
     sg_path_init();
     sg_clock_init();
     sg_rand_seed(&sg_rand_global, 1);
     sg_game_init();
+    sg_log_video = sg_logger_get("video");
 }
 
 void
@@ -32,6 +39,7 @@ sg_sys_getinfo(struct sg_game_info *info)
 void
 sg_sys_event(union sg_event *evt)
 {
+    const char *status;
     switch (evt->type) {
     default:
         break;
@@ -43,13 +51,16 @@ sg_sys_event(union sg_event *evt)
 
     case SG_EVENT_STATUS:
         sg_status = evt->status.status;
-        if (sg_status & SG_STATUS_VISIBLE) {
-            if (sg_status & SG_STATUS_FULLSCREEN)
-                puts("Status: fullscreen");
-            else
-                puts("Status: windowed");
-        } else {
-            puts("Status: hidden");
+        if (LOG_INFO >= sg_log_video->level) {
+            if (sg_status & SG_STATUS_VISIBLE) {
+                if (sg_status & SG_STATUS_FULLSCREEN)
+                    status = "fullscreen";
+                else
+                    status = "windowed";
+            } else {
+                status = "hidden";
+            }
+            sg_logf(sg_log_video, LOG_INFO, "Status: %s", status);
         }
         break;
     }

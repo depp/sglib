@@ -2,9 +2,9 @@
 
 #include "error.h"
 #include "file.h"
+#include "log.h"
 #include "model.h"
 #include "opengl.h"
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -27,6 +27,8 @@ static const unsigned short CUBE_LINE[12][2] = {
     { 0, 2 }, { 1, 3 }, { 4, 6 }, { 5, 7 },
     { 0, 4 }, { 1, 5 }, { 2, 6 }, { 3, 7 }
 };
+
+static struct sg_logger *sg_model_logger;
 
 static void
 sg_model_cube(struct sg_model *mp)
@@ -261,6 +263,9 @@ sg_model_load(struct sg_model *mp, struct sg_error **err)
     size_t maxsize = MODEL_MAXSIZE;
     int ret, r;
 
+    if (!sg_model_logger)
+        sg_model_logger = sg_logger_get("model");
+
     if (!(mp->flags & SG_MODEL_STATIC)) {
         sg_model_unload(mp);
         r = sg_file_get(mp->r.name, 0, &fbuf, maxsize, err);
@@ -272,12 +277,14 @@ sg_model_load(struct sg_model *mp, struct sg_error **err)
             goto error;
     }
 
-    fprintf(stderr, "loaded %s\n", mp->r.name);
+    sg_logf(sg_model_logger, LOG_INFO,
+            "loaded %s", mp->r.name);
     ret = 0;
     goto done;
 
 error:
-    fprintf(stderr, "error loading %s\n", mp->r.name);
+    sg_logf(sg_model_logger, LOG_ERROR,
+            "erorr loading %s", mp->r.name);
     sg_model_unload(mp);
     ret = -1;
     goto done;

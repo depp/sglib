@@ -6,11 +6,10 @@
 #include "error.h"
 #include "file.h"
 #include "file_impl.h"
+#include "log.h"
 #include <errno.h>
 #include <fcntl.h>
 #include <limits.h>
-/* FIXME: Remove IO here.  */
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
@@ -156,9 +155,12 @@ sg_path_getdir(pchar **abspath, size_t *abslen,
                const char *relpath, size_t rellen,
                int flags)
 {
+    struct sg_logger *logger;
     char *dpath = NULL, *apath = NULL, *rpath = NULL, *bpath = NULL, *real;
     size_t dlen, aalloc, rlen, blen;
-    int r, ret, bslash, pslash;
+    int r, ret, bslash, pslash, e;
+
+    logger = sg_logger_get("path");
 
     /* FIXME: log errors / warnings */
     if (!rellen)
@@ -224,23 +226,35 @@ sg_path_getdir(pchar **abspath, size_t *abslen,
         dpath[dlen] = '\0';
         r = access(dpath, F_OK | X_OK);
         if (r) {
+            if (LOG_INFO >= logger->level) {
+                e = errno;
+                sg_logf(logger, LOG_INFO,
+                        "path skipped: %s (%s)", dpath, strerror(e));
+            }
             ret = 0;
         } else {
+            if (LOG_INFO >= logger->level)
+                sg_logf(logger, LOG_INFO, "path: %s", dpath);
             *abspath = dpath;
             *abslen = dlen;
             dpath = NULL;
             ret = 1;
         }
     } else if (flags & SG_PATH_NODISCARD) {
+        if (LOG_INFO >= logger->level)
+            sg_logf(logger, LOG_INFO, "path: %s", rpath);
         *abspath = rpath;
         *abslen = rlen;
         rpath = NULL;
         ret = 1;
     } else {
+        if (LOG_INFO >= logger->level) {
+            e = errno;
+            sg_logf(logger, LOG_INFO, "path skipped: %s (%s)",
+                    rpath, strerror(e));
+        }
         ret = 0;
     }
-    if (ret)
-        fprintf(stderr, "path: %s\n", *abspath);
 
     free(dpath);
     free(apath);

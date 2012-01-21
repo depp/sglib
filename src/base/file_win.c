@@ -4,6 +4,7 @@
 #include "file.h"
 
 #include <Windows.h>
+#include <stdio.h>
 
 void
 sg_buffer_destroy(struct sg_buffer *fbuf)
@@ -239,6 +240,7 @@ sg_path_getdir(pchar **abspath, size_t *abslen,
     }
 
     if (ret > 0) {
+        fwprintf(stderr, L"path: %s\n", apath);
         *abspath = apath;
         *abslen = alen;
         apath = NULL;

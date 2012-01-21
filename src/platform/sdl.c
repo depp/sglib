@@ -2,7 +2,6 @@
 #include "base/entry.h"
 #include "base/error.h"
 #include "base/event.h"
-#include "version.h"
 #include "SDL.h"
 #include <getopt.h>
 #include <stdio.h>
@@ -195,7 +194,6 @@ sdl_main(void)
 int
 main(int argc, char *argv[])
 {
-    fprintf(stderr, "Version: %s (LibSDL)\n", VERSION_STRING);
     init(argc, argv);
     sdl_main();
     return 0;

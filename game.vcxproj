@@ -24,6 +24,8 @@
     <ClCompile Include="src\base\hash.c" />
     <ClCompile Include="src\base\keycode\keyid.c" />
     <ClCompile Include="src\base\keycode\keytable_win.c" />
+    <ClCompile Include="src\base\log.c" />
+    <ClCompile Include="src\base\log_console.c" />
     <ClCompile Include="src\base\model.c" />
     <ClCompile Include="src\base\opengl.c" />
     <ClCompile Include="src\base\pixbuf.c" />
@@ -104,6 +106,8 @@
     <ClInclude Include="src\base\keycode\keycode.h" />
     <ClInclude Include="src\base\keycode\keyid.h" />
     <ClInclude Include="src\base\keycode\keytable.h" />
+    <ClInclude Include="src\base\log.h" />
+    <ClInclude Include="src\base\log_impl.h" />
     <ClInclude Include="src\base\model.h" />
     <ClInclude Include="src\base\opengl.h" />
     <ClInclude Include="src\base\pixbuf.h" />

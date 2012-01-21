@@ -3,6 +3,7 @@
 #endif
 
 #include "error.h"
+#include "log.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -11,11 +12,14 @@ static void
 sg_error_clobber(const struct sg_error_domain *dom,
                  long code, const char *msg)
 {
+    struct sg_logger *logger = sg_logger_get(NULL);
     if (code)
-        fprintf(stderr, "warning: error discarded: %s (%s %ld)\n",
+        sg_logf(logger, LOG_ERROR,
+                "warning: error discarded: %s (%s %ld)\n",
                 msg, dom->name, code);
     else
-        fprintf(stderr, "warning: error discarded: %s (%s)\n",
+        sg_logf(logger, LOG_ERROR,
+                "warning: error discarded: %s (%s)\n",
                 msg, dom->name);
 }
 

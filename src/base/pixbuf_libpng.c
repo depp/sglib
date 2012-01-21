@@ -1,21 +1,14 @@
 #include "error.h"
+#include "log.h"
 #include "pixbuf.h"
 #include <png.h>
 #include <stdlib.h>
 
 static void
-sg_png_message(png_struct *pngp, int iserror, const char *msg)
-{
-    (void) pngp;
-    (void) iserror;
-    fprintf(stderr, "libpng: %s", msg);
-}
-
-static void
 sg_png_error(png_struct *pngp, const char *msg)
 {
     struct sg_error **err = png_get_error_ptr(pngp);
-    sg_png_message(pngp, 1, msg);
+    sg_logf(sg_logger_get("image"), LOG_ERROR, "LibPNG: %s", msg);
     sg_error_data(err, "PNG");
     longjmp(png_jmpbuf(pngp), 1);
 }
@@ -23,7 +16,8 @@ sg_png_error(png_struct *pngp, const char *msg)
 static void
 sg_png_warning(png_struct *pngp, const char *msg)
 {
-    sg_png_message(pngp, 0, msg);
+    (void) pngp;
+    sg_logf(sg_logger_get("image"), LOG_WARN, "LibPNG: %s", msg);
 }
 
 struct sg_pngbuf {
@@ -33,6 +27,7 @@ struct sg_pngbuf {
 static void
 sg_png_read(png_struct *pngp, unsigned char *ptr, png_size_t len)
 {
+    struct sg_error **err;
     struct sg_pngbuf *b;
     size_t rem;
     b = png_get_io_ptr(pngp);
@@ -41,7 +36,11 @@ sg_png_read(png_struct *pngp, unsigned char *ptr, png_size_t len)
         memcpy(ptr, b->p, len);
         b->p += len;
     } else {
-        sg_png_error(pngp, "unexpected end of file");
+        sg_logs(sg_logger_get("image"), LOG_ERROR,
+                "PNG: unexpected end of file");
+        err = png_get_error_ptr(pngp);
+        sg_error_data(err, "PNG");
+        longjmp(png_jmpbuf(pngp), 1);
     }
 }
 
@@ -105,6 +104,9 @@ sg_pixbuf_loadpng(struct sg_pixbuf *pbuf, const void *data, size_t len,
         break;
 
     default:
+        sg_error_data(err, "PNG");
+        sg_logf(sg_logger_get("image"), LOG_ERROR,
+                "PNG has unknown color type");
         goto error;
     }
 
