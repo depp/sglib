@@ -129,6 +129,7 @@ sg_error_data(struct sg_error **err, const char *fmtname)
 }
 
 #ifdef _WIN32
+#include <WS2tcpip.h>
 #include <Windows.h>
 
 extern const struct sg_error_domain SG_ERROR_WINDOWS = { "windows" };
@@ -155,7 +156,7 @@ sg_error_win32(struct sg_error **err, unsigned long code)
     l2 = WideCharToMultiByte(CP_UTF8, 0, wtext, l1, NULL, 0, NULL, NULL);
     if (!l2)
         goto error;
-    atext = malloc(l2);
+    atext = malloc(l2 + 1);
     if (!atext)
         goto error;
     l3 = WideCharToMultiByte(CP_UTF8, 0, wtext, l1, atext, l2, NULL, NULL);
@@ -170,6 +171,7 @@ sg_error_win32(struct sg_error **err, unsigned long code)
     e = malloc(sizeof(*e));
     if (!e)
         goto error;
+    atext[l2] = '\0';
     e->refcount = 1;
     e->domain = &SG_ERROR_WINDOWS;
     e->msg = atext;
@@ -231,7 +233,9 @@ sg_error_errno(struct sg_error **err, int code)
 
 #endif
 
+#if !defined(_WIN32)
 #include <netdb.h>
+#endif
 
 const struct sg_error_domain SG_ERROR_GETADDRINFO = { "getaddrinfo" };
 
