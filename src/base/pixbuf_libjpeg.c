@@ -1,5 +1,7 @@
 /* <stdio.h> is necessary for <jpeglib.h> */
 
+#include "error.h"
+#include "log.h"
 #include "pixbuf.h"
 #include <stdio.h>
 #include <jpeglib.h>
@@ -87,7 +89,9 @@ sg_pixbuf_loadjpeg(struct sg_pixbuf *pbuf, const void *data, size_t len,
         break;
 
     default:
-        fprintf(stderr, "JPEG: unknown color space\n");
+        sg_error_data(err, "JPEG");
+        sg_logf(sg_logger_get("image"), LOG_ERROR,
+                "JPEG has unknown color space");
         goto error;
     }
 
