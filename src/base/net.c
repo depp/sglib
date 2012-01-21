@@ -31,7 +31,9 @@ sg_net_getaddr(struct sg_addr *addr, const char *str,
         memcpy(strin, str + 1, len);
         strin[len] = '\0';
         r = inet_pton(AF_INET6, strin, &addr->addr.in6.sin6_addr);
-        if (r) {
+        if (r == 0) {
+            goto invalid;
+        } else if (r < 0) {
             sg_error_errno(err, errno);
             return -1;
         }
@@ -56,7 +58,9 @@ sg_net_getaddr(struct sg_addr *addr, const char *str,
                 break;
         if (!host[i]) {
             r = inet_pton(AF_INET, host, &addr->addr.in.sin_addr);
-            if (r) {
+            if (r == 0) {
+                goto invalid;
+            } else if (r < 0) {
                 sg_error_errno(err, errno);
                 return -1;
             }
