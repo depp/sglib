@@ -16,7 +16,8 @@ sg_sys_init(void)
     struct sg_logger *log;
     sg_log_init();
     log = sg_logger_get("init");
-    sg_logf(log, LOG_INFO, "Version: %s", VERSION_STRING);
+    if (LOG_INFO >= log->level)
+        sg_version_print();
     sg_path_init();
     sg_clock_init();
     sg_rand_seed(&sg_rand_global, 1);

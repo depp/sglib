@@ -11,6 +11,7 @@
 #include "base/keycode/keycode.h"
 #include "base/keycode/keytable.h"
 #include "base/opengl.h"
+#include "base/version.h"
 
 /* The Gtk headers generate a warning.  */
 #if defined(HAVE_DPUSH)
@@ -420,4 +421,15 @@ main(int argc, char *argv[])
     init(argc, argv);
     gtk_main();
     return 0;
+}
+
+void
+sg_platform_version(struct sg_logger *lp)
+{
+    char cv[16], rv[16];
+    snprintf(cv, sizeof(cv), "%d.%d.%d",
+             GTK_MAJOR_VERSION, GTK_MINOR_VERSION, GTK_MICRO_VERSION);
+    snprintf(rv, sizeof(rv), "%d.%d.%d",
+             gtk_major_version, gtk_minor_version, gtk_micro_version);
+    sg_version_lib(lp, "GTK+", cv, rv);
 }

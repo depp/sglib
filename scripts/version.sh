@@ -5,7 +5,7 @@ SRCDIR="$1"
 BUILDDIR="$2"
 
 INPUT="$SRCDIR"/scripts/VERSION
-OUTPUT="$BUILDDIR"/src/version.c
+OUTPUT="$BUILDDIR"/src/base/version_str.c
 
 if test $# -ne 2
 then
@@ -36,5 +36,5 @@ then
 fi
 
 echo "Version $VERSION"
-echo "const char VERSION_STRING[] = \"$VERSION\";" >"$OUTPUT".tmp
+echo "const char SG_VERSION[] = \"$VERSION\";" >"$OUTPUT".tmp
 mv "$OUTPUT".tmp "$OUTPUT"

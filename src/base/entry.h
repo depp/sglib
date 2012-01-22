@@ -9,6 +9,7 @@ extern "C" {
 #endif
 union sg_event;
 struct sg_error;
+struct sg_logger;
 
 #define SG_GAME_ASPECT_SCALE 0x10000
 
@@ -120,6 +121,11 @@ sg_platform_faile(struct sg_error *err);
 __attribute__((noreturn))
 void
 sg_platform_return(void);
+
+/* Log the platform version to the given logger.  Use sg_version_lib
+   if necessary from "version.h".  */
+void
+sg_platform_version(struct sg_logger *lp);
 
 #ifdef __cplusplus
 }

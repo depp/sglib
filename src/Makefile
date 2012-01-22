@@ -134,21 +134,25 @@ CBASE_OBJS += base/strbuf.o
 CBASE_OBJS += base/sys.o
 CBASE_OBJS += base/texture.o
 CBASE_OBJS += base/type.o
-CBASE_OBJS += version.o
+CBASE_OBJS += base/version.o
+CBASE_OBJS += base/version_str.o
 
 ifdef HAVE_LIBPNG
 CBASE_OBJS += base/pixbuf_libpng.o
 base/pixbuf_libpng.o: BASE_CFLAGS += $(LIBPNG_CFLAGS)
+base/version.o: BASE_CFLAGS += $(LIBPNG_CFLAGS)
 endif
 
 ifdef HAVE_LIBJPEG
 CBASE_OBJS += base/pixbuf_libjpeg.o
 base/pixbuf_libjpeg.o: BASE_CFLAGS += $(LIBJPEG_CFLAGS)
+base/version.o: BASE_CFLAGS += $(LIBJPEG_CFLAGS)
 endif
 
 ifdef HAVE_PANGO
 CBASE_OBJS += base/type_pango.o
 base/type_pango.o: BASE_CFLAGS += $(PANGO_CFLAGS)
+base/version.o: BASE_CFLAGS += $(PANGO_CFLAGS)
 endif
 
 SYS_OBJS =
@@ -255,7 +259,7 @@ endif
 
 ########################################
 
-version.c: version-stamp
+base/version_str.c: version-stamp
 version-stamp:
 	$(QUIET_VERS)sh ../scripts/version.sh .. ..
 
@@ -298,7 +302,7 @@ endif
 all: $(targets)
 
 clean:
-	$(RM) $(targets) $(ALL_OBJS)
+	$(RM) $(targets) $(ALL_OBJS) base/version_str.c
 	$(RM) -r $(dep_dirs)
 
 .PHONY: all clean
