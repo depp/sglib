@@ -109,15 +109,15 @@ sg_version_os(struct sg_logger *lp)
 }
 
 #elif defined(__APPLE__)
+#include <CoreServices/CoreServices.h>
 
 static void
 sg_version_os(struct sg_logger *lp)
 {
     SInt32 major, minor, bugfix;
-    char vers[8];
     Gestalt(gestaltSystemVersionMajor, &major);
     Gestalt(gestaltSystemVersionMinor, &minor);
-    Gestalt(gestaltSystemVersionBugFix, &bugFixVersion);
+    Gestalt(gestaltSystemVersionBugFix, &bugfix);
     sg_logf(lp, LOG_INFO, "Mac OS X: %d.%d.%d", major, minor, bugfix);
 }
 

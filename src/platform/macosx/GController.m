@@ -3,6 +3,7 @@
 #import "base/entry.h"
 #import "base/cvar.h"
 #import "base/error.h"
+#import "base/version.h"
 
 static GController *gController;
 
@@ -45,6 +46,12 @@ sg_platform_quit(void)
     // The display thread could be waiting for the lock from our thread
     // and then we'd wait for the display thread to terminate...
     [NSApp performSelectorOnMainThread:@selector(terminate:) withObject:nil waitUntilDone:NO];
+}
+
+void
+sg_platform_version(struct sg_logger *sp)
+{
+    (void) sp;
 }
 
 @implementation GController

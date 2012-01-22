@@ -20,7 +20,6 @@
 		382D219011D98E62009C8EF5 /* AppKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 382D218F11D98E62009C8EF5 /* AppKit.framework */; };
 		382D224611D98E6A009C8EF5 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 382D224511D98E6A009C8EF5 /* Foundation.framework */; };
 		382D22C711D98E80009C8EF5 /* ApplicationServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 382D22C611D98E80009C8EF5 /* ApplicationServices.framework */; };
-		384C894614CB561E00EBDB6A /* version.c in Sources */ = {isa = PBXBuildFile; fileRef = 384C894514CB561E00EBDB6A /* version.c */; };
 		384C894814CB563800EBDB6A /* log_network.c in Sources */ = {isa = PBXBuildFile; fileRef = 384C894714CB563800EBDB6A /* log_network.c */; };
 		384C894E14CB565800EBDB6A /* net.c in Sources */ = {isa = PBXBuildFile; fileRef = 384C894D14CB565800EBDB6A /* net.c */; };
 		385269B714C2FEA700CD7C74 /* clock.c in Sources */ = {isa = PBXBuildFile; fileRef = 3852697B14C2FEA700CD7C74 /* clock.c */; };
@@ -76,6 +75,9 @@
 		388A9CF614B978F700036448 /* world.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3813314F14141F8600B8CE5B /* world.cpp */; };
 		388A9CF714B978F800036448 /* explosion.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3813314314141F8600B8CE5B /* explosion.cpp */; };
 		389F7FCD141D4ECD00123790 /* CoreVideo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 389F7FCC141D4ECD00123790 /* CoreVideo.framework */; };
+		38A1F1EB14CB930000901856 /* version_str.c in Sources */ = {isa = PBXBuildFile; fileRef = 38A1F1E814CB930000901856 /* version_str.c */; };
+		38A1F1EC14CB930000901856 /* version.c in Sources */ = {isa = PBXBuildFile; fileRef = 38A1F1E914CB930000901856 /* version.c */; };
+		38A1F1F614CB978600901856 /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 38A1F1F514CB978600901856 /* CoreServices.framework */; };
 		38A2E8A91499D08300A820A9 /* model.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 38A2E8741499D08300A820A9 /* model.cpp */; };
 		38A2E8AA1499D08300A820A9 /* group.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 38A2E8781499D08300A820A9 /* group.cpp */; };
 		38A2E8AB1499D08300A820A9 /* leafobject.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 38A2E87A1499D08300A820A9 /* leafobject.cpp */; };
@@ -169,7 +171,6 @@
 		382D218F11D98E62009C8EF5 /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = /System/Library/Frameworks/AppKit.framework; sourceTree = "<absolute>"; };
 		382D224511D98E6A009C8EF5 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = /System/Library/Frameworks/Foundation.framework; sourceTree = "<absolute>"; };
 		382D22C611D98E80009C8EF5 /* ApplicationServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ApplicationServices.framework; path = /System/Library/Frameworks/ApplicationServices.framework; sourceTree = "<absolute>"; };
-		384C894514CB561E00EBDB6A /* version.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = version.c; sourceTree = "<group>"; };
 		384C894714CB563800EBDB6A /* log_network.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = log_network.c; sourceTree = "<group>"; };
 		384C894C14CB565800EBDB6A /* net.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = net.h; sourceTree = "<group>"; };
 		384C894D14CB565800EBDB6A /* net.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = net.c; sourceTree = "<group>"; };
@@ -254,6 +255,10 @@
 		388A9CDC14B9788F00036448 /* path_win.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = path_win.cpp; sourceTree = "<group>"; };
 		388A9CDD14B9788F00036448 /* path_xdg.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = path_xdg.cpp; sourceTree = "<group>"; };
 		389F7FCC141D4ECD00123790 /* CoreVideo.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreVideo.framework; path = /System/Library/Frameworks/CoreVideo.framework; sourceTree = "<absolute>"; };
+		38A1F1E814CB930000901856 /* version_str.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = version_str.c; sourceTree = "<group>"; };
+		38A1F1E914CB930000901856 /* version.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = version.c; sourceTree = "<group>"; };
+		38A1F1EA14CB930000901856 /* version.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = version.h; sourceTree = "<group>"; };
+		38A1F1F514CB978600901856 /* CoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreServices.framework; path = /System/Library/Frameworks/CoreServices.framework; sourceTree = "<absolute>"; };
 		38A2E8611499D08300A820A9 /* color.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = color.hpp; sourceTree = "<group>"; };
 		38A2E8621499D08300A820A9 /* dummytexture.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = dummytexture.cpp; sourceTree = "<group>"; };
 		38A2E8631499D08300A820A9 /* dummytexture.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = dummytexture.hpp; sourceTree = "<group>"; };
@@ -333,6 +338,7 @@
 				382D22C711D98E80009C8EF5 /* ApplicationServices.framework in Frameworks */,
 				389F7FCD141D4ECD00123790 /* CoreVideo.framework in Frameworks */,
 				38A2ECD11495EBA700772423 /* Carbon.framework in Frameworks */,
+				38A1F1F614CB978600901856 /* CoreServices.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -450,6 +456,7 @@
 				382D22C611D98E80009C8EF5 /* ApplicationServices.framework */,
 				389F7FCC141D4ECD00123790 /* CoreVideo.framework */,
 				38A2ECD01495EBA700772423 /* Carbon.framework */,
+				38A1F1F514CB978600901856 /* CoreServices.framework */,
 			);
 			name = frameworks;
 			sourceTree = "<group>";
@@ -475,7 +482,6 @@
 		385208A911743F4100640971 /* src */ = {
 			isa = PBXGroup;
 			children = (
-				384C894514CB561E00EBDB6A /* version.c */,
 				3852697914C2FEA700CD7C74 /* base */,
 				38A2E8601499D08300A820A9 /* client */,
 				382C270D12119CA10048F4BF /* game */,
@@ -554,6 +560,9 @@
 				38FC2D8D14C5A422002E9D02 /* type_impl.h */,
 				38FC2D8E14C5A422002E9D02 /* type_pango.c */,
 				38FC2D8F14C5A422002E9D02 /* type_win.c */,
+				38A1F1E814CB930000901856 /* version_str.c */,
+				38A1F1E914CB930000901856 /* version.c */,
+				38A1F1EA14CB930000901856 /* version.h */,
 			);
 			path = base;
 			sourceTree = "<group>";
@@ -829,9 +838,10 @@
 				38FC2D9514C5A433002E9D02 /* type_coretext.c in Sources */,
 				38FE66B314CA128600EAE6BA /* log_console.c in Sources */,
 				38FE66B414CA128600EAE6BA /* log.c in Sources */,
-				384C894614CB561E00EBDB6A /* version.c in Sources */,
 				384C894814CB563800EBDB6A /* log_network.c in Sources */,
 				384C894E14CB565800EBDB6A /* net.c in Sources */,
+				38A1F1EB14CB930000901856 /* version_str.c in Sources */,
+				38A1F1EC14CB930000901856 /* version.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
