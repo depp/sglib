@@ -1,5 +1,6 @@
 #include "dict.h"
 #include "error.h"
+#include "log.h"
 #include "model.h"
 #include "resource.h"
 #include "texture.h"
@@ -68,6 +69,14 @@ sg_resource_load(struct sg_resource *rs)
     }
 
     if (r) {
+        if (err) {
+            sg_logf(sg_logger_get(NULL), LOG_ERROR,
+                    "%s: %s (%s %ld)", rs->name, err->msg,
+                    err->domain->name, err->code);
+        } else {
+            sg_logf(sg_logger_get(NULL), LOG_ERROR,
+                    "%s: unknown error", rs->name);
+        }
         sg_error_clear(&err);
     }
     rs->flags |= SG_RSRC_LOADED;
