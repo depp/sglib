@@ -81,6 +81,7 @@ sg_net_inet_ntop(int af, const void *src, char *dest, size_t len)
     switch (af) {
     case AF_INET:
         memset(&a.in, 0, sizeof(a.in));
+        a.in.sin_family = AF_INET;
         memcpy(&a.in.sin_addr, src, sizeof(struct in_addr));
         r = WSAAddressToStringA(&a.addr, sizeof(a.in), NULL, dest, &slen);
         if (r) return NULL;
@@ -88,6 +89,7 @@ sg_net_inet_ntop(int af, const void *src, char *dest, size_t len)
 
     case AF_INET6:
         memset(&a.in6, 0, sizeof(a.in6));
+        a.in6.sin6_family = AF_INET6;
         memcpy(&a.in6.sin6_addr, src, sizeof(struct in6_addr));
         r = WSAAddressToStringA(&a.addr, sizeof(a.in6), NULL, dest, &slen);
         if (r) return NULL;
