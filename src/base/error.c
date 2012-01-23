@@ -129,20 +129,56 @@ sg_error_data(struct sg_error **err, const char *fmtname)
 }
 
 #ifdef _WIN32
+#define COBJMACROS 1
 #include <WS2tcpip.h>
 #include <Windows.h>
+//#include <OAIdl.h>
 
 extern const struct sg_error_domain SG_ERROR_WINDOWS = { "windows" };
+
+static void
+sg_error_setw(struct sg_error **err, const struct sg_error_domain *dom,
+              long code, wchar_t *wtext, int wlen)
+{
+    struct sg_error *e = NULL;
+    int alen, r;
+    char *atext;
+
+    alen = WideCharToMultiByte(CP_UTF8, 0, wtext, wlen, NULL, 0, NULL, NULL);
+    if (!alen)
+        goto error;
+    e = malloc(sizeof(*e) + alen + 1);
+    if (!e)
+        goto error;
+    atext = (char *) (e + 1);
+    r = WideCharToMultiByte(CP_UTF8, 0, wtext, wlen, atext, alen, NULL, NULL);
+    if (!r)
+        goto error;
+    atext[alen] = '\0';
+
+    if (!err || *err) {
+        sg_error_clobber(dom, code, atext);
+    } else {
+        e->refcount = 1;
+        e->domain = dom;
+        e->msg = atext;
+        e->code = code;
+        *err = e;
+    }
+    return;
+
+error:
+    fputs("error: out of memory in error handler\n", stderr);
+    abort();
+}
 
 void
 sg_error_win32(struct sg_error **err, unsigned long code)
 {
-    struct sg_error *e = NULL;
-    LPWSTR wtext = NULL;
-    LPSTR atext = NULL;
-    int l1, l2, l3;
+    LPWSTR wtext;
+    int len;
 
-    l1 = FormatMessageW(
+    len = FormatMessageW(
         FORMAT_MESSAGE_ALLOCATE_BUFFER |
         FORMAT_MESSAGE_FROM_SYSTEM |
         FORMAT_MESSAGE_IGNORE_INSERTS,
@@ -151,49 +187,30 @@ sg_error_win32(struct sg_error **err, unsigned long code)
         MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
         (LPWSTR) &wtext,
         0, NULL);
-    if (!l1)
-        goto error;
-    l2 = WideCharToMultiByte(CP_UTF8, 0, wtext, l1, NULL, 0, NULL, NULL);
-    if (!l2)
-        goto error;
-    atext = malloc(l2 + 1);
-    if (!atext)
-        goto error;
-    l3 = WideCharToMultiByte(CP_UTF8, 0, wtext, l1, atext, l2, NULL, NULL);
-    if (!l3)
-        goto error;
-    LocalFree(wtext);
-    if (!err || *err) {
-        sg_error_clobber(&SG_ERROR_WINDOWS, code, atext);
-        free(atext);
-        return;
-    }
-    e = malloc(sizeof(*e));
-    if (!e)
-        goto error;
-    atext[l2] = '\0';
-    e->refcount = 1;
-    e->domain = &SG_ERROR_WINDOWS;
-    e->msg = atext;
-    e->code = code;
-    *err = e;
-    return;
-
-error:
-    if (wtext)
+    if (!len) {
+        sg_error_sets(err, &SG_ERROR_WINDOWS, code, "<error in error handler>");
+    } else {
+        sg_error_setw(err, &SG_ERROR_WINDOWS, code, wtext, len);
         LocalFree(wtext);
-    free(e);
-    free(atext);
-    abort();
+    }
 }
 
-/*
 void
 sg_error_hresult(struct sg_error **err, long code)
 {
-
+    IErrorInfo *iei;
+    HRESULT hr;
+    BSTR bstr;
+    hr = GetErrorInfo(0, &iei);
+    if (SUCCEEDED(hr) && iei) {
+        IErrorInfo_GetDescription(iei, &bstr);
+        sg_error_setw(err, &SG_ERROR_WINDOWS, code, bstr + 1, *bstr);
+        SysFreeString(bstr);
+        IUnknown_Release(iei);
+    } else {
+        sg_error_sets(err, &SG_ERROR_WINDOWS, code, "<unknown HRESULT>");
+    }
 }
-*/
 
 #else
 
