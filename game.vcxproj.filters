@@ -258,6 +258,9 @@
     <ClCompile Include="src\base\net.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\base\version.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\client\ui\screen.hpp">
@@ -525,6 +528,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\base\net.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\base\version.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

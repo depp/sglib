@@ -7,13 +7,19 @@
 #include <gl\glu.h>
 #include <string.h>
 #include "base/opengl.h"
-#include "version.h"
+#include "base/version.h"
 
 #pragma comment(lib, "opengl32.lib")
 #pragma comment(lib, "glu32.lib")
 
 /* FIXME: Make this work on Windows */
-const char VERSION_STRING[] = "<version unavailable>";
+const char SG_VERSION[] = "<version unavailable>";
+
+void
+sg_platform_version(struct sg_logger *lp)
+{
+    (void) lp;
+}
 
 static void
 quit()

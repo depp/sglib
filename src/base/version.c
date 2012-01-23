@@ -121,6 +121,21 @@ sg_version_os(struct sg_logger *lp)
     sg_logf(lp, LOG_INFO, "Mac OS X: %d.%d.%d", major, minor, bugfix);
 }
 
+#elif defined(_WIN32)
+#include <Windows.h>
+
+static void
+sg_version_os(struct sg_logger *lp)
+{
+    OSVERSIONINFOW v;
+    BOOL br;
+    memset(&v, 0, sizeof(v));
+    v.dwOSVersionInfoSize = sizeof(v);
+    br = GetVersionExW(&v);
+    if (!br) return;
+    sg_logf(lp, LOG_INFO, "Windows: %d.%d", v.dwMajorVersion, v.dwMinorVersion);
+}
+
 #else
 
 #define sg_version_os(x) (void)0
