@@ -301,7 +301,7 @@ static LRESULT CALLBACK wndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
         return 0;
     }
 
-    return DefWindowProc(hWnd, uMsg, wParam, lParam);
+    return DefWindowProcW(hWnd, uMsg, wParam, lParam);
 }
 
 struct cmdline {
