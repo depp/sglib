@@ -9,7 +9,6 @@
 #include <string.h>
 
 #if defined(_WIN32)
-#pragma comment(lib, "Ws2_32.lib")
 #define SOCKET_VALID(s) ((s) != SOCKET_ERROR)
 #define NO_SOCKET SOCKET_ERROR
 #else

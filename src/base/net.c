@@ -1,3 +1,5 @@
+#include "defs.h"
+
 #include "error.h"
 #include "net.h"
 
@@ -9,9 +11,13 @@
 #if !defined(_WIN32)
 #include <arpa/inet.h>
 #include <netdb.h>
+#else
+#include <Windows.h>
 #endif
 
-#if !defined(WIN32)
+#define DYNAMIC_PROCS 0
+
+#if !defined(_WIN32)
 
 int
 sg_net_init(void)
@@ -20,6 +26,93 @@ sg_net_init(void)
 }
 
 #else
+
+#pragma comment(lib, "Ws2_32.lib")
+
+#if NTDDI_VERSION < NTDDI_VISTA
+typedef int (WSAAPI *inet_pton_t)(int, const char *, void *);
+typedef const char *(WSAAPI *inet_ntop_t)(int, const void *, char *, size_t);
+static inet_pton_t inet_pton;
+static inet_ntop_t inet_ntop;
+
+static int WSAAPI
+sg_net_inet_pton(int af, const char *src, void *dest)
+{
+    DWORD alen;
+    int r;
+    union {
+        struct sockaddr addr;
+        struct sockaddr_in in;
+        struct sockaddr_in6 in6;
+    } a;
+
+    switch (af) {
+    case AF_INET:
+        alen = sizeof(a.in);
+        r = WSAStringToAddressA((char *) src, af, NULL, &a.addr, &alen);
+        if (r) return -1;
+        memcpy(dest, &a.in.sin_addr, sizeof(struct in_addr));
+        return 1;
+
+    case AF_INET6:
+        alen = sizeof(a.in6);
+        r = WSAStringToAddressA((char *) src, af, NULL, &a.addr, &alen);
+        if (r) return -1;
+        memcpy(dest, &a.in6.sin6_addr, sizeof(struct in6_addr));
+        return 1;
+
+    default:
+        WSASetLastError(WSAEINVAL);
+        return -1;
+    }
+}
+
+static const char * WSAAPI
+sg_net_inet_ntop(int af, const void *src, char *dest, size_t len)
+{
+    DWORD slen = len;
+    int r;
+    union {
+        struct sockaddr addr;
+        struct sockaddr_in in;
+        struct sockaddr_in6 in6;
+    } a;
+
+    switch (af) {
+    case AF_INET:
+        memset(&a.in, 0, sizeof(a.in));
+        memcpy(&a.in.sin_addr, src, sizeof(struct in_addr));
+        r = WSAAddressToStringA(&a.addr, sizeof(a.in), NULL, dest, &slen);
+        if (r) return NULL;
+        return dest;
+
+    case AF_INET6:
+        memset(&a.in6, 0, sizeof(a.in6));
+        memcpy(&a.in6.sin6_addr, src, sizeof(struct in6_addr));
+        r = WSAAddressToStringA(&a.addr, sizeof(a.in6), NULL, dest, &slen);
+        if (r) return NULL;
+        return dest;
+
+    default:
+        WSASetLastError(WSAEINVAL);
+        return NULL;
+    }
+}
+
+static void
+sg_net_getprocs(void)
+{
+    HANDLE h = GetModuleHandleA("Ws2_32.dll");
+    if (h) {
+        inet_pton = (inet_pton_t) GetProcAddress(h, "inet_pton");
+        inet_ntop = (inet_ntop_t) GetProcAddress(h, "inet_ntop");
+    }
+    if (!inet_pton) inet_pton = sg_net_inet_pton;
+    if (!inet_ntop) inet_ntop = sg_net_inet_ntop;
+}
+#else
+#define sg_net_getprocs(x) (void)0
+#endif
 
 int
 sg_net_init(void)
@@ -36,6 +129,7 @@ sg_net_init(void)
         return 0;
     }
     initted = 2;
+    sg_net_getprocs();
     return 1;
 }
 
@@ -63,14 +157,15 @@ sg_net_getaddr(struct sg_addr *addr, const char *str,
             goto invalid;
         memcpy(strin, str + 1, len);
         strin[len] = '\0';
-        r = inet_pton(AF_INET6, strin, &addr->addr.in6.sin6_addr);
+        p += 1;
+        host = strin;
+        r = inet_pton(AF_INET6, host, &addr->addr.in6.sin6_addr);
         if (r == 0)
             goto invalid;
         if (r < 0)
             goto error_errno;
         addr->len = sizeof(struct sockaddr_in6);
         addr->addr.in6.sin6_family = AF_INET6;
-        p += 1;
         port = &addr->addr.in6.sin6_port;
     } else {
         p = strchr(str, ':');
@@ -82,6 +177,8 @@ sg_net_getaddr(struct sg_addr *addr, const char *str,
             strin[len] = '\0';
             host = strin;
         } else {
+            len = strlen(str);
+            p = str + len;
             host = str;
         }
         for (i = 0; host[i]; ++i)

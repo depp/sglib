@@ -1,6 +1,8 @@
 #ifndef BASE_NET_H
 #define BASE_NET_H
 #if defined(_WIN32)
+#include "defs.h"
+#define INCL_WINSOCK_API_TYPEDEFS 1
 #include <WinSock2.h>
 #include <WS2tcpip.h>
 #else
