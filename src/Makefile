@@ -158,8 +158,6 @@ endif
 SYS_OBJS =
 SYS_OBJS += sys/error.o
 SYS_OBJS += sys/file.o
-SYS_OBJS += sys/stringarray.o
-SYS_OBJS += sys/system_error.o
 
 CLIENT_OBJS =
 CLIENT_OBJS += client/bitmapfont.o
