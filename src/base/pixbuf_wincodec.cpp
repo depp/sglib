@@ -1,5 +1,7 @@
 #include "defs.h"
 
+#include "error.h"
+#include "log.h"
 #include "pixbuf.h"
 #include <wincodec.h>
 
@@ -63,6 +65,9 @@ sg_pixbuf_loadwincodec(struct sg_pixbuf *pbuf, const void *data, size_t len,
         break;
 
     default:
+        sg_logf(sg_logger_get("image"), LOG_ERROR,
+                "Unsupported channel count: %u", chanCount);
+        sg_error_data(err, "Wincodec");
         goto failed;
     }
 
@@ -96,6 +101,7 @@ done:
     return r;
 
 failed:
+    sg_error_hresult(err, hr);
     r = -1;
     goto done;
 }
