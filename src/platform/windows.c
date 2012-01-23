@@ -129,7 +129,7 @@ static PIXELFORMATDESCRIPTOR pfd = {
     0, 0, 0 // layer masks
 };
 
-BOOL createWindow(LPCWSTR title, int width, int height)
+BOOL createWindow(LPCWSTR title, int width, int height, int nCmdShow)
 {
     GLuint pixelFormat;
     WNDCLASSEXW wc;
@@ -209,7 +209,7 @@ BOOL createWindow(LPCWSTR title, int width, int height)
         return FALSE;
     }
 
-    ShowWindow(hWnd, SW_SHOW);
+    ShowWindow(hWnd, nCmdShow);
     SetForegroundWindow(hWnd);
     SetFocus(hWnd);
     handleResize(width, height);
@@ -406,7 +406,7 @@ parseError:
 }
 
 static void
-init(void)
+init(int nCmdShow)
 {
     HRESULT hr;
 
@@ -419,7 +419,7 @@ init(void)
         exit(1);
     }
 
-    if (!createWindow(L"Game", 768, 480))
+    if (!createWindow(L"Game", 768, 480, nCmdShow))
         exit(0);
     glBlendColor = (void (APIENTRY *)(GLclampf, GLclampf, GLclampf, GLclampf))
         wglGetProcAddress("glBlendColor");
@@ -432,11 +432,11 @@ init(void)
 void (APIENTRY *glBlendColor)(GLclampf, GLclampf, GLclampf, GLclampf);
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
-                   LPSTR lpCmdLine, int iCmdShow)
+                   LPSTR lpCmdLine, int nCmdShow)
 {
     MSG msg;
 
-    init();
+    init(nCmdShow);
 
     while(1) {
         while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
