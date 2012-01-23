@@ -35,8 +35,8 @@ void BitmapFont::print(int x, int y, const char *text)
 
         default:
             u = c & 15; v = c >> 4;
-            x0 = xp; x1 = xp + xs;
-            y0 = yp; y1 = yp + ys;
+            x0 = (float) xp; x1 = (float) (xp + xs);
+            y0 = (float) yp; y1 = (float) (yp + ys);
             u0 = u * xt; u1 = u0 + xt;
             v1 = v * yt; v0 = v1 + yt;
             glTexCoord2f(u0, v0); glVertex2f(x0, y0);

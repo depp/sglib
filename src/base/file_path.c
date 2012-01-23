@@ -145,6 +145,7 @@ sg_path_add(struct sg_paths *p, const char *path, size_t len, int flags)
 
 nomem:
     abort();
+    return -1;
 }
 
 void

@@ -196,7 +196,8 @@ void Walker::scanItems()
             continue;
         Item *it = static_cast<Item *> (*i);
         int ix = it->centerx(), iy = it->centery();
-        float dx = ix - x, dy = iy - y, id = dx*dx + dy*dy;
+        float dx = (float) (ix - x), dy = (float) (iy - y),
+            id = dx*dx + dy*dy;
         if (id < icd) {
             ic = it;
             icd = id;
@@ -220,8 +221,8 @@ void Walker::updateItem()
         m_item_distance = 0.0f;
         return;
     }
-    float dx = centerx() - m_item->centerx();
-    float dy = centery() - m_item->centery();
+    float dx = (float) (centerx() - m_item->centerx());
+    float dy = (float) (centery() - m_item->centery());
     m_item_distance = std::sqrt(dx*dx + dy*dy);
 }
 

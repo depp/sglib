@@ -71,10 +71,10 @@ sg_layout_load(struct sg_layout *lp)
 
     sg_layout_calcbounds(lp, &b);
 
-    lp->vx0 = b.ibounds.x - b.x;
-    lp->vx1 = b.ibounds.x - b.x + b.ibounds.width;
-    lp->vy0 = b.ibounds.y - b.y;
-    lp->vy1 = b.ibounds.y - b.y + b.ibounds.height;
+    lp->vx0 = (float) (b.ibounds.x - b.x);
+    lp->vx1 = (float) (b.ibounds.x - b.x + b.ibounds.width);
+    lp->vy0 = (float) (b.ibounds.y - b.y);
+    lp->vy1 = (float) (b.ibounds.y - b.y + b.ibounds.height);
 
     sg_pixbuf_init(&pbuf);
     r = sg_pixbuf_set(&pbuf, SG_Y, b.ibounds.width, b.ibounds.height, &err);

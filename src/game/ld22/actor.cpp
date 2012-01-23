@@ -26,10 +26,10 @@ void Actor::drawHitBox(int delta)
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glColor4ub(255, 40, 40, 128);
     glBegin(GL_QUADS);
-    glVertex2f(x, y);
-    glVertex2f(x, y + h);
-    glVertex2f(x + w, y + h);
-    glVertex2f(x + w, y);
+    glVertex2s(x, y);
+    glVertex2s(x, y + h);
+    glVertex2s(x + w, y + h);
+    glVertex2s(x + w, y);
     glEnd();
     glColor3ub(255, 255, 255);
     glDisable(GL_BLEND);

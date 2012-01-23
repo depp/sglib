@@ -73,8 +73,8 @@ void Item::advance()
             XO = SCREEN_WIDTH * 0.5f,
             YS = SCREEN_HEIGHT * 0.15f/2,
             YO = SCREEN_HEIGHT * 0.75f;
-        m_x = XO + XS * sin(XT * hack_end);
-        m_y = YO + YS * sin(YT * hack_end);
+        m_x = (int) (XO + XS * sin(XT * hack_end));
+        m_y = (int) (YO + YS * sin(YT * hack_end));
     } else {
         if (!m_owner->isvalid() || m_owner->m_item != this) {
             m_locked = false;

@@ -143,7 +143,7 @@ public:
                 const CloudInstance &ci = m_layer[i].data[j];
                 int x = (-SCREEN_WIDTH / 2) + ((ci.dx * 2 + lpos) & 2047);
                 int y = ci.dy;
-                CLOUDS[ci.cloud].render(x, y);
+                CLOUDS[ci.cloud].render((float) x, (float) y);
             }
         }
         glEnd();

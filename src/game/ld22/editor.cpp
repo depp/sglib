@@ -276,7 +276,7 @@ void Editor::drawExtra(int delta)
     }
 
     glPushMatrix();
-    glTranslatef(SCREEN_WIDTH, 0, 0);
+    glTranslatef((float) SCREEN_WIDTH, 0, 0);
     int w = EDITBAR_SIZE, h = SCREEN_WIDTH;
     glBegin(GL_QUADS);
     glVertex2s(0, 0);
