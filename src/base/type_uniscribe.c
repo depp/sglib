@@ -1,3 +1,5 @@
+#include "defs.h"
+
 #include "pixbuf.h"
 #include "type_impl.h"
 #include <Windows.h>

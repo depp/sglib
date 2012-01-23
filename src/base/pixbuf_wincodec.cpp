@@ -1,3 +1,5 @@
+#include "defs.h"
+
 #include "pixbuf.h"
 #include <wincodec.h>
 
