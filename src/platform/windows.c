@@ -408,8 +408,16 @@ parseError:
 static void
 init(void)
 {
+    HRESULT hr;
+
     cmdline_parse();
     sg_sys_init();
+
+    hr = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
+    if (FAILED(hr)) {
+        errorBox("CoInitializeEx failed");
+        exit(1);
+    }
 
     if (!createWindow(L"Game", 768, 480))
         exit(0);
