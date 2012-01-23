@@ -90,7 +90,6 @@
     <ClCompile Include="src\game\tank\world.cpp" />
     <ClCompile Include="src\platform\windows.c" />
     <ClCompile Include="src\sys\error.cpp" />
-    <ClCompile Include="src\sys\error_win.cpp" />
     <ClCompile Include="src\sys\file.cpp" />
     <ClCompile Include="src\base\type_uniscribe.c" />
   </ItemGroup>
@@ -182,7 +181,6 @@
     <ClInclude Include="src\game\tank\world.hpp" />
     <ClInclude Include="src\sys\buffer.hpp" />
     <ClInclude Include="src\sys\error.hpp" />
-    <ClInclude Include="src\sys\error_win.hpp" />
     <ClInclude Include="src\sys\file.hpp" />
     <ClInclude Include="src\sys\sharedref.hpp" />
   </ItemGroup>
