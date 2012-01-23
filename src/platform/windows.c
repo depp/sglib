@@ -415,7 +415,7 @@ init(void)
         exit(0);
     glBlendColor = (void (APIENTRY *)(GLclampf, GLclampf, GLclampf, GLclampf))
         wglGetProcAddress("glBlendColor");
-    if (!glBlendColor) {
+    if (0 && !glBlendColor) {
         errorBox("Can't get glBlendColor address.");
         exit(1);
     }
