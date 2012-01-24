@@ -54,7 +54,6 @@ sg_file_open(const char *path, int flags, struct sg_error **e)
     char nbuf[SG_MAX_PATH];
     pchar *pbuf = NULL, *p;
 
-    flags = flags;
     if (flags & SG_WRONLY)
         flags |= SG_WRITABLE;
 
