@@ -87,11 +87,12 @@ sg_strbuf_compact(struct sg_strbuf *b)
 {
     char *p;
     size_t sz;
-    /* This is true for static allocations.  */
+    /* This is also true for static allocations.  */
     if (b->p == b->e)
         return;
     sz = b->p - b->s;
-    p = realloc(b->p, sz + 1);
+    p = realloc(b->s, sz + 1);
+    (void) p;
     b->e = b->p;
 }
 

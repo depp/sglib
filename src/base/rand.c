@@ -110,7 +110,6 @@ sg_rand_getentropy(unsigned *array, unsigned count)
             return -1;
     }
 
-    amt = 0;
     while (rem) {
         amt = read(fdes, p, rem);
         if (amt > 0) {

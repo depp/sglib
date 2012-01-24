@@ -104,7 +104,6 @@ sg_layout_render(struct sg_layout *lp, struct sg_pixbuf *pbuf,
 {
     cairo_surface_t *surf;
     cairo_t *cr;
-    PangoContext *pc;
     PangoLayout *pl;
 
     surf = cairo_image_surface_create_for_data(
@@ -117,7 +116,7 @@ sg_layout_render(struct sg_layout *lp, struct sg_pixbuf *pbuf,
         abort();
     cairo_translate(cr, xoff, pbuf->pheight - yoff);
 
-    pc = sg_layout_sharedcontext(cr);
+    (void) sg_layout_sharedcontext(cr);
     pl = lp->impl->layout;
     if (!pl)
         abort();

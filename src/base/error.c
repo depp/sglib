@@ -38,11 +38,10 @@ sg_error_setv(struct sg_error **err, const struct sg_error_domain *dom,
               long code, const char *fmt, va_list ap)
 {
     char buf[512];
-    int r;
 #if !defined(_WIN32)
-    r = vsnprintf(buf, sizeof(buf), fmt, ap);
+    vsnprintf(buf, sizeof(buf), fmt, ap);
 #else
-    r = _vsnprintf(buf, sizeof(buf), fmt, ap);
+    _vsnprintf(buf, sizeof(buf), fmt, ap);
     buf[sizeof(buf) - 1] = '\0';
 #endif
     sg_error_sets(err, dom, code, buf);
