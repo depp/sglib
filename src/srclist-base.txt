@@ -1,0 +1,82 @@
+base/clock.c
+base/clock.h
+base/configfile.c
+base/configfile.h
+base/configfile_read.c
+base/cvar.c
+base/cvar.h
+base/defs.h
+base/dict.c
+base/dict.h
+base/entry.h
+base/error.c
+base/error.h
+base/event.h
+base/file.h
+base/file_impl.h
+base/file_norm.c
+base/file_path.c
+base/file_posix.c MACOSX LINUX
+base/file_read.c
+base/file_win.c WINDOWS
+base/hash.c
+base/hash.h
+base/keycode/keycode.h
+base/keycode/keyid.c
+base/keycode/keyid.h
+base/keycode/keytable_evdev.c LINUX
+base/keycode/keytable.h
+base/keycode/keytable_mac.c MACOSX
+base/keycode/keytable_win.c WINDOWS
+base/log.c
+base/log_console.c
+base/log.h
+base/log_impl.h
+base/log_network.c
+base/model.c
+base/model.h
+base/net.c
+base/net.h
+base/opengl.c
+base/opengl.h
+base/pixbuf.c
+base/pixbuf_coregraphics.c MACOSX
+base/pixbuf.h
+base/pixbuf_libjpeg.c LIBJPEG
+base/pixbuf_libpng.c LIBPNG
+base/pixbuf_loadimage.c
+base/pixbuf_wincodec.cpp WINDOWS
+base/rand.c
+base/rand.h
+base/resource.c
+base/resource.h
+base/strbuf.c
+base/strbuf.h
+base/sys.c
+base/texture.c
+base/texture.h
+base/type.c
+base/type_coretext.c
+base/type.h
+base/type_impl.h
+base/type_pango.c PANGO
+base/type_uniscribe.c WINDOWS
+#base/type_win.c
+base/version.c
+base/version.h
+base/version_str.c
+platform/gtk.c GTK
+platform/macosx/GApplication.h MACOSX
+platform/macosx/GApplication.m MACOSX
+platform/macosx/GController.h MACOSX
+platform/macosx/GController.m MACOSX
+platform/macosx/GDisplay.h MACOSX
+platform/macosx/GDisplay.m MACOSX
+platform/macosx/GMain.m MACOSX
+platform/macosx/GPrefix.h MACOSX
+platform/macosx/GView.h MACOSX
+platform/macosx/GView.m MACOSX
+platform/macosx/GWindow.h MACOSX
+platform/macosx/GWindow.m MACOSX
+platform/sdl.c SDL
+platform/windows.c WINDOWS
