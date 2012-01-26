@@ -184,7 +184,7 @@ sg_version_print(void)
     sg_logf(log, LOG_INFO, "Compiler: " COMPILER);
     sg_logf(log, LOG_INFO, "Architecture: " ARCH);
     sg_version_os(log);
-    sg_platform_version(log);
+    sg_version_platform(log);
     sg_version_libjpeg(log);
     sg_version_libpng(log);
     sg_version_pango(log);

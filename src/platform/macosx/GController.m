@@ -49,7 +49,7 @@ sg_platform_quit(void)
 }
 
 void
-sg_platform_version(struct sg_logger *sp)
+sg_version_platform(struct sg_logger *sp)
 {
     (void) sp;
 }

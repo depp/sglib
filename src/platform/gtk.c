@@ -424,7 +424,7 @@ main(int argc, char *argv[])
 }
 
 void
-sg_platform_version(struct sg_logger *lp)
+sg_version_platform(struct sg_logger *lp)
 {
     char cv[16], rv[16];
     snprintf(cv, sizeof(cv), "%d.%d.%d",
