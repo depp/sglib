@@ -10,8 +10,7 @@
 /run.sh
 
 # Apple's Xcode
-*.mode1v3
-*.pbxuser
+*.xcodeproj
 
 # Autoconf
 /aclocal.m4

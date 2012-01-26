@@ -3,6 +3,7 @@ import buildtool.plist
 import random
 import os
 import sys
+import cStringIO
 
 def gen_id(self):
     c = self._ctr
@@ -74,6 +75,8 @@ class XcodeObject(object):
                 for x in v.itervalues():
                     if isinstance(x, XcodeObject):
                         x._allobjs(dest)
+            elif isinstance(v, XcodeObject):
+                v._allobjs(dest)
 
     def allobjs(self):
         objs = set([])
@@ -126,37 +129,64 @@ def relpath(p, x):
     return '/'.join(['..' for i in x] + p)
 
 class PathObject(XcodeObject):
-    def __init__(self, path):
+    def __init__(self, path, root=None, name=None):
         self.parent = None
-        self.abspath = path or ''
+        path = path or ''
+        self.abspath = path
+        self.name = name
+        if root is None:
+            if path.startswith('/'):
+                root = '<absolute>'
+            else:
+                root = 'SOURCE_ROOT'
+        self.root = root
         self.make_relative()
     def make_relative(self):
         """Make the path of this object relative, if possible."""
         op = self.abspath
         if self.parent:
             pp = self.parent.abspath
+            pr = self.parent.root
+        elif self.root == 'SOURCE_ROOT':
+            pp = ''
+            pr = 'SOURCE_ROOT'
         else:
             pp = ''
-        if op.startswith('/') == pp.startswith('/'):
+            pr = ''
+        if self.root == pr:
             self.path = relpath(op, pp)
             self.sourceTree = '<group>'
-        elif self.path.startswith('/'):
-            self.sourceTree = '<absolute>'
         else:
-            self.sourceTree = 'SOURCE_ROOT'
+            self.path = op
+            self.sourceTree = self.root
 
     def __cmp__(self, other):
         if isinstance(other, PathObject):
-            return cmp(self.abspath, other.abspath)
+            x = cmp(self.CSORT, other.CSORT)
+            if x: return x
+            x = cmp(self.root, other.root)
+            if x: return x
+            x = cmp(self.abspath, other.abspath)
+            if x: return x
+            n = getattr(self, 'name', None)
+            m = getattr(other, 'name', None)
+            if n is None:
+                if m is None:
+                    return 0
+                return -1
+            else:
+                if m is None:
+                    return 1
+                return cmp(n, m)
         return NotImplemented
 
 class Group(PathObject):
+    CSORT = 0
     ISA = 'PBXGroup'
     ATTRS = ['children', optional('name'), optional('path'), 'sourceTree']
-    def __init__(self, path, name=None):
-        PathObject.__init__(self, path)
+    def __init__(self, path, root=None, name=None):
+        PathObject.__init__(self, path, root=root, name=name)
         self.children = []
-        self.name = name
     def add(self, obj):
         if not isinstance(obj, PathObject):
             raise TypeError('Can only add PathObject to Group')
@@ -167,27 +197,137 @@ class Group(PathObject):
         obj.make_relative()
 
 class FileRef(PathObject):
+    CSORT = 1
     COMPACT = True
     ISA = 'PBXFileReference'
-    ATTRS = [optional('fileEncoding'), 'lastKnownFileType', 'path', 'sourceTree']
-    def __init__(self, path):
-        PathObject.__init__(self, path)
+    ATTRS = [optional('fileEncoding'), optional('lastKnownFileType'),
+             optional('explicitFileType'), optional('includeInIndex'),
+             optional('name'), 'path', 'sourceTree']
+    def __init__(self, path, root=None, name=None, etype=None):
+        PathObject.__init__(self, path, root=root, name=name)
         ext = os.path.splitext(path)[1]
-        try:
-            ftype = buildtool.path.EXTS[ext]
-        except KeyError:
-            ftype = ext[1:] if ext else ''
-        ftype = TYPES[ftype]
-        self.lastKnownFileType = ftype
+        if etype is None:
+            try:
+                ftype = buildtool.path.EXTS[ext]
+            except KeyError:
+                ftype = ext[1:] if ext else ''
+            ftype = TYPES[ftype]
+            self.lastKnownFileType = ftype
+            self.explicitFileType = None
+        else:
+            self.lastKnownFileType = None
+            self.explicitFileType = etype
+            ftype = etype
+        self.includeInIndex = None
         if ftype.startswith('sourcecode.') or ftype.startswith('.text'):
             self.fileEncoding = 4
         else:
             self.fileEncoding = None
+    @property
+    def ftype(self):
+        return self.explicitFileType or self.lastKnownFileType
+
+class BuildFile(XcodeObject):
+    ISA = 'PBXBuildFile'
+    ATTRS = ['fileRef']
+    def __init__(self, f):
+        self.fileRef = f
+
+class BuildPhase(XcodeObject):
+    ATTRS = ['buildActionMask', 'files', 'runOnlyForDeploymentProcessing']
+    buildActionMask = 0x7fffffff
+    runOnlyForDeploymentProcessing = 0
+    def __init__(self):
+        self.files = []
+    def add(self, x):
+        self.files.append(x)
+
+class FrameworksBuildPhase(BuildPhase):
+    ISA = 'PBXFrameworksBuildPhase'
+
+class ResourcesBuildPhase(BuildPhase):
+    ISA = 'PBXResourcesBuildPhase'
+
+class SourcesBuildPhase(BuildPhase):
+    ISA = 'PBXSourcesBuildPhase'
+
+class NativeTarget(XcodeObject):
+    ISA = 'PBXNativeTarget'
+    ATTRS = ['buildConfigurationList', 'buildPhases',
+             'buildRules', 'dependencies', 'name',
+             'productName', 'productReference', 'productType']
+    def __init__(self, ttype, name, productName=None):
+        productName = productName or name
+        self.buildConfigurationList = None # Object
+        self.buildPhases = [] # Object list
+        self.buildRules = []
+        self.dependencies = []
+        self.name = name
+        self.productName = productName
+        product = FileRef(productName + '.app', root='BUILT_PRODUCTS_DIR',
+                          etype='wrapper.application')
+        self.productReference = product
+        self.productType = ttype
+
+class BuildConfigList(XcodeObject):
+    ISA = 'XCConfigurationList'
+    ATTRS = ['buildConfigurations', 'defaultConfigurationIsVisible',
+             'defaultConfigurationName']
+    def __init__(self, items, default=None):
+        self.buildConfigurations = list(items)
+        self.defaultConfigurationIsVisible = 0
+        self.defaultConfigurationName = default or item[0].name
+
+class BuildConfiguration(XcodeObject):
+    ISA = 'XCBuildConfiguration'
+    ATTRS = ['buildSettings', 'name']
+    def __init__(self, name, *init):
+        s = {}
+        for obj in init:
+            if isinstance(obj, BuildConfiguration):
+                obj = obj.buildSettings
+            s.update(obj)
+        self.buildSettings = s
+        self.name = name
+    def __getitem__(self, i):
+        return self.buildSettings[i]
+    def __setitem__(self, i, v):
+        self.buildSettings[i] = v
+    def __delitem__(self, i):
+        del self.buildSettings[i]
+    def update(self, d):
+        if isinstance(d, BuildConfiguration):
+            d = d.buildSettings
+        self.buildSettings.update(d)
+
+class Project(XcodeObject):
+    ISA = 'PBXProject'
+    ATTRS = ['buildConfigurationList', 'compatibilityVersion',
+             'hasScannedForEncodings', 'mainGroup', 'productRefGroup',
+             'projectDirPath', 'projectRoot', 'targets']
+    def __init__(self):
+        self.buildConfigurationList = BuildConfigList
+        self.compatibilityVersion = 'Xcode 2.4'
+        self.hasScannedForEncodings = 0
+        self.mainGroup = Group(None)
+        self.productRefGroup = Group(None, name='Products')
+        self.mainGroup.add(self.productRefGroup)
+        self.projectDirPath = ''
+        self.projectRoot = ''
+        self.targets = []
 
 class Xcode(object):
     def __init__(self):
         self._paths = {} # object for each path
-        self._root = Group(None) # root group
+        self._buildfile = {}
+        self.project = Project()
+        self._frameworks = Group(None, name='Frameworks')
+        self.project.mainGroup.add(self._frameworks)
+
+    def sort_groups(self):
+        for x in self._paths.itervalues():
+            if isinstance(x, Group):
+                x.children.sort()
 
     def source_group(self, path):
         """Get the Group for the given directory."""
@@ -201,20 +341,33 @@ class Xcode(object):
                 par = self.source_group(os.path.dirname(path))
                 par.add(obj)
             else:
-                obj = self._root
+                obj = self.project.mainGroup
             self._paths[path] = obj
         else:
             if not isinstance(obj, Group):
                 raise Exception('Group and FileRef have same path, %r' % path)
         return obj
 
-    def source_file(self, path):
+    def build_file(self, f):
+        try:
+            return self._buildfile[f]
+        except KeyError:
+            obj = BuildFile(f)
+            self._buildfile[f] = obj
+            return obj
+
+    def source_file(self, path, name=None):
         """Get the FileRef for the given file."""
         try:
             obj = self._paths[path]
         except KeyError:
-            obj = FileRef(path)
-            par = self.source_group(os.path.dirname(path))
+            obj = FileRef(path, name=name)
+            if obj.root == 'SOURCE_ROOT':
+                par = self.source_group(os.path.dirname(path))
+            elif obj.ftype == 'wrapper.framework':
+                par = self._frameworks
+            else:
+                assert 0
             par.add(obj)
             self._paths[path] = obj
         else:
@@ -222,8 +375,13 @@ class Xcode(object):
                 raise Exception('Group and FileRef have same path, %r' % path)
         return obj
 
+    def add_target(self, t):
+        self.project.targets.append(t)
+        self.project.productRefGroup.add(t.productReference)
+
     def write(self, f):
-        objs = self._root.allobjs()
+        self.sort_groups()
+        objs = self.project.allobjs()
         groups = {}
         for obj in objs:
             try:
@@ -232,7 +390,7 @@ class Xcode(object):
                 groups[obj.ISA] = [obj]
             else:
                 g.append(obj)
-        idxs = dict(zip(ISAS, ['%03d' for x in range(len(ISAS))]))
+        idxs = dict(zip(ISAS, ['%03d' % x for x in range(len(ISAS))]))
         groups = list(groups.iteritems())
         groups.sort(key=lambda x: idxs.get(x[0], '999' + x[0]))
         nonce = random.getrandbits(32)
@@ -255,10 +413,100 @@ class Xcode(object):
                 for obj in groupobjs:
                     obj.emit(w, ids)
         w.end_dict()
+        w.write_pair('rootObject', ids[self.project])
         w.end_dict()
+
+def projectConfig(obj):
+    base = {
+        'GCC_PRECOMPILE_PREFIX_HEADER': True,
+        'GCC_PREFIX_HEADER': 'src/platform/macosx/GPrefix.h',
+        'GCC_VERSION': '4.2',
+        'WARNING_CFLAGS': ['-Wall', '-Wextra'],
+        'HEADER_SEARCH_PATHS': [
+                'src',
+                '$(HEADER_SEARCH_PATHS)',
+        ],
+    }
+    debug = {
+        'COPY_PHASE_STRIP': False,
+    }
+    release = {
+        'COPY_PHASE_STRIP': True,
+    }
+    cd = BuildConfiguration('Debug', base, debug)
+    cr = BuildConfiguration('Release', base, release)
+    return BuildConfigList([cd, cr], 'Release')
+
+def targetConfig(obj):
+    base = {
+        'ALWAYS_SEARCH_USER_PATHS': False,
+        'FRAMEWORK_SEARCH_PATHS': [
+            '$(inherited)',
+            '$(FRAMEWORK_SEARCH_PATHS_QUOTED_FOR_TARGET_1)',
+        ],
+        'FRAMEWORK_SEARCH_PATHS_QUOTED_FOR_TARGET_1':
+            '"$(SYSTEM_LIBRARY_DIR)/Frameworks/ApplicationServices.framework/Frameworks"',
+        'GCC_DYNAMIC_NO_PIC': False,
+        'GCC_ENABLE_FIX_AND_CONTINUE': True,
+        'GCC_MODEL_TUNING': 'G5',
+        'GCC_OPTIMIZATION_LEVEL': 0,
+        'INFOPLIST_FILE': 'mac/Game-Info.plist',
+        'INSTALL_PATH': '$(HOME)/Applications',
+        'OTHER_LDFLAGS': [
+                '-framework', 'Foundation',
+                '-framework', 'AppKit',
+                '-framework', 'OpenGL',
+        ],
+        'PREBINDING': False,
+        'PRODUCT_NAME': 'Game',
+    }
+    debug = {
+        'COPY_PHASE_STRIP': False,
+        'GCC_ENABLE_FIX_AND_CONTINUE': False,
+        'GCC_OPTIMIZATION_LEVEL': 0,
+    }
+    release = {
+        'ARCHS': 'ppc i386',
+        'COPY_PHASE_STRIP': True,
+        'DEBUG_INFORMATION_FORMAT': 'dwarf-with-dsym',
+        'ZERO_LINK': False,
+        'GCC_ENABLE_FIX_AND_CONTINUE': True,
+    }
+    cd = BuildConfiguration('Debug', base, debug)
+    cr = BuildConfiguration('Release', base, release)
+    return BuildConfigList([cd, cr], 'Release')
 
 def run(obj):
     x = Xcode()
+    x.project.buildConfigurationList = projectConfig(obj)
+    t = NativeTarget('com.apple.product-type.application', 'Game')
+    t.buildConfigurationList = targetConfig(obj)
+    rsrcs = ResourcesBuildPhase()
+    srcs = SourcesBuildPhase()
+    fwks = FrameworksBuildPhase()
+    t.buildPhases = [rsrcs, srcs, fwks]
+    def add_source(fref):
+        ft = fref.lastKnownFileType
+        if ft in SOURCE_BUILD:
+            phase = srcs
+        elif ft in RESOURCE_BUILD:
+            phase = rsrcs
+        elif ft in FRAMEWORK_BUILD:
+            phase = fwks
+        else:
+            phase = None
+        if phase is not None:
+            bref = x.build_file(fref)
+            phase.add(bref)
     for src in obj._sources:
-        fref = x.source_file(src.path)
-    x.write(sys.stdout)
+        fref = x.source_file('src/' + src.path)
+        if not src.atoms or 'MACOSX' in src.atoms:
+            add_source(fref)
+    for fw in ['Foundation', 'AppKit', 'CoreServices', 'CoreVideo', 'Carbon']:
+        add_source(x.source_file('/System/Library/Frameworks/%s.framework' % fw, name=fw))
+    add_source(x.source_file('mac/Game-Info.plist'))
+    add_source(x.source_file('mac/MainMenu.xib'))
+    x.add_target(t)
+    f = cStringIO.StringIO()
+    x.write(f)
+    obj._write_file('game.xcodeproj/project.pbxproj', f.getvalue())
