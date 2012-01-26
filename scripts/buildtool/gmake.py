@@ -13,11 +13,13 @@ def run(obj):
     libjpeg_src = obj._get_atoms('LIBJPEG')
     pango_src = obj._get_atoms('PANGO')
 
-    all_src = base_src + gtk_src + libpng_src + libjpeg_src + pango_src
+    all_src = (base_src + gtk_src + sdl_src +
+               libpng_src + libjpeg_src + pango_src)
 
     subs = {
         'BASE_OBJS': objs(base_src),
         'GTK_OBJS': objs(gtk_src),
+        'SDL_OBJS': objs(sdl_src),
         'LIBPNG_OBJS': objs(libpng_src),
         'LIBJPEG_OBJS': objs(libjpeg_src),
         'PANGO_OBJS': objs(pango_src),
