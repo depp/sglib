@@ -2,6 +2,7 @@ from __future__ import with_statement
 import os
 import buildtool.source as source
 import sys
+import shutil
 
 ACTIONS = ['gmake', 'xcode']
 DEFAULT = {
@@ -88,7 +89,15 @@ class Tool(object):
         opts, args = p.parse_args()
         self._run(opts, args)
 
+    def _mkdirp(self, path):
+        apath = self._rootpath(path)
+        if not path or os.path.isdir(apath):
+            return
+        self._mkdirp(os.path.dirname(path))
+        os.mkdir(apath)
+
     def _write_file(self, path, data):
+        self._mkdirp(os.path.dirname(path))
         print path
         abspath = self._rootpath(path)
         try:
