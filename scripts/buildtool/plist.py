@@ -51,7 +51,7 @@ class Writer(object):
     def newline(self, indent=True):
         self._file.write('\n')
         if indent:
-            self._file.write(' ' * self._cxt.indent)
+            self._file.write('\t' * self._cxt.indent)
 
     def _startobj(self):
         c = self._cxt.type
@@ -84,7 +84,7 @@ class Writer(object):
         self._endobj()
 
     def _push(self, type, compact):
-        self._cxt = Context(type, self._cxt.indent + 4,
+        self._cxt = Context(type, self._cxt.indent + 1,
                             self._cxt.compact or compact, self._cxt)
 
     def start_dict(self, compact=False):

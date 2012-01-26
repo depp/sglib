@@ -229,6 +229,7 @@ class FileRef(PathObject):
         return self.explicitFileType or self.lastKnownFileType
 
 class BuildFile(XcodeObject):
+    COMPACT = True
     ISA = 'PBXBuildFile'
     ATTRS = ['fileRef']
     def __init__(self, f):
