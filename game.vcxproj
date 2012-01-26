@@ -40,6 +40,7 @@
     <ClCompile Include="src\base\texture.c" />
     <ClCompile Include="src\base\type.c" />
     <ClCompile Include="src\base\version.c" />
+    <ClCompile Include="src\base\version_str.c" />
     <ClCompile Include="src\client\bitmapfont.cpp" />
     <ClCompile Include="src\client\letterbox.cpp" />
     <ClCompile Include="src\client\model.cpp" />
@@ -228,6 +229,12 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
     </Link>
+    <PreBuildEvent>
+      <Command>"$(ProjectDir)scripts\version.sh" "$(ProjectDir)"</Command>
+    </PreBuildEvent>
+    <PreBuildEvent>
+      <Message>Get version number</Message>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>

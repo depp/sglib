@@ -2,12 +2,12 @@
 set -e
 DEFAULT='v0.0-unknown'
 SRCDIR="$1"
-BUILDDIR="$2"
+BUILDDIR="${2:-$1}"
 
 INPUT="$SRCDIR"/scripts/VERSION
 OUTPUT="$BUILDDIR"/src/base/version_str.c
 
-if test $# -ne 2
+if test $# -ne 2 && test $# -ne 1
 then
     echo 'This should only be called from the Makefile'
 	exit 1

@@ -258,6 +258,9 @@
     <ClCompile Include="src\base\version.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\base\version_str.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\client\ui\screen.hpp">
