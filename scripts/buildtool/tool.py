@@ -3,9 +3,10 @@ import os
 import buildtool.source as source
 import sys
 
-ACTIONS = ['gmake']
+ACTIONS = ['gmake', 'xcode']
 DEFAULT = {
     'Linux': 'gmake',
+    'Darwin': 'xcode',
 }
 
 class Tool(object):
