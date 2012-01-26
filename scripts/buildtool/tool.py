@@ -1,5 +1,11 @@
 import os
 import buildtool.source as source
+import sys
+
+ACTIONS = ['gmake']
+DEFAULT = {
+    'Linux': 'gmake',
+}
 
 class Tool(object):
     def __init__(self):
@@ -50,3 +56,44 @@ class Tool(object):
             fpath = os.path.normpath(os.path.join(base, fpath))
             self._atoms.update(fatoms)
             self._sources.append(source.Source(fpath, fatoms))
+
+    def _run(self, opts, args):
+        actions = []
+        if not args:
+            import platform
+            s = platform.system()
+            try:
+                args = DEFAULT[s]
+            except KeyError:
+                print >>sys.stderr, 'Error: no action specified\n' \
+                    'No default action for %s platform' % s
+                sys.exit(1)
+            if isinstance(args, str):
+                args = (args,)
+        for arg in args:
+            if arg not in ACTIONS:
+                print >>sys.stderr, 'Error: unknown backend %r' % arg
+                sys.exit(1)
+            actions.append(arg)
+        for b in actions:
+            m = getattr(__import__('buildtool.' + b), b)
+            m.run(self)
+
+    def run(self):
+        import optparse
+        p = optparse.OptionParser()
+        opts, args = p.parse_args()
+        self._run(opts, args)
+
+    def _write_file(self, path, data):
+        print path
+        abspath = self._rootpath(path)
+        try:
+            with open(abspath, 'w') as f:
+                f.write(data)
+        except:
+            try:
+                os.unlink(abspath)
+            except OSError:
+                pass
+            raise

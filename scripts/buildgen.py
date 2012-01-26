@@ -18,3 +18,5 @@ for x in os.listdir('src/game'):
     if not os.path.isfile(os.path.join('src', p)):
         continue
     tool.srclist(p)
+
+tool.run()
