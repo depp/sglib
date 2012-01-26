@@ -1,5 +1,6 @@
 #include "pixbuf.h"
 #include "type_impl.h"
+#include "version.h"
 #include <pango/pango.h>
 #include <pango/pangocairo.h>
 #include <stdlib.h>
@@ -127,4 +128,11 @@ sg_layout_render(struct sg_layout *lp, struct sg_pixbuf *pbuf,
 
     cairo_destroy(cr);
     cairo_surface_destroy(surf);
+}
+
+void
+sg_version_pango(struct sg_logger *lp)
+{
+    sg_version_lib(lp, "Pango", PANGO_VERSION_STRING,
+                   pango_version_string());
 }

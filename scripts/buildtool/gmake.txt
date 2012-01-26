@@ -2,6 +2,9 @@ all:
 
 -include ../config.mak
 
+########################################
+# Platform defaults
+
 # Below are "sensible defaults" based on knowledge of specific
 # platforms.  The defaults are ignored if 'configure' is run.
 ifndef HAVE_CONFIG
@@ -61,6 +64,7 @@ endif
 endif
 
 ########################################
+# Variables
 
 ALL_CPPFLAGS = $(DEFS) $(BASE_CPPFLAGS) $(CPPFLAGS)
 ALL_CFLAGS = $(BASE_CFLAGS) $(CWARN) $(CFLAGS)
@@ -74,6 +78,7 @@ BASE_CXXFLAGS =
 BASE_LIBS =
 
 ########################################
+# Dependency analysis
 
 dep_check = $(shell $(CC) $(ALL_CFLAGS) \
 	-c -MF /dev/null -MMD -MP -x c /dev/null -o /dev/null 2>&1; \
@@ -87,143 +92,33 @@ endif
 
 ########################################
 
-GTK_OBJS =
-GTK_OBJS += platform/gtk.o
-$(GTK_OBJS): BASE_CFLAGS += $(GTK_CFLAGS)
+BASE_OBJS = @BASE_OBJS@
+GTK_OBJS = @GTK_OBJS@
+LIBPNG_OBJS = @LIBPNG_OBJS@
+LIBJPEG_OBJS = @LIBJPEG_OBJS@
+PANGO_OBJS = @PANGO_OBJS@
 
-SDL_OBJS =
-SDL_OBJS += platform/sdl.o
+C_OBJS = @C_OBJS@
+CXX_OBJS = @CXX_OBJS@
+ALL_OBJS = $(C_OBJS) $(CXX_OBJS)
+
+$(GTK_OBJS): BASE_CFLAGS += $(GTK_CFLAGS)
 $(SDL_OBJS): BASE_CFLAGS += $(SDL_CFLAGS)
 
-MAC_OBJS =
-MAC_OBJS += platform/macosx/GApplication.o
-MAC_OBJS += platform/macosx/GController.o
-MAC_OBJS += platform/macosx/GDisplay.o
-MAC_OBJS += platform/macosx/GMain.o
-MAC_OBJS += platform/macosx/GView.o
-MAC_OBJS += platform/macosx/GWindow.o
-
-CBASE_OBJS =
-CBASE_OBJS += base/configfile.o
-CBASE_OBJS += base/configfile_read.o
-CBASE_OBJS += base/clock.o
-CBASE_OBJS += base/cvar.o
-CBASE_OBJS += base/dict.o
-CBASE_OBJS += base/error.o
-CBASE_OBJS += base/hash.o
-CBASE_OBJS += base/keycode/keyid.o
-CBASE_OBJS += base/keycode/keytable_evdev.o
-CBASE_OBJS += base/keycode/keytable_mac.o
-CBASE_OBJS += base/keycode/keytable_win.o
-CBASE_OBJS += base/file_norm.o
-CBASE_OBJS += base/file_path.o
-CBASE_OBJS += base/file_posix.o
-CBASE_OBJS += base/file_read.o
-#CBASE_OBJS += base/file_win.o
-CBASE_OBJS += base/log.o
-CBASE_OBJS += base/log_console.o
-CBASE_OBJS += base/log_network.o
-CBASE_OBJS += base/model.o
-CBASE_OBJS += base/net.o
-CBASE_OBJS += base/opengl.o
-CBASE_OBJS += base/pixbuf.o
-CBASE_OBJS += base/pixbuf_loadimage.o
-CBASE_OBJS += base/rand.o
-CBASE_OBJS += base/resource.o
-CBASE_OBJS += base/strbuf.o
-CBASE_OBJS += base/sys.o
-CBASE_OBJS += base/texture.o
-CBASE_OBJS += base/type.o
-CBASE_OBJS += base/version.o
-CBASE_OBJS += base/version_str.o
-
 ifdef HAVE_LIBPNG
-CBASE_OBJS += base/pixbuf_libpng.o
-base/pixbuf_libpng.o: BASE_CFLAGS += $(LIBPNG_CFLAGS)
-base/version.o: BASE_CFLAGS += $(LIBPNG_CFLAGS)
+$(LIBPNG_OBJS): BASE_CFLAGS += $(LIBPNG_CFLAGS)
+BASE_OBJS += $(LIBPNG_OBJS)
 endif
 
 ifdef HAVE_LIBJPEG
-CBASE_OBJS += base/pixbuf_libjpeg.o
-base/pixbuf_libjpeg.o: BASE_CFLAGS += $(LIBJPEG_CFLAGS)
-base/version.o: BASE_CFLAGS += $(LIBJPEG_CFLAGS)
+$(LIBJPEG_OBJS): BASE_CFLAGS += $(LIBJPEG_CFLAGS)
+BASE_OBJS += $(LIBJPEG_OBJS)
 endif
 
 ifdef HAVE_PANGO
-CBASE_OBJS += base/type_pango.o
-base/type_pango.o: BASE_CFLAGS += $(PANGO_CFLAGS)
-base/version.o: BASE_CFLAGS += $(PANGO_CFLAGS)
+$(PANGO_OBJS): BASE_CFLAGS += $(PANGO_CFLAGS)
+BASE_OBJS += $(PANGO_OBJS)
 endif
-
-SYS_OBJS =
-SYS_OBJS += sys/error.o
-SYS_OBJS += sys/file.o
-
-CLIENT_OBJS =
-CLIENT_OBJS += client/bitmapfont.o
-CLIENT_OBJS += client/letterbox.o
-CLIENT_OBJS += client/model.o
-CLIENT_OBJS += client/scene/group.o
-CLIENT_OBJS += client/scene/leafobject.o
-CLIENT_OBJS += client/scene/object.o
-CLIENT_OBJS += client/texture.o
-CLIENT_OBJS += client/ui/button.o
-CLIENT_OBJS += client/ui/keymanager.o
-CLIENT_OBJS += client/ui/menu.o
-CLIENT_OBJS += client/ui/mousemanager.o
-CLIENT_OBJS += client/ui/screen.o
-CLIENT_OBJS += client/ui/widget.o
-CLIENT_OBJS += client/viewport.o
-
-GAME_LD22_OBJS =
-GAME_LD22_OBJS += game/ld22/actor.o
-GAME_LD22_OBJS += game/ld22/area.o
-GAME_LD22_OBJS += game/ld22/background.o
-GAME_LD22_OBJS += game/ld22/editor.o
-GAME_LD22_OBJS += game/ld22/effect.o
-GAME_LD22_OBJS += game/ld22/endwalk.o
-GAME_LD22_OBJS += game/ld22/item.o
-GAME_LD22_OBJS += game/ld22/level.o
-GAME_LD22_OBJS += game/ld22/mover.o
-GAME_LD22_OBJS += game/ld22/other.o
-GAME_LD22_OBJS += game/ld22/player.o
-GAME_LD22_OBJS += game/ld22/screen.o
-GAME_LD22_OBJS += game/ld22/screenbase.o
-GAME_LD22_OBJS += game/ld22/thinker.o
-GAME_LD22_OBJS += game/ld22/tileset.o
-GAME_LD22_OBJS += game/ld22/walker.o
-
-GAME_TANK_OBJS =
-GAME_TANK_OBJS += game/tank/explosion.o
-GAME_TANK_OBJS += game/tank/gamescreen.o
-GAME_TANK_OBJS += game/tank/object.o
-GAME_TANK_OBJS += game/tank/obstacle.o
-GAME_TANK_OBJS += game/tank/player.o
-GAME_TANK_OBJS += game/tank/shot.o
-GAME_TANK_OBJS += game/tank/world.o
-
-GAME_SPACE_OBJS =
-GAME_SPACE_OBJS += game/space/entity.o
-GAME_SPACE_OBJS += game/space/gamescreen.o
-GAME_SPACE_OBJS += game/space/main.o
-GAME_SPACE_OBJS += game/space/player.o
-GAME_SPACE_OBJS += game/space/random.o
-GAME_SPACE_OBJS += game/space/scenery.o
-GAME_SPACE_OBJS += game/space/shapes.o
-GAME_SPACE_OBJS += game/space/ship.o
-GAME_SPACE_OBJS += game/space/shot.o
-GAME_SPACE_OBJS += game/space/stars.o
-GAME_SPACE_OBJS += game/space/thinker.o
-GAME_SPACE_OBJS += game/space/world.o
-
-GAME_OBJS = $(GAME_LD22_OBJS) $(GAME_TANK_OBJS) $(GAME_SPACE_OBJS)
-
-C_OBJS = $(GTK_OBJS) $(SDL_OBJS) $(CBASE_OBJS)
-CXX_OBJS = $(SYS_OBJS) $(CLIENT_OBJS) $(GAME_OBJS)
-OBJC_OBJS = $(MAC_OBJS)
-
-BASE_OBJS = $(CBASE_OBJS) $(CXX_OBJS)
-ALL_OBJS = $(C_OBJS) $(CXX_OBJS) $(OBJC_OBJS)
 
 ########################################
 

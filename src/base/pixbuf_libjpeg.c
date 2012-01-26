@@ -3,6 +3,7 @@
 #include "error.h"
 #include "log.h"
 #include "pixbuf.h"
+#include "version.h"
 #include <stdio.h>
 #include <jpeglib.h>
 
@@ -122,4 +123,23 @@ error:
 done:
     jpeg_destroy_decompress(&cinfo);
     return ret;
+}
+
+void
+sg_version_libjpeg(struct sg_logger *lp)
+{
+    char vers[8];
+    int major, minor;
+#ifndef JPEG_LIB_VERSION_MINOR
+    major = JPEG_LIB_VERSION / 10;
+    minor = JPEG_LIB_VERSION % 10;
+#else
+    major = JPEG_LIB_VERSION_MAJOR;
+    minor = JPEG_LIB_VERSION_MINOR;
+#endif
+    if (minor)
+        snprintf(vers, sizeof(vers), "%d%c", major, minor + 'a');
+    else
+        snprintf(vers, sizeof(vers), "%d", major);
+    sg_version_lib(lp, "LibJPEG", vers, NULL);
 }

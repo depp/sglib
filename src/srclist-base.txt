@@ -56,7 +56,7 @@ base/sys.c
 base/texture.c
 base/texture.h
 base/type.c
-base/type_coretext.c
+base/type_coretext.c MACOSX
 base/type.h
 base/type_impl.h
 base/type_pango.c PANGO

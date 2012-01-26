@@ -1,6 +1,7 @@
 #include "error.h"
 #include "log.h"
 #include "pixbuf.h"
+#include "version.h"
 #include <png.h>
 #include <stdlib.h>
 
@@ -142,4 +143,17 @@ done:
     png_destroy_read_struct((png_structp *) &pngp,
                             (png_infop *) &infop, NULL);
     return ret;
+}
+
+void
+sg_version_libpng(struct sg_logger *lp)
+{
+    int v = png_access_version_number(), maj, min, mic;
+    char vers[16];
+    min = v / 100;
+    mic = v % 100;
+    maj = min / 100;
+    min = min % 100;
+    snprintf(vers, sizeof(vers), "%d.%d.%d", maj, min, mic);
+    sg_version_lib(lp, "LibPNG", PNG_LIBPNG_VER_STRING, vers);
 }
