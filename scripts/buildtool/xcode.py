@@ -43,6 +43,7 @@ ISAS = [
     'PBXNativeTarget',
     'PBXProject',
     'PBXResourcesBuildPhase',
+    'PBXShellScriptBuildPhase',
     'PBXSourcesBuildPhase',
     'XCBuildConfiguration',
     'XCConfigurationList',
@@ -234,9 +235,9 @@ class BuildFile(XcodeObject):
         self.fileRef = f
 
 class BuildPhase(XcodeObject):
-    ATTRS = ['buildActionMask', 'files', 'runOnlyForDeploymentProcessing']
+    ATTRS = ['buildActionMask', 'files', 'runOnlyForDeploymentPostprocessing']
     buildActionMask = 0x7fffffff
-    runOnlyForDeploymentProcessing = 0
+    runOnlyForDeploymentPostprocessing = 0
     def __init__(self):
         self.files = []
     def add(self, x):
@@ -250,6 +251,16 @@ class ResourcesBuildPhase(BuildPhase):
 
 class SourcesBuildPhase(BuildPhase):
     ISA = 'PBXSourcesBuildPhase'
+
+class ShellScriptBuildPhase(BuildPhase):
+    ISA = 'PBXShellScriptBuildPhase'
+    ATTRS = BuildPhase.ATTRS + ['inputPaths', 'outputPaths', 'shellPath', 'shellScript']
+    shellPath = '/bin/sh'
+    def __init__(self, script):
+        BuildPhase.__init__(self)
+        self.shellScript = script
+        self.inputPaths = []
+        self.outputPaths = []
 
 class NativeTarget(XcodeObject):
     ISA = 'PBXNativeTarget'
@@ -481,10 +492,11 @@ def run(obj):
     x.project.buildConfigurationList = projectConfig(obj)
     t = NativeTarget('com.apple.product-type.application', 'Game')
     t.buildConfigurationList = targetConfig(obj)
+    script = ShellScriptBuildPhase('exec "$PROJECT_DIR"/scripts/version.sh "$PROJECT_DIR" "$PROJECT_DIR"')
     rsrcs = ResourcesBuildPhase()
     srcs = SourcesBuildPhase()
     fwks = FrameworksBuildPhase()
-    t.buildPhases = [rsrcs, srcs, fwks]
+    t.buildPhases = [script, rsrcs, srcs, fwks]
     def add_source(fref):
         ft = fref.lastKnownFileType
         if ft in SOURCE_BUILD:
