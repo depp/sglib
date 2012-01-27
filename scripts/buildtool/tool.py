@@ -8,6 +8,7 @@ ACTIONS = ['cmake', 'gmake', 'xcode']
 DEFAULT = {
     'Linux': 'gmake',
     'Darwin': 'xcode',
+    'Windows': 'cmake',
 }
 
 class Tool(object):
