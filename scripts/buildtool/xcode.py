@@ -434,10 +434,7 @@ def projectConfig(obj):
         'GCC_PREFIX_HEADER': 'src/platform/macosx/GPrefix.h',
         'GCC_VERSION': '4.2',
         'WARNING_CFLAGS': ['-Wall', '-Wextra'],
-        'HEADER_SEARCH_PATHS': [
-                'src',
-                '$(HEADER_SEARCH_PATHS)',
-        ],
+        'HEADER_SEARCH_PATHS': ['$(HEADER_SEARCH_PATHS)'] + obj._incldirs,
     }
     debug = {
         'COPY_PHASE_STRIP': False,
@@ -512,7 +509,7 @@ def run(obj):
             bref = x.build_file(fref)
             phase.add(bref)
     for src in obj._sources:
-        fref = x.source_file('src/' + src.path)
+        fref = x.source_file(src.path)
         if not src.atoms or 'MACOSX' in src.atoms:
             add_source(fref)
     for fw in ['Foundation', 'AppKit', 'CoreServices', 'CoreVideo', 'Carbon']:
