@@ -43,4 +43,4 @@ def run(obj):
     text = open(inpath, 'r').read()
     text = ('# ' + obj._warning + '\n' +
             re.sub(r'@(\w+)@', repl, text))
-    obj._write_file('src/Makefile', text)
+    obj._write_file('Makefile', text)

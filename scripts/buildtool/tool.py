@@ -13,7 +13,6 @@ DEFAULT = {
 class Tool(object):
     def __init__(self):
         self._rootdir = None
-        self._srcdir = None
         self._atoms = set()
         self._sources = []
         self._incldirs = []
@@ -32,18 +31,6 @@ class Tool(object):
             raise Exception('Need a root directory')
         return path
 
-    def srcdir(self, path):
-        """Set the source directory."""
-        if self._srcdir is not None:
-            raise Exception('Already have a source directory')
-        self._srcdir = self._rootpath(path)
-
-    def _srcpath(self, path):
-        """Get a srcdir-relative path."""
-        if self._srcdir is None:
-            raise Exception('Need a source directory')
-        return os.path.join(self._srcdir, path)
-
     def srclist(self, path, *atoms):
         """Add a list of source files from a list at the given path.
 
@@ -51,7 +38,7 @@ class Tool(object):
         file are relative to the file's directory.
         """
         base = os.path.dirname(path)
-        for line in open(self._srcpath(path), 'r'):
+        for line in open(self._rootpath(path), 'r'):
             line = line.strip()
             if not line or line.startswith('#'):
                 continue

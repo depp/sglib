@@ -155,9 +155,9 @@ endif
 ########################################
 # Intermediate files
 
-base/version_str.c: version-stamp
+src/base/version_str.c: version-stamp
 version-stamp:
-	$(QUIET_VERS)sh ../scripts/version.sh .. ..
+	$(QUIET_VERS)sh scripts/version.sh . .
 
 $(C_OBJS): %.o: %.c $(dep_dirs_missing)
 	$(QUIET_CC)$(CC) -o $@ -c  $(dep_args) $(ALL_CPPFLAGS) $(ALL_CFLAGS) $<
@@ -170,6 +170,15 @@ $(OBJC_OBJS): %.o: %.m $(dep_dirs_missing)
 
 ########################################
 # Build products
+
+run.sh: scripts/run.sh.in
+	sed \
+		-e 's,@SRCDIR@,$(srcdir),g' \
+		-e 's,@BUILDDIR@,$(srcdir),g' \
+		-e 's,@SHELL@,$(SHELL),g' \
+		$< > $@.tmp
+	chmod +x $@.tmp
+	mv $@.tmp $@
 
 ifdef HAVE_GTK
 targets += game-gtk
@@ -199,10 +208,10 @@ endif
 ########################################
 # Pseudo-targets
 
-all: $(targets)
+all: run.sh $(targets)
 
 clean:
-	$(RM) $(targets) $(ALL_OBJS) base/version_str.c
+	$(RM) run.sh $(targets) $(ALL_OBJS) src/base/version_str.c
 	$(RM) -r $(dep_dirs)
 
 .PHONY: all clean

@@ -8,6 +8,9 @@
 *.zip
 .deps
 /run.sh
+/Makefile
+/game-gtk
+/game-sdl
 
 # Apple's Xcode
 *.xcodeproj

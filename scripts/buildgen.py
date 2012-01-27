@@ -5,18 +5,18 @@ import sys
 
 tool = buildtool.tool.Tool()
 tool.rootdir(os.path.dirname(sys.path[0]))
-tool.srcdir('src')
 
-tool.includepath('.')
-tool.srclist('srclist-base.txt')
-tool.srclist('srclist-client.txt')
+tool.includepath('src')
+tool.srclist('src/srclist-base.txt')
+tool.srclist('src/srclist-client.txt')
 for x in os.listdir('src/game'):
     if x.startswith('.'):
         continue
-    if not os.path.isdir(os.path.join('src/game', x)):
+    p = os.path.join('src/game', x)
+    if not os.path.isdir(p):
         continue
-    p = os.path.join('game', x, 'srclist.txt')
-    if not os.path.isfile(os.path.join('src', p)):
+    p = os.path.join(p, 'srclist.txt')
+    if not os.path.isfile(p):
         continue
     tool.srclist(p)
 
