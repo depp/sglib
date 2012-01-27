@@ -3,6 +3,7 @@ import os
 import buildtool.source as source
 import sys
 import shutil
+import posixpath
 
 ACTIONS = ['cmake', 'gmake', 'xcode']
 DEFAULT = {
@@ -38,7 +39,11 @@ class Tool(object):
         The file is relative to the source directory, and paths in the
         file are relative to the file's directory.
         """
-        base = os.path.dirname(path)
+        if os.path.sep != '/':
+            base = path.replace(os.path.sep, '/')
+        else:
+            base = path
+        base = posixpath.dirname(base)
         for line in open(self._rootpath(path), 'r'):
             line = line.strip()
             if not line or line.startswith('#'):
@@ -46,7 +51,7 @@ class Tool(object):
             line = line.split()
             fpath, fatoms = line[0], line[1:]
             fatoms.extend(atoms)
-            fpath = os.path.normpath(os.path.join(base, fpath))
+            fpath = posixpath.join(base, fpath)
             self._atoms.update(fatoms)
             self._sources.append(source.Source(fpath, fatoms))
 

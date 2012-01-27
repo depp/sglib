@@ -7,12 +7,13 @@ tool = buildtool.tool.Tool()
 tool.rootdir(os.path.dirname(sys.path[0]))
 
 tool.includepath('src')
-tool.srclist('src/srclist-base.txt')
-tool.srclist('src/srclist-client.txt')
-for x in os.listdir('src/game'):
+tool.srclist(os.path.join('src', 'srclist-base.txt'))
+tool.srclist(os.path.join('src', 'srclist-client.txt'))
+r = os.path.join('src', 'game')
+for x in os.listdir(r):
     if x.startswith('.'):
         continue
-    p = os.path.join('src/game', x)
+    p = os.path.join(r, x)
     if not os.path.isdir(p):
         continue
     p = os.path.join(p, 'srclist.txt')

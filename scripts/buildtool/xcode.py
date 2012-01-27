@@ -1,7 +1,7 @@
 import buildtool.path
 import buildtool.plist
 import random
-import os
+import posixpath
 import sys
 import cStringIO
 
@@ -206,7 +206,7 @@ class FileRef(PathObject):
              optional('name'), 'path', 'sourceTree']
     def __init__(self, path, root=None, name=None, etype=None):
         PathObject.__init__(self, path, root=root, name=name)
-        ext = os.path.splitext(path)[1]
+        ext = posixpath.splitext(path)[1]
         if etype is None:
             try:
                 ftype = buildtool.path.EXTS[ext]
@@ -350,7 +350,7 @@ class Xcode(object):
         except KeyError:
             if path:
                 obj = Group(path)
-                par = self.source_group(os.path.dirname(path))
+                par = self.source_group(posixpath.dirname(path))
                 par.add(obj)
             else:
                 obj = self.project.mainGroup
@@ -375,7 +375,7 @@ class Xcode(object):
         except KeyError:
             obj = FileRef(path, name=name)
             if obj.root == 'SOURCE_ROOT':
-                par = self.source_group(os.path.dirname(path))
+                par = self.source_group(posixpath.dirname(path))
             elif obj.ftype == 'wrapper.framework':
                 par = self._frameworks
             else:
