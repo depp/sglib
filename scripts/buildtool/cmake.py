@@ -9,7 +9,7 @@ if(NOT DEFINED WIN32)
   message(FATAL_ERROR "Only Windows supported with CMake")
 endif()
 include_directories($INCDIRS)
-add_executable($EXENAME $SOURCES)
+add_executable($EXENAME WIN32 $SOURCES)
 """
 
 def run(obj):
