@@ -434,7 +434,7 @@ def projectConfig(obj):
         'GCC_PREFIX_HEADER': 'src/platform/macosx/GPrefix.h',
         'GCC_VERSION': '4.2',
         'WARNING_CFLAGS': ['-Wall', '-Wextra'],
-        'HEADER_SEARCH_PATHS': ['$(HEADER_SEARCH_PATHS)'] + obj._incldirs,
+        'HEADER_SEARCH_PATHS': ['$(HEADER_SEARCH_PATHS)'] + obj.incldirs,
     }
     debug = {
         'COPY_PHASE_STRIP': False,
@@ -508,10 +508,10 @@ def run(obj):
         if phase is not None:
             bref = x.build_file(fref)
             phase.add(bref)
-    for src in obj._sources:
-        fref = x.source_file(src.path)
-        if not src.atoms or 'MACOSX' in src.atoms:
-            add_source(fref)
+    for src in obj.all_sources():
+        x.source_file(src)
+    for src in obj.get_atoms('MACOSX', None):
+        add_source(x.source_file(src))
     for fw in ['Foundation', 'AppKit', 'CoreServices', 'CoreVideo', 'Carbon']:
         add_source(x.source_file('/System/Library/Frameworks/%s.framework' % fw, name=fw))
     add_source(x.source_file('mac/Game-Info.plist'))
@@ -519,4 +519,4 @@ def run(obj):
     x.add_target(t)
     f = cStringIO.StringIO()
     x.write(f)
-    obj._write_file('game.xcodeproj/project.pbxproj', f.getvalue())
+    obj.write_file('game.xcodeproj/project.pbxproj', f.getvalue())

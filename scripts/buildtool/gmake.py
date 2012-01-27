@@ -6,12 +6,12 @@ def objs(paths):
     return ' '.join(path.withext(path.sources(paths), '.o'))
 
 def run(obj):
-    base_src = obj._get_atoms(None, 'LINUX')
-    gtk_src = obj._get_atoms('GTK')
-    sdl_src = obj._get_atoms('SDL')
-    libpng_src = obj._get_atoms('LIBPNG')
-    libjpeg_src = obj._get_atoms('LIBJPEG')
-    pango_src = obj._get_atoms('PANGO')
+    base_src = obj.get_atoms(None, 'LINUX')
+    gtk_src = obj.get_atoms('GTK')
+    sdl_src = obj.get_atoms('SDL')
+    libpng_src = obj.get_atoms('LIBPNG')
+    libjpeg_src = obj.get_atoms('LIBJPEG')
+    pango_src = obj.get_atoms('PANGO')
 
     all_src = (base_src + gtk_src + sdl_src +
                libpng_src + libjpeg_src + pango_src)
@@ -26,7 +26,7 @@ def run(obj):
         'C_OBJS': objs(path.c_sources(all_src)),
         'CXX_OBJS': objs(path.cxx_sources(all_src)),
 
-        'CPPFLAGS': ' '.join(['-I' + p for p in obj._incldirs]),
+        'CPPFLAGS': ' '.join(['-I' + p for p in obj.incldirs]),
         'CFLAGS': '',
         'CXXFLAGS': '',
         'LIBS': '',
@@ -41,6 +41,6 @@ def run(obj):
 
     inpath = os.path.join(os.path.dirname(__file__), 'gmake.txt')
     text = open(inpath, 'r').read()
-    text = ('# ' + obj._warning + '\n' +
+    text = ('# ' + obj.warning + '\n' +
             re.sub(r'@(\w+)@', repl, text))
-    obj._write_file('Makefile', text)
+    obj.write_file('Makefile', text)
