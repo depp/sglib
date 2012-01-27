@@ -4,7 +4,7 @@ import buildtool.source as source
 import sys
 import shutil
 
-ACTIONS = ['gmake', 'xcode']
+ACTIONS = ['cmake', 'gmake', 'xcode']
 DEFAULT = {
     'Linux': 'gmake',
     'Darwin': 'xcode',
