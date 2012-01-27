@@ -13,7 +13,7 @@
 #pragma comment(lib, "glu32.lib")
 
 void
-sg_platform_version(struct sg_logger *lp)
+sg_version_platform(struct sg_logger *lp)
 {
     (void) lp;
 }

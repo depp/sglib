@@ -142,57 +142,15 @@ sg_version_os(struct sg_logger *lp)
 
 #endif
 
-#if defined(HAVE_LIBJPEG)
-#include <jpeglib.h>
-static void
-sg_version_libjpeg(struct sg_logger *lp)
-{
-    char vers[8];
-    int major, minor;
-#ifndef JPEG_LIB_VERSION_MINOR
-    major = JPEG_LIB_VERSION / 10;
-    minor = JPEG_LIB_VERSION % 10;
-#else
-    major = JPEG_LIB_VERSION_MAJOR;
-    minor = JPEG_LIB_VERSION_MINOR;
-#endif
-    if (minor)
-        snprintf(vers, sizeof(vers), "%d%c", major, minor + 'a');
-    else
-        snprintf(vers, sizeof(vers), "%d", major);
-    sg_version_lib(lp, "LibJPEG", vers, NULL);
-}
-#else
+#if !defined(HAVE_LIBJPEG)
 #define sg_version_libjpeg(x) (void)0
 #endif
 
-#if defined(HAVE_LIBPNG)
-#include <png.h>
-static void
-sg_version_libpng(struct sg_logger *lp)
-{
-    int v = png_access_version_number(), maj, min, mic;
-    char vers[16];
-    min = v / 100;
-    mic = v % 100;
-    maj = min / 100;
-    min = min % 100;
-    snprintf(vers, sizeof(vers), "%d.%d.%d", maj, min, mic);
-    sg_version_lib(lp, "LibPNG", PNG_LIBPNG_VER_STRING, vers);
-}
-#else
+#if !defined(HAVE_LIBPNG)
 #define sg_version_libpng(x) (void)0
 #endif
 
-#if defined(HAVE_PANGOCAIRO)
-#include <pango/pango.h>
-static void
-sg_version_pango(struct sg_logger *lp)
-{
-    sg_version_lib(lp, "Pango", PANGO_VERSION_STRING,
-                   pango_version_string());
-}
-#else
+#if !defined(HAVE_PANGOCAIRO)
 #define sg_version_pango(x) (void)0
 #endif
 
@@ -226,7 +184,7 @@ sg_version_print(void)
     sg_logf(log, LOG_INFO, "Compiler: " COMPILER);
     sg_logf(log, LOG_INFO, "Architecture: " ARCH);
     sg_version_os(log);
-    sg_platform_version(log);
+    sg_version_platform(log);
     sg_version_libjpeg(log);
     sg_version_libpng(log);
     sg_version_pango(log);

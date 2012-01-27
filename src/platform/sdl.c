@@ -2,6 +2,7 @@
 #include "base/entry.h"
 #include "base/error.h"
 #include "base/event.h"
+#include "base/version.h"
 #include "SDL.h"
 #include <getopt.h>
 #include <stdio.h>
@@ -52,6 +53,18 @@ sg_platform_faile(struct sg_error *err)
         fputs("error: an unknown error occurred\n", stderr);
     }
     quit(1);
+}
+
+void
+sg_version_platform(struct sg_logger *lp)
+{
+    char v1[16], v2[16];
+    const SDL_version *v = SDL_Linked_Version();
+    snprintf(v1, sizeof(v1), "%d.%d.%d",
+             SDL_MAJOR_VERSION, SDL_MINOR_VERSION, SDL_PATCHLEVEL);
+    snprintf(v2, sizeof(v2), "%d.%d.%d",
+             v->major, v->minor, v->patch);
+    sg_version_lib(lp, "LibSDL", v1, v2);
 }
 
 __attribute__((noreturn))

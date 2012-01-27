@@ -122,11 +122,6 @@ __attribute__((noreturn))
 void
 sg_platform_return(void);
 
-/* Log the platform version to the given logger.  Use sg_version_lib
-   if necessary from "version.h".  */
-void
-sg_platform_version(struct sg_logger *lp);
-
 #ifdef __cplusplus
 }
 #endif

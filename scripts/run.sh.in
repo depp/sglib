@@ -12,8 +12,8 @@
 SRCDIR="@SRCDIR@"
 BUILDDIR="@BUILDDIR@"
 
-GAMEDIR="$BUILDDIR/src"
-PATHVAR="path.data-path=$SRCDIR/data"
+GAMEDIR="${BUILDDIR:-.}"
+PATHVAR="path.data-path=${SRCDIR:-.}/data"
 GDB=gdb
 
 if test -z "$FRONTEND"

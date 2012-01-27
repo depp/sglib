@@ -8,10 +8,20 @@
 *.zip
 .deps
 /run.sh
+/Makefile
+/game-gtk
+/game-sdl
+
+# CMake
+/CMakeLists.txt
+/CMakeCache.txt
+/CMakeFiles
+/Win32
+/*.dir
+/cmake_install.cmake
 
 # Apple's Xcode
-*.mode1v3
-*.pbxuser
+*.xcodeproj
 
 # Autoconf
 /aclocal.m4
@@ -22,10 +32,13 @@
 /configure
 
 # Microsoft Visual Studio
-*.sdf
-*.suo
-*.opensdf
-*.user
+/*.vcxproj
+/*.vcxproj.filters
+/*.vcxproj.user
+/*.sln
+/*.sdf
+/*.suo
+/*.opensdf
 /Debug
 /Release
 /ipch
