@@ -7,6 +7,7 @@ tool = buildtool.tool.Tool()
 tool.rootdir(os.path.dirname(sys.path[0]))
 tool.srcdir('src')
 
+tool.includepath('.')
 tool.srclist('srclist-base.txt')
 tool.srclist('srclist-client.txt')
 for x in os.listdir('src/game'):

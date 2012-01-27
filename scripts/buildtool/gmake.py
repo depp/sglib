@@ -25,6 +25,11 @@ def run(obj):
         'PANGO_OBJS': objs(pango_src),
         'C_OBJS': objs(path.c_sources(all_src)),
         'CXX_OBJS': objs(path.cxx_sources(all_src)),
+
+        'CPPFLAGS': ' '.join(['-I' + p for p in obj._incldirs]),
+        'CFLAGS': '',
+        'CXXFLAGS': '',
+        'LIBS': '',
     }
 
     def repl(m):
