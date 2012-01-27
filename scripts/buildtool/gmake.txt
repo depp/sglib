@@ -2,6 +2,8 @@ all:
 
 -include ../config.mak
 
+RM = rm -f
+
 ########################################
 # Platform defaults
 
@@ -14,7 +16,6 @@ UNAME_M := $(shell sh -c 'uname -m 2>/dev/null || echo unknown')
 
 CC = gcc
 CXX = g++
-RM = rm -f
 
 CPPFLAGS =
 CFLAGS = -g -O2
@@ -78,19 +79,7 @@ BASE_CXXFLAGS = @CXXFLAGS@
 BASE_LIBS = @LIBS@
 
 ########################################
-# Dependency analysis
-
-dep_check = $(shell $(CC) $(ALL_CFLAGS) \
-	-c -MF /dev/null -MMD -MP -x c /dev/null -o /dev/null 2>&1; \
-	echo $$?)
-
-ifeq ($(dep_check),0)
-COMPUTE_DEPS = yes
-else
-COMPUTE_DEPS = no
-endif
-
-########################################
+# Source files
 
 BASE_OBJS = @BASE_OBJS@
 GTK_OBJS = @GTK_OBJS@
@@ -122,6 +111,17 @@ BASE_OBJS += $(PANGO_OBJS)
 endif
 
 ########################################
+# Dependency analysis
+
+dep_check = $(shell $(CC) $(ALL_CFLAGS) \
+	-c -MF /dev/null -MMD -MP -x c /dev/null -o /dev/null 2>&1; \
+	echo $$?)
+
+ifeq ($(dep_check),0)
+COMPUTE_DEPS = yes
+else
+COMPUTE_DEPS = no
+endif
 
 ifeq ($(COMPUTE_DEPS),yes)
 dep_files := $(foreach f,$(ALL_OBJS),$(dir $f).deps/$(notdir $f).d)
@@ -142,6 +142,7 @@ dep_args =
 endif
 
 ########################################
+# Verbose / quiet output
 
 ifndef V
 	QUIET_CC   = @echo '   ' CC $<;
@@ -152,6 +153,7 @@ ifndef V
 endif
 
 ########################################
+# Intermediate files
 
 base/version_str.c: version-stamp
 version-stamp:
@@ -165,6 +167,9 @@ $(CXX_OBJS): %.o: %.cpp $(dep_dirs_missing)
 
 $(OBJC_OBJS): %.o: %.m $(dep_dirs_missing)
 	$(QUIET_OBJC)$(CC) -o $@ -c $(dep_args) $(ALL_CPPFLAGS) $(ALL_OBJCFLAGS) $<
+
+########################################
+# Build products
 
 ifdef HAVE_GTK
 targets += game-gtk
@@ -192,6 +197,7 @@ game-mac: $(BASE_OBJS) $(MAC_OBJS)
 endif
 
 ########################################
+# Pseudo-targets
 
 all: $(targets)
 
