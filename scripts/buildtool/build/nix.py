@@ -20,7 +20,7 @@ def getmachine(env):
     """Get the name of the target machine."""
     m = shell.getoutput([env.CC, '-dumpmachine'] +
                         env.CPPFLAGS + env.CFLAGS)
-    m = m[m.index('-'):]
+    m = m[:m.index('-')]
     return m
 
 def cc(obj, src, env, stype):
