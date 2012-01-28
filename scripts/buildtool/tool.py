@@ -4,6 +4,7 @@ import buildtool.source as source
 import sys
 import shutil
 import posixpath
+import buildtool.git as git
 
 ACTIONS = ['cmake', 'gmake', 'xcode', 'build']
 DEFAULT = {
@@ -66,6 +67,12 @@ class ToolInvocation(object):
     @property
     def incldirs(self):
         return self._tool._incldirs
+
+    def _writeversion(self):
+        vers = git.describe('.')
+        self.write_file(
+            'version.c',
+            'const char SG_VERSION[] = "%s";\n' % vers)
 
 class Tool(object):
     def __init__(self):
@@ -134,7 +141,9 @@ class Tool(object):
                 print >>sys.stderr, 'Error: unknown backend %r' % arg
                 sys.exit(1)
             actions.append(arg)
+        self._sources.append(source.Source('version.c', []))
         i = ToolInvocation(self)
+        i._writeversion()
         for b in actions:
             m = getattr(__import__('buildtool.' + b), b)
             m.run(i)
