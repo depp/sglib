@@ -146,10 +146,14 @@ def build_nix(obj):
     # Build the sources that use each package
     pkgobjs = {}
     for pkg, pkgenv in pkgenvs.iteritems():
+        if pkg is None:
+            atoms = (None, 'LINUX')
+        else:
+            atoms = (pkg,)
         objs = []
         pkgobjs[pkg] = objs
         env = Environment(baseenv, pkgenv, userenv)
-        for src in obj.get_atoms(pkg):
+        for src in obj.get_atoms(*atoms):
             sbase, sext = os.path.splitext(src)
             stype = path.EXTS[sext]
             if stype in ('c', 'cxx'):
