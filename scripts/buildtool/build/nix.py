@@ -122,7 +122,8 @@ def build_nix(obj):
     # Get the base environment
     baseenv, userenv = env_nix(
         obj,
-        LDFLAGS='-Wl,--as-needed -Wl,--gc-sections'
+        LDFLAGS='-Wl,--as-needed -Wl,--gc-sections',
+        LIBS='-lGL -lGLU',
     )
     machine = getmachine(baseenv + userenv)
 
