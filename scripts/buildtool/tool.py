@@ -5,7 +5,7 @@ import sys
 import shutil
 import posixpath
 
-ACTIONS = ['cmake', 'gmake', 'xcode']
+ACTIONS = ['cmake', 'gmake', 'xcode', 'build']
 DEFAULT = {
     'Linux': 'gmake',
     'Darwin': 'xcode',
