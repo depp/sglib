@@ -17,7 +17,7 @@ def find_program(*progs):
             if os.access(path, os.X_OK):
                 return path
 
-PROGS = ('CC', 'CXX')
+PROGS = ('CC', 'CXX', 'LD')
 FLAGS = ('CPPFLAGS', 'CFLAGS', 'CXXFLAGS', 'CWARN', 'CXXWARN',
          'LDFLAGS', 'LIBS', 'ARCHS', 'ARCH')
 
