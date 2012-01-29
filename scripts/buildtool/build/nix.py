@@ -125,7 +125,11 @@ def build_macosx(obj):
         objdir = os.path.join(archdir, 'obj')
         exedir = os.path.join(archdir, 'exe')
         # Build the sources
-        archenv = Environment(env, ARCH=arch)
+        if arch in ('ppc', 'ppc64'):
+            cflags = '-mtune=G5'
+        else:
+            cflags = ''
+        archenv = Environment(baseenv, Environment(ARCH=arch), userenv)
         objs = []
         for src in srcs:
             sbase, sext = os.path.splitext(src)
