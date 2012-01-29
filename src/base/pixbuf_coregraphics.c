@@ -1,5 +1,5 @@
 #include "pixbuf.h"
-#include <CoreGraphics/CoreGraphics.h>
+#include <ApplicationServices/ApplicationServices.h>
 
 static void releaseData(void *info, const void *data, size_t size)
 {

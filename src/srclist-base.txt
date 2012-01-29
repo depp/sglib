@@ -64,7 +64,6 @@ base/type_uniscribe.c WINDOWS
 #base/type_win.c
 base/version.c
 base/version.h
-base/version_str.c
 platform/gtk.c GTK
 platform/macosx/GApplication.h MACOSX
 platform/macosx/GApplication.m MACOSX

@@ -11,6 +11,7 @@
 /Makefile
 /game-gtk
 /game-sdl
+/version.c
 
 # CMake
 /CMakeLists.txt

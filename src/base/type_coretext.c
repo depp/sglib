@@ -1,7 +1,6 @@
 #include "pixbuf.h"
 #include "type_impl.h"
-#include <CoreText/CoreText.h>
-#include <CoreGraphics/CoreGraphics.h>
+#include <ApplicationServices/ApplicationServices.h>
 
 struct sg_layout_impl {
     CTLineRef line;
