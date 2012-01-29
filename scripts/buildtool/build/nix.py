@@ -66,6 +66,12 @@ def ld(obj, src, env):
     return target.Target(cmd, inputs=src, outputs=[obj],
                          quietmsg=buildline('LD', obj, tag))
 
+def lipo(obj, src, env):
+    """Mac OS X: Create a universal executable from non-universal ones."""
+    cmd = ['lipo'] + src + ['-create', '-output', obj]
+    return target.Target(cmd, inputs=src, outputs=[obj],
+                         quietmsg=buildline('LIPO', obj, None))
+
 def env_nix(obj, **kw):
     # Base environment common to Mac OS X / Linux / etc
 
@@ -135,7 +141,11 @@ def build_macosx(obj):
         # Build the executable
         exe = os.path.join(exedir, 'Game')
         build.add(ld(exe, objs, archenv))
+        exes.append(exe)
 
+    # Combine into Universal binary
+    exe = os.path.join('build', 'product', 'Game')
+    build.add(lipo(exe, exes, env))
     return build
 
 def build_nix(obj):
