@@ -250,8 +250,10 @@ class SourcesBuildPhase(BuildPhase):
 
 class ShellScriptBuildPhase(BuildPhase):
     ISA = 'PBXShellScriptBuildPhase'
-    ATTRS = BuildPhase.ATTRS + ['inputPaths', 'outputPaths', 'shellPath', 'shellScript']
+    ATTRS = BuildPhase.ATTRS + ['inputPaths', 'outputPaths', 'shellPath', 'shellScript',
+                                'showEnvVarsInLog']
     shellPath = '/bin/sh'
+    showEnvVarsInLog = 0
     def __init__(self, script):
         BuildPhase.__init__(self)
         self.shellScript = script
