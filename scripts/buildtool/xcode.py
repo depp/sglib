@@ -5,11 +5,6 @@ import posixpath
 import sys
 import cStringIO
 
-def gen_id(self):
-    c = self._ctr
-    self._ctr = c + 1
-    return '%16X%08X' % (self._nonce, c)
-
 TYPES = {
     'c': 'sourcecode.c.c',
     'cxx': 'sourcecode.cpp.cpp',
@@ -411,7 +406,7 @@ class Xcode(object):
         for groupname, groupobjs in groups:
             groupobjs.sort()
             for obj in groupobjs:
-                ids[obj] = '%08X%08X' % (nonce, ctr)
+                ids[obj] = 'CAFEBABE%08X%08X' % (nonce, ctr)
                 ctr += 1
         w = buildtool.plist.Writer(f)
         w.start_dict()
