@@ -73,6 +73,9 @@ class Build(object):
                 buildable.append(target)
             else:
                 unbuildable += 1
+            for path in target.outputs:
+                if path not in revdeps:
+                    revdeps[path] = []
         self._revdeps = revdeps
         self._depcounts = depcounts
         self._buildable = buildable
