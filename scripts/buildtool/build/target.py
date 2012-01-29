@@ -1,5 +1,7 @@
+from __future__ import with_statement
 import os
 import subprocess
+import shutil
 
 def cpu_count():
     ncpu = None
@@ -115,14 +117,6 @@ class Target(object):
     A target has inputs and outputs, which are lists of file paths.
     """
 
-    def __init__(self, cmd, cwd=None, inputs=None, outputs=None,
-                 quietmsg=None):
-        self.cmd = cmd
-        self.cwd = cwd
-        self.inputs = inputs
-        self.outputs = outputs
-        self.quietmsg = quietmsg
-
     def build(self, quiet=True):
         """Build the target.
 
@@ -135,6 +129,59 @@ class Target(object):
         else:
             line = ' '.join(self.cmd)
         print line
+        return self.run()
+
+class Command(Target):
+    """A command-line target."""
+
+    def __init__(self, cmd, cwd=None, inputs=None, outputs=None,
+                 quietmsg=None, pre=None, post=None):
+        self.cmd = cmd
+        self.cwd = cwd
+        self.inputs = inputs
+        self.outputs = outputs
+        self.quietmsg = quietmsg
+        self.pre = pre
+        self.post = post
+    
+    def run(self):
+        if self.pre is not None:
+            if not self.pre():
+                return False
         proc = subprocess.Popen(self.cmd, cwd=self.cwd)
         status = proc.wait()
-        return status == 0
+        if status != 0:
+            return False
+        if self.post is not None:
+            if not self.post():
+                return False
+        return True
+
+class CopyFile(Target):
+    """A target which copies a file."""
+
+    def __init__(self, dest, src):
+        self.outputs = [dest]
+        self.inputs = [src]
+        self.src = src
+        self.dest = dest
+        self.quietmsg = 'CP %s' % dest
+
+    def run(self):
+        shutil.copyfile(self.src, self.dest)
+        return True
+
+class StaticFile(Target):
+    """A target which creates a file from a string."""
+
+    def __init__(self, dest, contents):
+        self.outputs = [dest]
+        self.inputs = []
+        self.dest = dest
+        self.contents = contents
+        self.quietmsg = 'FILE %s' % dest
+
+    def run(self):
+        with open(self.dest, 'wb') as f:
+            f.write(self.contents)
+        return True

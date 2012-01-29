@@ -3,6 +3,7 @@ import buildtool.shell as shell
 import buildtool.build.target as target
 from buildtool.env import Environment
 import os
+import shutil
 
 def customconfig(cmd):
     """Get the environment for a package from a config program."""
@@ -54,8 +55,8 @@ def cc(obj, src, env, stype):
         raise ValueError('not a C file type: %r' % stype)
     tag, aflags = getarch(env)
     cmd = [cc, '-o', obj, '-c', src] + aflags + env.CPPFLAGS + warn + cflags
-    return target.Target(cmd, inputs=[src], outputs=[obj],
-                         quietmsg=buildline(what, src, tag))
+    return target.Command(cmd, inputs=[src], outputs=[obj],
+                          quietmsg=buildline(what, src, tag))
 
 def ld(obj, src, env):
     """Create a target that links an executable."""
@@ -63,14 +64,38 @@ def ld(obj, src, env):
     # Some LDFLAGS do not work if they don't appear before -o
     tag, aflags = getarch(env)
     cmd = [cc] + aflags + env.LDFLAGS + ['-o', obj] + src + env.LIBS
-    return target.Target(cmd, inputs=src, outputs=[obj],
-                         quietmsg=buildline('LD', obj, tag))
+    return target.Command(cmd, inputs=src, outputs=[obj],
+                          quietmsg=buildline('LD', obj, tag))
 
 def lipo(obj, src, env):
     """Mac OS X: Create a universal executable from non-universal ones."""
     cmd = ['lipo'] + src + ['-create', '-output', obj]
-    return target.Target(cmd, inputs=src, outputs=[obj],
-                         quietmsg=buildline('LIPO', obj, None))
+    return target.Command(cmd, inputs=src, outputs=[obj],
+                          quietmsg=buildline('LIPO', obj, None))
+
+def ibtool(obj, src, env):
+    ibtool = '/Developer/usr/bin/ibtool'
+    cmd = [ibtool, '--errors', '--warnings', '--notices',
+           '--output-format', 'human-readable-text',
+           '--compile', obj, src]
+    return target.Command(cmd, inputs=[src], outputs=[obj],
+                          quietmsg=buildline('IBTOOL', obj, None))
+
+def plist(obj, src, changes):
+    # PlistBuddy operates in-place, so we use a pre-command hook
+    # to copy our source to the destination
+    def pre():
+        print 'PRE hook'
+        shutil.copyfile(src, obj)
+        return True
+    buddy = '/usr/libexec/PlistBuddy'
+    cmd = [buddy, '-x']
+    for change in changes:
+        cmd.extend(('-c', change))
+    cmd.append(obj)
+    return target.Command(cmd, inputs=[src], outputs=[obj],
+                          quietmsg=buildline('PLIST', obj, None),
+                          pre=pre)
 
 def env_nix(obj, **kw):
     # Base environment common to Mac OS X / Linux / etc
@@ -116,6 +141,9 @@ def build_macosx(obj):
         LDFLAGS=ldflags,
     )
 
+    appname = 'Game'
+    exename = 'Game'
+
     # Build the executable for each architecture
     exes = []
     env = Environment(baseenv, userenv)
@@ -143,13 +171,30 @@ def build_macosx(obj):
             else:
                 raise Exception('Unknown file type: %r' % src)
         # Build the executable
-        exe = os.path.join(exedir, 'Game')
+        exe = os.path.join(exedir, exename)
         build.add(ld(exe, objs, archenv))
         exes.append(exe)
 
+    contents = os.path.join('build', 'product', appname + '.app', 'Contents')
+
     # Combine into Universal binary
-    exe = os.path.join('build', 'product', 'Game')
+    exe = os.path.join(contents, 'MacOS', exename)
     build.add(lipo(exe, exes, env))
+
+    # Create Info.plist and PkgInfo
+    pcmds = ['Set :CFBundleExecutable %s' % exename]
+    # CFBundleIdentifier
+    build.add(plist(os.path.join(contents, 'Info.plist'),
+                    'mac/Game-Info.plist', pcmds))
+    pkginfo = 'APPL????'
+    build.add(target.StaticFile(os.path.join(contents, 'PkgInfo'),
+                                pkginfo))
+
+    # Compile / copy resources
+    resources = os.path.join(contents, 'Resources')
+    build.add(ibtool(os.path.join(resources, 'MainMenu.nib'),
+                     'mac/MainMenu.xib', env))
+
     return build
 
 def build_nix(obj):
