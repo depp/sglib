@@ -130,7 +130,7 @@ class Target(object):
         """
         if quiet and self.quietmsg is not None:
             line = self.quietmsg
-        elif isinstance(self.cmd, string):
+        elif isinstance(self.cmd, str):
             line = self.cmd
         else:
             line = ' '.join(self.cmd)
