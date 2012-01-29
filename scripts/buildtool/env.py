@@ -19,7 +19,7 @@ def find_program(*progs):
 
 PROGS = ('CC', 'CXX')
 FLAGS = ('CPPFLAGS', 'CFLAGS', 'CXXFLAGS', 'CWARN', 'CXXWARN',
-         'LDFLAGS', 'LIBS', 'ARCHS')
+         'LDFLAGS', 'LIBS', 'ARCHS', 'ARCH')
 
 def _accum(x, y):
     for prog in PROGS:

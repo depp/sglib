@@ -23,6 +23,21 @@ def getmachine(env):
     m = m[:m.index('-')]
     return m
 
+def buildline(cmd, target, tag):
+    if tag is None:
+        return '%s %s' % (cmd, target)
+    else:
+        return '[%s] %s %s' % (tag, cmd, target)
+
+def getarch(env):
+    aflags = []
+    arch = env.ARCH
+    if not arch:
+        return None, aflags
+    for a in arch:
+        aflags.extend(('-arch', a))
+    return ' '.join(arch), aflags
+
 def cc(obj, src, env, stype):
     """Create a target that compiles C, C++, or Objective C. """
     if stype in ('c', 'm'):
@@ -37,17 +52,19 @@ def cc(obj, src, env, stype):
         what = 'CXX'
     else:
         raise ValueError('not a C file type: %r' % stype)
-    cmd = [cc, '-o', obj, '-c', src] + env.CPPFLAGS + warn + cflags
+    tag, aflags = getarch(env)
+    cmd = [cc, '-o', obj, '-c', src] + aflags + env.CPPFLAGS + warn + cflags
     return target.Target(cmd, inputs=[src], outputs=[obj],
-                         quietmsg='%s %s' % (what, src))
+                         quietmsg=buildline(what, src, tag))
 
 def ld(obj, src, env):
     """Create a target that links an executable."""
     cc = env.CXX
     # Some LDFLAGS do not work if they don't appear before -o
-    cmd = [cc] + env.LDFLAGS + ['-o', obj] + src + env.LIBS
+    tag, aflags = getarch(env)
+    cmd = [cc] + aflags + env.LDFLAGS + ['-o', obj] + src + env.LIBS
     return target.Target(cmd, inputs=src, outputs=[obj],
-                         quietmsg='LD %s' % obj)
+                         quietmsg=buildline('LD', obj, tag))
 
 def env_nix(obj, **kw):
     # Base environment common to Mac OS X / Linux / etc
@@ -77,44 +94,49 @@ def env_nix(obj, **kw):
     return baseenv, userenv
 
 def build_macosx(obj):
+    build = target.Build()
+
     # Get the base environment
+    ldflags = ['-Wl,-dead_strip', '-Wl,-dead_strip_dylibs']
+    fworks = ['Foundation', 'AppKit', 'OpenGL',
+              'CoreServices', 'CoreVideo', 'Carbon']
+    for fwork in fworks:
+        ldflags.extend(('-framework', fwork))
     baseenv, userenv = env_nix(
         obj,
         ARCHS='ppc i386',
         CC=('gcc-4.2', 'gcc'),
         CXX=('g++-4.2', 'g++'),
-        LDFLAGS='-Wl,-dead_strip -Wl,-dead_strip_dylibs',
+        LDFLAGS=ldflags,
     )
 
-    srcs = obj.get_atoms(None, 'MACOSX')
-    ldflags = []
-    fworks = ['Foundation', 'AppKit', 'OpenGL',
-              'CoreServices', 'CoreVideo', 'Carbon']
-    for fwork in fworks:
-        ldflags.extend(('-framework', fwork))
-    macenv = Environment(LDFLAGS=ldflags)
+    # Build the executable for each architecture
     exes = []
+    env = Environment(baseenv, userenv)
+    srcs = obj.get_atoms(None, 'MACOSX')
     for arch in env.ARCHS:
-        archdir = os.path.join('build', 'arch-%s' % arch)
+        archdir = os.path.join('build', 'arch-' + arch)
         objdir = os.path.join(archdir, 'obj')
         exedir = os.path.join(archdir, 'exe')
         # Build the sources
-        env = Environment(
-            *[baseenv, Environment(CFLAGS=['-arch', arch]), userenv])
+        archenv = Environment(env, ARCH=arch)
         objs = []
         for src in srcs:
             sbase, sext = os.path.splitext(src)
             stype = path.EXTS[sext]
             if stype in ('c', 'cxx', 'm', 'mm'):
                 objf = os.path.join(objdir, sbase + '.o')
-                build.add(cc(objf, src, env, stype))
+                build.add(cc(objf, src, archenv, stype))
                 objs.append(objf)
             elif stype in ('h', 'hxx'):
                 pass
             else:
                 raise Exception('Unknown file type: %r' % src)
         # Build the executable
-        exe = os.path.join(exedir, 'game')
+        exe = os.path.join(exedir, 'Game')
+        build.add(ld(exe, objs, archenv))
+
+    return build
 
 def build_nix(obj):
     build = target.Build()
