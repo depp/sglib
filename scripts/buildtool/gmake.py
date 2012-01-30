@@ -30,6 +30,8 @@ def run(obj):
         'CFLAGS': '',
         'CXXFLAGS': '',
         'LIBS': '',
+
+        'EXENAME': 'game',
     }
 
     def repl(m):

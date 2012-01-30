@@ -176,32 +176,33 @@ run.sh: scripts/run.sh.in
 		-e 's,@SRCDIR@,$(srcdir),g' \
 		-e 's,@BUILDDIR@,$(srcdir),g' \
 		-e 's,@SHELL@,$(SHELL),g' \
+		-e 's,@EXENAME''@,@EXENAME@,g' \
 		$< > $@.tmp
 	chmod +x $@.tmp
 	mv $@.tmp $@
 
 ifdef HAVE_GTK
-targets += game-gtk
+targets += @EXENAME@-gtk
 
-game-gtk: BASE_LIBS += $(GTK_LIBS) $(OPENGL_LIBS) $(IMAGE_LIBS) $(TYPE_LIBS)
+@EXENAME@-gtk: BASE_LIBS += $(GTK_LIBS) $(OPENGL_LIBS) $(IMAGE_LIBS) $(TYPE_LIBS)
 
-game-gtk: $(BASE_OBJS) $(GTK_OBJS)
+@EXENAME@-gtk: $(BASE_OBJS) $(GTK_OBJS)
 	$(QUIET_LINK)$(CXX) $(ALL_LDFLAGS) -o $@ $^ $(ALL_LIBS)
 endif
 
 ifdef HAVE_SDL
-targets += game-sdl
-game-sdl: BASE_LIBS += $(SDL_LIBS) $(OPENGL_LIBS) $(IMAGE_LIBS) $(TYPE_LIBS)
-game-sdl: $(BASE_OBJS) $(SDL_OBJS)
+targets += @EXENAME@-sdl
+@EXENAME@-sdl: BASE_LIBS += $(SDL_LIBS) $(OPENGL_LIBS) $(IMAGE_LIBS) $(TYPE_LIBS)
+@EXENAME@-sdl: $(BASE_OBJS) $(SDL_OBJS)
 	$(QUIET_LINK)$(CXX) $(ALL_LDFLAGS) -o $@ $^ $(ALL_LIBS)
 endif
 
 ifdef HAVE_COCOA
-targets += game-mac
+targets += @EXENAME@-mac
 
-game-mac: BASE_LIBS += $(COCOA_LIBS) $(OPENGL_LIBS) $(IMAGE_LIBS) $(TYPE_LIBS)
+@EXENAME@-mac: BASE_LIBS += $(COCOA_LIBS) $(OPENGL_LIBS) $(IMAGE_LIBS) $(TYPE_LIBS)
 
-game-mac: $(BASE_OBJS) $(MAC_OBJS)
+@EXENAME@-mac: $(BASE_OBJS) $(MAC_OBJS)
 	$(QUIET_LINK)$(CXX) $(ALL_LDFLAGS) -o $@ $^ $(ALL_LIBS)
 endif
 

@@ -11,6 +11,7 @@
 # 'make' will substitute these variables
 SRCDIR="@SRCDIR@"
 BUILDDIR="@BUILDDIR@"
+EXENAME="@EXENAME@"
 
 GAMEDIR="${BUILDDIR:-.}"
 PATHVAR="path.data-path=${SRCDIR:-.}/data"
@@ -20,14 +21,14 @@ if test -z "$FRONTEND"
 then
     for FRONTEND in gtk sdl
     do
-	test -x "$GAMEDIR/game-$FRONTEND" && break
+	test -x "$GAMEDIR/$EXENAME-$FRONTEND" && break
     done
 fi
 
-GAME="$GAMEDIR/game-$FRONTEND"
+GAME="$GAMEDIR/$EXENAME-$FRONTEND"
 if test ! -x "$GAME"
 then
-    echo "error: game-$FRONTEND does not exist, did you run make?" >&2
+    echo "error: $EXENAME-$FRONTEND does not exist, did you run make?" >&2
     exit 1
 fi
 
