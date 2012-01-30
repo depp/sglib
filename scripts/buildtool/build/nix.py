@@ -226,6 +226,10 @@ def build_nix(obj):
     for pkg, spec in PKGSPECS:
         if pkg not in pkgenvs:
             pkgenvs[pkg] = pkgconfig(spec)
+    # This flag is added by the gmodule indirect dependency.  We don't
+    # need this flag and it's a waste.
+    for env in pkgenvs.itervalues():
+        env.remove('LIBS', '-Wl,--export-dynamic')
 
     # Build the sources that use each package
     pkgobjs = {}

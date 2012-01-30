@@ -294,6 +294,18 @@ class Environment(object):
                 continue
             print var.name, '=', var.as_string(v)
 
+    def remove(self, key, flag):
+        """Remove all flags which match 'flag' in var."""
+        var = VARS[key]
+        try:
+            val = self._props[key]
+        except KeyError:
+            return
+        if flag not in val:
+            return
+        nval = [f for f in val if f != flag]
+        var.set(self, nval)
+
 def find_program(*progs):
     """Find the absolute path to a program if it exists.
 
