@@ -146,7 +146,7 @@ def build(obj):
         LIBS='',
     )
 
-    exename = 'Game'
+    exename = obj.exe_file_windows
 
     # Build the sources
     objs = []

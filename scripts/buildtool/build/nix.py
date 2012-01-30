@@ -141,8 +141,8 @@ def build_macosx(obj):
         LDFLAGS=ldflags,
     )
 
-    appname = 'Game'
-    exename = 'Game'
+    appname = obj.exe_file_mac
+    exename = appname
 
     # Build the executable for each architecture
     exes = []
@@ -254,7 +254,7 @@ def build_nix(obj):
     for exe, exepkgs in EXESPECS:
         env = Environment(
             *([baseenv] + [pkgenvs[pkg] for pkg in exepkgs] + [userenv]))
-        exename = 'game-%s-%s' % (machine, exe)
+        exename = '%s-%s-%s' % (obj.exe_file_linux, machine, exe)
         exe = os.path.join('build', 'product', exename)
         objs = []
         for pkg in exepkgs:

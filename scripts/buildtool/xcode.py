@@ -464,7 +464,7 @@ def targetConfig(obj):
                 '-framework', 'OpenGL',
         ],
         'PREBINDING': False,
-        'PRODUCT_NAME': 'Game',
+        'PRODUCT_NAME': obj.exe_file_mac,
     }
     debug = {
         'COPY_PHASE_STRIP': False,
@@ -485,7 +485,8 @@ def targetConfig(obj):
 def run(obj):
     x = Xcode()
     x.project.buildConfigurationList = projectConfig(obj)
-    t = NativeTarget('com.apple.product-type.application', 'Game')
+    t = NativeTarget('com.apple.product-type.application',
+                     obj.exe_file_mac)
     t.buildConfigurationList = targetConfig(obj)
     script = ShellScriptBuildPhase('exec "$PROJECT_DIR"/scripts/version.sh "$PROJECT_DIR" "$PROJECT_DIR"')
     rsrcs = ResourcesBuildPhase()
@@ -516,4 +517,5 @@ def run(obj):
     x.add_target(t)
     f = cStringIO.StringIO()
     x.write(f)
-    obj.write_file('game.xcodeproj/project.pbxproj', f.getvalue())
+    obj.write_file(obj.pkg_filename + '.xcodeproj/project.pbxproj',
+                   f.getvalue())

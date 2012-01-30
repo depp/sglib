@@ -5,6 +5,7 @@ import sys
 import shutil
 import posixpath
 import buildtool.git as git
+import re
 
 ACTIONS = ['cmake', 'gmake', 'xcode', 'build']
 DEFAULT = {
@@ -12,6 +13,9 @@ DEFAULT = {
     'Darwin': 'xcode',
     'Windows': 'cmake',
 }
+
+PROPS = set(['pkg_name', 'pkg_ident', 'pkg_filename', 'exe_name',
+             'exe_file_linux', 'exe_file_mac', 'exe_file_windows'])
 
 class ToolInvocation(object):
     def __init__(self, tool):
@@ -74,12 +78,83 @@ class ToolInvocation(object):
             'version.c',
             'const char SG_VERSION[] = "%s";\n' % vers)
 
+    def __getattr__(self, name):
+        if name in PROPS:
+            return getattr(self._tool, name)
+        else:
+            raise AttributeError(name)
+
+class UnsetProperty(Exception):
+    def __init__(self, prop, fallback=()):
+        self.prop = prop
+        self.fallback = fallback
+    def __repr__(self):
+        if self.fallback:
+            return 'UnsetProperty(%r)' % self.prop
+        else:
+            return 'UnsetProperty(%r, %r)' % (self.prop, self.fallback)
+    def __str__(self):
+        if self.fallback:
+            return 'property not set: %s (defaults from %s)' % \
+                (self.prop, ', '.join(self.fallback))
+        else:
+            return 'property not set: %s' % self.prop
+
+class InvalidProperty(ValueError):
+    def __init__(self, prop, value):
+        self.prop = prop
+        self.value = value
+    def __repr__(self):
+        return 'InvalidProperty(%r, %r)' % (self.prop, self.value)
+    def __str__(self):
+        return 'invalid value for %s property: %r' % \
+            (self.prop, self.value)
+
+class Property(object):
+    def __init__(self, name, check, default=None):
+        self.name = name
+        self.check = check
+        self.default = default
+
+    def __get__(self, instance, owner):
+        try:
+            return instance._props[self.name]
+        except KeyError:
+            if self.default is not None:
+                try:
+                    return self.default(instance)
+                except UnsetProperty, ex:
+                    raise UnsetProperty(self.name, (ex.prop,) + ex.fallback)
+            raise UnsetProperty(self.name)
+
+    def __set__(self, instance, value):
+        if isinstance(self.check, str):
+            match = re.match(self.check, value)
+        else:
+            match = self.check(value)
+        if not match:
+            raise InvalidProperty(self.name, value)
+        else:
+            instance._props[self.name] = value
+
+    def __delete__(self, instance):
+        del instance._props[self.name]
+
+
+_title = r'^[-\w]+(?: [-\w]+)*$'
+_file = r'\w+'
+_domain = (r'^[a-z0-9](?:[-a-z0-9]*[a-z0-9])?' 
+           r'(?:\.[a-z0-9](?:[-a-z0-9]*[a-z0-9])?)*$')
+def _tofile(x):
+    return re.sub('[-_ ]+', '_', x)
+
 class Tool(object):
     def __init__(self):
         self._rootdir = None
         self._atoms = set()
         self._sources = []
         self._incldirs = []
+        self._props = {}
 
     def rootdir(self, path):
         """Set the root directory."""
@@ -153,3 +228,17 @@ class Tool(object):
         p = optparse.OptionParser()
         opts, args = p.parse_args()
         self._run(opts, args)
+
+    pkg_name = Property('pkg_name', _title)
+    pkg_ident = Property('pkg_ident', _domain)
+    pkg_filename = Property('pkg_filename', _file,
+                            lambda x: _tofile(x.pkg_name))
+
+    exe_name = Property('exe_name', _title, lambda x: x.pkg_name)
+    exe_file_linux = Property('exe_file_linux', _file,
+                              lambda x: _tofile(x.exe_name))
+    exe_file_mac = Property('exe_file_mac', _title,
+                            lambda x: x.exe_name)
+    exe_file_windows = Property('exe_file_windows', _title,
+                                lambda x: x.exe_name)
+

@@ -6,6 +6,10 @@ import sys
 tool = buildtool.tool.Tool()
 tool.rootdir(os.path.dirname(sys.path[0]))
 
+tool.pkg_name = 'My Game'
+tool.ident = 'us.moria.my-game'
+tool.exe_name = 'Game'
+
 tool.includepath('src')
 tool.srclist(os.path.join('src', 'srclist-base.txt'))
 tool.srclist(os.path.join('src', 'srclist-client.txt'))
