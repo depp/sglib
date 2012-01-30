@@ -74,6 +74,10 @@ class ToolInvocation(object):
     def env(self):
         return self._tool.env
 
+    @property
+    def opts(self):
+        return self._tool.opts
+
     def _writeversion(self):
         vers = git.describe('.')
         self.write_file(
@@ -132,6 +136,7 @@ class Tool(object):
         self._incldirs.extend(paths)
 
     def _run(self, opts, args):
+        self.opts = opts
         actions = []
         for arg in args:
             idx = arg.find('=')
@@ -167,5 +172,11 @@ class Tool(object):
     def run(self):
         import optparse
         p = optparse.OptionParser()
+        p.add_option('--config', dest='config',
+                     help="use configuration (debug, release)",
+                     default='release')
+        p.add_option('--verbose', dest='verbose',
+                     action='store_true', default=False,
+                     help="print variables and command lines")
         opts, args = p.parse_args()
         self._run(opts, args)

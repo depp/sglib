@@ -49,7 +49,7 @@ class Build(object):
             for path in target.outputs:
                 mkdirp(os.path.dirname(path))
 
-    def build(self):
+    def build(self, obj):
         """Build all targets.
 
         Return True if successful, False if failed."
@@ -85,8 +85,9 @@ class Build(object):
         self._failures = 0
         self._successes = 0
 
+        quiet = not obj.opts.verbose
         self._mkdirs()
-        self.build1()
+        self.build1(quiet)
 
         print 'Targets: %d built, %d failed, %d skipped' % \
             (self._successes, self._failures, self._unbuildable)
@@ -97,10 +98,10 @@ class Build(object):
             print 'Build succeeded'
             return True
 
-    def build1(self):
+    def build1(self, quiet):
         while self._buildable:
             target = self._buildable.pop(0)
-            if target.build():
+            if target.build(quiet):
                 self._successes += 1
                 for path in target.outputs:
                     for target in self._revdeps[path]:
@@ -117,7 +118,7 @@ class Target(object):
     A target has inputs and outputs, which are lists of file paths.
     """
 
-    def build(self, quiet=True):
+    def build(self, quiet):
         """Build the target.
 
         Return True if successful, False on failure.

@@ -15,7 +15,7 @@ def run(obj):
     else:
         print >>sys.stderr, 'error: unspported system: %s' % s
         sys.exit(1)
-    if build.build():
+    if build.build(obj):
         sys.exit(0)
     else:
         sys.exit(1)
