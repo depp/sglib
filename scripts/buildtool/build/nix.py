@@ -81,7 +81,6 @@ def plist(obj, src, changes):
     # PlistBuddy operates in-place, so we use a pre-command hook
     # to copy our source to the destination
     def pre():
-        print 'PRE hook'
         shutil.copyfile(src, obj)
         return True
     buddy = '/usr/libexec/PlistBuddy'
