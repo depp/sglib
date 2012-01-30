@@ -154,9 +154,8 @@ def build_macosx(obj):
     exes = []
     srcs = obj.get_atoms(None, 'MACOSX')
     for arch in env.ARCHS:
-        archdir = os.path.join('build', 'arch-' + arch)
-        objdir = os.path.join(archdir, 'obj')
-        exedir = os.path.join(archdir, 'exe')
+        objdir = os.path.join('build', 'obj-' + arch)
+        exedir = os.path.join('build', 'exe-' + arch)
         # Build the sources
         if arch in ('ppc', 'ppc64'):
             cflags = '-mtune=G5'
