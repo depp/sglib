@@ -151,7 +151,7 @@ def build(obj):
     objs = []
     env = Environment(baseenv, userenv)
     objdir = os.path.join('build', 'obj')
-    for src in obj.get_atoms(None, 'WINDOWS'):
+    for src in obj.get_atoms(None, 'WINDOWS', native=True):
         sbase, sext = os.path.splitext(src)
         stype = path.EXTS[sext]
         if stype in ('c', 'cxx'):

@@ -42,13 +42,21 @@ class ToolInvocation(object):
                 pass
             raise
 
-    def get_atoms(self, *atoms):
+    def get_atoms(self, *atoms, **kw):
         """Get all source files with the given atoms.
 
         This returns a list of all source files which have at least
         one of the atoms listed.  If None appears in the list, then
         source files with no atoms will also be included.
         """
+        try:
+            native = kw['native']
+        except KeyError:
+            native = False
+        else:
+            del kw['native']
+        if kw:
+            raise ValueError('unexpected keyword arguments')
         result = []
         for src in self._tool._sources:
             for atom in atoms:
@@ -60,11 +68,18 @@ class ToolInvocation(object):
                     if atom in src.atoms:
                         result.append(src.path)
                         break
+        if native and os.path.sep != '/':
+            sep = os.path.sep
+            result = [path.replace('/', sep) for path in result]
         return result
 
-    def all_sources(self):
+    def all_sources(self, native=False):
         """Get a list of all sources."""
-        return [src.path for src in self._tool._sources]
+        if native and os.path.sep != '/':
+            return [src.path.replace('/', sep)
+                    for src in self._tool._sources]
+        else:
+            return [src.path for src in self._tool._sources]
 
     @property
     def incldirs(self):
