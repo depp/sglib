@@ -154,9 +154,10 @@ def build_macosx(obj):
     # Build the executable for each architecture
     exes = []
     srcs = obj.get_atoms(None, 'MACOSX')
+    objdir = os.path.join('build', 'obj')
+    exedir = os.path.join('build', 'exe')
     for arch in env.ARCHS:
-        objdir = os.path.join('build', 'obj-' + arch)
-        exedir = os.path.join('build', 'exe-' + arch)
+        objext = '-%s.o' % arch
         # Build the sources
         if arch in ('ppc', 'ppc64'):
             cflags = '-mtune=G5'
@@ -169,7 +170,7 @@ def build_macosx(obj):
             sbase, sext = os.path.splitext(src)
             stype = path.EXTS[sext]
             if stype in ('c', 'cxx', 'm', 'mm'):
-                objf = os.path.join(objdir, sbase + '.o')
+                objf = os.path.join(objdir, sbase + objext)
                 build.add(cc(objf, src, archenv, stype))
                 objs.append(objf)
             elif stype in ('h', 'hxx'):
@@ -177,7 +178,7 @@ def build_macosx(obj):
             else:
                 raise Exception('Unknown file type: %r' % src)
         # Build the executable
-        exe = os.path.join(exedir, exename)
+        exe = os.path.join(exedir, exename + '-' + arch)
         build.add(ld(exe, objs, archenv))
         exes.append(exe)
 
