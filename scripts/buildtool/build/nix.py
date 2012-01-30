@@ -285,7 +285,7 @@ def build_nix(obj):
                 ['objcopy', '--only-keep-debug', exe_raw, dbg],
                 inputs=[exe_raw], outputs=[dbg], name='OBJCOPY'))
         build.add(target.Command(
-                ['objcopy', '--strip-debug',
+                ['objcopy', '--strip-unneeded',
                  '--add-gnu-debuglink=' + dbg, exe_raw, exe],
                 ['chmod', '-x', dbg],
                 inputs=[exe_raw, dbg], outputs=[exe], name='OBJCOPY'))
