@@ -180,7 +180,7 @@ class StaticFile(Target):
         self.inputs = []
         self.dest = dest
         self.contents = contents
-        self.quietmsg = 'FILE %s' % dest
+        self.name = 'FILE'
 
     def run(self):
         with open(self.dest, 'wb') as f:
