@@ -282,11 +282,12 @@ def build_nix(obj):
             objs.extend(pkgobjs[pkg])
         build.add(ld(exe_raw, objs, env))
         build.add(target.Command(
-                ['objcopy', '--strip-debug',
-                 '--add-gnu-debuglink=' + dbg, exe_raw, exe],
-                inputs=[exe_raw, dbg], outputs=[exe], name='OBJCOPY'))
-        build.add(target.Command(
                 ['objcopy', '--only-keep-debug', exe_raw, dbg],
                 inputs=[exe_raw], outputs=[dbg], name='OBJCOPY'))
+        build.add(target.Command(
+                ['objcopy', '--strip-debug',
+                 '--add-gnu-debuglink=' + dbg, exe_raw, exe],
+                ['chmod', '-x', dbg],
+                inputs=[exe_raw, dbg], outputs=[exe], name='OBJCOPY'))
 
     return build
