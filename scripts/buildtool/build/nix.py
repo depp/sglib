@@ -106,14 +106,23 @@ def env_nix(obj, **kw):
         CPPFLAGS=['-I' + p for p in obj.incldirs],
     )
 
+    if obj.opts.config == 'debug':
+        cflags = '-O0 -g'
+    elif obj.opts.config == 'release':
+        cflags = '-O2 -g'
+    else:
+        print >>sys.stderr, "error: unknown configuration: %r" % \
+            (obj.opts.config,)
+        sys.exit(1)
+
     # Common defaults.  Some of these are overridden by platform
     # variations.  All may be overridden by the user.
     userenv = Environment(
         CC='gcc',
         CXX='g++',
         CPPFLAGS='',
-        CFLAGS='-g -O2',
-        CXXFLAGS='-g -O2',
+        CFLAGS=cflags,
+        CXXFLAGS=cflags,
         CWARN='-Wall -Wextra -Wpointer-arith -Wno-sign-compare ' \
             '-Wwrite-strings -Wstrict-prototypes -Wmissing-prototypes',
         CXXWARN='-Wall -Wextra -Wpointer-arith -Wno-sign-compare',
