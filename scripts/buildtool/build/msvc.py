@@ -76,13 +76,11 @@ def cc(obj, src, env, stype):
         raise ValueError('not a C file type: %r' % stype)
     cmd = [cc, '/c', '/Fo' + obj, lflag] + \
         env.CPPFLAGS + warn + cflags + [src]
-    return target.Command(cmd, inputs=[src], outputs=[obj],
-                          quietmsg='CC %s' % src)
+    return target.Command(cmd, inputs=[src], outputs=[obj], name=what)
 
 def ld(obj, src, env):
     cmd = [env.LD, '/OUT:' + obj] + env.LDFLAGS + src + env.LIBS
-    return target.Command(cmd, inputs=src, outputs=[obj],
-                          quietmsg='LD %s' % obj)
+    return target.Command(cmd, inputs=src, outputs=[obj], name='LD')
 
 def build(obj):
     build = target.Build()
@@ -145,8 +143,9 @@ def build(obj):
         LDFLAGS='',
         LIBS='',
     )
+    userenv.override(obj.env)
 
-    exename = obj.exe_file_windows
+    exename = userenv.EXE_WINDOWS
 
     # Build the sources
     objs = []
