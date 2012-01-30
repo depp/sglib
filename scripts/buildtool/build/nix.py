@@ -91,7 +91,7 @@ def plist(obj, src, changes):
     return target.Command(cmd, inputs=[src], outputs=[obj], name='PLIST',
                           pre=pre)
 
-def env_nix(obj, **kw):
+def env_nix(obj, debugflags, **kw):
     # Base environment common to Mac OS X / Linux / etc.  This always
     # comes first, and the user environment always comes last.  This
     # way, flags in the user environment can override flags in the
@@ -100,10 +100,11 @@ def env_nix(obj, **kw):
         CPPFLAGS=['-I' + p for p in obj.incldirs],
     )
 
+    debugflags = debugflags.split()
     if obj.opts.config == 'debug':
-        cflags = '-O0 -g'
+        cflags = ['-O0'] + debugflags
     elif obj.opts.config == 'release':
-        cflags = '-O2 -g'
+        cflags = ['-O2'] + debugflags
     else:
         print >>sys.stderr, "error: unknown configuration: %r" % \
             (obj.opts.config,)
@@ -133,7 +134,7 @@ def build_macosx(obj):
 
     # Get the environments
     baseenv, userenv = env_nix(
-        obj,
+        obj, '-gdwarf-2',
         ARCHS='ppc i386',
         CC=('gcc-4.2', 'gcc'),
         CXX=('g++-4.2', 'g++'),
@@ -207,7 +208,7 @@ def build_nix(obj):
 
     # Get the base environment
     baseenv, userenv = env_nix(
-        obj,
+        obj, '-g',
         LDFLAGS='-Wl,--as-needed -Wl,--gc-sections',
     )
 
