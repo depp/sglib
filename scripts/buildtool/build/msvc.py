@@ -99,6 +99,8 @@ def build(obj):
         '/Zc:wchar_t',  # wchar_t extension
         '/Zc:forScope', # standard for scope rules
         '/Gd',          # use __cdecl calling convention
+        '/Zi',          # generate debugging info
+        '/Fd' + os.path.join('build', 'obj', 'debug.pdb'),
     ]
     ldflags = [
         '/NOLOGO',      # don't print version info
@@ -107,6 +109,7 @@ def build(obj):
         '/DYNAMICBASE', # allow ASLR
         '/NXCOMPAT',    # allow NX bit
         '/MACHINE:X86',
+        '/DEBUG',
     ]
     libs = [
         'kernel32.lib',
@@ -130,7 +133,14 @@ def build(obj):
         LIBS=libs
     )
     ccwarn = ['/W3', '/WX-']
-    ccflags = ['/O2', '/Oy-', '/MT']
+    if obj.opts.config == 'release':
+        ccflags = ['/O2', '/Oy-', '/MT']
+    elif obj.opts.config == 'debug':
+        ccflags = ['/Od', '/Oy-', '/MDd']
+    else:
+        print >>sys.stderr, 'unsupported configuration: %r' % \
+            (obj.opts.config,)
+        sys.exit(1)
     userenv = Environment(
         CC='cl.exe',
         CXX='cl.exe',
@@ -160,8 +170,10 @@ def build(obj):
             objs.append(objf)
 
     # Build the executable
+    ldflags = ['/SUBSYSTEM:WINDOWS',
+               '/PDB:' + os.path.join('build', 'product', 'exename' + '.pdb')]
     build.add(ld(os.path.join('build', 'product', exename + '.exe'),
-                 objs, Environment(env, LDFLAGS='/SUBSYSTEM:WINDOWS')))
+                 objs, Environment(env, LDFLAGS=ldflags)))
 
     return build
 
