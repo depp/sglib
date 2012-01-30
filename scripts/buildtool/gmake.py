@@ -31,7 +31,7 @@ def run(obj):
         'CXXFLAGS': '',
         'LIBS': '',
 
-        'EXENAME': obj.exe_file_linux,
+        'EXENAME': obj.env.EXE_LINUX,
     }
 
     def repl(m):

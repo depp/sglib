@@ -98,12 +98,17 @@ def plist(obj, src, changes):
                           pre=pre)
 
 def env_nix(obj, **kw):
-    # Base environment common to Mac OS X / Linux / etc
+    # Base environment common to Mac OS X / Linux / etc.  This always
+    # comes first, and the user environment always comes last.  This
+    # way, flags in the user environment can override flags in the
+    # base environment.
+    baseenv = Environment(
+        CPPFLAGS=['-I' + p for p in obj.incldirs],
+    )
 
-    # The user environment consists of defaults that can be overridden
-    # by the user.  It always goes last, so user-specified flags can
-    # override everything else.
-    defaults = Environment(
+    # Common defaults.  Some of these are overridden by platform
+    # variations.  All may be overridden by the user.
+    userenv = Environment(
         CC='gcc',
         CXX='g++',
         CPPFLAGS='',
@@ -115,38 +120,35 @@ def env_nix(obj, **kw):
         LDFLAGS='',
         LIBS='',
     )
-    osenv = Environment(**kw)
-    userenv = defaults + osenv
+    userenv.override(Environment(**kw))
+    userenv.override(obj.env)
 
-    # The base environment consist of flags specific to the project.
-    baseenv = Environment(
-        CPPFLAGS=['-I' + p for p in obj.incldirs],
-    )
     return baseenv, userenv
 
 def build_macosx(obj):
     build = target.Build()
 
-    # Get the base environment
-    ldflags = ['-Wl,-dead_strip', '-Wl,-dead_strip_dylibs']
-    fworks = ['Foundation', 'AppKit', 'OpenGL',
-              'CoreServices', 'CoreVideo', 'Carbon']
-    for fwork in fworks:
-        ldflags.extend(('-framework', fwork))
+    # Get the environments
     baseenv, userenv = env_nix(
         obj,
         ARCHS='ppc i386',
         CC=('gcc-4.2', 'gcc'),
         CXX=('g++-4.2', 'g++'),
-        LDFLAGS=ldflags,
+        LDFLAGS='-Wl,-dead_strip -Wl,-dead_strip_dylibs',
     )
+    ldflags = []
+    fworks = ['Foundation', 'AppKit', 'OpenGL',
+              'CoreServices', 'CoreVideo', 'Carbon']
+    for fwork in fworks:
+        ldflags.extend(('-framework', fwork))
+    baseenv = Environment(baseenv, LDFLAGS=ldflags)
+    env = Environment(baseenv, userenv)
 
-    appname = obj.exe_file_mac
+    appname = userenv.EXE_MAC
     exename = appname
 
     # Build the executable for each architecture
     exes = []
-    env = Environment(baseenv, userenv)
     srcs = obj.get_atoms(None, 'MACOSX')
     for arch in env.ARCHS:
         archdir = os.path.join('build', 'arch-' + arch)
@@ -157,7 +159,8 @@ def build_macosx(obj):
             cflags = '-mtune=G5'
         else:
             cflags = ''
-        archenv = Environment(baseenv, Environment(ARCH=arch), userenv)
+        archenv = Environment(ARCH=arch, CFLAGS=cflags, CXXFLAGS=cflags)
+        archenv = Environment(baseenv, archenv, userenv)
         objs = []
         for src in srcs:
             sbase, sext = os.path.splitext(src)
@@ -204,13 +207,13 @@ def build_nix(obj):
     baseenv, userenv = env_nix(
         obj,
         LDFLAGS='-Wl,--as-needed -Wl,--gc-sections',
-        LIBS='-lGL -lGLU',
     )
-    machine = getmachine(baseenv + userenv)
+
+    machine = getmachine(Environment(baseenv, userenv))
 
     # Get the environment for each package
     pkgenvs = {
-        None: Environment(),
+        None: Environment(LIBS='-lGL -lGLU'),
         'LIBJPEG': Environment(LIBS='-ljpeg'),
         'SDL': customconfig('sdl-config'),
     }
@@ -254,7 +257,7 @@ def build_nix(obj):
     for exe, exepkgs in EXESPECS:
         env = Environment(
             *([baseenv] + [pkgenvs[pkg] for pkg in exepkgs] + [userenv]))
-        exename = '%s-%s-%s' % (obj.exe_file_linux, machine, exe)
+        exename = '%s-%s-%s' % (env.EXE_LINUX, machine, exe)
         exe = os.path.join('build', 'product', exename)
         objs = []
         for pkg in exepkgs:
