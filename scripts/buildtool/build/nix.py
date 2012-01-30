@@ -182,11 +182,19 @@ def build_macosx(obj):
         build.add(ld(exe, objs, archenv))
         exes.append(exe)
 
+    # Make Universal binary
+    exe_raw = os.path.join(exedir, exename)
+    build.add(lipo(exe_raw, exes, env))
+
     contents = os.path.join('build', 'product', appname + '.app', 'Contents')
 
-    # Combine into Universal binary
+    # Produce stripped executable and dsym package
     exe = os.path.join(contents, 'MacOS', exename)
-    build.add(lipo(exe, exes, env))
+    build.add(target.Command(['strip', '-u', '-r', '-o', exe, exe_raw],
+                             inputs=[exe_raw], outputs=[exe], name='STRIP'))
+    dsym = os.path.join('build', 'product', appname + '.app.dSYM')
+    build.add(target.Command(['dsymutil', exe_raw, '-o', dsym],
+                             inputs=[exe_raw], outputs=[dsym], name='DSYM'))
 
     # Create Info.plist and PkgInfo
     pcmds = ['Set :CFBundleExecutable %s' % exename]
