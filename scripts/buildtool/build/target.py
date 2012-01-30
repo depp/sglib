@@ -49,7 +49,7 @@ class Build(object):
             for path in target.outputs:
                 mkdirp(os.path.dirname(path))
 
-    def build(self):
+    def build(self, obj):
         """Build all targets.
 
         Return True if successful, False if failed."
@@ -85,8 +85,9 @@ class Build(object):
         self._failures = 0
         self._successes = 0
 
+        quiet = not obj.opts.verbose
         self._mkdirs()
-        self.build1()
+        self.build1(quiet)
 
         print 'Targets: %d built, %d failed, %d skipped' % \
             (self._successes, self._failures, self._unbuildable)
@@ -97,10 +98,10 @@ class Build(object):
             print 'Build succeeded'
             return True
 
-    def build1(self):
+    def build1(self, quiet):
         while self._buildable:
             target = self._buildable.pop(0)
-            if target.build():
+            if target.build(quiet):
                 self._successes += 1
                 for path in target.outputs:
                     for target in self._revdeps[path]:
@@ -116,42 +117,39 @@ class Target(object):
 
     A target has inputs and outputs, which are lists of file paths.
     """
-
-    def build(self, quiet=True):
-        """Build the target.
-
-        Return True if successful, False on failure.
-        """
-        if quiet and self.quietmsg is not None:
-            line = self.quietmsg
-        elif isinstance(self.cmd, str):
-            line = self.cmd
-        else:
-            line = ' '.join(self.cmd)
-        print line
-        return self.run()
+    def quietmsg(self):
+        return '%s %s' % (self.name, ' '.join(self.outputs))
 
 class Command(Target):
     """A command-line target."""
+    ARGS=set(('cwd', 'inputs', 'outputs', 'name', 'pre', 'post'))
 
-    def __init__(self, cmd, cwd=None, inputs=None, outputs=None,
-                 quietmsg=None, pre=None, post=None):
-        self.cmd = cmd
-        self.cwd = cwd
-        self.inputs = inputs
-        self.outputs = outputs
-        self.quietmsg = quietmsg
-        self.pre = pre
-        self.post = post
+    def __init__(self, *cmds, **kw):
+        for a in Command.ARGS:
+            setattr(self, a, None)
+        self.cmds = cmds
+        for k, v in kw.iteritems():
+            if k not in Command.ARGS:
+                raise ValueError('unkown keyword argument: %r' % k)
+            setattr(self, k, v)
     
-    def run(self):
+    def build(self, quiet):
         if self.pre is not None:
             if not self.pre():
                 return False
-        proc = subprocess.Popen(self.cmd, cwd=self.cwd)
-        status = proc.wait()
-        if status != 0:
-            return False
+        quiet = quiet and self.name is not None
+        if quiet:
+            print self.quietmsg()
+        for cmd in self.cmds:
+            if not quiet:
+                if isinstance(cmd, str):
+                    print cmd
+                else:
+                    print ' '.join(cmd)
+            proc = subprocess.Popen(cmd, cwd=self.cwd)
+            status = proc.wait()
+            if status != 0:
+                return False
         if self.post is not None:
             if not self.post():
                 return False
@@ -165,9 +163,10 @@ class CopyFile(Target):
         self.inputs = [src]
         self.src = src
         self.dest = dest
-        self.quietmsg = 'CP %s' % dest
+        self.name = 'COPY'
 
-    def run(self):
+    def build(self, quiet):
+        print self.quietmsg()
         shutil.copyfile(self.src, self.dest)
         return True
 
@@ -179,9 +178,10 @@ class StaticFile(Target):
         self.inputs = []
         self.dest = dest
         self.contents = contents
-        self.quietmsg = 'FILE %s' % dest
+        self.name = 'FILE'
 
-    def run(self):
+    def build(self, quiet):
+        print self.quietmsg()
         with open(self.dest, 'wb') as f:
             f.write(self.contents)
         return True

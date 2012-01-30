@@ -76,13 +76,11 @@ def cc(obj, src, env, stype):
         raise ValueError('not a C file type: %r' % stype)
     cmd = [cc, '/c', '/Fo' + obj, lflag] + \
         env.CPPFLAGS + warn + cflags + [src]
-    return target.Command(cmd, inputs=[src], outputs=[obj],
-                          quietmsg='CC %s' % src)
+    return target.Command(cmd, inputs=[src], outputs=[obj], name=what)
 
 def ld(obj, src, env):
     cmd = [env.LD, '/OUT:' + obj] + env.LDFLAGS + src + env.LIBS
-    return target.Command(cmd, inputs=src, outputs=[obj],
-                          quietmsg='LD %s' % obj)
+    return target.Command(cmd, inputs=src, outputs=[obj], name='LD')
 
 def build(obj):
     build = target.Build()
@@ -101,6 +99,8 @@ def build(obj):
         '/Zc:wchar_t',  # wchar_t extension
         '/Zc:forScope', # standard for scope rules
         '/Gd',          # use __cdecl calling convention
+        '/Zi',          # generate debugging info
+        '/Fd' + os.path.join('build', 'obj', 'debug.pdb'),
     ]
     ldflags = [
         '/NOLOGO',      # don't print version info
@@ -109,6 +109,7 @@ def build(obj):
         '/DYNAMICBASE', # allow ASLR
         '/NXCOMPAT',    # allow NX bit
         '/MACHINE:X86',
+        '/DEBUG',
     ]
     libs = [
         'kernel32.lib',
@@ -132,7 +133,14 @@ def build(obj):
         LIBS=libs
     )
     ccwarn = ['/W3', '/WX-']
-    ccflags = ['/O2', '/Oy-', '/MT']
+    if obj.opts.config == 'release':
+        ccflags = ['/O2', '/Oy-', '/MT']
+    elif obj.opts.config == 'debug':
+        ccflags = ['/Od', '/Oy-', '/MDd']
+    else:
+        print >>sys.stderr, 'unsupported configuration: %r' % \
+            (obj.opts.config,)
+        sys.exit(1)
     userenv = Environment(
         CC='cl.exe',
         CXX='cl.exe',
@@ -145,14 +153,15 @@ def build(obj):
         LDFLAGS='',
         LIBS='',
     )
+    userenv.override(obj.env)
 
-    exename = 'Game'
+    exename = userenv.EXE_WINDOWS
 
     # Build the sources
     objs = []
     env = Environment(baseenv, userenv)
     objdir = os.path.join('build', 'obj')
-    for src in obj.get_atoms(None, 'WINDOWS'):
+    for src in obj.get_atoms(None, 'WINDOWS', native=True):
         sbase, sext = os.path.splitext(src)
         stype = path.EXTS[sext]
         if stype in ('c', 'cxx'):
@@ -161,8 +170,10 @@ def build(obj):
             objs.append(objf)
 
     # Build the executable
+    ldflags = ['/SUBSYSTEM:WINDOWS',
+               '/PDB:' + os.path.join('build', 'product', 'exename' + '.pdb')]
     build.add(ld(os.path.join('build', 'product', exename + '.exe'),
-                 objs, Environment(env, LDFLAGS='/SUBSYSTEM:WINDOWS')))
+                 objs, Environment(env, LDFLAGS=ldflags)))
 
     return build
 

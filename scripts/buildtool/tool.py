@@ -5,6 +5,8 @@ import sys
 import shutil
 import posixpath
 import buildtool.git as git
+from buildtool.env import Environment
+import re
 
 ACTIONS = ['cmake', 'gmake', 'xcode', 'build']
 DEFAULT = {
@@ -40,13 +42,21 @@ class ToolInvocation(object):
                 pass
             raise
 
-    def get_atoms(self, *atoms):
+    def get_atoms(self, *atoms, **kw):
         """Get all source files with the given atoms.
 
         This returns a list of all source files which have at least
         one of the atoms listed.  If None appears in the list, then
         source files with no atoms will also be included.
         """
+        try:
+            native = kw['native']
+        except KeyError:
+            native = False
+        else:
+            del kw['native']
+        if kw:
+            raise ValueError('unexpected keyword arguments')
         result = []
         for src in self._tool._sources:
             for atom in atoms:
@@ -58,15 +68,30 @@ class ToolInvocation(object):
                     if atom in src.atoms:
                         result.append(src.path)
                         break
+        if native and os.path.sep != '/':
+            sep = os.path.sep
+            result = [path.replace('/', sep) for path in result]
         return result
 
-    def all_sources(self):
+    def all_sources(self, native=False):
         """Get a list of all sources."""
-        return [src.path for src in self._tool._sources]
+        if native and os.path.sep != '/':
+            return [src.path.replace('/', sep)
+                    for src in self._tool._sources]
+        else:
+            return [src.path for src in self._tool._sources]
 
     @property
     def incldirs(self):
         return self._tool._incldirs
+
+    @property
+    def env(self):
+        return self._tool.env
+
+    @property
+    def opts(self):
+        return self._tool.opts
 
     def _writeversion(self):
         vers = git.describe('.')
@@ -80,6 +105,8 @@ class Tool(object):
         self._atoms = set()
         self._sources = []
         self._incldirs = []
+        self._props = {}
+        self.env = Environment()
 
     def rootdir(self, path):
         """Set the root directory."""
@@ -124,8 +151,21 @@ class Tool(object):
         self._incldirs.extend(paths)
 
     def _run(self, opts, args):
+        self.opts = opts
         actions = []
-        if not args:
+        for arg in args:
+            idx = arg.find('=')
+            if idx >= 0:
+                var = arg[:idx]
+                val = arg[idx+1:]
+                self.env[var] = val
+            else:
+                if arg not in ACTIONS:
+                    print >>sys.stderr, 'Error: unknown backend %r' % arg
+                    sys.exit(1)
+                actions.append(arg)
+
+        if not actions:
             import platform
             s = platform.system()
             try:
@@ -136,11 +176,7 @@ class Tool(object):
                 sys.exit(1)
             if isinstance(args, str):
                 args = (args,)
-        for arg in args:
-            if arg not in ACTIONS:
-                print >>sys.stderr, 'Error: unknown backend %r' % arg
-                sys.exit(1)
-            actions.append(arg)
+
         self._sources.append(source.Source('version.c', []))
         i = ToolInvocation(self)
         i._writeversion()
@@ -151,5 +187,11 @@ class Tool(object):
     def run(self):
         import optparse
         p = optparse.OptionParser()
+        p.add_option('--config', dest='config',
+                     help="use configuration (debug, release)",
+                     default='release')
+        p.add_option('--verbose', dest='verbose',
+                     action='store_true', default=False,
+                     help="print variables and command lines")
         opts, args = p.parse_args()
         self._run(opts, args)

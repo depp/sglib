@@ -15,8 +15,8 @@ add_executable($EXENAME WIN32 $SOURCES)
 def run(obj):
     t = string.Template(TEMPL).substitute(
         WARNING=obj.warning,
-        PROJNAME='game',
-        EXENAME='Game',
+        PROJNAME=obj.pkg_filename,
+        EXENAME=obj.exe_file_windows,
         INCDIRS=' '.join(obj.incldirs),
         SOURCES=' '.join(obj.get_atoms(None, 'WINDOWS')))
     obj.write_file('CMakeLists.txt', t)

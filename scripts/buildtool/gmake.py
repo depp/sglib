@@ -30,6 +30,8 @@ def run(obj):
         'CFLAGS': '',
         'CXXFLAGS': '',
         'LIBS': '',
+
+        'EXENAME': obj.env.EXE_LINUX,
     }
 
     def repl(m):

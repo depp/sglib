@@ -4,6 +4,7 @@ import buildtool.build.target as target
 from buildtool.env import Environment
 import os
 import shutil
+import re
 
 def customconfig(cmd):
     """Get the environment for a package from a config program."""
@@ -34,10 +35,10 @@ def getarch(env):
     aflags = []
     arch = env.ARCH
     if not arch:
-        return None, aflags
+        return aflags
     for a in arch:
         aflags.extend(('-arch', a))
-    return ' '.join(arch), aflags
+    return aflags
 
 def cc(obj, src, env, stype):
     """Create a target that compiles C, C++, or Objective C. """
@@ -53,39 +54,34 @@ def cc(obj, src, env, stype):
         what = 'CXX'
     else:
         raise ValueError('not a C file type: %r' % stype)
-    tag, aflags = getarch(env)
+    aflags = getarch(env)
     cmd = [cc, '-o', obj, '-c', src] + aflags + env.CPPFLAGS + warn + cflags
-    return target.Command(cmd, inputs=[src], outputs=[obj],
-                          quietmsg=buildline(what, src, tag))
+    return target.Command(cmd, inputs=[src], outputs=[obj], name=what)
 
 def ld(obj, src, env):
     """Create a target that links an executable."""
     cc = env.CXX
     # Some LDFLAGS do not work if they don't appear before -o
-    tag, aflags = getarch(env)
+    aflags = getarch(env)
     cmd = [cc] + aflags + env.LDFLAGS + ['-o', obj] + src + env.LIBS
-    return target.Command(cmd, inputs=src, outputs=[obj],
-                          quietmsg=buildline('LD', obj, tag))
+    return target.Command(cmd, inputs=src, outputs=[obj], name='LD')
 
 def lipo(obj, src, env):
     """Mac OS X: Create a universal executable from non-universal ones."""
     cmd = ['lipo'] + src + ['-create', '-output', obj]
-    return target.Command(cmd, inputs=src, outputs=[obj],
-                          quietmsg=buildline('LIPO', obj, None))
+    return target.Command(cmd, inputs=src, outputs=[obj], name='LIPO')
 
 def ibtool(obj, src, env):
     ibtool = '/Developer/usr/bin/ibtool'
     cmd = [ibtool, '--errors', '--warnings', '--notices',
            '--output-format', 'human-readable-text',
            '--compile', obj, src]
-    return target.Command(cmd, inputs=[src], outputs=[obj],
-                          quietmsg=buildline('IBTOOL', obj, None))
+    return target.Command(cmd, inputs=[src], outputs=[obj], name='IBTOOL')
 
 def plist(obj, src, changes):
     # PlistBuddy operates in-place, so we use a pre-command hook
     # to copy our source to the destination
     def pre():
-        print 'PRE hook'
         shutil.copyfile(src, obj)
         return True
     buddy = '/usr/libexec/PlistBuddy'
@@ -93,77 +89,89 @@ def plist(obj, src, changes):
     for change in changes:
         cmd.extend(('-c', change))
     cmd.append(obj)
-    return target.Command(cmd, inputs=[src], outputs=[obj],
-                          quietmsg=buildline('PLIST', obj, None),
+    return target.Command(cmd, inputs=[src], outputs=[obj], name='PLIST',
                           pre=pre)
 
-def env_nix(obj, **kw):
-    # Base environment common to Mac OS X / Linux / etc
+def env_nix(obj, debugflags, **kw):
+    # Base environment common to Mac OS X / Linux / etc.  This always
+    # comes first, and the user environment always comes last.  This
+    # way, flags in the user environment can override flags in the
+    # base environment.
+    baseenv = Environment(
+        CPPFLAGS=['-I' + p for p in obj.incldirs],
+    )
 
-    # The user environment consists of defaults that can be overridden
-    # by the user.  It always goes last, so user-specified flags can
-    # override everything else.
-    defaults = Environment(
+    debugflags = debugflags.split()
+    if obj.opts.config == 'debug':
+        cflags = ['-O0'] + debugflags
+    elif obj.opts.config == 'release':
+        cflags = ['-O2'] + debugflags
+    else:
+        print >>sys.stderr, "error: unknown configuration: %r" % \
+            (obj.opts.config,)
+        sys.exit(1)
+
+    # Common defaults.  Some of these are overridden by platform
+    # variations.  All may be overridden by the user.
+    userenv = Environment(
         CC='gcc',
         CXX='g++',
         CPPFLAGS='',
-        CFLAGS='-g -O2',
-        CXXFLAGS='-g -O2',
+        CFLAGS=cflags,
+        CXXFLAGS=cflags,
         CWARN='-Wall -Wextra -Wpointer-arith -Wno-sign-compare ' \
             '-Wwrite-strings -Wstrict-prototypes -Wmissing-prototypes',
         CXXWARN='-Wall -Wextra -Wpointer-arith -Wno-sign-compare',
         LDFLAGS='',
         LIBS='',
     )
-    osenv = Environment(**kw)
-    userenv = defaults + osenv
+    userenv.override(Environment(**kw))
+    userenv.override(obj.env)
 
-    # The base environment consist of flags specific to the project.
-    baseenv = Environment(
-        CPPFLAGS=['-I' + p for p in obj.incldirs],
-    )
     return baseenv, userenv
 
 def build_macosx(obj):
     build = target.Build()
 
-    # Get the base environment
-    ldflags = ['-Wl,-dead_strip', '-Wl,-dead_strip_dylibs']
+    # Get the environments
+    baseenv, userenv = env_nix(
+        obj, '-gdwarf-2',
+        ARCHS='ppc i386',
+        CC=('gcc-4.2', 'gcc'),
+        CXX=('g++-4.2', 'g++'),
+        LDFLAGS='-Wl,-dead_strip -Wl,-dead_strip_dylibs',
+    )
+    ldflags = []
     fworks = ['Foundation', 'AppKit', 'OpenGL',
               'CoreServices', 'CoreVideo', 'Carbon']
     for fwork in fworks:
         ldflags.extend(('-framework', fwork))
-    baseenv, userenv = env_nix(
-        obj,
-        ARCHS='ppc i386',
-        CC=('gcc-4.2', 'gcc'),
-        CXX=('g++-4.2', 'g++'),
-        LDFLAGS=ldflags,
-    )
+    baseenv = Environment(baseenv, LDFLAGS=ldflags)
+    env = Environment(baseenv, userenv)
 
-    appname = 'Game'
-    exename = 'Game'
+    appname = userenv.EXE_MAC
+    exename = appname
 
     # Build the executable for each architecture
     exes = []
-    env = Environment(baseenv, userenv)
     srcs = obj.get_atoms(None, 'MACOSX')
+    objdir = os.path.join('build', 'obj')
+    exedir = os.path.join('build', 'exe')
     for arch in env.ARCHS:
-        archdir = os.path.join('build', 'arch-' + arch)
-        objdir = os.path.join(archdir, 'obj')
-        exedir = os.path.join(archdir, 'exe')
+        objext = '-%s.o' % arch
         # Build the sources
         if arch in ('ppc', 'ppc64'):
             cflags = '-mtune=G5'
         else:
             cflags = ''
-        archenv = Environment(baseenv, Environment(ARCH=arch), userenv)
+        archenv = Environment(ARCH=arch, CFLAGS=cflags, CXXFLAGS=cflags)
+        archenv = Environment(baseenv, archenv, userenv)
         objs = []
         for src in srcs:
             sbase, sext = os.path.splitext(src)
             stype = path.EXTS[sext]
             if stype in ('c', 'cxx', 'm', 'mm'):
-                objf = os.path.join(objdir, sbase + '.o')
+                objf = os.path.join(objdir, sbase + objext)
                 build.add(cc(objf, src, archenv, stype))
                 objs.append(objf)
             elif stype in ('h', 'hxx'):
@@ -171,15 +179,23 @@ def build_macosx(obj):
             else:
                 raise Exception('Unknown file type: %r' % src)
         # Build the executable
-        exe = os.path.join(exedir, exename)
+        exe = os.path.join(exedir, exename + '-' + arch)
         build.add(ld(exe, objs, archenv))
         exes.append(exe)
 
+    # Make Universal binary
+    exe_raw = os.path.join(exedir, exename)
+    build.add(lipo(exe_raw, exes, env))
+
     contents = os.path.join('build', 'product', appname + '.app', 'Contents')
 
-    # Combine into Universal binary
+    # Produce stripped executable and dsym package
     exe = os.path.join(contents, 'MacOS', exename)
-    build.add(lipo(exe, exes, env))
+    build.add(target.Command(['strip', '-u', '-r', '-o', exe, exe_raw],
+                             inputs=[exe_raw], outputs=[exe], name='STRIP'))
+    dsym = os.path.join('build', 'product', appname + '.app.dSYM')
+    build.add(target.Command(['dsymutil', exe_raw, '-o', dsym],
+                             inputs=[exe_raw], outputs=[dsym], name='DSYM'))
 
     # Create Info.plist and PkgInfo
     pcmds = ['Set :CFBundleExecutable %s' % exename]
@@ -202,15 +218,21 @@ def build_nix(obj):
 
     # Get the base environment
     baseenv, userenv = env_nix(
-        obj,
+        obj, '-g',
         LDFLAGS='-Wl,--as-needed -Wl,--gc-sections',
-        LIBS='-lGL -lGLU',
     )
-    machine = getmachine(baseenv + userenv)
+
+    machine = getmachine(Environment(baseenv, userenv))
+    if machine == 'x86_64':
+        machine = 'linux64'
+    elif re.match(r'i\d86', machine):
+        machine = 'linux32'
+    else:
+        print >>sys.stderr, 'warning: unknown machine %s' % machine
 
     # Get the environment for each package
     pkgenvs = {
-        None: Environment(),
+        None: Environment(LIBS='-lGL -lGLU'),
         'LIBJPEG': Environment(LIBS='-ljpeg'),
         'SDL': customconfig('sdl-config'),
     }
@@ -223,6 +245,10 @@ def build_nix(obj):
     for pkg, spec in PKGSPECS:
         if pkg not in pkgenvs:
             pkgenvs[pkg] = pkgconfig(spec)
+    # This flag is added by the gmodule indirect dependency.  We don't
+    # need this flag and it's a waste.
+    for env in pkgenvs.itervalues():
+        env.remove('LIBS', '-Wl,--export-dynamic')
 
     # Build the sources that use each package
     pkgobjs = {}
@@ -254,11 +280,21 @@ def build_nix(obj):
     for exe, exepkgs in EXESPECS:
         env = Environment(
             *([baseenv] + [pkgenvs[pkg] for pkg in exepkgs] + [userenv]))
-        exename = 'game-%s-%s' % (machine, exe)
+        exename = '%s-%s-%s' % (env.EXE_LINUX, machine, exe)
+        exe_raw = os.path.join('build', 'exe', exename)
         exe = os.path.join('build', 'product', exename)
+        dbg = os.path.join('build', 'product', exename + '.dbg')
         objs = []
         for pkg in exepkgs:
             objs.extend(pkgobjs[pkg])
-        build.add(ld(exe, objs, env))
+        build.add(ld(exe_raw, objs, env))
+        build.add(target.Command(
+                ['objcopy', '--only-keep-debug', exe_raw, dbg],
+                inputs=[exe_raw], outputs=[dbg], name='OBJCOPY'))
+        build.add(target.Command(
+                ['objcopy', '--strip-unneeded',
+                 '--add-gnu-debuglink=' + dbg, exe_raw, exe],
+                ['chmod', '-x', dbg],
+                inputs=[exe_raw, dbg], outputs=[exe], name='OBJCOPY'))
 
     return build
