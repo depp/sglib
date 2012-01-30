@@ -117,42 +117,39 @@ class Target(object):
 
     A target has inputs and outputs, which are lists of file paths.
     """
-
-    def build(self, quiet):
-        """Build the target.
-
-        Return True if successful, False on failure.
-        """
-        if quiet and self.name is not None:
-            line = '%s %s' % (self.name, ' '.join(self.outputs))
-        elif isinstance(self.cmd, str):
-            line = self.cmd
-        else:
-            line = ' '.join(self.cmd)
-        print line
-        return self.run()
+    def quietmsg(self):
+        return '%s %s' % (self.name, ' '.join(self.outputs))
 
 class Command(Target):
     """A command-line target."""
+    ARGS=set(('cwd', 'inputs', 'outputs', 'name', 'pre', 'post'))
 
-    def __init__(self, cmd, cwd=None, inputs=None, outputs=None,
-                 name=None, pre=None, post=None):
-        self.cmd = cmd
-        self.cwd = cwd
-        self.inputs = inputs
-        self.outputs = outputs
-        self.name = name
-        self.pre = pre
-        self.post = post
+    def __init__(self, *cmds, **kw):
+        for a in Command.ARGS:
+            setattr(self, a, None)
+        self.cmds = cmds
+        for k, v in kw.iteritems():
+            if k not in Command.ARGS:
+                raise ValueError('unkown keyword argument: %r' % k)
+            setattr(self, k, v)
     
-    def run(self):
+    def build(self, quiet):
         if self.pre is not None:
             if not self.pre():
                 return False
-        proc = subprocess.Popen(self.cmd, cwd=self.cwd)
-        status = proc.wait()
-        if status != 0:
-            return False
+        quiet = quiet and self.name is not None
+        if quiet:
+            print self.quietmsg()
+        for cmd in self.cmds:
+            if not quiet:
+                if isinstance(cmd, str):
+                    print cmd
+                else:
+                    print ' '.join(cmd)
+            proc = subprocess.Popen(cmd, cwd=self.cwd)
+            status = proc.wait()
+            if status != 0:
+                return False
         if self.post is not None:
             if not self.post():
                 return False
@@ -168,7 +165,8 @@ class CopyFile(Target):
         self.dest = dest
         self.name = 'COPY'
 
-    def run(self):
+    def build(self, quiet):
+        print self.quietmsg()
         shutil.copyfile(self.src, self.dest)
         return True
 
@@ -182,7 +180,8 @@ class StaticFile(Target):
         self.contents = contents
         self.name = 'FILE'
 
-    def run(self):
+    def build(self, quiet):
+        print self.quietmsg()
         with open(self.dest, 'wb') as f:
             f.write(self.contents)
         return True
