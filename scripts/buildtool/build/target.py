@@ -123,8 +123,8 @@ class Target(object):
 
         Return True if successful, False on failure.
         """
-        if quiet and self.quietmsg is not None:
-            line = self.quietmsg
+        if quiet and self.name is not None:
+            line = '%s %s' % (self.name, ' '.join(self.outputs))
         elif isinstance(self.cmd, str):
             line = self.cmd
         else:
@@ -136,12 +136,12 @@ class Command(Target):
     """A command-line target."""
 
     def __init__(self, cmd, cwd=None, inputs=None, outputs=None,
-                 quietmsg=None, pre=None, post=None):
+                 name=None, pre=None, post=None):
         self.cmd = cmd
         self.cwd = cwd
         self.inputs = inputs
         self.outputs = outputs
-        self.quietmsg = quietmsg
+        self.name = name
         self.pre = pre
         self.post = post
     
@@ -166,7 +166,7 @@ class CopyFile(Target):
         self.inputs = [src]
         self.src = src
         self.dest = dest
-        self.quietmsg = 'CP %s' % dest
+        self.name = 'COPY'
 
     def run(self):
         shutil.copyfile(self.src, self.dest)

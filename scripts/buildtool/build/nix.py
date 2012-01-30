@@ -34,10 +34,10 @@ def getarch(env):
     aflags = []
     arch = env.ARCH
     if not arch:
-        return None, aflags
+        return aflags
     for a in arch:
         aflags.extend(('-arch', a))
-    return ' '.join(arch), aflags
+    return aflags
 
 def cc(obj, src, env, stype):
     """Create a target that compiles C, C++, or Objective C. """
@@ -53,33 +53,29 @@ def cc(obj, src, env, stype):
         what = 'CXX'
     else:
         raise ValueError('not a C file type: %r' % stype)
-    tag, aflags = getarch(env)
+    aflags = getarch(env)
     cmd = [cc, '-o', obj, '-c', src] + aflags + env.CPPFLAGS + warn + cflags
-    return target.Command(cmd, inputs=[src], outputs=[obj],
-                          quietmsg=buildline(what, src, tag))
+    return target.Command(cmd, inputs=[src], outputs=[obj], name=what)
 
 def ld(obj, src, env):
     """Create a target that links an executable."""
     cc = env.CXX
     # Some LDFLAGS do not work if they don't appear before -o
-    tag, aflags = getarch(env)
+    aflags = getarch(env)
     cmd = [cc] + aflags + env.LDFLAGS + ['-o', obj] + src + env.LIBS
-    return target.Command(cmd, inputs=src, outputs=[obj],
-                          quietmsg=buildline('LD', obj, tag))
+    return target.Command(cmd, inputs=src, outputs=[obj], name='LD')
 
 def lipo(obj, src, env):
     """Mac OS X: Create a universal executable from non-universal ones."""
     cmd = ['lipo'] + src + ['-create', '-output', obj]
-    return target.Command(cmd, inputs=src, outputs=[obj],
-                          quietmsg=buildline('LIPO', obj, None))
+    return target.Command(cmd, inputs=src, outputs=[obj], name='LIPO')
 
 def ibtool(obj, src, env):
     ibtool = '/Developer/usr/bin/ibtool'
     cmd = [ibtool, '--errors', '--warnings', '--notices',
            '--output-format', 'human-readable-text',
            '--compile', obj, src]
-    return target.Command(cmd, inputs=[src], outputs=[obj],
-                          quietmsg=buildline('IBTOOL', obj, None))
+    return target.Command(cmd, inputs=[src], outputs=[obj], name='IBTOOL')
 
 def plist(obj, src, changes):
     # PlistBuddy operates in-place, so we use a pre-command hook
@@ -93,8 +89,7 @@ def plist(obj, src, changes):
     for change in changes:
         cmd.extend(('-c', change))
     cmd.append(obj)
-    return target.Command(cmd, inputs=[src], outputs=[obj],
-                          quietmsg=buildline('PLIST', obj, None),
+    return target.Command(cmd, inputs=[src], outputs=[obj], name='PLIST',
                           pre=pre)
 
 def env_nix(obj, **kw):
