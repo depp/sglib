@@ -274,10 +274,19 @@ def build_nix(obj):
         env = Environment(
             *([baseenv] + [pkgenvs[pkg] for pkg in exepkgs] + [userenv]))
         exename = '%s-%s-%s' % (env.EXE_LINUX, machine, exe)
+        exe_raw = os.path.join('build', 'exe', exename)
         exe = os.path.join('build', 'product', exename)
+        dbg = os.path.join('build', 'product', exename + '.dbg')
         objs = []
         for pkg in exepkgs:
             objs.extend(pkgobjs[pkg])
-        build.add(ld(exe, objs, env))
+        build.add(ld(exe_raw, objs, env))
+        build.add(target.Command(
+                ['objcopy', '--strip-debug',
+                 '--add-gnu-debuglink=' + dbg, exe_raw, exe],
+                inputs=[exe_raw, dbg], outputs=[exe], name='OBJCOPY'))
+        build.add(target.Command(
+                ['objcopy', '--only-keep-debug', exe_raw, dbg],
+                inputs=[exe_raw], outputs=[dbg], name='OBJCOPY'))
 
     return build
