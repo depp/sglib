@@ -4,6 +4,7 @@ import buildtool.build.target as target
 from buildtool.env import Environment
 import os
 import shutil
+import re
 
 def customconfig(cmd):
     """Get the environment for a package from a config program."""
@@ -222,6 +223,12 @@ def build_nix(obj):
     )
 
     machine = getmachine(Environment(baseenv, userenv))
+    if machine == 'x86_64':
+        machine = 'linux64'
+    elif re.match(r'i\d86', machine):
+        machine = 'linux32'
+    else:
+        print >>sys.stderr, 'warning: unknown machine %s' % machine
 
     # Get the environment for each package
     pkgenvs = {
