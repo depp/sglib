@@ -14,6 +14,7 @@ tool.env.set(
 )
 
 tool.includepath('src')
+tool.includepath('.')
 tool.srclist(os.path.join('src', 'srclist-base.txt'))
 tool.srclist(os.path.join('src', 'srclist-client.txt'))
 r = os.path.join('src', 'game')

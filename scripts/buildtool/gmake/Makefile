@@ -1,6 +1,6 @@
 all:
 
--include ../config.mak
+-include config.mak
 
 RM = rm -f
 
