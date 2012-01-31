@@ -1,5 +1,6 @@
 import os
 import buildtool.path as path
+import buildtool.shell as shell
 import re
 
 def objs(paths):
@@ -59,3 +60,8 @@ def run(obj):
 
     text = open(os.path.join(dirpath, 'config.mak.in'), 'r').read()
     obj.write_file('config.mak.in', text)
+
+    shell.run(obj, ['aclocal'])
+    shell.run(obj, ['autoheader'])
+    shell.run(obj, ['autoconf'])
+    shell.run(obj, ['./configure', '--enable-warnings=error'])
