@@ -29,7 +29,7 @@ class ToolInvocation(object):
     def write_file(self, path, data):
         """Write a file with the given contents to the given path."""
         self._mkdirp(os.path.dirname(path))
-        print path
+        print 'FILE', path
         try:
             with open(path, 'w') as f:
                 f.write(data)
@@ -171,6 +171,7 @@ class Tool(object):
         i = ToolInvocation(self)
         i._writeversion()
         for b in actions:
+            print 'ACTION', b
             m = getattr(__import__('buildtool.' + b), b)
             m.run(i)
 
