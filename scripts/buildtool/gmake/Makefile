@@ -171,38 +171,40 @@ $(OBJC_OBJS): %.o: %.m $(dep_dirs_missing)
 ########################################
 # Build products
 
+EXENAME=@EXE_LINUX@
+
 run.sh: scripts/run.sh.in
 	sed \
 		-e 's,@SRCDIR''@,$(srcdir),g' \
 		-e 's,@BUILDDIR''@,$(srcdir),g' \
 		-e 's,@SHELL''@,$(SHELL),g' \
-		-e 's,@EXENAME''@,@EXE_LINUX@,g' \
+		-e 's,@EXENAME''@,$(EXENAME),g' \
 		$< > $@.tmp
 	chmod +x $@.tmp
 	mv $@.tmp $@
 
 ifdef HAVE_GTK
-targets += @EXENAME@-gtk
+targets += $(EXENAME)-gtk
 
-@EXENAME@-gtk: BASE_LIBS += $(GTK_LIBS) $(OPENGL_LIBS) $(IMAGE_LIBS) $(TYPE_LIBS)
+$(EXENAME)-gtk: BASE_LIBS += $(GTK_LIBS) $(OPENGL_LIBS) $(IMAGE_LIBS) $(TYPE_LIBS)
 
-@EXENAME@-gtk: $(BASE_OBJS) $(GTK_OBJS)
+$(EXENAME)-gtk: $(BASE_OBJS) $(GTK_OBJS)
 	$(QUIET_LINK)$(CXX) $(ALL_LDFLAGS) -o $@ $^ $(ALL_LIBS)
 endif
 
 ifdef HAVE_SDL
-targets += @EXENAME@-sdl
-@EXENAME@-sdl: BASE_LIBS += $(SDL_LIBS) $(OPENGL_LIBS) $(IMAGE_LIBS) $(TYPE_LIBS)
-@EXENAME@-sdl: $(BASE_OBJS) $(SDL_OBJS)
+targets += $(EXENAME)-sdl
+$(EXENAME)-sdl: BASE_LIBS += $(SDL_LIBS) $(OPENGL_LIBS) $(IMAGE_LIBS) $(TYPE_LIBS)
+$(EXENAME)-sdl: $(BASE_OBJS) $(SDL_OBJS)
 	$(QUIET_LINK)$(CXX) $(ALL_LDFLAGS) -o $@ $^ $(ALL_LIBS)
 endif
 
 ifdef HAVE_COCOA
-targets += @EXENAME@-mac
+targets += $(EXENAME)-mac
 
-@EXENAME@-mac: BASE_LIBS += $(COCOA_LIBS) $(OPENGL_LIBS) $(IMAGE_LIBS) $(TYPE_LIBS)
+$(EXENAME)-mac: BASE_LIBS += $(COCOA_LIBS) $(OPENGL_LIBS) $(IMAGE_LIBS) $(TYPE_LIBS)
 
-@EXENAME@-mac: $(BASE_OBJS) $(MAC_OBJS)
+$(EXENAME)-mac: $(BASE_OBJS) $(MAC_OBJS)
 	$(QUIET_LINK)$(CXX) $(ALL_LDFLAGS) -o $@ $^ $(ALL_LIBS)
 endif
 
