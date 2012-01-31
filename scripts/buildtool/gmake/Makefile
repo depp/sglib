@@ -11,9 +11,6 @@ RM = rm -f
 # platforms.  The defaults are ignored if 'configure' is run.
 ifndef HAVE_CONFIG
 
-UNAME_S := $(shell sh -c 'uname -s 2>/dev/null || echo unknown')
-UNAME_M := $(shell sh -c 'uname -m 2>/dev/null || echo unknown')
-
 CC = gcc
 CXX = g++
 
