@@ -1,6 +1,6 @@
 all:
 
--include ../config.mak
+-include config.mak
 
 RM = rm -f
 
@@ -10,9 +10,6 @@ RM = rm -f
 # Below are "sensible defaults" based on knowledge of specific
 # platforms.  The defaults are ignored if 'configure' is run.
 ifndef HAVE_CONFIG
-
-UNAME_S := $(shell sh -c 'uname -s 2>/dev/null || echo unknown')
-UNAME_M := $(shell sh -c 'uname -m 2>/dev/null || echo unknown')
 
 CC = gcc
 CXX = g++
@@ -27,40 +24,36 @@ DEFS =
 LDFLAGS =
 LIBS =
 
-ifeq ($(UNAME_S),Linux)
-	HAVE_GTK := $(shell sh -c 'pkg-config gtk+-2.0 gtkglext-1.0 2>/dev/null && echo yes')
-	ifdef HAVE_GTK
-		GTK_CFLAGS := $(shell pkg-config --cflags gtk+-2.0 gtkglext-1.0)
-		GTK_LIBS := $(shell pkg-config --libs gtk+-2.0 gtkglext-1.0)
-		GTK_LIBS += -Wl,--no-export-dynamic # Turned on by gmodule
-	endif
-	HAVE_LIBPNG := $(shell sh -c 'pkg-config libpng 2>/dev/null && echo yes')
-	ifdef HAVE_LIBPNG
-		PNG_CFLAGS := -DHAVE_LIBPNG $(shell pkg-config --cflags libpng)
-		PNG_LIBS := $(shell pkg-config --libs libpng)
-	endif
-	HAVE_LIBJPEG := yes
-	JPEG_CFLAGS := -DHAVE_LIBJPEG
-	JPEG_LIBS := -ljpeg
-	IMAGE_CFLAGS := $(PNG_CFLAGS) $(JPEG_CFLAGS)
-	IMAGE_LIBS := $(PNG_LIBS) $(JPEG_LIBS)
-	HAVE_PANGO := $(shell sh -c 'pkg-config pangocairo 2>/dev/null && echo yes')
-	ifdef HAVE_PANGO
-		PANGO_CFLAGS := -DHAVE_PANGOCAIRO $(shell pkg-config --cflags pangocairo)
-		PANGO_LIBS := $(shell pkg-config --libs pangocairo)
-	endif
-	TYPE_CFLAGS = $(PANGO_CFLAGS)
-	TYPE_LIBS = $(PANGO_LIBS)
-	OPENGL_LIBS := -lGL -lGLU
-	BASE_LDFLAGS := -Wl,--gc-sections --Wl,--as-needed
+HAVE_GTK := $(shell sh -c 'pkg-config gtk+-2.0 gtkglext-1.0 2>/dev/null && echo yes')
+ifdef HAVE_GTK
+GTK_CFLAGS := $(shell pkg-config --cflags gtk+-2.0 gtkglext-1.0)
+GTK_LIBS := $(shell pkg-config --libs gtk+-2.0 gtkglext-1.0)
+GTK_LIBS += -Wl,--no-export-dynamic # Turned on by gmodule
 endif
-ifeq ($(UNAME_S),Darwin)
-	HAVE_COCOA := yes
-	IMAGE_CFLAGS := -DHAVE_COREGRAPHICS -F/System/Library/Frameworks/ApplicationServices.framework/Frameworks
-	IMAGE_LIBS := -framework ApplicationServices
-	OPENGL_LIBS := -framework OpenGL
-	COCOA_LIBS := -framework AppKit -framework Foundation -framework CoreVideo -framework Carbon
+
+HAVE_LIBPNG := $(shell sh -c 'pkg-config libpng 2>/dev/null && echo yes')
+ifdef HAVE_LIBPNG
+PNG_CFLAGS := $(shell pkg-config --cflags libpng)
+PNG_LIBS := $(shell pkg-config --libs libpng)
 endif
+
+HAVE_LIBJPEG := yes
+JPEG_CFLAGS :=
+JPEG_LIBS := -ljpeg
+
+IMAGE_CFLAGS := $(PNG_CFLAGS) $(JPEG_CFLAGS)
+IMAGE_LIBS := $(PNG_LIBS) $(JPEG_LIBS)
+
+HAVE_PANGO := $(shell sh -c 'pkg-config pangocairo 2>/dev/null && echo yes')
+ifdef HAVE_PANGO
+PANGO_CFLAGS := $(shell pkg-config --cflags pangocairo)
+PANGO_LIBS := $(shell pkg-config --libs pangocairo)
+endif
+
+TYPE_CFLAGS = $(PANGO_CFLAGS)
+TYPE_LIBS = $(PANGO_LIBS)
+OPENGL_LIBS := -lGL -lGLU
+BASE_LDFLAGS := -Wl,--gc-sections --Wl,--as-needed
 
 endif
 
@@ -171,38 +164,28 @@ $(OBJC_OBJS): %.o: %.m $(dep_dirs_missing)
 ########################################
 # Build products
 
+EXENAME=@EXE_LINUX@
+
 run.sh: scripts/run.sh.in
 	sed \
-		-e 's,@SRCDIR@,$(srcdir),g' \
-		-e 's,@BUILDDIR@,$(srcdir),g' \
-		-e 's,@SHELL@,$(SHELL),g' \
-		-e 's,@EXENAME''@,@EXENAME@,g' \
+		-e 's,@SRCDIR''@,$(srcdir),g' \
+		-e 's,@BUILDDIR''@,$(srcdir),g' \
+		-e 's,@EXENAME''@,$(EXENAME),g' \
 		$< > $@.tmp
 	chmod +x $@.tmp
 	mv $@.tmp $@
 
 ifdef HAVE_GTK
-targets += @EXENAME@-gtk
-
-@EXENAME@-gtk: BASE_LIBS += $(GTK_LIBS) $(OPENGL_LIBS) $(IMAGE_LIBS) $(TYPE_LIBS)
-
-@EXENAME@-gtk: $(BASE_OBJS) $(GTK_OBJS)
+targets += $(EXENAME)-gtk
+$(EXENAME)-gtk: BASE_LIBS += $(GTK_LIBS) $(OPENGL_LIBS) $(IMAGE_LIBS) $(TYPE_LIBS)
+$(EXENAME)-gtk: $(BASE_OBJS) $(GTK_OBJS)
 	$(QUIET_LINK)$(CXX) $(ALL_LDFLAGS) -o $@ $^ $(ALL_LIBS)
 endif
 
 ifdef HAVE_SDL
-targets += @EXENAME@-sdl
-@EXENAME@-sdl: BASE_LIBS += $(SDL_LIBS) $(OPENGL_LIBS) $(IMAGE_LIBS) $(TYPE_LIBS)
-@EXENAME@-sdl: $(BASE_OBJS) $(SDL_OBJS)
-	$(QUIET_LINK)$(CXX) $(ALL_LDFLAGS) -o $@ $^ $(ALL_LIBS)
-endif
-
-ifdef HAVE_COCOA
-targets += @EXENAME@-mac
-
-@EXENAME@-mac: BASE_LIBS += $(COCOA_LIBS) $(OPENGL_LIBS) $(IMAGE_LIBS) $(TYPE_LIBS)
-
-@EXENAME@-mac: $(BASE_OBJS) $(MAC_OBJS)
+targets += $(EXENAME)-sdl
+$(EXENAME)-sdl: BASE_LIBS += $(SDL_LIBS) $(OPENGL_LIBS) $(IMAGE_LIBS) $(TYPE_LIBS)
+$(EXENAME)-sdl: $(BASE_OBJS) $(SDL_OBJS)
 	$(QUIET_LINK)$(CXX) $(ALL_LDFLAGS) -o $@ $^ $(ALL_LIBS)
 endif
 

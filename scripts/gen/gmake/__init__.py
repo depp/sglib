@@ -1,5 +1,6 @@
 import os
-import buildtool.path as path
+import gen.path as path
+import gen.shell as shell
 import re
 
 def objs(paths):
@@ -31,7 +32,9 @@ def run(obj):
         'CXXFLAGS': '',
         'LIBS': '',
 
-        'EXENAME': obj.env.EXE_LINUX,
+        'SRCFILE': min(src for src in obj.all_sources()
+                       if src != 'version.c'),
+        'VERSION': obj.version,
     }
 
     def repl(m):
@@ -39,10 +42,27 @@ def run(obj):
         try:
             return subs[what]
         except KeyError:
-            return m.group(0)
+            pass
+        try:
+            return obj.env[what]
+        except KeyError:
+            pass
+        return m.group(0)
 
-    inpath = os.path.join(os.path.dirname(__file__), 'gmake.txt')
-    text = open(inpath, 'r').read()
-    text = ('# ' + obj.warning + '\n' +
-            re.sub(r'@(\w+)@', repl, text))
-    obj.write_file('Makefile', text)
+    dirpath = os.path.dirname(__file__)
+    files = [('Makefile', '#'),
+             ('configure.ac', 'dnl')]
+    for fname, cm in files:
+        text = open(os.path.join(dirpath, fname), 'r').read()
+        text = (cm + ' ' + obj.warning + '\n' +
+                re.sub(r'@(\w+)@', repl, text))
+        obj.write_file(fname, text)
+
+    text = open(os.path.join(dirpath, 'config.mak.in'), 'r').read()
+    obj.write_file('config.mak.in', text)
+
+    shell.run(obj, ['aclocal'])
+    shell.run(obj, ['autoheader'])
+    shell.run(obj, ['autoconf'])
+    if obj.opts.configure:
+        shell.run(obj, ['./configure', '--enable-warnings=error'])

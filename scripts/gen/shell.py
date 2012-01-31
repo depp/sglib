@@ -7,3 +7,7 @@ def getoutput(cmd, **kw):
     if proc.returncode:
         raise subprocess.CalledProcessError(proc.returncode, cmd)
     return stdout
+
+def run(obj, cmd, **kw):
+    print ' '.join(cmd)
+    subprocess.check_call(cmd, **kw)

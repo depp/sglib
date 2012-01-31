@@ -1,11 +1,11 @@
-import buildtool.token
+import gen.token
 import re
 
-ROOT  = buildtool.token.token('root object')
-KEY   = buildtool.token.token('dict key')
-VALUE = buildtool.token.token('dict value')
-LIST  = buildtool.token.token('list item')
-END   = buildtool.token.token('end of file')
+ROOT  = gen.token.token('root object')
+KEY   = gen.token.token('dict key')
+VALUE = gen.token.token('dict value')
+LIST  = gen.token.token('list item')
+END   = gen.token.token('end of file')
 
 UNQUOT = re.compile('^[A-Za-z0-9]+$')
 ESCAPE = re.compile('[\x00-\x1f"\\\x7f]')

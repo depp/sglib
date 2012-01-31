@@ -1,16 +1,20 @@
 #!/usr/bin/env python
-import buildtool.tool
+import gen.tool
 import os
 import sys
 
-tool = buildtool.tool.Tool()
-tool.rootdir(os.path.dirname(sys.path[0]))
+tool = gen.tool.Tool(os.path.dirname(sys.path[0]))
 
-tool.env.PKG_NAME = 'My Game'
-tool.env.PKG_IDENT = 'us.moria.my-game'
-tool.env.EXE_NAME = 'Game'
+tool.env.set(
+    PKG_NAME  = 'My Game',
+    PKG_IDENT = 'us.moria.my-game',
+    PKG_EMAIL = 'depp@zdome.net',
+    PKG_URL   = 'http://moria.us/',
+    EXE_NAME  = 'Game',
+)
 
 tool.includepath('src')
+tool.includepath('.')
 tool.srclist(os.path.join('src', 'srclist-base.txt'))
 tool.srclist(os.path.join('src', 'srclist-client.txt'))
 r = os.path.join('src', 'game')

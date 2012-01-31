@@ -1,5 +1,5 @@
-import buildtool.path
-import buildtool.plist
+import gen.path
+import gen.plist
 import random
 import posixpath
 import sys
@@ -204,7 +204,7 @@ class FileRef(PathObject):
         ext = posixpath.splitext(path)[1]
         if etype is None:
             try:
-                ftype = buildtool.path.EXTS[ext]
+                ftype = gen.path.EXTS[ext]
             except KeyError:
                 ftype = ext[1:] if ext else ''
             ftype = TYPES[ftype]
@@ -410,7 +410,7 @@ class Xcode(object):
             for obj in groupobjs:
                 ids[obj] = 'CAFEBABE%08X%08X' % (nonce, ctr)
                 ctr += 1
-        w = buildtool.plist.Writer(f)
+        w = gen.plist.Writer(f)
         w.start_dict()
         w.write_pair('archiveVersion', 1)
         w.write_pair('classes', {})

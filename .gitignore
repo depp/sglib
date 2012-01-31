@@ -8,9 +8,8 @@
 *.zip
 .deps
 /run.sh
-/Makefile
-/game-gtk
-/game-sdl
+/Game-gtk
+/Game-sdl
 /version.c
 
 # CMake
@@ -27,10 +26,15 @@
 # Autoconf
 /aclocal.m4
 /autom4te.cache
+/config.h
+/config.h.in
 /config.log
 /config.mak
 /config.status
 /configure
+/configure.ac
+/config.mak.in
+/Makefile
 
 # Microsoft Visual Studio
 /*.vcxproj
