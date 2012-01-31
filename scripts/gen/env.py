@@ -54,7 +54,7 @@ class EnvVar(object):
         value = self.default(instance)
         isvalid, nvalue = self.check(value)
         if not isvalid:
-            raise InvalidProperty(self.name, default)
+            raise InvalidProperty(self.name, value)
         return nvalue
 
     def default(self, instance):
