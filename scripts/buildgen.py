@@ -1,9 +1,9 @@
 #!/usr/bin/env python
-import buildtool.tool
+import gen.tool
 import os
 import sys
 
-tool = buildtool.tool.Tool(os.path.dirname(sys.path[0]))
+tool = gen.tool.Tool(os.path.dirname(sys.path[0]))
 
 tool.env.set(
     PKG_NAME  = 'My Game',

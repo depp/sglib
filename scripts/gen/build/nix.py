@@ -1,7 +1,7 @@
-import buildtool.path as path
-import buildtool.shell as shell
-import buildtool.build.target as target
-from buildtool.env import Environment
+import gen.path as path
+import gen.shell as shell
+import gen.build.target as target
+from gen.env import Environment
 import os
 import shutil
 import re

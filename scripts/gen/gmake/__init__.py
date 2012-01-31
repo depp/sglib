@@ -1,6 +1,6 @@
 import os
-import buildtool.path as path
-import buildtool.shell as shell
+import gen.path as path
+import gen.shell as shell
 import re
 
 def objs(paths):

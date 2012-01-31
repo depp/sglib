@@ -4,13 +4,13 @@ import platform
 def run(obj):
     s = platform.system()
     if s == 'Linux':
-        import buildtool.build.nix as nix
+        import gen.build.nix as nix
         build = nix.build_nix(obj)
     elif s == 'Darwin':
-        import buildtool.build.nix as nix
+        import gen.build.nix as nix
         build = nix.build_macosx(obj)
     elif s == 'Windows':
-        import buildtool.build.msvc as msvc
+        import gen.build.msvc as msvc
         build = msvc.build(obj)
     else:
         print >>sys.stderr, 'error: unspported system: %s' % s

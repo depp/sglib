@@ -1,4 +1,4 @@
-import buildtool.shell as shell
+import gen.shell as shell
 
 def describe(path):
     """Call 'git-describe' on the given path."""

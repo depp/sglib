@@ -1,11 +1,11 @@
 from __future__ import with_statement
 import os
-import buildtool.source as source
+import gen.source as source
 import sys
 import shutil
 import posixpath
-import buildtool.git as git
-from buildtool.env import Environment
+import gen.git as git
+from gen.env import Environment
 import re
 
 ACTIONS = ['cmake', 'gmake', 'xcode', 'build']
@@ -172,7 +172,7 @@ class Tool(object):
         i._writeversion()
         for b in actions:
             print 'ACTION', b
-            m = getattr(__import__('buildtool.' + b), b)
+            m = getattr(__import__('gen.' + b), b)
             m.run(i)
 
     def run(self):
