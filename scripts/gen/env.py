@@ -220,7 +220,7 @@ PKG = [
     Filename('PKG_FILENAME', 'PKG_NAME'),
     EnvVar('PKG_URL'),
     EnvVar('PKG_EMAIL'),
-    Title('EXE_NAME', 'PKG_IDENT'),
+    Title('EXE_NAME', 'PKG_NAME'),
     Title('EXE_MAC', 'EXE_NAME'),
     Filename('EXE_LINUX', 'EXE_NAME'),
     Title('EXE_WINDOWS', 'EXE_NAME'),
