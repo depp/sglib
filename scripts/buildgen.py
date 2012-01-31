@@ -6,11 +6,13 @@ import sys
 tool = buildtool.tool.Tool()
 tool.rootdir(os.path.dirname(sys.path[0]))
 
-tool.env.PKG_NAME = 'My Game'
-tool.env.PKG_IDENT = 'us.moria.my-game'
-tool.env.PKG_EMAIL = 'depp@zdome.net'
-tool.env.PKG_URL = 'http://moria.us/'
-tool.env.EXE_NAME = 'Game'
+tool.env.set(
+    PKG_NAME  = 'My Game',
+    PKG_IDENT = 'us.moria.my-game',
+    PKG_EMAIL = 'depp@zdome.net',
+    PKG_URL   = 'http://moria.us/',
+    EXE_NAME  = 'Game',
+)
 
 tool.includepath('src')
 tool.srclist(os.path.join('src', 'srclist-base.txt'))

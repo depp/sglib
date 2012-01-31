@@ -287,6 +287,11 @@ class Environment(object):
         for k, v in env._props.iteritems():
             p[k] = v
 
+    def set(self, **kw):
+        """Set many variables at the same time."""
+        for k, v in kw.iteritems():
+            setattr(self, k, v)
+
     def dump(self):
         p = self._props
         for var in sorted(VARS.itervalues(), key=lambda x: x.name):
