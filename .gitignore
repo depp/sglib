@@ -8,8 +8,8 @@
 *.zip
 .deps
 /run.sh
-/game-gtk
-/game-sdl
+/Game-gtk
+/Game-sdl
 /version.c
 
 # CMake
