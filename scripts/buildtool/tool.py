@@ -159,13 +159,13 @@ class Tool(object):
             import platform
             s = platform.system()
             try:
-                args = DEFAULT[s]
+                actions = DEFAULT[s]
             except KeyError:
                 print >>sys.stderr, 'Error: no action specified\n' \
                     'No default action for %s platform' % s
                 sys.exit(1)
-            if isinstance(args, str):
-                args = (args,)
+            if isinstance(actions, str):
+                actions = [actions]
 
         self._sources.append(source.Source('version.c', []))
         i = ToolInvocation(self)
