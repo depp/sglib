@@ -109,7 +109,6 @@ class Tool(object):
         self._incldirs = []
         self._props = {}
         self.env = Environment()
-        self.version = git.describe('.')
 
     def srclist(self, path, *atoms):
         """Add a list of source files from a list at the given path.
@@ -167,6 +166,7 @@ class Tool(object):
             if isinstance(actions, str):
                 actions = [actions]
 
+        self.version = git.describe(self, '.')
         self._sources.append(source.Source('version.c', []))
         i = ToolInvocation(self)
         i._writeversion()
@@ -190,5 +190,7 @@ class Tool(object):
         p.add_option('--dump-env', dest='dump_env',
                      action='store_true', default=False,
                      help='print all environment variables')
+        p.add_option('--with-git', dest='git_path',
+                     help='use git executable at PATH', metavar='PATH')
         opts, args = p.parse_args()
         self._run(opts, args)

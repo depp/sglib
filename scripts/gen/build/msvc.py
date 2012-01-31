@@ -39,18 +39,28 @@ def setup_msvc_env(obj):
         for k, v in sorted(os.environ.items()):
             print k, '=', v
         print
-    p = getreg(r'SOFTWARE\Microsoft\VisualStudio\10.0\Setup\VC',
-                'ProductDir')
-    if p is None:
-        fail('VS 10 not installed')
-    p = os.path.join(p, 'vcvarsall.bat')
+    if 0:
+        p = getreg(r'SOFTWARE\Microsoft\VisualStudio\10.0\Setup\VC',
+                   'ProductDir')
+        if p is None:
+            msvc_fail('VS 10 not installed')
+        p = os.path.join(p, 'vcvarsall.bat')
+    else:
+        p = getreg(r'SOFTWARE\Microsoft\Microsoft SDKs\Windows',
+                   'CurrentInstallFolder')
+        if p is None:
+            msvc_fail('Windows SDK is not installed')
+        p = os.path.join(p, 'Bin', 'SetEnv.Cmd')
     tag = 'TAG8306'
-    cmd = 'cmd.exe /c "%s" && echo %s && set' % (p, tag)
+    # It seems that setenv gives an exit status of 1 normally
+    cmd = 'cmd.exe /c "%s" & echo %s && set' % (p, tag)
     proc = subprocess.Popen(cmd, stdout=subprocess.PIPE,
                             stderr=subprocess.PIPE)
     out, err = proc.communicate()
     if proc.returncode:
-        fail('vcvarsall.bat failed (return code)')
+        sys.stderr.write(out)
+        sys.stderr.write(err)
+        msvc_fail('vcvarsall.bat failed (return code=%d)' % proc.returncode)
     lines = iter(out.splitlines())
     for line in lines:
         line = line.rstrip()
@@ -59,7 +69,7 @@ def setup_msvc_env(obj):
         if line == tag:
             break
     else:
-        fail('vcvarsall.bat failed (formatting)')
+        msvc_fail('vcvarsall.bat failed (formatting)')
     env = {}
     for line in lines:
         print line
