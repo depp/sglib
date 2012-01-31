@@ -32,14 +32,6 @@ AC_DEFUN([CHECK_LDFLAGS], [
     [m4_default([$3], [:])])
 ])
 
-dnl Check if the given framework is available
-dnl By default, do nothing
-AC_DEFUN([CHECK_FRAMEWORK], [
-  CHECK_LDFLAGS_BASE([-framework $1], [for the $1 framework],
-    [m4_default([$2], [:])],
-    [m4_default([$3], [:])])
-])
-
 AC_DEFUN([GET_UNAME], [
   $1=$(uname $2 2>/dev/null) || $1=unknown
   $1="${$1:-unknown}"
@@ -85,13 +77,6 @@ AC_DEFUN([CHECK_FRONTEND], [
   AC_SUBST(AS_TR_CPP([HAVE_$1]))
 ])
 
-dnl Cocoa (Mac OS X)
-dnl On Mac OS X, other front-ends may be available (SDL, Gtk, and X11)
-dnl but we prefer Cocoa.  On others systems this harmlessly fails.
-CHECK_FRONTEND([cocoa], [Cocoa], [
-  CHECK_FRAMEWORK([Cocoa], [HAVE_COCOA=yes])
-])
-
 dnl Gtk -- note that this requires GtkGLExt
 CHECK_FRONTEND([gtk], [Gtk+-2.0 / GtkGLExt], [
   PKG_CHECK_MODULES([GTK], [gtk+-2.0 gtkglext-1.0], [HAVE_GTK=yes], [:])
@@ -110,13 +95,6 @@ fi
 
 dnl Check for OpenGL
 if test -z "$have_opengl" ; then
-  CHECK_FRAMEWORK([OpenGL], [
-    have_opengl=yes
-    OPENGL_CFLAGS=
-    OPENGL_LIBS="-framework OpenGL"
-  ])
-fi
-if test -z "$have_opengl" ; then
   AC_CHECK_LIB([GL], [glClear], [
     AC_CHECK_LIB([GLU], [gluErrorString], [
       have_opengl=yes
@@ -132,15 +110,6 @@ AC_SUBST([OPENGL_LIBS])
 AC_SUBST([OPENGL_CFLAGS])
 
 dnl Check for some way to load images
-if test -z "$have_image" ; then
-  CHECK_FRAMEWORK([ApplicationServices], [
-    AC_DEFINE([HAVE_APPLICATIONSERVICES], [1],
-              [The Application Services framework is available])
-    have_image='Core Graphics framework'
-    IMAGE_CFLAGS=-F/System/Library/Frameworks/ApplicationServices.framework/Frameworks
-    IMAGE_LIBS="-framework ApplicationServices"
-  ])
-fi
 if test -z "$have_image" ; then
   PKG_CHECK_MODULES([LIBPNG], [libpng], [
     AC_DEFINE([HAVE_LIBPNG], [1], [LibPNG is available])
@@ -160,7 +129,6 @@ fi
 if test -z "$have_image" ; then
   AC_MSG_ERROR([cannot load images, try installing LibPNG and LibJPEG])
 fi
-AC_SUBST([HAVE_COREGRAPHICS])
 AC_SUBST([HAVE_LIBPNG])
 AC_SUBST([HAVE_LIBJPEG])
 AC_SUBST([LIBPNG_CFLAGS])
