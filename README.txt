@@ -12,6 +12,9 @@ provide functionality close to that of a native application, which is
 beyond SDL's capabilities.  The trade-off is that this way requires
 more work.
 
+This also provides some useful systems such as rendering text to
+OpenGL textures and loading PNGs and JPEGs.
+
 Requirements
 ------------
 
@@ -26,11 +29,11 @@ Linux:
 * Evdev (no other keyboard input is supported, sorry)
 
 Mac OS X:
-* Mac OS X 10.5 or more recent (uses the Core Text API)
+* Mac OS X 10.5 or more recent
 * Universal, tested on PowerPC and Intel processors
 
 Windows:
-* Vista or more recent (for WinCodec)
+* Windows XP SP3 or more recent
 
 Building
 --------
@@ -46,10 +49,12 @@ script which sets up the data paths correctly.
 On Mac OS X, use the provided Xcode projects.  They target Xcode 3.1
 and Mac OS X 10.5.
 
-On Windows, use the provided Visual Studio projects.  They were made
-for Microsoft Visual Studio Express 2010.
+On Windows, Visual Studio projects are no longer provided.  However,
+they are easy enough to create yourself.  You can also use the
+directions in HACKING.txt to use CMake to create a Visual Studio
+project.
 
-Known Limitations
+Known limitations
 -----------------
 
 The GTK version assumes that the user is using evdev exclusively.
