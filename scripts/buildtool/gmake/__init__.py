@@ -64,4 +64,5 @@ def run(obj):
     shell.run(obj, ['aclocal'])
     shell.run(obj, ['autoheader'])
     shell.run(obj, ['autoconf'])
-    shell.run(obj, ['./configure', '--enable-warnings=error'])
+    if obj.opts.configure:
+        shell.run(obj, ['./configure', '--enable-warnings=error'])

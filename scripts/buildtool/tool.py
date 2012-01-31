@@ -184,5 +184,8 @@ class Tool(object):
         p.add_option('--verbose', dest='verbose',
                      action='store_true', default=False,
                      help="print variables and command lines")
+        p.add_option('--no-configure', dest='configure',
+                     action='store_false', default=True,
+                     help="do not run the configure script")
         opts, args = p.parse_args()
         self._run(opts, args)
