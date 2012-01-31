@@ -33,12 +33,12 @@ endif
 
 HAVE_LIBPNG := $(shell sh -c 'pkg-config libpng 2>/dev/null && echo yes')
 ifdef HAVE_LIBPNG
-PNG_CFLAGS := -DHAVE_LIBPNG $(shell pkg-config --cflags libpng)
+PNG_CFLAGS := $(shell pkg-config --cflags libpng)
 PNG_LIBS := $(shell pkg-config --libs libpng)
 endif
 
 HAVE_LIBJPEG := yes
-JPEG_CFLAGS := -DHAVE_LIBJPEG
+JPEG_CFLAGS :=
 JPEG_LIBS := -ljpeg
 
 IMAGE_CFLAGS := $(PNG_CFLAGS) $(JPEG_CFLAGS)
@@ -46,7 +46,7 @@ IMAGE_LIBS := $(PNG_LIBS) $(JPEG_LIBS)
 
 HAVE_PANGO := $(shell sh -c 'pkg-config pangocairo 2>/dev/null && echo yes')
 ifdef HAVE_PANGO
-PANGO_CFLAGS := -DHAVE_PANGOCAIRO $(shell pkg-config --cflags pangocairo)
+PANGO_CFLAGS := $(shell pkg-config --cflags pangocairo)
 PANGO_LIBS := $(shell pkg-config --libs pangocairo)
 endif
 
