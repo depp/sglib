@@ -1,7 +1,8 @@
 AC_PREREQ(2.61)
-AC_INIT([game], [0.1])
-AC_CONFIG_SRCDIR([src/base/clock.c])
-AC_CONFIG_HEADERS([src/config.h])
+AC_INIT([@PKG_NAME@], [@VERSION@], [@PKG_EMAIL@],
+        [@PKG_FILENAME@], [@PKG_URL@])
+AC_CONFIG_SRCDIR([@SRCFILE@])
+AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_FILES([config.mak])
 
 dnl Check if the linker supports the given flags

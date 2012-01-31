@@ -31,7 +31,8 @@ def run(obj):
         'CXXFLAGS': '',
         'LIBS': '',
 
-        'EXENAME': obj.env.EXE_LINUX,
+        'SRCFILE': min(src for src in obj.all_sources()
+                       if src != 'version.c'),
     }
 
     def repl(m):
@@ -39,14 +40,21 @@ def run(obj):
         try:
             return subs[what]
         except KeyError:
-            return m.group(0)
+            pass
+        try:
+            return obj.env[what]
+        except KeyError:
+            pass
+        return m.group(0)
 
     dirpath = os.path.dirname(__file__)
     files = [('Makefile', '#'),
-             ('config.mak.in', '#'),
              ('configure.ac', 'dnl')]
     for fname, cm in files:
         text = open(os.path.join(dirpath, fname), 'r').read()
         text = (cm + ' ' + obj.warning + '\n' +
                 re.sub(r'@(\w+)@', repl, text))
         obj.write_file(fname, text)
+
+    text = open(os.path.join(dirpath, 'config.mak.in'), 'r').read()
+    obj.write_file('config.mak.in', text)

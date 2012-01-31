@@ -173,10 +173,10 @@ $(OBJC_OBJS): %.o: %.m $(dep_dirs_missing)
 
 run.sh: scripts/run.sh.in
 	sed \
-		-e 's,@SRCDIR@,$(srcdir),g' \
-		-e 's,@BUILDDIR@,$(srcdir),g' \
-		-e 's,@SHELL@,$(SHELL),g' \
-		-e 's,@EXENAME''@,@EXENAME@,g' \
+		-e 's,@SRCDIR''@,$(srcdir),g' \
+		-e 's,@BUILDDIR''@,$(srcdir),g' \
+		-e 's,@SHELL''@,$(SHELL),g' \
+		-e 's,@EXENAME''@,@EXE_LINUX@,g' \
 		$< > $@.tmp
 	chmod +x $@.tmp
 	mv $@.tmp $@
