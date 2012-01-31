@@ -8,7 +8,6 @@
 *.zip
 .deps
 /run.sh
-/Makefile
 /game-gtk
 /game-sdl
 /version.c
@@ -31,6 +30,9 @@
 /config.mak
 /config.status
 /configure
+/configure.ac
+/config.mak.in
+/Makefile
 
 # Microsoft Visual Studio
 /*.vcxproj

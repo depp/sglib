@@ -41,8 +41,12 @@ def run(obj):
         except KeyError:
             return m.group(0)
 
-    inpath = os.path.join(os.path.dirname(__file__), 'gmake.txt')
-    text = open(inpath, 'r').read()
-    text = ('# ' + obj.warning + '\n' +
-            re.sub(r'@(\w+)@', repl, text))
-    obj.write_file('Makefile', text)
+    dirpath = os.path.dirname(__file__)
+    files = [('Makefile', '#'),
+             ('config.mak.in', '#'),
+             ('configure.ac', 'dnl')]
+    for fname, cm in files:
+        text = open(os.path.join(dirpath, fname), 'r').read()
+        text = (cm + ' ' + obj.warning + '\n' +
+                re.sub(r'@(\w+)@', repl, text))
+        obj.write_file(fname, text)
