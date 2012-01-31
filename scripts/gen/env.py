@@ -318,6 +318,8 @@ def find_program(*progs):
 
     If it cannot be found, return the first program name as-is.
     """
+    if len(progs) == 1:
+        return progs[0]
     for prog in progs:
         for path in os.environ['PATH'].split(os.path.pathsep):
             if not path:
