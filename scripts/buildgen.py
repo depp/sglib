@@ -3,8 +3,7 @@ import buildtool.tool
 import os
 import sys
 
-tool = buildtool.tool.Tool()
-tool.rootdir(os.path.dirname(sys.path[0]))
+tool = buildtool.tool.Tool(os.path.dirname(sys.path[0]))
 
 tool.env.set(
     PKG_NAME  = 'My Game',
