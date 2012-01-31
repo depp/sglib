@@ -163,7 +163,7 @@ def build(obj):
             (obj.opts.config,)
         sys.exit(1)
     userenv = Environment(
-        ARCH='x86 x64',
+        ARCHS='x86 x64',
         CC='cl.exe',
         CXX='cl.exe',
         CPPFLAGS='',
@@ -177,7 +177,7 @@ def build(obj):
     )
     userenv.override(obj.env)
 
-    for arch in userenv.ARCH:
+    for arch in userenv.ARCHS:
         objdir = os.path.join('build', 'obj-' + arch)
         cflags=['/Fd' + os.path.join(objdir, 'debug.pdb')]
         archenv = Environment(
