@@ -91,8 +91,12 @@ class ToolInvocation(object):
     def opts(self):
         return self._tool.opts
 
+    @property
+    def version(self):
+        return self._tool.version
+
     def _writeversion(self):
-        vers = git.describe('.')
+        vers = self.version
         self.write_file(
             'version.c',
             'const char SG_VERSION[] = "%s";\n' % vers)
@@ -105,6 +109,7 @@ class Tool(object):
         self._incldirs = []
         self._props = {}
         self.env = Environment()
+        self.version = git.describe('.')
 
     def srclist(self, path, *atoms):
         """Add a list of source files from a list at the given path.

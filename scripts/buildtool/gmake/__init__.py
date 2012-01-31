@@ -33,6 +33,7 @@ def run(obj):
 
         'SRCFILE': min(src for src in obj.all_sources()
                        if src != 'version.c'),
+        'VERSION': obj.version,
     }
 
     def repl(m):
