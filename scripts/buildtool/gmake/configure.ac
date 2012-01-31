@@ -42,7 +42,6 @@ GET_UNAME([UNAME_M], [-m])
 AC_PROG_CXX
 AC_PROG_CC_C89
 AC_PROG_RANLIB
-AC_PATH_PROGS([shell], [dash sh bash], [/bin/sh])
 
 PKG_PROG_PKG_CONFIG(0.16)
 
