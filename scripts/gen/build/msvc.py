@@ -29,11 +29,16 @@ def msvc_fail(why):
 
 ENV_IS_SETUP = False
 
-def setup_msvc_env():
+def setup_msvc_env(obj):
     """Use the environment variables for Microsoft Visual C++."""
     global ENV_IS_SETUP
     if ENV_IS_SETUP:
         return
+    if obj.opts.dump_env:
+        print '==== Initial environment ===='
+        for k, v in sorted(os.environ.items()):
+            print k, '=', v
+        print
     p = getreg(r'SOFTWARE\Microsoft\VisualStudio\10.0\Setup\VC',
                 'ProductDir')
     if p is None:
@@ -49,15 +54,23 @@ def setup_msvc_env():
     lines = iter(out.splitlines())
     for line in lines:
         line = line.rstrip()
+        if obj.opts.dump_env:
+            print line
         if line == tag:
             break
     else:
         fail('vcvarsall.bat failed (formatting)')
     env = {}
     for line in lines:
+        print line
         k, v = line.rstrip().split('=', 1)
         os.environ[k] = v
     ENV_IS_SETUP = True
+    if obj.opts.dump_env:
+        print '==== MSVC Environment ===='
+        for k, v in sorted(os.environ.items()):
+            print k, '=', v
+        print
 
 def cc(obj, src, env, stype):
     if stype == 'c':
@@ -84,7 +97,7 @@ def ld(obj, src, env):
 
 def build(obj):
     build = target.Build()
-    setup_msvc_env()
+    setup_msvc_env(obj)
 
     # Get the base environment
     defs = ['_CRT_SECURE_NO_DEPRECATE', 'WIN32', 'DEBUG', '_WINDOWS']

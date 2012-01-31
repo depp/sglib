@@ -187,5 +187,8 @@ class Tool(object):
         p.add_option('--no-configure', dest='configure',
                      action='store_false', default=True,
                      help="do not run the configure script")
+        p.add_option('--dump-env', dest='dump_env',
+                     action='store_true', default=False,
+                     help='print all environment variables')
         opts, args = p.parse_args()
         self._run(opts, args)
