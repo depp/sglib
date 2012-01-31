@@ -122,7 +122,8 @@ class Target(object):
 
 class Command(Target):
     """A command-line target."""
-    ARGS=set(('cwd', 'inputs', 'outputs', 'name', 'pre', 'post'))
+    ARGS=set(('cwd', 'inputs', 'outputs', 'name', 'pre', 'post',
+              'env'))
 
     def __init__(self, *cmds, **kw):
         for a in Command.ARGS:
@@ -146,7 +147,7 @@ class Command(Target):
                     print cmd
                 else:
                     print ' '.join(cmd)
-            proc = subprocess.Popen(cmd, cwd=self.cwd)
+            proc = subprocess.Popen(cmd, cwd=self.cwd, env=self.env)
             status = proc.wait()
             if status != 0:
                 return False

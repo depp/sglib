@@ -106,11 +106,22 @@ class Program(EnvVar):
     This can be set to a list or a string.  If set to a list, the PATH
     is searched for each string until one is found.
     """
+
+    def get(self, instance):
+        try:
+            return instance._paths[self.name]
+        except KeyError:
+            pass
+        value = EnvVar.get(self, instance)
+        abspath = instance.prog_path(*value)
+        instance._paths[self.name] = abspath
+        return abspath
+
     def check(self, value):
         if isinstance(value, str):
-            return True, find_program(value)
+            return True, [value]
         else:
-            return True, find_program(*value)
+            return True, list(value)
 
 class Flags(EnvVar):
     """Program flags environment variable.
@@ -219,6 +230,8 @@ VARS = dict((v.name, v) for v in VARS)
 
 class Environment(object):
     def __init__(self, *args, **kw):
+        self._paths = {}
+        self.environ = {}
         self._props = {}
         for k, v in kw.iteritems():
             try:
@@ -231,6 +244,7 @@ class Environment(object):
         for arg in args:
             if not isinstance(arg, Environment):
                 raise TypeError
+            self.environ.update(arg.environ)
         props = dict(args[0]._props)
         for env in args[1:] + (self,):
             for k, v in env._props.iteritems():
@@ -313,18 +327,20 @@ class Environment(object):
         nval = [f for f in val if f != flag]
         var.set(self, nval)
 
-def find_program(*progs):
-    """Find the absolute path to a program if it exists.
-
-    If it cannot be found, return the first program name as-is.
-    """
-    if len(progs) == 1:
-        return progs[0]
-    for prog in progs:
-        for path in os.environ['PATH'].split(os.path.pathsep):
-            if not path:
-                continue
-            path = os.path.join(path, prog)
-            if os.access(path, os.X_OK):
-                return path
-    return progs[0]
+    def getenv(self, key):
+        try:
+            return self.environ[key]
+        except KeyError:
+            return os.environ[key]
+ 
+    def prog_path(self, *progs):
+        """Find the absolute path to a program if it exists."""
+        paths = self.getenv('PATH').split(os.path.pathsep)
+        for prog in progs:
+            for path in paths:
+                if not path:
+                    continue
+                progpath = os.path.join(path, prog)
+                if os.access(progpath, os.X_OK):
+                    return progpath
+        raise Exception('program not found: %s' % prog)
