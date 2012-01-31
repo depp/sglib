@@ -142,15 +142,9 @@ sg_version_os(struct sg_logger *lp)
 
 #endif
 
-#if !defined(HAVE_LIBJPEG)
+#if defined(_WIN32) || defined(__APPLE__)
 #define sg_version_libjpeg(x) (void)0
-#endif
-
-#if !defined(HAVE_LIBPNG)
 #define sg_version_libpng(x) (void)0
-#endif
-
-#if !defined(HAVE_PANGOCAIRO)
 #define sg_version_pango(x) (void)0
 #endif
 
