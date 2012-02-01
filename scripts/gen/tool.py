@@ -107,22 +107,28 @@ class ToolInvocation(object):
 
 class Tool(object):
     def __init__(self, rootdir):
-        os.chdir(rootdir)
+        rootpath = os.path.abspath(rootdir)
+        sgpath = os.path.abspath(__file__)
+        for i in xrange(3):
+            sgpath = os.path.dirname(sgpath)
+        sgrel = []
+        p = sgpath
+        while p != rootpath:
+            np, f = os.path.split(p)
+            if np == p:
+                print >>sys.stderr, 'root: %s, sglib: %s' % (rootpath, sgpath)
+                print >>sys.stderr, 'error: sglib must be below root directory'
+                sys.exit(1)
+            p = np
+            sgrel.insert(0, f)
+        sgpath = os.path.join(*sgrel)
+        os.chdir(rootpath)
+
         self._atoms = set()
         self._sources = []
         self._incldirs = []
         self._props = {}
         self.env = Environment()
-        sgpath = __file__
-        for i in xrange(3):
-            sgpath = os.path.dirname(sgpath)
-        sgpath = os.path.relpath(sgpath)
-        if os.path.isabs(sgpath):
-            print >>sys.stderr, 'error: cannot find sglib directory'
-        if os.path.sep != '/':
-            sgpath = sgpath.replace(os.path.sep, '/')
-        if sgpath.startswith('../') or sgpath == '..':
-            print >>sys.stderr, 'error: cannot find sglib directory'
         self._sgpath = sgpath
 
     def srclist(self, path, *atoms):
