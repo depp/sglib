@@ -24,4 +24,8 @@ public:
 };
 
 }
+
+// This must be implemented by the user
+UI::Screen *getMainScreen();
+
 #endif

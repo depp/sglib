@@ -4,9 +4,9 @@
 #include "base/event.h"
 #include "base/opengl.h"
 #include "base/resource.h"
-#include "menu.hpp"
 #include "screen.hpp"
 #include "sys/error.hpp"
+#include <assert.h>
 #include <stdio.h>
 using namespace UI;
 
@@ -50,7 +50,8 @@ static void handle_nullscreen()
 
 void sg_game_init(void)
 {
-    current_screen = new UI::Menu;
+    current_screen = getMainScreen();
+    assert(current_screen);
 }
 
 void sg_game_getinfo(struct sg_game_info *info)

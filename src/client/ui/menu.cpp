@@ -1,3 +1,5 @@
+#if 0
+
 #include "menu.hpp"
 #include "button.hpp"
 #include "game/ld22/screen.hpp"
@@ -116,3 +118,5 @@ void UI::Menu::quit()
 {
     Screen::quit();
 }
+
+#endif
