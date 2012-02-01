@@ -148,9 +148,9 @@ endif
 ########################################
 # Intermediate files
 
-src/base/version_str.c: version-stamp
-version-stamp:
-	$(QUIET_VERS)sh scripts/version.sh . .
+#src/base/version_str.c: version-stamp
+#version-stamp:
+#	$(QUIET_VERS)sh scripts/version.sh . .
 
 $(C_OBJS): %.o: %.c $(dep_dirs_missing)
 	$(QUIET_CC)$(CC) -o $@ -c  $(dep_args) $(ALL_CPPFLAGS) $(ALL_CFLAGS) $<
@@ -166,7 +166,7 @@ $(OBJC_OBJS): %.o: %.m $(dep_dirs_missing)
 
 EXENAME=@EXE_LINUX@
 
-run.sh: scripts/run.sh.in
+run.sh: @SGPATH@/scripts/run.sh.in
 	sed \
 		-e 's,@SRCDIR''@,$(srcdir),g' \
 		-e 's,@BUILDDIR''@,$(srcdir),g' \

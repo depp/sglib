@@ -17,6 +17,9 @@ def run(obj):
 
     all_src = (base_src + gtk_src + sdl_src +
                libpng_src + libjpeg_src + pango_src)
+    incldirs = obj.incldirs
+    if '.' not in incldirs:
+        incldirs = incldirs + ['.']
 
     subs = {
         'BASE_OBJS': objs(base_src),
@@ -28,7 +31,7 @@ def run(obj):
         'C_OBJS': objs(path.c_sources(all_src)),
         'CXX_OBJS': objs(path.cxx_sources(all_src)),
 
-        'CPPFLAGS': ' '.join(['-I' + p for p in obj.incldirs]),
+        'CPPFLAGS': ' '.join(['-I' + p for p in incldirs]),
         'CFLAGS': '',
         'CXXFLAGS': '',
         'LIBS': '',
@@ -36,6 +39,7 @@ def run(obj):
         'SRCFILE': min(src for src in obj.all_sources()
                        if src != 'version.c'),
         'VERSION': obj.version,
+        'SGPATH': obj.sgpath,
     }
 
     def repl(m):

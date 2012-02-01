@@ -95,6 +95,10 @@ class ToolInvocation(object):
     def version(self):
         return self._tool.version
 
+    @property
+    def sgpath(self):
+        return self._tool._sgpath
+
     def _writeversion(self):
         vers = self.version
         self.write_file(
@@ -109,6 +113,17 @@ class Tool(object):
         self._incldirs = []
         self._props = {}
         self.env = Environment()
+        sgpath = __file__
+        for i in xrange(3):
+            sgpath = os.path.dirname(sgpath)
+        sgpath = os.path.relpath(sgpath)
+        if os.path.isabs(sgpath):
+            print >>sys.stderr, 'error: cannot find sglib directory'
+        if os.path.sep != '/':
+            sgpath = sgpath.replace(os.path.sep, '/')
+        if sgpath.startswith('../') or sgpath == '..':
+            print >>sys.stderr, 'error: cannot find sglib directory'
+        self._sgpath = sgpath
 
     def srclist(self, path, *atoms):
         """Add a list of source files from a list at the given path.
