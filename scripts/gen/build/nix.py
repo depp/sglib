@@ -31,15 +31,6 @@ def buildline(cmd, target, tag):
     else:
         return '[%s] %s %s' % (tag, cmd, target)
 
-def getarch(env):
-    aflags = []
-    arch = env.ARCH
-    if not arch:
-        return aflags
-    for a in arch:
-        aflags.extend(('-arch', a))
-    return aflags
-
 def cc(obj, src, env, stype):
     """Create a target that compiles C, C++, or Objective C. """
     if stype in ('c', 'm'):
@@ -54,16 +45,14 @@ def cc(obj, src, env, stype):
         what = 'CXX'
     else:
         raise ValueError('not a C file type: %r' % stype)
-    aflags = getarch(env)
-    cmd = [cc, '-o', obj, '-c', src] + aflags + env.CPPFLAGS + warn + cflags
+    cmd = [cc, '-o', obj, '-c', src] + env.CPPFLAGS + warn + cflags
     return target.Command(cmd, inputs=[src], outputs=[obj], name=what)
 
 def ld(obj, src, env):
     """Create a target that links an executable."""
     cc = env.CXX
     # Some LDFLAGS do not work if they don't appear before -o
-    aflags = getarch(env)
-    cmd = [cc] + aflags + env.LDFLAGS + ['-o', obj] + src + env.LIBS
+    cmd = [cc] + env.LDFLAGS + ['-o', obj] + src + env.LIBS
     return target.Command(cmd, inputs=src, outputs=[obj], name='LD')
 
 def lipo(obj, src, env):
@@ -160,11 +149,13 @@ def build_macosx(obj):
     for arch in env.ARCHS:
         objext = '-%s.o' % arch
         # Build the sources
+        aflags = ['-arch', arch]
+        ldflags = aflags[:]
+        cflags = aflags[:]
         if arch in ('ppc', 'ppc64'):
-            cflags = '-mtune=G5'
-        else:
-            cflags = ''
-        archenv = Environment(ARCH=arch, CFLAGS=cflags, CXXFLAGS=cflags)
+            cflags.append('-mtune=G5')
+        archenv = Environment(LDFLAGS=ldflags,
+                              CFLAGS=cflags, CXXFLAGS=cflags)
         archenv = Environment(baseenv, archenv, userenv)
         objs = []
         for src in srcs:

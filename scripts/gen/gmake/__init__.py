@@ -2,6 +2,7 @@ import os
 import gen.path as path
 import gen.shell as shell
 import re
+import gen.cpucount
 
 def objs(paths):
     return ' '.join(path.withext(path.sources(paths), '.o'))
@@ -66,3 +67,10 @@ def run(obj):
     shell.run(obj, ['autoconf'])
     if obj.opts.configure:
         shell.run(obj, ['./configure', '--enable-warnings=error'])
+        n = gen.cpucount.cpu_count()
+        if n > 1:
+            cmd = 'make -j%d' % n
+        else:
+            cmd = 'make'
+        print
+        print 'Run "%s" to build.' % (cmd,)

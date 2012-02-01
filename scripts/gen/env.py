@@ -213,7 +213,7 @@ class DomainName(EnvVar):
 PROGS = [Program(p) for p in ('CC', 'CXX', 'LD')]
 FLAGS = [Flags(p) for p in
          ('CPPFLAGS', 'CFLAGS', 'CXXFLAGS', 'CWARN', 'CXXWARN',
-          'LDFLAGS', 'LIBS', 'ARCHS', 'ARCH')]
+          'LDFLAGS', 'LIBS', 'ARCHS')]
 PKG = [
     Title('PKG_NAME'),
     DomainName('PKG_IDENT'),
