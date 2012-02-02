@@ -201,6 +201,13 @@ def build_macosx(obj):
     resources = os.path.join(contents, 'Resources')
     build.add(ibtool(os.path.join(resources, 'MainMenu.nib'),
                      obj.main_xib(), env))
+    try:
+        icon = obj.env['EXE_MACICON']
+    except KeyError:
+        pass
+    else:
+        objf = os.path.join(resources, os.path.basename(icon))
+        build.add(target.CopyFile(objf, icon))
 
     return build
 
