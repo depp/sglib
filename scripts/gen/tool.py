@@ -147,9 +147,17 @@ class ToolInvocation(object):
 
     @memoize
     def info_plist(self):
+        import plistxml
         path = os.path.join('resources', 'mac', 'Info.plist')
-        self._ftemplate(os.path.join(self.sgpath, path), path,
-                        {'EXECUTABLE_NAME': None})
+        plist = plistxml.load(open(os.path.join(self.sgpath, path), 'rb').read())
+        plist[u'CFBundleIdentifier'] = unicode(self.env['PKG_IDENT'])
+        try:
+            icons = self.env['EXE_MACICON']
+        except KeyError:
+            pass
+        else:
+            plist[u'CFBundleIconFile'] = unicode(os.path.basename(icons))
+        self.write_file(path, plistxml.dump(plist))
         return path
 
     @memoize
