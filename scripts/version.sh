@@ -5,7 +5,7 @@ SRCDIR="$1"
 BUILDDIR="${2:-$1}"
 
 INPUT="$SRCDIR"/scripts/VERSION
-OUTPUT="$BUILDDIR"/src/base/version_str.c
+OUTPUT="$BUILDDIR"/version.c
 
 if test $# -ne 2 && test $# -ne 1
 then
