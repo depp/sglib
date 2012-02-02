@@ -224,6 +224,7 @@ PKG = [
     Title('EXE_MAC', 'EXE_NAME'),
     Filename('EXE_LINUX', 'EXE_NAME'),
     Title('EXE_WINDOWS', 'EXE_NAME'),
+    Filename('EXE_MACICON')
 ]
 VARS = PROGS + FLAGS + PKG
 VARS = dict((v.name, v) for v in VARS)

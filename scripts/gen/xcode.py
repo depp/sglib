@@ -14,10 +14,12 @@ TYPES = {
     'framework': 'wrapper.framework',
     'xib': 'file.xib',
     'plist': 'text.plist.xml',
+    'icns': 'image.icns',
 }
 
 RESOURCE_BUILD = set([
     'file.xib',
+    'image.icns',
 ])
 
 SOURCE_BUILD = set([
@@ -502,6 +504,12 @@ def run(obj):
         add_source(x.source_file('/System/Library/Frameworks/%s.framework' % fw, name=fw))
     add_source(x.source_file(obj.info_plist()))
     add_source(x.source_file(obj.main_xib()))
+    try:
+        icns = obj.env['EXE_MACICON']
+    except KeyError:
+        pass
+    else:
+        add_source(x.source_file(icns))
     x.add_target(t)
     f = cStringIO.StringIO()
     x.write(f)
