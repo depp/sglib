@@ -15,6 +15,21 @@ DEFAULT = {
     'Windows': 'cmake',
 }
 
+def memoize(fn):
+    def decorated(self):
+        try:
+            memo = self._memo
+        except AttributeError:
+            memo = {}
+            self._memo = memo
+        try:
+            return memo[fn.__name__]
+        except KeyError:
+            v = fn(self)
+            memo[fn.__name__] = v
+            return v
+    return decorated
+
 class ToolInvocation(object):
     def __init__(self, tool):
         self._tool = tool
@@ -99,11 +114,49 @@ class ToolInvocation(object):
     def sgpath(self):
         return self._tool._sgpath
 
-    def _writeversion(self):
+    @memoize
+    def version_file(self):
+        path = 'version.c'
         vers = self.version
         self.write_file(
-            'version.c',
+            path,
             'const char SG_VERSION[] = "%s";\n' % vers)
+        return path
+
+    def _ftemplate(self, ipath, opath, vars=None):
+        import re
+        data = open(ipath, 'rb').read()
+        def repl(m):
+            w = m.group(1)
+            try:
+                return self.env[w]
+            except KeyError:
+                pass
+            if vars is not None:
+                try:
+                    v = vars[w]
+                    if v is None:
+                        return m.group(0)
+                    return v
+                except KeyError:
+                    pass
+            print >>sys.stderr, '%s: unknown variable %r' % (ipath, w)
+            return m.group(0)
+        data = re.sub(r'\${(\w+)}', repl, data)
+        self.write_file(opath, data)
+
+    @memoize
+    def info_plist(self):
+        path = os.path.join('resources', 'mac', 'Info.plist')
+        self._ftemplate(os.path.join(self.sgpath, path), path,
+                        {'EXECUTABLE_NAME': None})
+        return path
+
+    @memoize
+    def main_xib(self):
+        path = os.path.join('resources', 'mac', 'MainMenu.xib')
+        self._ftemplate(os.path.join(self.sgpath, path), path)
+        return path
 
 class Tool(object):
     def __init__(self, rootdir):
@@ -188,9 +241,8 @@ class Tool(object):
                 actions = [actions]
 
         self.version = git.describe(self, '.')
-        self._sources.append(source.Source('version.c', []))
         i = ToolInvocation(self)
-        i._writeversion()
+        self._sources.append(source.Source(i.version_file(), []))
         for b in actions:
             print 'ACTION', b
             m = getattr(__import__('gen.' + b), b)

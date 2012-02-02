@@ -192,7 +192,7 @@ def build_macosx(obj):
     pcmds = ['Set :CFBundleExecutable %s' % exename]
     # CFBundleIdentifier
     build.add(plist(os.path.join(contents, 'Info.plist'),
-                    'mac/Game-Info.plist', pcmds))
+                    obj.info_plist(), pcmds))
     pkginfo = 'APPL????'
     build.add(target.StaticFile(os.path.join(contents, 'PkgInfo'),
                                 pkginfo))
@@ -200,7 +200,7 @@ def build_macosx(obj):
     # Compile / copy resources
     resources = os.path.join(contents, 'Resources')
     build.add(ibtool(os.path.join(resources, 'MainMenu.nib'),
-                     'mac/MainMenu.xib', env))
+                     obj.main_xib(), env))
 
     return build
 

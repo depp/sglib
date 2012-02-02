@@ -456,7 +456,7 @@ def targetConfig(obj):
         'GCC_ENABLE_FIX_AND_CONTINUE': True,
         'GCC_MODEL_TUNING': 'G5',
         'GCC_OPTIMIZATION_LEVEL': 0,
-        'INFOPLIST_FILE': 'mac/Game-Info.plist',
+        'INFOPLIST_FILE': obj.info_plist(),
         'INSTALL_PATH': '$(HOME)/Applications',
         'OTHER_LDFLAGS': [
                 '-framework', 'Foundation',
@@ -512,8 +512,8 @@ def run(obj):
         add_source(x.source_file(src))
     for fw in ['Foundation', 'AppKit', 'CoreServices', 'CoreVideo', 'Carbon']:
         add_source(x.source_file('/System/Library/Frameworks/%s.framework' % fw, name=fw))
-    add_source(x.source_file('mac/Game-Info.plist'))
-    add_source(x.source_file('mac/MainMenu.xib'))
+    add_source(x.source_file(obj.info_plist()))
+    add_source(x.source_file(obj.main_xib()))
     x.add_target(t)
     f = cStringIO.StringIO()
     x.write(f)
