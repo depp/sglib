@@ -427,8 +427,6 @@ class Xcode(object):
 
 def projectConfig(obj):
     base = {
-        'GCC_PRECOMPILE_PREFIX_HEADER': True,
-        'GCC_PREFIX_HEADER': 'src/platform/macosx/GPrefix.h',
         'GCC_VERSION': '4.2',
         'WARNING_CFLAGS': ['-Wall', '-Wextra'],
         'HEADER_SEARCH_PATHS': ['$(HEADER_SEARCH_PATHS)'] + obj.incldirs,
@@ -446,23 +444,12 @@ def projectConfig(obj):
 def targetConfig(obj):
     base = {
         'ALWAYS_SEARCH_USER_PATHS': False,
-        'FRAMEWORK_SEARCH_PATHS': [
-            '$(inherited)',
-            '$(FRAMEWORK_SEARCH_PATHS_QUOTED_FOR_TARGET_1)',
-        ],
-        'FRAMEWORK_SEARCH_PATHS_QUOTED_FOR_TARGET_1':
-            '"$(SYSTEM_LIBRARY_DIR)/Frameworks/ApplicationServices.framework/Frameworks"',
         'GCC_DYNAMIC_NO_PIC': False,
         'GCC_ENABLE_FIX_AND_CONTINUE': True,
         'GCC_MODEL_TUNING': 'G5',
         'GCC_OPTIMIZATION_LEVEL': 0,
         'INFOPLIST_FILE': obj.info_plist(),
         'INSTALL_PATH': '$(HOME)/Applications',
-        'OTHER_LDFLAGS': [
-                '-framework', 'Foundation',
-                '-framework', 'AppKit',
-                '-framework', 'OpenGL',
-        ],
         'PREBINDING': False,
         'PRODUCT_NAME': obj.env.EXE_MAC,
     }
@@ -475,7 +462,6 @@ def targetConfig(obj):
         'ARCHS': 'ppc i386',
         'COPY_PHASE_STRIP': True,
         'DEBUG_INFORMATION_FORMAT': 'dwarf-with-dsym',
-        'ZERO_LINK': False,
         'GCC_ENABLE_FIX_AND_CONTINUE': True,
     }
     cd = BuildConfiguration('Debug', base, debug)
@@ -488,7 +474,9 @@ def run(obj):
     t = NativeTarget('com.apple.product-type.application',
                      obj.env.EXE_MAC)
     t.buildConfigurationList = targetConfig(obj)
-    script = ShellScriptBuildPhase('exec "$PROJECT_DIR"/scripts/version.sh "$PROJECT_DIR" "$PROJECT_DIR"')
+    script = ShellScriptBuildPhase(
+        'exec "$PROJECT_DIR"/%s/scripts/version.sh "$PROJECT_DIR" "$PROJECT_DIR"' %
+        obj.sgpath)
     rsrcs = ResourcesBuildPhase()
     srcs = SourcesBuildPhase()
     fwks = FrameworksBuildPhase()
@@ -510,7 +498,7 @@ def run(obj):
         x.source_file(src)
     for src in obj.get_atoms('MACOSX', None):
         add_source(x.source_file(src))
-    for fw in ['Foundation', 'AppKit', 'CoreServices', 'CoreVideo', 'Carbon']:
+    for fw in ['Foundation', 'AppKit', 'CoreServices', 'CoreVideo', 'Carbon', 'OpenGL']:
         add_source(x.source_file('/System/Library/Frameworks/%s.framework' % fw, name=fw))
     add_source(x.source_file(obj.info_plist()))
     add_source(x.source_file(obj.main_xib()))
