@@ -108,7 +108,7 @@ class ToolInvocation(object):
 
     @property
     def version(self):
-        return self._tool.version
+        return self._tool._version
 
     @property
     def sgpath(self):
@@ -117,10 +117,13 @@ class ToolInvocation(object):
     @memoize
     def version_file(self):
         path = 'version.c'
-        vers = self.version
-        self.write_file(
-            path,
-            'const char SG_VERSION[] = "%s";\n' % vers)
+        data = """\
+        const char SG_VERSION[] = "%s";
+        const char SG_COMMIT[] = "%s";
+        """ % (self.version, self._tool._sha1)
+        data = ''.join(x.strip() + '\n' for x in data.splitlines()
+                       if x.strip())
+        self.write_file(path, data)
         return path
 
     def _ftemplate(self, ipath, opath, vars=None):
@@ -149,14 +152,35 @@ class ToolInvocation(object):
     def info_plist(self):
         import plistxml
         path = os.path.join('resources', 'mac', 'Info.plist')
-        plist = plistxml.load(open(os.path.join(self.sgpath, path), 'rb').read())
-        plist[u'CFBundleIdentifier'] = unicode(self.env['PKG_IDENT'])
         try:
-            icons = self.env['EXE_MACICON']
+            icon = self.env['EXE_MACICON']
+            icon = os.path.splitext(icon)[0]
+            icon = os.path.basename(icon)
+            icon = unicode(icon)
         except KeyError:
-            pass
-        else:
-            plist[u'CFBundleIconFile'] = unicode(os.path.basename(icons))
+            icon = None
+        plist = {
+            u'CFBundleDevelopmentRegion': u'English',
+            u'CFBundleExecutable': u'${EXECUTABLE_NAME}',
+            u'CFBundleGetInfoString':
+                u'%s, %s' % (self.version, self.env['PKG_COPYRIGHT']),
+            # CFBundleName
+            u'CFBundleIconFile': icon,
+            u'CFBundleIdentifier': unicode(self.env['PKG_IDENT']),
+            u'CFBundleInfoDictionaryVersion': u'6.0',
+            u'CFBundlePackageType': u'APPL',
+            u'CFBundleShortVersionString': unicode(self.version),
+            u'CFBundleSignature': u'????',
+            u'CFBundleVersion': unicode(self.version),
+            # LSArchicecturePriority
+            # LSFileQuarantineEnabled
+            u'LSMinimumSystemVersion': u'10.5.0',
+            u'NSMainNibFile': u'MainMenu',
+            u'NSPrincipalClass': u'GApplication',
+            # NSSupportsAutomaticTermination
+            # NSSupportsSuddenTermination
+        }
+        plist = dict((k,v) for (k,v) in plist.iteritems() if v is not None)
         self.write_file(path, plistxml.dump(plist))
         return path
 
@@ -248,13 +272,25 @@ class Tool(object):
             if isinstance(actions, str):
                 actions = [actions]
 
-        self.version = git.describe(self, '.')
+        self._get_version()
         i = ToolInvocation(self)
         self._sources.append(source.Source(i.version_file(), []))
         for b in actions:
             print 'ACTION', b
             m = getattr(__import__('gen.' + b), b)
             m.run(i)
+
+    def _get_version(self):
+        version = git.get_version(self, '.')
+        if version is None:
+            version = (0,1,0)
+        x,y,z = version
+        if z:
+            version = '%d.%d.%d' % (x,y,z)
+        else:
+            version = '%d.%d' % (x,y)
+        self._version = version
+        self._sha1 = git.get_sha1(self, '.')
 
     def run(self):
         import optparse
