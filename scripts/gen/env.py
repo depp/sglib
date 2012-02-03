@@ -100,6 +100,17 @@ class EnvVar(object):
     def as_string(self, value):
         return value
 
+class UEnvVar(EnvVar):
+    """Unicode environment variable."""
+    def check(self, value):
+        if isinstance(value, unicode):
+            return True, value
+        elif isinstance(value, str):
+            return True, unicode(value, 'ascii')
+        return False, None
+    def as_string(self, value):
+        return value.encode('utf-8')
+
 class Program(EnvVar):
     """Program path environment variable.
 
@@ -220,11 +231,12 @@ PKG = [
     Filename('PKG_FILENAME', 'PKG_NAME'),
     EnvVar('PKG_URL'),
     EnvVar('PKG_EMAIL'),
+    UEnvVar('PKG_COPYRIGHT'),
     Title('EXE_NAME', 'PKG_NAME'),
     Title('EXE_MAC', 'EXE_NAME'),
     Filename('EXE_LINUX', 'EXE_NAME'),
     Title('EXE_WINDOWS', 'EXE_NAME'),
-    Filename('EXE_MACICON')
+    Filename('EXE_MACICON'),
 ]
 VARS = PROGS + FLAGS + PKG
 VARS = dict((v.name, v) for v in VARS)

@@ -159,11 +159,15 @@ class ToolInvocation(object):
             icon = unicode(icon)
         except KeyError:
             icon = None
+        try:
+            copyright = self.env['PKG_COPYRIGHT']
+            getinfo = '%s, %s' % (self.version, copyright)
+        except KeyError:
+            getinfo = unicode(self.version)
         plist = {
             u'CFBundleDevelopmentRegion': u'English',
             u'CFBundleExecutable': u'${EXECUTABLE_NAME}',
-            u'CFBundleGetInfoString':
-                u'%s, %s' % (self.version, self.env['PKG_COPYRIGHT']),
+            u'CFBundleGetInfoString': getinfo,
             # CFBundleName
             u'CFBundleIconFile': icon,
             u'CFBundleIdentifier': unicode(self.env['PKG_IDENT']),
