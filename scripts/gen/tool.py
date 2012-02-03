@@ -163,7 +163,12 @@ class ToolInvocation(object):
             copyright = self.env['PKG_COPYRIGHT']
             getinfo = '%s, %s' % (self.version, copyright)
         except KeyError:
+            print >>sys.stderr, 'warning: PKG_COPYRIGHT is unset'
             getinfo = unicode(self.version)
+        try:
+            category = unicode(self.env['PKG_APPLE_CATEGORY'], 'ascii')
+        except KeyError:
+            category = u'public.app-category.games'
         plist = {
             u'CFBundleDevelopmentRegion': u'English',
             u'CFBundleExecutable': u'${EXECUTABLE_NAME}',
@@ -176,6 +181,7 @@ class ToolInvocation(object):
             u'CFBundleShortVersionString': unicode(self.version),
             u'CFBundleSignature': u'????',
             u'CFBundleVersion': unicode(self.version),
+            u'LSApplicationCategory': category,
             # LSArchicecturePriority
             # LSFileQuarantineEnabled
             u'LSMinimumSystemVersion': u'10.5.0',
