@@ -237,6 +237,7 @@ PKG = [
     Filename('EXE_LINUX', 'EXE_NAME'),
     Title('EXE_WINDOWS', 'EXE_NAME'),
     Filename('EXE_MACICON'),
+    DomainName('PKG_APPLE_CATEGORY'),
 ]
 VARS = PROGS + FLAGS + PKG
 VARS = dict((v.name, v) for v in VARS)
@@ -274,36 +275,51 @@ class Environment(object):
         if not IS_ENVVAR.match(name):
             return object.__getattr__(self, name)
         try:
-            return self[name]
+            var = VARS[name]
         except KeyError:
             raise AttributeError(name)
+        return var.get(self)
 
     def __setattr__(self, name, value):
         if not IS_ENVVAR.match(name):
             return object.__setattr__(self, name, value)
         try:
-            self[name] = value
+            var = VARS[name]
         except KeyError:
             raise AttributeError(name)
+        var.set(self, value)
 
     def __delattr__(self, name):
         if not IS_ENVVAR.match(name):
             return object.__delattr__(self, name)
         try:
-            del self[name]
+            var = VARS[name]
         except KeyError:
             raise AttributeError(name)
+        var.delete(self)
 
     def __getitem__(self, name):
-        var = VARS[name]
-        return var.get(self)
+        try:
+            var = VARS[name]
+        except KeyError:
+            raise UnknownProperty(name)
+        try:
+            return var.get(self)
+        except UnsetProperty:
+            raise KeyError(name)
 
     def __setitem__(self, name, value):
-        var = VARS[name]
-        return var.set(self, value)
+        try:
+            var = VARS[name]
+        except KeyError:
+            raise UnknownProperty(name)
+        var.set(self, value)
 
     def __delitem__(self, name):
-        var = VARS[name]
+        try:
+            var = VARS[name]
+        except KeyError:
+            raise UnknownProperty(name)
         return var.delete(self)
 
     def override(self, env):
