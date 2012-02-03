@@ -3,6 +3,10 @@ import subprocess
 import re
 import sys
 
+def git(obj, path, *cmd):
+    git = obj.opts.git_path or 'git'
+    return shell.getoutput([git] + list(cmd), cwd=path)
+
 def get_version(obj, path):
     """Get the current version as (X, Y, Z) where X, Y, Z are integers.
 
@@ -11,9 +15,8 @@ def get_version(obj, path):
     with 0.  If the tag has the wrong format or cannot be found, None is
     returned and a warning is printed.
     """
-    git = obj.opts.git_path or 'git'
     try:
-        desc = shell.getoutput([git, 'describe', '--abbrev=0'], cwd=path)
+        desc = git(obj, path, 'describe', '--abbrev=0')
     except subprocess.CalledProcessError:
         print >>sys.stderr, 'warning: no git tags found'
         return
@@ -31,9 +34,8 @@ def get_version(obj, path):
     return tuple(s)
 
 def get_sha1(obj, path):
-    git = obj.opts.git_path or 'git'
     try:
-        sha1 = shell.getoutput([git, 'rev-parse', 'HEAD'], cwd=path)
+        sha1 = git(obj, path, 'rev-parse', 'HEAD')
     except subprocess.CalledProcessError:
         print >>sys.stderr, 'warning: no git HEAD found'
         return None
