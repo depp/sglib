@@ -108,7 +108,7 @@ sg_path_norm(char *buf, const char *path, size_t pathlen,
     unsigned int ci, co;
     int r;
 
-    if (pathlen > SG_MAX_PATH) {
+    if (pathlen >= SG_MAX_PATH) {
         sg_path_error(err, "path too long");
         return -1;
     }
