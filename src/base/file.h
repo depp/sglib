@@ -34,9 +34,16 @@ sg_path_init(void);
 
 /* Normalize a path.  Returns the length of the result, or -1 if the
    path is not legal, which sets the error.  The buffer must be
-   SG_MAX_PATH long.  */
+   SG_MAX_PATH long.  The resulting path will use '/' as a path
+   separator, will not start with '/', and each component will be a
+   non-empty lower-case string containing only alphanumeric characters
+   and "-", "_", and ".".  No component will start or end with a
+   period, and no component will be a reserved device name on Windows.
+   If the input path refers to a directory, the output will either end
+   with '/' or be empty.  */
 int
-sg_path_norm(char *buf, const char *path, struct sg_error **err);
+sg_path_norm(char *buf, const char *path, size_t pathlen,
+             struct sg_error **err);
 
 /* A buffer of data read from a file.  Can be copied or moved.  Do not
    free manually.  */
@@ -91,7 +98,8 @@ struct sg_file {
 
 /* Open a open a regular file, or return NULL for failure.  */
 struct sg_file *
-sg_file_open(const char *path, int flags, struct sg_error **e);
+sg_file_open(const char *path, size_t pathlen, int flags,
+             struct sg_error **e);
 
 /* Read the contents of a file, starting with the current position.
    Return 0 for success, -1 for failure, or 1 if the amount of data
@@ -105,7 +113,7 @@ sg_file_readall(struct sg_file *f, struct sg_buffer *fbuf, size_t maxsize);
    maxsize (which sets the error).  The buffer will contain an extra
    zero byte past the end.  */
 int
-sg_file_get(const char *path, int flags,
+sg_file_get(const char *path, size_t pathlen, int flags,
             struct sg_buffer *fbuf, size_t maxsize, struct sg_error **e);
 
 #ifdef __cplusplus

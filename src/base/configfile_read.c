@@ -41,7 +41,7 @@ configfile_read(struct configfile *f, const char *path)
     char *buf = NULL, *bptr, *sstr, *nstr, *vstr;
     size_t bufsize = 0;
 
-    r = sg_file_get(path, 0, &fbuf, MAX_CONFIGFILE, NULL);
+    r = sg_file_get(path, strlen(path), 0, &fbuf, MAX_CONFIGFILE, NULL);
     if (r) {
         if (r > 0) {
             logger = sg_logger_get("config");

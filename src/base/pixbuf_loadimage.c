@@ -41,14 +41,14 @@ sg_pixbuf_loadimage(struct sg_pixbuf *pbuf, const char *path,
         if (l - e == 3) {
             if (!memcmp(npath + e, "png", 3)) {
                 attempt = IMG_PNG;
-                r = sg_file_get(path, 0, &fbuf, maxsize, &ferr);
+                r = sg_file_get(path, strlen(path), 0, &fbuf, maxsize, &ferr);
                 if (!r) {
                     r = sg_pixbuf_loadpng(pbuf, fbuf.data, fbuf.length, err);
                     goto havefile;
                 }
             } else if (!memcmp(npath + e, "jpg", 3)) {
                 attempt = IMG_JPEG;
-                r = sg_file_get(path, 0, &fbuf, maxsize, &ferr);
+                r = sg_file_get(path, strlen(path), 0, &fbuf, maxsize, &ferr);
                 if (!r) {
                     r = sg_pixbuf_loadjpeg(pbuf, fbuf.data, fbuf.length, err);
                     goto havefile;
@@ -71,7 +71,7 @@ sg_pixbuf_loadimage(struct sg_pixbuf *pbuf, const char *path,
     memcpy(npath, path, e);
     if (attempt != IMG_PNG) {
         memcpy(npath + e, ".png", 5);
-        r = sg_file_get(npath, 0, &fbuf, maxsize, &ferr);
+        r = sg_file_get(npath, strlen(npath), 0, &fbuf, maxsize, &ferr);
         if (!r) {
             r = sg_pixbuf_loadpng(pbuf, fbuf.data, fbuf.length, err);
             goto havefile;
@@ -82,7 +82,7 @@ sg_pixbuf_loadimage(struct sg_pixbuf *pbuf, const char *path,
     }
     if (attempt != IMG_JPEG) {
         memcpy(npath + e, ".jpg", 5);
-        r = sg_file_get(npath, 0, &fbuf, maxsize, &ferr);
+        r = sg_file_get(npath, strlen(npath), 0, &fbuf, maxsize, &ferr);
         if (!r) {
             r = sg_pixbuf_loadpng(pbuf, fbuf.data, fbuf.length, err);
             goto havefile;

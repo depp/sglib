@@ -268,7 +268,8 @@ sg_model_load(struct sg_model *mp, struct sg_error **err)
 
     if (!(mp->flags & SG_MODEL_STATIC)) {
         sg_model_unload(mp);
-        r = sg_file_get(mp->r.name, 0, &fbuf, maxsize, err);
+        r = sg_file_get(mp->r.name, strlen(mp->r.name),
+                        0, &fbuf, maxsize, err);
         if (r)
             goto error;
         r = sg_model_load2(mp, &fbuf, err);

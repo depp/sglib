@@ -45,7 +45,8 @@ sg_path_copy(pchar *dest, const char *src, size_t len)
 }   
 
 struct sg_file *
-sg_file_open(const char *path, int flags, struct sg_error **e)
+sg_file_open(const char *path, size_t pathlen, int flags,
+             struct sg_error **e)
 {
     struct sg_file *f;
     struct sg_path *a;
@@ -57,7 +58,7 @@ sg_file_open(const char *path, int flags, struct sg_error **e)
     if (flags & SG_WRONLY)
         flags |= SG_WRITABLE;
 
-    nlen = sg_path_norm(nbuf, path, e);
+    nlen = sg_path_norm(nbuf, path, pathlen, e);
     if (nlen < 0)
         return NULL;
 
