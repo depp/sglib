@@ -8,7 +8,7 @@ FBuffer::FBuffer(const char *path, int flags, size_t maxsize)
     int r;
     sg_buffer b;
     sg_error *e = NULL;
-    r = sg_file_get(path, strlen(path), flags, &b, maxsize, &e);
+    r = sg_file_get(path, strlen(path), flags, NULL, &b, maxsize, &e);
     if (r)
         throw error(&e);
     std::memcpy(&m_buf, &b, sizeof(sg_buffer));
@@ -18,7 +18,7 @@ File::File(const char *path, int flags)
     : m_ptr(0)
 {
     sg_error *e = NULL;
-    m_ptr = sg_file_open(path, strlen(path), flags, &e);
+    m_ptr = sg_file_open(path, strlen(path), flags, NULL, &e);
     if (!m_ptr)
         throw error(&e);
 }

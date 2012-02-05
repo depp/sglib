@@ -96,10 +96,23 @@ struct sg_file {
 
 };
 
-/* Open a open a regular file, or return NULL for failure.  */
+/* Open a open a regular file, or return NULL for failure.
+
+   If extensions is not NULL, it is a list of extensions to search
+   separated by ":".  Extensions do not begin with a period.  If the
+   given path already starts with one of the extensions in the list,
+   it is stripped and that extension is tried first.  Earlier search
+   paths override later search paths.
+
+   For example, with search path "a:b", path "file", and extensions
+   "png:jpg", the following paths are tried in order:
+
+   > a/file.png a/file.jpg b/file.png b/file.jpg
+
+   The list of extensions is assumed to be safe and lower case.  */
 struct sg_file *
 sg_file_open(const char *path, size_t pathlen, int flags,
-             struct sg_error **e);
+             const char *extensions, struct sg_error **e);
 
 /* Read the contents of a file, starting with the current position.
    Return 0 for success, -1 for failure, or 1 if the amount of data
@@ -114,6 +127,7 @@ sg_file_readall(struct sg_file *f, struct sg_buffer *fbuf, size_t maxsize);
    zero byte past the end.  */
 int
 sg_file_get(const char *path, size_t pathlen, int flags,
+            const char *extensions,
             struct sg_buffer *fbuf, size_t maxsize, struct sg_error **e);
 
 #ifdef __cplusplus

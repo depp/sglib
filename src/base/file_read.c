@@ -76,11 +76,12 @@ toobig:
 
 int
 sg_file_get(const char *path, size_t pathlen, int flags,
+            const char *extensions,
             struct sg_buffer *fbuf, size_t maxsize, struct sg_error **e)
 {
     struct sg_file *f;
     int r;
-    f = sg_file_open(path, pathlen, flags, e);
+    f = sg_file_open(path, pathlen, flags, extensions, e);
     if (!f)
         return -1;
     r = sg_file_readall(f, fbuf, maxsize);

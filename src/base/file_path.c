@@ -8,6 +8,7 @@
 #include "error.h"
 #include "file.h"
 #include "file_impl.h"
+#include "log.h"
 #include <stdlib.h>
 #include <string.h>
 
@@ -44,16 +45,38 @@ sg_path_copy(pchar *dest, const char *src, size_t len)
 #endif
 }   
 
+/* Same, without separator normalization.  */
+static void
+sg_path_copy2(pchar *dest, const char *src, size_t len)
+{
+#if defined(SG_PATH_UNICODE)
+    size_t i;
+    for (i = 0; i < len; ++i)
+        dest[i] = src[i];
+#else
+    memcpy(dest, src, len);
+#endif
+}
+
+#define MAX_EXTENSIONS 8
+
+struct sg_file_ext {
+    const char *p;
+    unsigned len;
+};
+
 struct sg_file *
 sg_file_open(const char *path, size_t pathlen, int flags,
-             struct sg_error **e)
+             const char *extensions, struct sg_error **e)
 {
+    struct sg_file_ext exts[MAX_EXTENSIONS];
     struct sg_file *f;
     struct sg_path *a;
-    int nlen, r;
-    unsigned i, pcount, pmaxlen;
+    int nlen, r, stripped;
+    unsigned i, j, pcount, pmaxlen, nexts, extlen, emaxlen;
     char nbuf[SG_MAX_PATH];
     pchar *pbuf = NULL, *p;
+    const char *extp, *extq;
 
     if (flags & SG_WRONLY)
         flags |= SG_WRITABLE;
@@ -61,6 +84,56 @@ sg_file_open(const char *path, size_t pathlen, int flags,
     nlen = sg_path_norm(nbuf, path, pathlen, e);
     if (nlen < 0)
         return NULL;
+
+    extp = extensions;
+    nexts = 0;
+    stripped = 0;
+    emaxlen = 0;
+    while (extp) {
+        extq = extp;
+        extp = strchr(extp, ':');
+        if (extp) {
+            extlen = extp - extq;
+            extp++;
+        } else {
+            extlen = strlen(extq);
+        }
+        if (nexts == MAX_EXTENSIONS) {
+            sg_logs(sg_logger_get(NULL), LOG_ERROR,
+                    "list of extensions is too long");
+            break;
+        }
+        if (extlen > emaxlen)
+            emaxlen = extlen;
+        if (!stripped &&
+            (size_t) nlen > extlen + 1 &&
+            nbuf[nlen - extlen - 1] == '.' &&
+            !memcmp(nbuf + nlen - extlen, extq, extlen))
+        {
+            if (nexts)
+                memcpy(&exts[nexts], &exts[0], sizeof(*exts));
+            exts[0].p = extq;
+            exts[0].len = extlen;
+            nlen -= extlen + 1;
+            stripped = 1;
+        } else {
+            exts[nexts].p = extq;
+            exts[nexts].len = extlen;
+        }
+        nexts++;
+    }
+    if (!nexts) {
+        exts[0].p = NULL;
+        exts[0].len = 0;
+        nexts = 1;
+    }
+    if (emaxlen)
+        emaxlen += 1;
+    if (nlen + emaxlen >= SG_MAX_PATH) {
+        sg_error_sets(e, &SG_ERROR_INVALPATH, 0,
+                      "path too long for given extension list");
+        return NULL;
+    }
 
     a = sg_paths.a;
     if (flags & SG_LOCAL) {
@@ -72,20 +145,30 @@ sg_file_open(const char *path, size_t pathlen, int flags,
     }
     if (!pcount)
         goto notfound;
-    pbuf = malloc((pmaxlen + nlen + 1) * sizeof(pchar));
+    pbuf = malloc((pmaxlen + nlen + emaxlen + 1) * sizeof(pchar));
     if (!pbuf)
         goto nomem;
     sg_path_copy(pbuf + pmaxlen, nbuf, nlen);
-    pbuf[pmaxlen + nlen] = '\0';
     for (i = 0; i < pcount; ++i) {
         p = pbuf + pmaxlen - a[i].len;
         memcpy(p, a[i].path, a[i].len * sizeof(pchar));
-        r = sg_file_tryopen(&f, p, flags, e);
-        if (r > 0)
-            goto done;
-        if (r < 0) {
-            f = NULL;
-            goto done;
+        for (j = 0; j < nexts; ++j) {
+            extp = exts[j].p;
+            extlen = exts[j].len;
+            if (extlen) {
+                pbuf[pmaxlen + nlen] = '.';
+                sg_path_copy2(pbuf + pmaxlen + nlen + 1, extp, extlen);
+                pbuf[pmaxlen + nlen + extlen + 1] = '\0';
+            } else {
+                pbuf[pmaxlen + nlen] = '\0';
+            }
+            r = sg_file_tryopen(&f, p, flags, e);
+            if (r > 0)
+                goto done;
+            if (r < 0) {
+                f = NULL;
+                goto done;
+            }
         }
     }
     goto notfound;
