@@ -42,8 +42,8 @@ struct sg_dispatch_pthread_local {
 
 static struct sg_dispatch_pthread *sg_dispatch_pthread;
 
-static void
-sg_dispatch_pthread_init(void)
+void
+sg_dispatch_async_init(void)
 {
     struct sg_dispatch_pthread *p;
     pthread_mutexattr_t mattr;
@@ -218,16 +218,13 @@ err:
 }
 
 void
-sg_dispatch_queue(sg_dispatch_type_t type, int priority,
-                  void *cxt, void (*func)(void *))
+sg_dispatch_async_queue(sg_dispatch_type_t type, int priority,
+                        void *cxt, void (*func)(void *))
 {
     struct sg_dispatch_pthread *p;
     int i, r;
     p = sg_dispatch_pthread;
-    if (!p) {
-        sg_dispatch_pthread_init();
-        p = sg_dispatch_pthread;
-    }
+    if (!p) goto err;
 
     r = pthread_mutex_lock(&p->mutex);
     if (r) goto err;
@@ -246,7 +243,7 @@ err:
 }
 
 void
-sg_dispatch_settype(sg_dispatch_type_t type)
+sg_dispatch_async_settype(sg_dispatch_type_t type)
 {
     struct sg_dispatch_pthread *p;
     struct sg_dispatch_pthread_local *local;

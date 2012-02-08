@@ -13,6 +13,7 @@ base/dispatch_common.c
 #base/dispatch_coop.c
 base/dispatch_impl.h
 base/dispatch_pthread.c LINUX MACOSX
+base/dispatch_sync.c
 base/entry.h
 base/error.c
 base/error.h
