@@ -1,4 +1,5 @@
 #include "clock.h"
+#include "dispatch.h"
 #include "entry.h"
 #include "event.h"
 #include "file.h"
@@ -19,6 +20,8 @@ sg_sys_init(void)
     if (LOG_INFO >= log->level)
         sg_version_print();
     sg_path_init();
+    sg_dispatch_async_init();
+    sg_dispatch_sync_init();
     sg_clock_init();
     sg_rand_seed(&sg_rand_global, 1);
     sg_game_init();
@@ -71,7 +74,9 @@ sg_sys_event(union sg_event *evt)
 void
 sg_sys_draw(void)
 {
-    unsigned msec = sg_clock_get();
+    unsigned msec;
+    sg_dispatch_sync_run();
+    msec = sg_clock_get();
     sg_game_draw(0, 0, sg_vid_width, sg_vid_height, msec);
 }
 
