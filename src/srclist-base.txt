@@ -60,6 +60,8 @@ base/strbuf.h
 base/sys.c
 base/texture.c
 base/texture.h
+base/thread_pthread.c LINUX MACOSX
+base/thread.h
 base/type.c
 base/type_coretext.c MACOSX
 base/type.h

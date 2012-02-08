@@ -19,4 +19,12 @@
 #define _WIN32_WINNT 0x0501
 #endif
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
+#if defined(__linux__) || defined(__APPLE__)
+#define HAVE_PTHREAD 1
+#endif
+
 #endif
