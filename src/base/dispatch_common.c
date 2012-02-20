@@ -62,7 +62,7 @@ sg_dispatch_queue_pop(struct sg_dispatch_queue *queue,
     ntasks = queue->count;
     assert(ntasks > 0);
     tasks = queue->tasks;
-    memcpy(&task, &tasks[0], sizeof(*task));
+    memcpy(task, &tasks[0], sizeof(*task));
     ntasks--;
     queue->count = ntasks;
     if (!ntasks)
