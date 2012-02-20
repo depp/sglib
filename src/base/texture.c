@@ -1,7 +1,9 @@
+#include "dict.h"
 #include "error.h"
 #include "texture.h"
 #include "opengl.h"
 #include "pixbuf.h"
+#include "strbuf.h"
 #include <stdlib.h>
 #include <string.h>
 
@@ -16,104 +18,138 @@ static const struct sg_fmtinfo SG_FMTINFO[SG_PIXBUF_NFORMAT] = {
     { GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE }
 };
 
-int
-sg_texture_load(struct sg_texture *tex, struct sg_error **err)
+static void
+sg_texture_image_free(struct sg_resource *rs)
 {
-    struct sg_pixbuf pbuf;
+    struct sg_texture_image *img;
+    GLuint texnum;
+
+    img = (struct sg_texture_image *) rs;
+    texnum = img->texnum;
+    if (texnum)
+        glDeleteTextures(1, &texnum);
+    free(img);
+}
+
+static void *
+sg_texture_image_load(struct sg_resource *rs, struct sg_error **err)
+{
+    struct sg_texture_image *img;
+    struct sg_pixbuf *pbuf;
+    int r;
+
+    img = (struct sg_texture_image *) rs;
+    pbuf = malloc(sizeof(*pbuf));
+    sg_pixbuf_init(pbuf);
+    if (!pbuf) {
+        sg_error_nomem(err);
+        return NULL;
+    }
+    r = sg_pixbuf_loadimage(pbuf, img->path, err);
+    if (r) {
+        free(pbuf);
+        return NULL;
+    }
+    return pbuf;
+}
+
+static void
+sg_texture_image_load_finished(struct sg_resource *rs, void *result)
+{
     const struct sg_fmtinfo *ifo;
-    GLuint texnum = 0;
-    GLenum glerr = 0;
+    struct sg_texture_image *img;
+    struct sg_pixbuf *pbuf;
     GLint twidth;
-    int r, ret;
+    GLuint texnum;
+    GLenum glerr;
 
-    texnum = (tex->flags & SG_TEX_LOADED) ? tex->texnum : 0;
+    if (rs->state != SG_RSRC_LOADED)
+        return;
 
-    sg_pixbuf_init(&pbuf);
-    r = sg_pixbuf_loadimage(&pbuf, tex->r.name, err);
-    if (r)
-        goto error;
+    img = (struct sg_texture_image *) rs;
+    pbuf = result;
 
-    ifo = &SG_FMTINFO[(int) pbuf.format];
-    if (!texnum)
-        glGenTextures(1, &texnum);
+    glGenTextures(1, &texnum);
+    img->texnum = texnum;
+    img->iwidth = pbuf->iwidth;
+    img->iheight = pbuf->iheight;
+    img->twidth = pbuf->pwidth;
+    img->theight = pbuf->pheight;
+
+    ifo = &SG_FMTINFO[(int) pbuf->format];
+
     glPushAttrib(GL_ENABLE_BIT);
     glEnable(GL_TEXTURE_2D);
     glBindTexture(GL_TEXTURE_2D, texnum);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexImage2D(GL_TEXTURE_2D, 0,
-                 ifo->ifmt, pbuf.pwidth, pbuf.pheight, 0,
-                 ifo->fmt, ifo->type, pbuf.data);
-    glPopAttrib();
+                 ifo->ifmt, pbuf->pwidth, pbuf->pheight, 0,
+                 ifo->fmt, ifo->type, pbuf->data);
     glGetTexLevelParameteriv(GL_TEXTURE_2D, 0,
                              GL_TEXTURE_WIDTH, &twidth);
+    glPopAttrib();
+
+    sg_pixbuf_destroy(pbuf);
+    free(pbuf);
 
     glerr = glGetError();
     if (glerr) {
-        sg_error_opengl(err, glerr);
-        goto error;
+        /* Handle this error! */
     }
-    tex->texnum = texnum;
-    tex->flags |= SG_TEX_LOADED;
-    tex->iwidth = pbuf.iwidth;
-    tex->iheight = pbuf.iheight;
-    tex->twidth = pbuf.pwidth;
-    tex->theight = pbuf.pheight;
-    ret = 0;
-    goto done;
-
-error:
-    if (texnum)
-        glDeleteTextures(1, &texnum);
-    tex->texnum = 0;
-    tex->flags &= ~SG_TEX_LOADED;
-    tex->iwidth = pbuf.iwidth;
-    tex->iheight = pbuf.iheight;
-    tex->twidth = pbuf.pwidth;
-    tex->theight = pbuf.pheight;
-    ret = -1;
-    goto done;
-
-done:
-    sg_pixbuf_destroy(&pbuf);
-    return ret;
 }
 
-struct sg_texture *
-sg_texture_new(const char *path, struct sg_error **err)
+static void
+sg_texture_image_get_name(struct sg_resource *rs, struct sg_strbuf *buf)
 {
-    struct sg_texture *tex;
-    size_t l;
-    char *npath;
-    int r;
-    tex = (struct sg_texture *)
-        sg_resource_find(SG_RSRC_TEXTURE, path);
-    if (tex) {
-        sg_resource_incref(&tex->r);
-        return tex;
+    struct sg_texture_image *img = (struct sg_texture_image *) rs;
+    sg_strbuf_printf(buf, "image:%s", img->path);
+}
+
+static const struct sg_resource_type sg_texture_image_type = {
+    sg_texture_image_free,
+    sg_texture_image_load,
+    sg_texture_image_load_finished,
+    sg_texture_image_get_name,
+    SG_DISPATCH_IO
+};
+
+static struct dict sg_texture_images;
+
+struct sg_texture_image *
+sg_texture_image_new(const char *path, struct sg_error **err)
+{
+    struct dict_entry *e;
+    struct sg_texture_image *img;
+    size_t len;
+    char *pp;
+
+    e = dict_insert(&sg_texture_images, (char *) path);
+    img = e->value;
+    if (!img) {
+        len = strlen(path);
+        img = malloc(sizeof(*img) + len + 1);
+        if (!img) {
+            dict_erase(&sg_texture_images, e);
+            sg_error_nomem(err);
+            return NULL;
+        }
+        pp = (char *) (img + 1);
+        img->r.type = &sg_texture_image_type;
+        img->r.refcount = 0;
+        img->r.action = 0;
+        img->r.state = SG_RSRC_INITIAL;
+        img->path = pp;
+        img->texnum = 0;
+        img->iwidth = 0;
+        img->iheight = 0;
+        img->twidth = 0;
+        img->twidth = 0;
+        memcpy(pp, path, len + 1);
+        e->key = pp;
+        e->value = img;
     }
-    l = strlen(path);
-    tex = malloc(sizeof(*tex) + l + 1);
-    if (!tex) {
-        sg_error_nomem(err);
-        return NULL;
-    }
-    npath = (char *) (tex + 1);
-    tex->r.type = SG_RSRC_TEXTURE;
-    tex->r.refcount = 1;
-    tex->r.flags = 0;
-    tex->r.name = npath;
-    tex->texnum = 0;
-    tex->flags = 0;
-    tex->iwidth = 0;
-    tex->iheight = 0;
-    tex->twidth = 0;
-    tex->theight = 0;
-    memcpy(npath, path, l + 1);
-    r = sg_resource_register(&tex->r, err);
-    if (r) {
-        free(tex);
-        return NULL;
-    }
-    return tex;
+    sg_resource_incref(&img->r);
+
+    return img;
 }

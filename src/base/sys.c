@@ -5,6 +5,7 @@
 #include "file.h"
 #include "log.h"
 #include "rand.h"
+#include "resource.h"
 #include "version.h"
 
 static unsigned sg_status;
@@ -24,6 +25,7 @@ sg_sys_init(void)
     sg_dispatch_sync_init();
     sg_clock_init();
     sg_rand_seed(&sg_rand_global, 1);
+    sg_resource_init();
     sg_game_init();
     sg_log_video = sg_logger_get("video");
 }
@@ -76,6 +78,7 @@ sg_sys_draw(void)
 {
     unsigned msec;
     sg_dispatch_sync_run();
+    sg_resource_updateall();
     msec = sg_clock_get();
     sg_game_draw(0, 0, sg_vid_width, sg_vid_height, msec);
 }
