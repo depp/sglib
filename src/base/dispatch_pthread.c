@@ -163,7 +163,7 @@ sg_dispatch_pthread_exec(void *arg)
     r = pthread_setspecific(p->key, &local);
     if (r) goto err;
     r = pthread_mutex_lock(&p->mutex);
-    if (!r) goto err;
+    if (r) goto err;
     p->awake = 0;
     p->waiting -= 1;
     while (1) {
