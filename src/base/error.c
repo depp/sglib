@@ -24,8 +24,8 @@ sg_error_clobber(const struct sg_error_domain *dom,
 }
 
 void
-sg_error_set(struct sg_error **err, const struct sg_error_domain *dom,
-             long code, const char *fmt, ...)
+sg_error_setf(struct sg_error **err, const struct sg_error_domain *dom,
+              long code, const char *fmt, ...)
 {
     va_list ap;
     va_start(ap, fmt);
@@ -111,8 +111,8 @@ const struct sg_error_domain SG_ERROR_DATA = { "data" };
 void
 sg_error_notfound(struct sg_error **err, const char *path)
 {
-    sg_error_set(err, &SG_ERROR_NOTFOUND, 0,
-                 "file not found: '%s'", path);
+    sg_error_setf(err, &SG_ERROR_NOTFOUND, 0,
+                  "file not found: '%s'", path);
 }
 
 void
@@ -124,7 +124,7 @@ sg_error_nomem(struct sg_error **err)
 void
 sg_error_data(struct sg_error **err, const char *fmtname)
 {
-    sg_error_set(err, &SG_ERROR_DATA, 0, "corrupt %s file", fmtname);
+    sg_error_setf(err, &SG_ERROR_DATA, 0, "corrupt %s file", fmtname);
 }
 
 #ifdef _WIN32

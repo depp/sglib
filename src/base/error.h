@@ -25,15 +25,16 @@ struct sg_error_domain {
 
 /* Set error using a formatted message.  */
 void
-sg_error_set(struct sg_error **err, const struct sg_error_domain *dom,
-             long code, const char *fmt, ...);
+sg_error_setf(struct sg_error **err, const struct sg_error_domain *dom,
+              long code, const char *fmt, ...);
 
 /* Set error using a formatted message and a va_list.  */
 void
 sg_error_setv(struct sg_error **err, const struct sg_error_domain *dom,
               long code, const char *fmt, va_list ap);
 
-/* Set error using literal sting.  */
+/* Set error using a string as the message.  The string may be
+   NULL.  */
 void
 sg_error_sets(struct sg_error **err, const struct sg_error_domain *dom,
               long code, const char *msg);

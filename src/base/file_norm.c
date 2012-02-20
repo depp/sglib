@@ -69,8 +69,8 @@ sg_path_checkpart(const char *p, size_t len, struct sg_error **err)
 reserved:
     memcpy(buf, p, len);
     buf[len] = '\0';
-    sg_error_set(err, &SG_ERROR_INVALPATH, 0,
-                 "'%s' is a reserved filename", buf);
+    sg_error_setf(err, &SG_ERROR_INVALPATH, 0,
+                  "'%s' is a reserved filename", buf);
     return -1;
 }
 
