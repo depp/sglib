@@ -1,3 +1,5 @@
+#if 0
+
 #include "sys/error.hpp"
 #include "model.hpp"
 #include "color.hpp"
@@ -30,3 +32,5 @@ Model::Ref Model::mstatic(sg_model_static_t which)
         throw error(&err);
     return Ref(ptr);
 }
+
+#endif

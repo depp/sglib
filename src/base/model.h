@@ -1,3 +1,5 @@
+#if 0
+
 #ifndef BASE_MODEL_H
 #define BASE_MODEL_H
 #include "resource.h"
@@ -54,4 +56,6 @@ sg_model_draw(struct sg_model *mp);
 #ifdef __cplusplus
 }
 #endif
+#endif
+
 #endif

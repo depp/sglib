@@ -8,6 +8,12 @@ base/cvar.h
 base/defs.h
 base/dict.c
 base/dict.h
+base/dispatch.h
+base/dispatch_common.c
+#base/dispatch_coop.c
+base/dispatch_impl.h
+base/dispatch_pthread.c LINUX MACOSX
+base/dispatch_sync.c
 base/entry.h
 base/error.c
 base/error.h
@@ -55,6 +61,8 @@ base/strbuf.h
 base/sys.c
 base/texture.c
 base/texture.h
+base/thread_pthread.c LINUX MACOSX
+base/thread.h
 base/type.c
 base/type_coretext.c MACOSX
 base/type.h

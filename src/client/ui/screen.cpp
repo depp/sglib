@@ -3,7 +3,6 @@
 #include "base/entry.h"
 #include "base/event.h"
 #include "base/opengl.h"
-#include "base/resource.h"
 #include "screen.hpp"
 #include "sys/error.hpp"
 #include <assert.h>
@@ -122,7 +121,6 @@ void sg_game_draw(int x, int y, int width, int height, unsigned msec)
     }
     try {
         current_screen->update(msec);
-        sg_resource_loadall();
         {
             Viewport v(x, y, width, height);
             current_screen->draw(v, msec);

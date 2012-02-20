@@ -1,3 +1,5 @@
+#if 0
+
 #ifndef CLIENT_MODEL_HPP
 #define CLIENT_MODEL_HPP
 // #include "opengl.hpp"
@@ -30,5 +32,7 @@ public:
     static Ref pyramid() { return mstatic(SG_MODEL_PYRAMID); }
     static Ref cube() { return mstatic(SG_MODEL_CUBE); }
 };
+
+#endif
 
 #endif

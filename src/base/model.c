@@ -1,3 +1,5 @@
+#if 0
+
 #define MODEL_MAXSIZE (256 * 1024)
 
 #include "error.h"
@@ -358,3 +360,5 @@ sg_model_draw(struct sg_model *mp)
     glPopClientAttrib();
     glPopAttrib();
 }
+
+#endif
