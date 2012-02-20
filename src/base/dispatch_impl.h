@@ -40,7 +40,7 @@ struct sg_dispatch_queue {
 /* Add a task to the queue.  */
 void
 sg_dispatch_queue_push(struct sg_dispatch_queue *queue,
-                         int priority, void *cxt, void (*func)(void *));
+                       int priority, void *cxt, void (*func)(void *));
 
 /* Pop the highest priority task from the queue.  This will abort the
    program if the queue is empty.  */

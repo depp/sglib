@@ -61,10 +61,9 @@ sg_dispatch_queue_pop(struct sg_dispatch_queue *queue,
 
     ntasks = queue->count;
     assert(ntasks > 0);
+    queue->count = --ntasks;
     tasks = queue->tasks;
     memcpy(task, &tasks[0], sizeof(*task));
-    ntasks--;
-    queue->count = ntasks;
     if (!ntasks)
         return;
 
@@ -84,18 +83,18 @@ sg_dispatch_queue_pop(struct sg_dispatch_queue *queue,
             }
             if (p >= pp)
                 break;
-            memcpy(&tasks[n], &tasks[nn], sizeof(task));
+            memcpy(&tasks[n], &tasks[nn], sizeof(*task));
             n = nn;
         } else {
             nn = 2*n+1;
-            if (nn < ntasks && (tasks[nn].priority ^ m) < p) {
-                memcpy(&tasks[n], &tasks[2*n+1], sizeof(task));
+            if (nn < ntasks && (tasks[nn].priority ^ m) > p) {
+                memcpy(&tasks[n], &tasks[nn], sizeof(*task));
                 n = nn;
             }
             break;
         }
     }
-    memcpy(&tasks[n], &tasks[ntasks], sizeof(task));
+    memcpy(&tasks[n], &tasks[ntasks], sizeof(*task));
 }
 
 void
