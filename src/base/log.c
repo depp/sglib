@@ -120,9 +120,10 @@ sg_logger_get(const char *name)
               name[off] == '-' || name[off] == '.' || name[off] == '_'))
             abort();
     }
+    off = 0;
     while (1) {
         q = memchr(name + off, len - off, '.');
-        clen = q ? (size_t) (q - (name + off )) : (len - off);
+        clen = q ? (size_t) (q - (name + off)) : (len - off);
         for (np = lp->child; np; np = np->next)
             if (!memcmp(np->name + off, name + off, clen))
                 break;
