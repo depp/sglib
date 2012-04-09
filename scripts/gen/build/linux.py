@@ -57,7 +57,7 @@ class Strip(target.Commands):
         yield self._dest
 
     def name(self):
-        yield 'OBJCOPY'
+        return 'OBJCOPY'
 
     def commands(self):
         return [['objcopy', '--strip-unneeded',
