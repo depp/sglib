@@ -42,16 +42,16 @@ class Graph(object):
             if isinstance(t, Path):
                 if t in self._filetargets:
                     raise ValueError('duplicate target: %s' %
-                                     (t.posixpath,))
+                                     (t.posix,))
                 self._filetargets[t] = target
             elif isinstance(t, str):
                 if t in self._pseudotargets:
                     raise ValueError('duplicate target: %s' % (t,))
                 self._pseudotargets[t] = target
 
-    def _mkdirs(self, targets, quiet=False):
+    def _mkdirs(self, targets, verbose=False):
         """Make all necessary directories."""
-        dirs = set()
+        dirs = set([''])
         def mkdirp(path):
             if path in dirs:
                 return
@@ -59,8 +59,8 @@ class Graph(object):
                 par = os.path.dirname(path)
                 if par:
                     mkdirp(par)
-                if quiet:
-                    print 'mkdir %s' % path
+                if verbose:
+                    print 'mkdir', repr(path)
                 os.mkdir(path)
             dirs.add(path)
         for t in targets:
