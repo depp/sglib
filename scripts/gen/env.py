@@ -1,5 +1,6 @@
 import os
 import re
+from gen.path import Path
 
 class EnvError(Exception):
     pass
@@ -172,7 +173,7 @@ class Flags(EnvVar):
         return ' '.join(value)
 
 IS_TITLE = re.compile(r'^[-\w]+(?: [-\w]+)*$')
-IS_FILE = re.compile(r'\w+')
+IS_FILE = re.compile(r'^\w+$')
 IS_DOMAIN = re.compile(r'^[a-z0-9](?:[-a-z0-9]*[a-z0-9])?' 
                        r'(?:\.[a-z0-9](?:[-a-z0-9]*[a-z0-9])?)*$')
 
@@ -220,11 +221,39 @@ class Filename(EnvVar):
             return True, value
         return False, None
 
+class PathVar(EnvVar):
+    """A path environment variable."""
+
+    def check(self, value):
+        try:
+            p = Path(value)
+        except ValueError:
+            return False, None
+        return True, p
+
 class DomainName(EnvVar):
     """A domain name environment variable."""
 
     def check(self, value):
         if IS_DOMAIN.match(value):
+            return True, value
+        return False, None
+
+IS_VERSION = re.compile(r'^[-+.A-Za-z0-9]+$')
+class Version(EnvVar):
+    """A version number environment variable."""
+
+    def check(self, value):
+        if IS_VERSION.match(value):
+            return True, value
+        return False, None
+
+IS_HASH = re.compile(r'^[0-9a-f]+$')
+class Hash(EnvVar):
+    """A hash (e.g., git SHA1) environment variable"""
+
+    def check(self, value):
+        if IS_HASH.match(value):
             return True, value
         return False, None
 
@@ -320,12 +349,16 @@ class Environment(object):
     PKG_EMAIL      = EnvVar('PKG_EMAIL')
     PKG_COPYRIGHT  = UEnvVar('PKG_COPYRIGHT')
     PKG_APPLE_CATEGORY = DomainName('PKG_APPLE_CATEGORY')
+    PKG_SG_VERSION   = Version('PKG_SG_VERSION')
+    PKG_SG_COMMIT    = Hash('PKG_SG_COMMIT')
+    PKG_APP_VERSION  = Version('PKG_APP_VERSION')
+    PKG_APP_COMMIT   = Hash('PKG_APP_COMMIT')
 
     EXE_NAME     = Title('EXE_NAME', 'PKG_NAME')
     EXE_MAC      = Title('EXE_MAC', 'EXE_NAME')
     EXE_LINUX    = Filename('EXE_LINUX', 'EXE_NAME')
     EXE_WINDOWS  = Title('EXE_WINDOWS', 'EXE_NAME')
-    EXE_MACICON  = Filename('EXE_MACICON')
+    EXE_MACICON  = PathVar('EXE_MACICON')
 
     def __init__(self, *args, **kw):
         self._paths = {}
