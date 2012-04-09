@@ -1,5 +1,5 @@
 
-def cpu_count():
+def cpucount():
     ncpu = None
     try:
         import multiprocessing
