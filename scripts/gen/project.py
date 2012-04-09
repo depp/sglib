@@ -1,7 +1,8 @@
 import os
-import gen.source
+import gen.source as source
 import sys
 from gen.env import Environment
+from gen.path import Path
 
 class Project(object):
     def __init__(self, rootdir):
@@ -31,7 +32,7 @@ class Project(object):
         sgpath = os.path.join(*sgrel)
         os.chdir(rootpath)
 
-        self._sources = gen.source.SourceList()
+        self._sources = source.SourceList()
         self._props = {}
         self._env = Environment(
             CPPPATH=os.path.join(sgpath, 'src'),
@@ -42,6 +43,15 @@ class Project(object):
             'sglib', os.path.join(sgpath, 'src/srclist-base.txt'), ())
         self._sources.read_list(
             'sglib', os.path.join(sgpath, 'src/srclist-client.txt'), ('cxx',))
+
+        group = source.Group('version', Path('.'), ())
+        group.add(Path('version.c'), ())
+        self._sources.add_group(group)
+
+    @property
+    def sgpath(self):
+        """The path to the sglib library root."""
+        return self._sgpath
 
     @property
     def sourcelist(self):

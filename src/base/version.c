@@ -174,7 +174,10 @@ void
 sg_version_print(void)
 {
     struct sg_logger *log = sg_logger_get("init");
-    sg_logf(log, LOG_INFO, "Version: %s", SG_VERSION);
+    sg_logf(log, LOG_INFO, "App version: %s (%s)",
+            SG_APP_VERSION, SG_APP_COMMIT);
+    sg_logf(log, LOG_INFO, "SGLib version: %s (%s)",
+            SG_SG_VERSION, SG_SG_COMMIT);
     sg_logf(log, LOG_INFO, "Compiler: " COMPILER);
     sg_logf(log, LOG_INFO, "Architecture: " ARCH);
     sg_version_os(log);

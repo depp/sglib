@@ -1,5 +1,6 @@
-import gen.build.graph
+import gen.build.graph as graph
 from gen.env import Environment
+import gen.git as git
 import optparse
 import sys
 
@@ -12,6 +13,13 @@ def run(proj):
     are specified, the default target for the current platform is
     invoked.
     """
+    src = set()
+    for s in proj.sourcelist.sources():
+        p = s.relpath.posix
+        if p in src:
+            raise Exception('duplicate source file: %s' % (p,))
+        src.add(p)
+
     p = optparse.OptionParser()
     p.add_option('--dump-env', dest='dump_env',
                  action='store_true', default=False,
@@ -20,6 +28,7 @@ def run(proj):
 
     targets = []
     env = Environment()
+    env.GIT='git'
     for arg in args:
         idx = arg.find('=')
         if idx >= 0:
@@ -32,13 +41,21 @@ def run(proj):
     if not targets:
         targets = ['default']
 
-    graph = gen.build.graph.Graph()
-    for module in ('linux',): # osx msvc
-        __import__('gen.build.' + module)
-        m = getattr(gen.build, module)
-        m.add_targets(graph, proj, env)
+    venv = Environment(
+        PKG_SG_VERSION=git.get_version(env, proj.sgpath),
+        PKG_SG_COMMIT=git.get_sha1(env, proj.sgpath),
+        PKG_APP_VERSION=git.get_version(env, '.'),
+        PKG_APP_COMMIT=git.get_sha1(env, '.'),
+    )
+    env = Environment(venv, env)
 
-    r = graph.build(targets)
+    g = graph.Graph()
+    for module in ('version', 'linux'): # osx msvc
+        m = __import__('gen.build.' + module)
+        m = getattr(m.build, module)
+        m.add_targets(g, proj, env)
+
+    r = g.build(targets)
     if r:
         sys.exit(0)
     else:
