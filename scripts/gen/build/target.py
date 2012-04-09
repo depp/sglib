@@ -47,15 +47,6 @@ class Commands(object):
             raise TypeError('env must be an Environment object')
         self._env = env
 
-    def input(self):
-        assert False
-
-    def output(self):
-        assert False
-
-    def commands(self):
-        assert False
-
     def build(self):
         env = self._env
         quiet = not env.VERBOSE
@@ -113,6 +104,9 @@ class DepTarget(Commands):
 
     def output(self):
         yield self._name
+
+    def commands(self):
+        return ()
 
 class CC(Commands):
     """Compile a C, C++, or Objective C file.
