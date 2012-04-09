@@ -1,5 +1,6 @@
 import gen.path as path
 import os
+import sys
 
 Path = path.Path
 
@@ -94,7 +95,24 @@ class Graph(object):
 
         Return True if successful, False if failed.
         """
-        buildable = self._closure(self[t] for t in targets)
+        targets2 = set()
+        unknown = []
+        for t in targets:
+            try:
+                tt = self._pseudotargets[t]
+            except KeyError:
+                try:
+                    tt = self._filetargets[Path(t)]
+                except KeyError:
+                    unknown.append(t)
+                    tt = None
+            if tt is not None:
+                targets2.add(tt)
+        if unknown:
+            print >>sys.stderr, 'error: unknown targets:', ' '.join(unknown)
+            return False
+
+        buildable = self._closure(targets2)
         inputs = set()
         outputs = set()
         req_counts = {}
