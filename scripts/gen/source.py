@@ -79,6 +79,8 @@ class Group(object):
     Each group has a root path, a name, and a set of atoms.
     """
     def __init__(self, name, path, atoms):
+        if not _VALID_NAME.match(name):
+            raise ValueError('invalid group name: %r' % (name,))
         self._name = name
         self._path = path
         self._sources = []
@@ -115,6 +117,11 @@ class SourceList(object):
     """
     def __init__(self):
         self._groups = []
+    def add_group(self, group):
+        for g in self._groups:
+            if g.name == group.name:
+                raise Exception('group exists with name %r' % (group.name,))
+        self._groups.append(group)
     def read_list(self, name, path, atoms):
         """Read a list of source files at the given path.
 
@@ -124,18 +131,12 @@ class SourceList(object):
         The path to the source file list should use the native OS
         conventions, but it must be a relative path.
         """
-        if not _VALID_NAME.match(name):
-            raise ValueError('invalid group name: %r' % (name,))
         dname, fname = os.path.split(path)
         gpath = gen.path.Path(dname.replace(os.path.sep, '/'))
         for g in self._groups:
             if g.relpath == gpath:
                 if g.name == name:
                     break
-                else:
-                    raise Exception(
-                        'group %r has two names: %r and %r' %
-                        (gpath, g.name, name))
             else:
                 if g.name == name:
                     raise Exception(
