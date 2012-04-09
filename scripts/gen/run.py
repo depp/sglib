@@ -55,7 +55,7 @@ def run(proj):
         m = getattr(m.build, module)
         m.add_targets(g, proj, env)
 
-    r = g.build(targets)
+    r = g.build(targets, env)
     if r:
         sys.exit(0)
     else:

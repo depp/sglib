@@ -8,18 +8,18 @@ from gen import path
 
 Path = path.Path
 
-def mkarg(x):
+def mkarg(x, ptype='native'):
     if isinstance(x, str):
         pass
     elif isinstance(x, Path):
-        x = x.native
+        x = getattr(x, ptype)
     elif isinstance(x, tuple):
         a = ''
         for i in x:
             if isinstance(i, str):
                 pass
             elif isinstance(i, Path):
-                i = i.native
+                i = getattr(i, ptype)
             else:
                 raise TypeError('invalid command argument: %r' % (x,))
             a += i
@@ -80,6 +80,39 @@ class Commands(object):
                 if status:
                     return False
         return True
+
+    def write_rule(self, f, generic):
+        """Write the makefile rule for this target to the given file."""
+        cmds = [[mkarg(arg, ptype='posix') for arg in cmd]
+                for cmd in self.commands()]
+        for cmd in cmds:
+            for arg in cmd:
+                if ' ' in arg:
+                    raise ValueError('command line has spaces: %s' %
+                                     (', '.join(repr(x) for arg in cmd),))
+        otarg = ' '.join(mkarg(x, ptype='posix') for x in self.output())
+        itarg = ' '.join(mkarg(x, ptype='posix') for x in self.input())
+        if not otarg:
+            raise ValueError('target has no outputs')
+        if itarg:
+            f.write('%s: %s\n' % (otarg, itarg))
+        else:
+            f.write('%s:\n' % (otarg,))
+        if cmds:
+            try:
+                name = self.name
+            except AttributeError:
+                name = None
+            else:
+                name = name()
+                if generic:
+                    cmds = [['$(QE %s)' % name]] + \
+                        [['$(QS)' + cmd[0]] + cmd[1:] for cmd in cmds]
+                elif not self._env.VERBOSE:
+                    cmds = [['@echo %s $@' % name]] + \
+                        [['@' + cmd[0]] + cmd[1:] for cmd in cmds]
+            for cmd in cmds:
+                f.write('\t' + ' '.join(cmd) + '\n')
 
 class DepTarget(Commands):
     """Target which does nothing, but depends on other targets.

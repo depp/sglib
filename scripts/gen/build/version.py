@@ -21,16 +21,26 @@ class VersionFile(object):
     def output(self):
         yield self._dest
 
-    def build(self):
-        print 'VERSION', self._dest.posix
+    def contents(self):
         env = self._env
-        data = VERSION_TEMPL % (
+        return VERSION_TEMPL % (
             env.PKG_SG_VERSION, env.PKG_SG_COMMIT,
             env.PKG_APP_VERSION, env.PKG_APP_COMMIT,
         )
+
+    def build(self):
+        print 'VERSION', self._dest.posix
+        data = self.contents()
         with open(self._dest.native, 'wb') as f:
             f.write(data)
         return True
+
+    def write_rule(self, f, generic):
+        """Write the makefile rule for this target to the given file."""
+        f.write('%s:\n' % self._dest.posix)
+        f.write("\trm $@\n")
+        for line in self.contents().splitlines():
+            f.write("\techo '%s' >> $@\n" % (line,))
 
 def add_targets(graph, proj, env):
     graph.add(VersionFile(Path('version.c'), env))

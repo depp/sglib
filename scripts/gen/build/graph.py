@@ -1,6 +1,11 @@
+from __future__ import with_statement
 import gen.path as path
+import gen.build.target as target
+import gen.cpucount as cpucount
 import os
 import sys
+import platform
+import subprocess
 
 Path = path.Path
 
@@ -90,12 +95,10 @@ class Graph(object):
             x.update(z)
         return x
 
-    def build(self, targets):
-        """Build the given targets.
-
-        Return True if successful, False if failed.
-        """
-        targets2 = set()
+    def _resolve(self, targets):
+        """Resolve targets as either pseudo-targets or file targets."""
+        tset = set([None])
+        ts = []
         unknown = []
         for t in targets:
             try:
@@ -106,22 +109,57 @@ class Graph(object):
                 except KeyError:
                     unknown.append(t)
                     tt = None
-            if tt is not None:
-                targets2.add(tt)
+            if tt not in tset:
+                ts.append(tt)
+                tset.add(tt)
         if unknown:
-            print >>sys.stderr, 'error: unknown targets:', ' '.join(unknown)
-            return False
+            raise ValueError('error: unknown targets:', ' '.join(unknown))
+        return ts
 
-        buildable = self._closure(targets2)
-        inputs = set()
+    def build(self, targets, env):
+        """Build the given targets.
+
+        Return True if successful, False if failed.
+        """
+        targets = self._resolve(targets)
+        buildable = self._closure(targets)
+
         outputs = set()
+        for t in buildable:
+            outputs.update(t.output())
+
+        # Use GNU Make if we can
+        if platform.system() in ('Linux', 'Darwin'):
+            self._mkdirs(outputs)
+            tnames = []
+            for t in targets:
+                tnames.extend(t.output())
+            buildable.add(target.DepTarget('all', tnames, env))
+            makefile = '.Makefile.tmp'
+            ncpu = cpucount.cpucount()
+            cmd = ['make', '-f', makefile]
+            if ncpu > 1:
+                cmd.append('-j%d' % ncpu)
+            try:
+                with open(makefile, 'wb') as f:
+                    f.write('all:\n')
+                    self._gen_gmake(buildable, False, f)
+                proc = subprocess.Popen(cmd)
+                status = proc.wait()
+                return status == 0
+            finally:
+                try:
+                    os.unlink(makefile)
+                except OSError:
+                    pass
+
+        inputs = set()
         req_counts = {}
         rev_dep = {}
         queue = []
         for t in buildable:
             i = list(t.input())
             inputs.update(i)
-            outputs.update(t.output())
             for tt in i:
                 try:
                     r = rev_dep[tt]
@@ -173,3 +211,38 @@ class Graph(object):
         else:
             print 'Build succeeded'
             return True
+
+    def _gen_gmake(self, targets, generic, f):
+        """Write the given targets as GNU make rules.
+
+        No dependent targets will be written.  The 'generic' parameter
+        must be true for generating a distributed Makefile, and may be
+        false for generating a temporary Makefile.
+
+        Generates a .PHONY rule if any pseudo-targets are included.
+        """
+        targs = list(targets)
+        targs.sort(key=tkey)
+        phony = set()
+        for t in targs:
+            try:
+                wr = t.write_rule
+            except AttributeError:
+                raise TypeError('cannot generate make rule for %s' %
+                                repr(t.__class__))
+            wr(f, False)
+            for i in t.input():
+                if isinstance(i, str):
+                    phony.add(i)
+        if phony:
+            f.write('.PHONY: ' + ' '.join(sorted(phony)))
+
+    def gen_gmake(self, targets, f):
+        """Write the given targets as gmakefile rules."""
+        targets = self._resolve(targets)
+        buildable = list(self._closure(targets))
+        self._gen_gmake(buildable, False, f)
+
+MAKE_TEMPL = """
+
+"""
