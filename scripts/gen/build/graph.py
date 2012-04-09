@@ -3,6 +3,15 @@ import os
 
 Path = path.Path
 
+def tkey(t):
+    for x in t.output():
+        if isinstance(x, Path):
+            x = '0' + x.posix
+        else:
+            x = '1' + x
+        return (x, id(t))
+    return ('', id(t))
+
 class Graph(object):
     """A graph is a set of targets with dependency information.
 
@@ -120,6 +129,8 @@ class Graph(object):
 
         for t in inputs - outputs:
             post(t)
+
+        queue.sort(key=tkey)
 
         self._mkdirs(outputs)
 
