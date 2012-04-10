@@ -8,24 +8,69 @@ from gen import path
 
 Path = path.Path
 
-def mkarg(x, ptype='native'):
+def mkarg(x):
     if isinstance(x, str):
         pass
     elif isinstance(x, Path):
-        x = getattr(x, ptype)
+        x = x.native
     elif isinstance(x, tuple):
         a = ''
         for i in x:
             if isinstance(i, str):
                 pass
             elif isinstance(i, Path):
-                i = getattr(i, ptype)
+                i = i.native
             else:
                 raise TypeError('invalid command argument: %r' % (x,))
             a += i
         x = a
     else:
         raise TypeError('invalid command argument: %r' % (x,))
+    return x
+
+SPECIAL_ARG = re.compile('[^-_.+/A-Za-z0-9,=]')
+SPECIAL_DEP = re.compile('[^-_.+/A-Za-z0-9]')
+def escape(x):
+    c = x.group(0)
+    if c == ' ':
+        return '\\ '
+    raise ValueError('invalid character: %r' % (c,))
+
+def mkmkarg(x):
+    if isinstance(x, str):
+        pass
+    elif isinstance(x, Path):
+        x = x.posix
+    elif isinstance(x, tuple):
+        a = ''
+        for i in x:
+            if isinstance(i, str):
+                pass
+            elif isinstance(i, Path):
+                i = i.posix
+            else:
+                raise TypeError('invalid command argument: %r' % (x,))
+            a += i
+        x = a
+    else:
+        raise TypeError('invalid command argument: %r' % (x,))
+    try:
+        x = SPECIAL_ARG.sub(escape, x)
+    except ValueError:
+        raise ValueError('invalid character in %r' % (x,))
+    return x
+
+def mkmkdep(x):
+    if isinstance(x, str):
+        pass
+    elif isinstance(x, Path):
+        x = x.posix
+    else:
+        raise TypeError('invalid make dependency: %r' % (x,))
+    try:
+        x = SPECIAL_DEP.sub(escape, x)
+    except ValueError:
+        raise ValueError('invalid character in %r' % (x,))
     return x
 
 class Commands(object):
@@ -83,15 +128,10 @@ class Commands(object):
 
     def write_rule(self, f, generic):
         """Write the makefile rule for this target to the given file."""
-        cmds = [[mkarg(arg, ptype='posix') for arg in cmd]
+        cmds = [[mkmkarg(arg) for arg in cmd]
                 for cmd in self.commands()]
-        for cmd in cmds:
-            for arg in cmd:
-                if ' ' in arg:
-                    raise ValueError('command line has spaces: %s' %
-                                     (', '.join(repr(x) for arg in cmd),))
-        otarg = ' '.join(mkarg(x, ptype='posix') for x in self.output())
-        itarg = ' '.join(mkarg(x, ptype='posix') for x in self.input())
+        otarg = ' '.join(mkmkdep(x) for x in self.output())
+        itarg = ' '.join(mkmkdep(x) for x in self.input())
         if not otarg:
             raise ValueError('target has no outputs')
         if itarg:
@@ -242,9 +282,6 @@ class StaticFile(object):
 
     def output(self):
         yield self._dest
-
-    def write(self, f):
-        assert False
 
     def build(self):
         env = self._env

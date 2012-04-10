@@ -3,7 +3,7 @@ import os
 import re
 import posixpath
 
-_VALID_PATH = re.compile('^[A-Za-z0-9](?:[-_.A-Za-z0-9]*[A-Za-z0-9])?$')
+_VALID_PATH = re.compile(r'^[A-Za-z0-9](?:[- _.A-Za-z0-9]*[A-Za-z0-9])$')
 
 C_EXTS = ['.c']
 CXX_EXTS = ['.cpp', '.cxx', '.cp']
@@ -79,7 +79,7 @@ class Path(object):
                     else:
                         pp.pop()
                 else:
-                    if valid(p):
+                    if valid(p) and '  ' not in p:
                         pp.append(p)
                         isdir = False
                     else:
