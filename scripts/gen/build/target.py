@@ -316,11 +316,10 @@ class Template(object):
         def repl(m):
             w = m.group(1)
             try:
-                return env[w]
-            except KeyError:
-                pass
-            print >>sys.stderr, '%s: unknown variable %r' % (w, w)
-            return m.group(0)
+                return getattr(env, w)
+            except AttributeError:
+                print >>sys.stderr, '%s: unknown variable %r' % (w, w)
+                return m.group(0)
         data = re.sub(r'\${(\w+)}', repl, data)
         with open(self._dest.native, 'wb') as f:
             f.write(data)
