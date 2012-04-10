@@ -6,42 +6,52 @@ import gen.path as path
 
 Path = path.Path
 
+class PkgInfo(target.StaticFile):
+    """Target which creates a PkgInfo file for an application."""
+    __slots__ = ['_dest', '_env']
+    def write(self, f):
+        f.write('APPL????')
+
 class InfoPlist(target.StaticFile):
     """Target which creates an Info.plist file for an application."""
     __slots__ = ['_dest', '_env']
-    def __init__(self, dest, env):
-        target.StaticFile.__init__(dest, env)
-
     def write(self, f):
+        env = self._env
+
         try:
             icon = env['EXE_MACICON']
-            icon = os.path.splitext(icon)[0]
-            icon = os.path.basename(icon)
-            icon = unicode(icon)
         except KeyError:
             icon = None
+        else:
+            icon = unicode(icon.withext('').basename, 'ascii')
+
         try:
             copyright = env['PKG_COPYRIGHT']
-            getinfo = '%s, %s' % (env['VERSION'], copyright)
         except KeyError:
             print >>sys.stderr, 'warning: PKG_COPYRIGHT is unset'
-            getinfo = unicode(env['VERSION'])
+            getinfo = unicode(env.PKG_APP_VERSION)
+        else:
+            getinfo = u'%s, %s' % (env.PKG_APP_VERSION, copyright)
+
         try:
-            category = unicode(env['PKG_APPLE_CATEGORY'], 'ascii')
+            category = env['PKG_APPLE_CATEGORY']
         except KeyError:
             category = u'public.app-category.games'
+        else:
+            category = unicode(category, 'ascii')
+
         plist = {
             u'CFBundleDevelopmentRegion': u'English',
             u'CFBundleExecutable': u'${EXECUTABLE_NAME}',
             u'CFBundleGetInfoString': getinfo,
             # CFBundleName
             u'CFBundleIconFile': icon,
-            u'CFBundleIdentifier': unicode(env['PKG_IDENT']),
+            u'CFBundleIdentifier': unicode(env.PKG_IDENT),
             u'CFBundleInfoDictionaryVersion': u'6.0',
             u'CFBundlePackageType': u'APPL',
-            u'CFBundleShortVersionString': unicode(env['VERSION']),
+            u'CFBundleShortVersionString': unicode(env.PKG_APP_VERSION),
             u'CFBundleSignature': u'????',
-            u'CFBundleVersion': unicode(env['VERSION']),
+            u'CFBundleVersion': unicode(env.PKG_APP_VERSION),
             u'LSApplicationCategory': category,
             # LSArchicecturePriority
             # LSFileQuarantineEnabled
@@ -52,8 +62,8 @@ class InfoPlist(target.StaticFile):
             # NSSupportsSuddenTermination
         }
         plist = dict((k,v) for (k,v) in plist.iteritems() if v is not None)
-        import plistxml
-        f.write(plistxml.dump(plist))
+        import gen.plistxml
+        f.write(gen.plistxml.dump(plist))
 
 class Strip(target.Commands):
     """Mac OS X: Strip an executable of its debugging symbols."""
@@ -291,32 +301,44 @@ def build_osx(graph, proj, userenv):
 
     contents = Path('build/product', appname + '.app', 'Contents')
 
+    appdeps = []
+
     # produce stripped executable and dsym package
     exe = Path(contents, 'MacOS', exename)
     dsym = Path('build/product', appname + '.app.dSYM')
+    appdeps.extend((exe, dsym))
     graph.add(Strip(exe, exe_raw, env))
     graph.add(DSymUtil(dsym, exe_raw, env))
 
-    graph.add(target.DepTarget('build', [exe, dsym], env))
-    return
-
     # Create Info.plist and PkgInfo
+    src_plist = Path('resources/mac/Info.plist')
+    app_plist = Path(contents, 'Info.plist')
     pcmds = ['Set :CFBundleExecutable %s' % exename]
-    # CFBundleIdentifier
-    build.add(plist(os.path.join(contents, 'Info.plist'),
-                    obj.info_plist(), pcmds))
-    pkginfo = 'APPL????'
-    build.add(target.StaticFile(os.path.join(contents, 'PkgInfo'),
-                                pkginfo))
+    graph.add(InfoPlist(src_plist, env))
+    graph.add(Plist(app_plist, src_plist, env, pcmds))
+    appdeps.append(app_plist)
+
+    # Create PkgInfo
+    app_pinfo = Path(contents, 'PkgInfo')
+    graph.add(PkgInfo(app_pinfo, env))
+    appdeps.append(app_pinfo)
 
     # Compile / copy resources
-    resources = os.path.join(contents, 'Resources')
-    build.add(ibtool(os.path.join(resources, 'MainMenu.nib'),
-                     obj.main_xib(), env))
+    resources = Path(contents, 'Resources')
+    tpl_xib = Path(proj.sgpath, 'resources/mac/MainMenu.xib')
+    src_xib = Path('resources/mac/MainMenu.xib')
+    app_nib = Path(resources, 'MainMenu.nib')
+    graph.add(target.Template(src_xib, tpl_xib, env))
+    graph.add(IBTool(app_nib, src_xib, env))
+    appdeps.append(app_nib)
+
     try:
-        icon = obj.env['EXE_MACICON']
+        icon = env['EXE_MACICON']
     except KeyError:
         pass
     else:
-        objf = os.path.join(resources, os.path.basename(icon))
-        build.add(target.CopyFile(objf, icon))
+        app_icon = Path(resources, icon.basename)
+        graph.add(target.CopyFile(app_icon, icon, env))
+        appdeps.append(app_icon)
+
+    graph.add(target.DepTarget('build', appdeps, env))

@@ -50,7 +50,7 @@ def run(proj):
     env = Environment(venv, env)
 
     g = graph.Graph()
-    for module in ('version', 'linux'): # osx msvc
+    for module in ('version', 'linux', 'osx'): # msvc
         m = __import__('gen.build.' + module)
         m = getattr(m.build, module)
         m.add_targets(g, proj, env)
