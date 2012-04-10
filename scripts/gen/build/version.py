@@ -38,7 +38,7 @@ class VersionFile(object):
     def write_rule(self, f, generic):
         """Write the makefile rule for this target to the given file."""
         f.write('%s:\n' % self._dest.posix)
-        f.write("\trm $@\n")
+        f.write("\trm -f $@\n")
         for line in self.contents().splitlines():
             f.write("\techo '%s' >> $@\n" % (line,))
 
