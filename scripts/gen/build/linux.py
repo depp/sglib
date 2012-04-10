@@ -1,5 +1,6 @@
 import gen.build.target as target
 import gen.build.nix as nix
+import gen.atom as atom
 from gen.env import Environment
 import gen.shell as shell
 import gen.path as path
@@ -132,63 +133,27 @@ def build_linux(graph, proj, userenv):
             env.remove('LIBS', '-Wl,--export-dynamic')
             return env
 
-    products = genbuild_linux(graph, proj, penv, uenv, libenvf, machine)
+    atomenv = atom.AtomEnv([libenvf], penv, uenv, 'LINUX')
+    products = genbuild_linux(graph, proj, atomenv, machine)
     graph.add(target.DepTarget('build', products, uenv))
 
-def genbuild_linux(graph, proj, pkgenv, userenv, libenvf, machine):
+def genbuild_linux(graph, proj, atomenv, machine):
     """Generate all targets for any Linux build.
 
-    The package environment is pkgenv, the user environment is
-    userenv.
-
-    The libenvf parameter is a function which looks up the environment
-    for the library identified by the given atom.  If it returns None
-    for any atom, then sources with that atom will be excluded from
-    the build.
+    The atomenv parameter should be an AtomEnv object for looking up
+    atom environments.
 
     The machine parameter is the machine name to add to the name of
     the executable.  It may be empty.
     """
 
-    envs1 = {}
-    def getenv1(atom):
-        """Memoized version of libenvf."""
-        try:
-            return envs1[atom]
-        except KeyError:
-            e = libenvf(atom)
-            envs1[atom] = e
-            return e
-
-    envs = {}
-    allatoms = set()
-    def getenv(atoms):
-        """Multiple-atom version of libenvf."""
-        x = list(sorted(set(atoms)))
-        xn = ' '.join(x)
-        try:
-            return envs[xn]
-        except KeyError:
-            es = [pkgenv]
-            for a in x:
-                e = getenv1(a)
-                if e is None:
-                    envs[xn] = None
-                    return None
-                es.append(e)
-            es.append(userenv)
-            e = Environment(*es)
-            envs[xn] = e
-            allatoms.update(x)
-            return e
-
     objs = []
+    atoms = set()
     for source in proj.sourcelist.sources():
-        if not source.match_platform('LINUX'):
-            continue
-        env = getenv(source.other_atoms())
+        env = atomenv.getenv(source.atoms)
         if env is None:
             continue
+        atoms.update(source.atoms)
         ext = source.grouppath.ext
         try:
             stype = path.EXTS[ext]
@@ -208,7 +173,7 @@ def genbuild_linux(graph, proj, pkgenv, userenv, libenvf, machine):
                 'cannot handle file type %s for path %s' %
                 (stype, source.relpath.posixpath))
 
-    env = getenv(allatoms)
+    env = atomenv.getenv(atoms - atom.PLATFORMS)
     if machine:
         exename = '%s-%s' % (env.EXE_LINUX, machine)
     else:

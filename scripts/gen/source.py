@@ -11,8 +11,6 @@ import re
 
 _VALID_NAME = re.compile('^[A-Za-z](?:[-_A-Za-z0-9]*[A-Za-z0-9])$')
 
-PLATFORMS = frozenset(['LINUX', 'MACOSX', 'WINDOWS'])
-
 class Source(object):
     """A source file.
 
@@ -57,21 +55,6 @@ class Source(object):
     def atoms(self):
         """The atoms which apply to this file, a tuple."""
         return self._atoms
-    def match_platform(self, plat):
-        """Return whether this file is built on the platform.
-
-        If this file has no platform atoms, then this function returns
-        true.  Otherwise, this function only returns true if the
-        parameter matches one of the platform atoms.
-        """
-        plats = set(self._atoms) & PLATFORMS
-        return (not plats) or (plat in plats)
-    def other_atoms(self):
-        """Iterate over non-platform atoms."""
-        p = PLATFORMS
-        for a in self._atoms:
-            if a not in p:
-                yield a
 
 class Group(object):
     """A group of source files.
