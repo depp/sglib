@@ -116,50 +116,48 @@ class Graph(object):
             raise ValueError('error: unknown targets:', ' '.join(unknown))
         return ts
 
-    def build(self, targets, env):
-        """Build the given targets.
-
-        Return True if successful, False if failed.
-        """
-        targets = self._resolve(targets)
-        buildable = self._closure(targets)
-
-        outputs = set()
-        for t in buildable:
-            outputs.update(t.output())
-
-        # Use GNU Make if we can
-        if platform.system() in ('Linux', 'Darwin'):
-            self._mkdirs(outputs)
-            tnames = []
-            for t in targets:
-                tnames.extend(t.output())
-            buildable.add(target.DepTarget('all', tnames, env))
-            makefile = '.Makefile.tmp'
-            ncpu = cpucount.cpucount()
-            cmd = ['make', '-f', makefile]
-            if ncpu > 1:
-                cmd.append('-j%d' % ncpu)
+    def _build_make(self, buildlist, env):
+        """Build all targets in the given list using Make."""
+        buildlist = list(buildlist)
+        if not buildlist:
+            return True
+        tnames = []
+        for t in buildlist:
+            tnames.extend(t.output())
+        buildlist.append(target.DepTarget('all', tnames, env))
+        makefile = '.Makefile.tmp'
+        ncpu = cpucount.cpucount()
+        cmd = ['make', '-f', makefile]
+        if ncpu > 1:
+            cmd.append('-j%d' % ncpu)
+        try:
+            with open(makefile, 'wb') as f:
+                f.write('all:\n')
+                self._gen_gmake(buildlist, False, f)
+            print 'make'
+            proc = subprocess.Popen(cmd)
+            status = proc.wait()
+        finally:
             try:
-                with open(makefile, 'wb') as f:
-                    f.write('all:\n')
-                    self._gen_gmake(buildable, False, f)
-                proc = subprocess.Popen(cmd)
-                status = proc.wait()
-                return status == 0
-            finally:
-                try:
-                    os.unlink(makefile)
-                except OSError:
-                    pass
+                os.unlink(makefile)
+            except OSError:
+                pass
+        return status == 0
 
+    def _build_direct(self, buildlist, env):
+        """Build all targets in the given list directly."""
+        buildlist = list(buildlist)
+        if not buildlist:
+            return True
+        outputs = set()
         inputs = set()
         req_counts = {}
         rev_dep = {}
         queue = []
-        for t in buildable:
+        for t in buildlist:
             i = list(t.input())
             inputs.update(i)
+            outputs.update(t.output())
             for tt in i:
                 try:
                     r = rev_dep[tt]
@@ -202,15 +200,40 @@ class Graph(object):
             else:
                 failure += 1
 
-        skipped = len(buildable) - (success + failure)
+        skipped = len(buildlist) - (success + failure)
         print 'Targets: %d built, %d failed, %d skipped' % \
             (success, failure, skipped)
-        if failure or skipped:
-            print 'Build failed'
-            return False
-        else:
-            print 'Build succeeded'
+        return (not failure) and (not skipped)
+
+    def build(self, targets, env):
+        """Build the given targets.
+
+        Return True if successful, False if failed.
+        """
+        targets = self._resolve(targets)
+        buildset = self._closure(targets)
+
+        outputs = set()
+        for t in buildset:
+            outputs.update(t.output())
+        self._mkdirs(outputs)
+
+        # Use Make if we can
+        if platform.system() in ('Linux', 'Darwin'):
+            directset = []
+            for t in buildset:
+                try:
+                    t.write_rule
+                except AttributeError:
+                    directset.append(t)
+            directset = self._closure(directset)
+            if not self._build_direct(directset, env):
+                return False
+            if not self._build_make(buildset - directset, env):
+                return False
             return True
+        else:
+            return self._build_direct(buildset, env)
 
     def _gen_gmake(self, targets, generic, f):
         """Write the given targets as GNU make rules.
