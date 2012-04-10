@@ -140,3 +140,7 @@ class Path(object):
         if self._p == '.':
             raise ValueError('cannot add extension to empty path')
         return Path(self._p + ext)
+    @property
+    def basename(self):
+        """Get the base name, the last component of the path."""
+        return posixpath.basename(self._p)
