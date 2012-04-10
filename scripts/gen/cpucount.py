@@ -8,6 +8,7 @@ def cpucount():
     else:
         ncpu = multiprocessing.cpu_count()
     if ncpu is None:
+        import os
         if hasattr(os, "sysconf"):
             if 'SC_NPROCESSORS_ONLN' in os.sysconf_names:
                 ncpu = os.sysconf('SC_NPROCESSORS_ONLN')
