@@ -28,7 +28,7 @@ def mkarg(x):
         raise TypeError('invalid command argument: %r' % (x,))
     return x
 
-SPECIAL_ARG = re.compile('[^-_.+/A-Za-z0-9,=]')
+SPECIAL_ARG = re.compile('[^-_.+/A-Za-z0-9,=:]')
 SPECIAL_DEP = re.compile('[^-_.+/A-Za-z0-9]')
 def escape(x):
     c = x.group(0)
