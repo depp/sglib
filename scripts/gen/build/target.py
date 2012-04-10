@@ -3,6 +3,7 @@ import os
 import subprocess
 import shutil
 import re
+import sys
 from gen.env import Environment
 from gen import path
 
@@ -286,7 +287,7 @@ class StaticFile(object):
     def build(self):
         env = self._env
         print 'FILE', self._dest.posix
-        with open(self._dest, 'wb') as f:
+        with open(self._dest.native, 'wb') as f:
             self.write(f)
         return True
 
@@ -318,7 +319,7 @@ class Template(object):
                 return env[w]
             except KeyError:
                 pass
-            print >>sys.stderr, '%s: unknown variable %r' % (ipath, w)
+            print >>sys.stderr, '%s: unknown variable %r' % (w, w)
             return m.group(0)
         data = re.sub(r'\${(\w+)}', repl, data)
         with open(self._dest.native, 'wb') as f:
