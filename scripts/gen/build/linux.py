@@ -103,6 +103,7 @@ def build_linux(graph, proj, userenv):
         LIBS='-lGL -lGLU',
     )
     uenv = nix.get_user_env(userenv)
+    uenv.override(userenv)
 
     machine = getmachine(uenv)
     if machine == 'x86_64':

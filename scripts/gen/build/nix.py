@@ -53,16 +53,15 @@ _DEFAULT_CFLAGS = {
 def get_user_env(env):
     """Get the default user environment for a GCC-based build.
 
-    The input is the user-specified environment.  The default values
-    will be filled in, but any value specified by the user will be
-    untouched.
+    The input is the user-specified environment.  Values from that
+    environment will not be combined, but they will be examined.
     """
     config = env.CONFIG
     try:
         cflags = _DEFAULT_CFLAGS[config]
     except KeyError:
         raise ValueError('unknown configuration: %r' % (config,))
-    e = Environment(
+    return Environment(
         CC='gcc',
         CXX='g++',
         CPPFLAGS='',
@@ -74,5 +73,3 @@ def get_user_env(env):
         LDFLAGS='',
         LIBS='',
     )
-    e.override(env)
-    return e
