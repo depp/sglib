@@ -265,13 +265,7 @@ def build_osx(graph, proj, userenv):
         objext = '.%s.o' % (arch,)
         objs = []
         for source, env in srcenv:
-            ext = source.grouppath.ext
-            try:
-                stype = path.EXTS[ext]
-            except KeyError:
-                raise Exception(
-                    'unknown extension %s for path %s' %
-                    (ext, source.relpath.posixpath))
+            stype = source.sourcetype
             if stype in ('c', 'cxx', 'm', 'mm'):
                 opath = Path('build/obj', source.group.name,
                              source.grouppath.withext(objext))

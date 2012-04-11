@@ -21,6 +21,7 @@ class Source(object):
     You should not construct a Source object directly, instead call
     the 'add' method on a Group object.
     """
+    __slots__ = ['_path', '_atoms', '_group', '_sourcetype']
     def __init__(self, path, atoms, group):
         if not isinstance(path, gen.path.Path):
             raise TypeError('path must be Path instance')
@@ -28,9 +29,21 @@ class Source(object):
             raise TypeError('atoms must be tuple')
         if not isinstance(group, Group):
             raise TypeError('group must be Group instance')
+        ext = path.ext
+        if not ext:
+            raise ValueError(
+                'source file has no extension, cannot determine type: %s' %
+                (path.posix,))
+        try:
+            stype = gen.path.EXTS[ext]
+        except KeyError:
+            raise ValueError(
+                'source file %s has unknown extension, cannot determine type' %
+                (path.posix,))
         self._path = path
         self._atoms = atoms
         self._group = group
+        self._sourcetype = stype
     def __repr__(self):
         if self._atoms:
             return '<source %s %r atoms=%s>' % \
@@ -55,6 +68,10 @@ class Source(object):
     def atoms(self):
         """The atoms which apply to this file, a tuple."""
         return self._atoms
+    @property
+    def sourcetype(self):
+        """The type of this source file."""
+        return self._sourcetype
 
 class Group(object):
     """A group of source files.
