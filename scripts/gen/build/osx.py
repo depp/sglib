@@ -261,14 +261,10 @@ def build_osx(graph, proj, userenv):
     # build executable for each architecture
     exes = []
     for arch in archs:
-        atoms = set([arch])
+        srcenv = atom.SourceEnv(proj, atomenv, arch)
         objext = '.%s.o' % (arch,)
         objs = []
-        for source in proj.sourcelist.sources():
-            env = atomenv.getenv(source.atoms + (arch,))
-            if env is None:
-                continue
-            atoms.update(source.atoms)
+        for source, env in srcenv:
             ext = source.grouppath.ext
             try:
                 stype = path.EXTS[ext]
@@ -288,7 +284,7 @@ def build_osx(graph, proj, userenv):
                     'cannot handle file type %s for path %s' %
                     (stype, source.relpath.posixpath))
 
-        env = atomenv.getenv(atoms - atom.PLATFORMS)
+        env = srcenv.unionenv()
         exe = Path('build/exe', exename + '-' + arch)
         graph.add(nix.LD(exe, objs, env))
         exes.append(exe)

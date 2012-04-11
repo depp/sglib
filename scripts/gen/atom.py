@@ -76,3 +76,39 @@ class AtomEnv(object):
             e = Environment(*es)
             self._envn[lstr] = e
             return e
+
+class SourceEnv(object):
+    """Object which lists sources and their environments.
+    
+    Iterating over this object yields (source, env) pairs, where source
+    is a source file and env is the corresponding environment.  This will
+    omit any sources which should not be built, according to the
+    environment.
+    """
+    __slots__ = ['_allatoms', '_complete', '_proj', '_atomenv', '_atoms']
+    def __init__(self, proj, atomenv, *atoms):
+        self._allatoms = set(atoms)
+        self._complete = False
+        self._proj = proj
+        self._atomenv = atomenv
+        self._atoms = atoms
+
+    def unionenv(self):
+        """Get the combined environment for all sources."""
+        if not self._complete:
+            for x in self:
+                pass
+            assert self._complete
+        env = self._atomenv.getenv(self._allatoms - PLATFORMS)
+        assert env is not None
+        return env
+
+    def __iter__(self):
+        atoms = self._atoms
+        getenv = self._atomenv.getenv
+        for source in self._proj.sourcelist.sources():
+            env = getenv(source.atoms + atoms)
+            if env is not None:
+                yield source, env
+                self._allatoms.update(source.atoms)
+        self._complete = True
