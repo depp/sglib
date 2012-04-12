@@ -150,33 +150,21 @@ def genbuild_linux(graph, proj, atomenv, machine):
     the executable.  It may be empty.
     """
 
+    srcenv = atom.SourceEnv(proj, atomenv)
+    types_cc = 'c', 'cxx'
+    types_ignore = 'h', 'hxx'
     objs = []
-    atoms = set()
-    for source in proj.sourcelist.sources():
-        env = atomenv.getenv(source.atoms)
-        if env is None:
-            continue
-        atoms.update(source.atoms)
-        ext = source.grouppath.ext
-        try:
-            stype = path.EXTS[ext]
-        except KeyError:
-            raise Exception(
-                'unknown extension %s for path %s' %
-                (ext, source.relpath.posixpath))
-        if stype in ('c', 'cxx'):
-            opath = Path('build/obj', source.group.simple_name,
-                         source.grouppath.withext('.o'))
-            objs.append(opath)
-            graph.add(nix.CC(opath, source.relpath, env, stype))
-        elif stype in ('h', 'hxx'):
-            pass
-        else:
-            raise Exception(
-                'cannot handle file type %s for path %s' %
-                (stype, source.relpath.posixpath))
+    def handlec(source, env):
+        opath = Path('build/obj', source.group.simple_name,
+                     source.grouppath.withext('.o'))
+        objs.append(opath)
+        graph.add(nix.CC(opath, source.relpath, env, source.sourcetype))
+    handlers = {}
+    for t in types_cc: handlers[t] = handlec
+    for t in types_ignore: handlers[t] = None
+    srcenv.apply(handlers)
 
-    env = atomenv.getenv(atoms - atom.PLATFORMS)
+    env = srcenv.unionenv()
     if machine:
         exename = '%s-%s' % (env.EXE_LINUX, machine)
     else:
