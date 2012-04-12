@@ -156,7 +156,13 @@ class Flags(EnvVar):
             return True, value.split()
         nvalue = list(value)
         for f in nvalue:
-            if not isinstance(f, str):
+            if isinstance(f, (str, Path)):
+                continue
+            elif isinstance(f, tuple):
+                for x in f:
+                    if not isinstance(x, (str, Path)):
+                        return False, None
+            else:
                 return False, None
         return True, nvalue
 
