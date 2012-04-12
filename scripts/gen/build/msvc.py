@@ -1,13 +1,17 @@
-import gen.path as path
+import gen.path
 import gen.build.target as target
 from gen.env import Environment
+import gen.atom as atom
 import subprocess
 import os
 import sys
-import _winreg
+import platform
+
+Path = gen.path.Path
 
 def getreg(key, subkey):
     """Get a value from the Windows registry."""
+    import _winreg
     h = None
     try:
         h = _winreg.OpenKey(_winreg.HKEY_LOCAL_MACHINE, key)
@@ -27,30 +31,24 @@ def msvc_fail(why):
     print >>sys.stderr, 'Cannot find MSVC environment: %s' % why
     sys.exit(1)
 
-def get_sdk_environ(obj, target, config):
+def get_sdk_environ(target, config):
     """Return the environment variables for the Windows SDK."""
-    if obj.opts.dump_env:
+    dumpenv = False
+    if dumpenv:
         print '==== Initial environment ===='
         for k, v in sorted(os.environ.items()):
             print k, '=', v
         print
-    if 0:
-        p = getreg(r'SOFTWARE\Microsoft\VisualStudio\10.0\Setup\VC',
-                   'ProductDir')
-        if p is None:
-            msvc_fail('VS 10 not installed')
-        p = os.path.join(p, 'vcvarsall.bat')
-    else:
-        p = getreg(r'SOFTWARE\Microsoft\Microsoft SDKs\Windows',
-                   'CurrentInstallFolder')
-        if p is None:
-            msvc_fail('Windows SDK is not installed')
-        p = os.path.join(p, 'Bin', 'SetEnv.Cmd')
-        if target not in ('x86', 'x64', 'ia64'):
-            msvc_fail('--target must be x86, x64, or ia64')
-        if config not in ('debug', 'release'):
-            msvc_fail('--config must be debug or release')
-        args = ' '.join(['/' + config, '/' + target, '/xp'])
+    p = getreg(r'SOFTWARE\Microsoft\Microsoft SDKs\Windows',
+               'CurrentInstallFolder')
+    if p is None:
+        msvc_fail('Windows SDK is not installed')
+    p = os.path.join(p, 'Bin', 'SetEnv.Cmd')
+    if target not in ('x86', 'x64', 'ia64'):
+        msvc_fail('target must be x86, x64, or ia64')
+    if config not in ('debug', 'release'):
+        msvc_fail('config must be debug or release')
+    args = ' '.join(['/' + config, '/' + target, '/xp'])
     tag = 'TAG8306'
     # It seems that setenv gives an exit status of 1 normally
     cmd = 'cmd.exe /c "%s" %s & echo %s && set' % (p, args, tag)
@@ -64,7 +62,7 @@ def get_sdk_environ(obj, target, config):
     lines = iter(out.splitlines())
     for line in lines:
         line = line.rstrip()
-        if obj.opts.dump_env:
+        if dumpenv:
             print line
         if line == tag:
             break
@@ -74,45 +72,95 @@ def get_sdk_environ(obj, target, config):
     for line in lines:
         k, v = line.rstrip().split('=', 1)
         env[k] = v
-    if obj.opts.dump_env:
+    if dumpenv:
         print '==== MSVC Environment ===='
         for k, v in sorted(env.items()):
             print k, '=', v
         print
     return env
 
-def cc(obj, src, env, stype):
-    if stype == 'c':
-        cc = env.CC
-        cflags = env.CFLAGS
-        warn = env.CWARN
-        what = 'CC'
-        lflag = '/TC'
-    elif stype == 'cxx':
-        cc = env.CXX
-        cflags = env.CXXFLAGS
-        warn = env.CWARN
-        what = 'CXX'
-        lflag = '/TP'
-    else:
-        raise ValueError('not a C file type: %r' % stype)
-    cmd = [cc, '/c', '/Fo' + obj, lflag] + \
-        env.CPPFLAGS + warn + cflags + [src]
-    return target.Command(cmd, inputs=[src], outputs=[obj],
-                          env=env.environ, name=what)
+class CC(target.CC):
+    """Windows: Compile a C or C++ file."""
+    __slots__ = ['_dest', '_src', '_env', '_sourcetype']
+    def commands(self):
+        env = self._env
+        if self._sourcetype == 'c':
+            cc = env.CC
+            cflags = env.CFLAGS
+            warn = env.CWARN
+            lflag = '/TC'
+        elif self._sourcetype == 'cxx':
+            cc = env.CXX
+            cflags = env.CXXFLAGS
+            warn = env.CXXWARN
+            lflag = '/TP'
+        else:
+            assert False
+        return [[cc, '/c', ('/Fo', self._dest), lflag] +
+                [('/I', p) for p in env.CPPPATH] +
+                env.CPPFLAGS + warn + cflags + [self._src]]
 
-def ld(obj, src, env):
-    cmd = [env.LD, '/OUT:' + obj] + env.LDFLAGS + src + env.LIBS
-    return target.Command(cmd, inputs=src, outputs=[obj],
-                          env=env.environ, name='LD')
+class LD(target.LD):
+    """Windows: Link an executable."""
+    __slots__ = ['_dest', '_src', '_env', '_debugsym']
+    def __init__(self, dest, src, env, debugsym):
+        target.LD.__init__(self, dest, src, env)
+        if debugsym is not None and not isinstance(debugsym, Path):
+            raise TypeError('debugsym must be None or Path')
+        self._debugsym = debugsym
 
-def build(obj):
-    build = target.Build()
+    def output(self):
+        yield self._dest
+        if self._debugsym is not None:
+            yield self._debugsym
+
+    def commands(self):
+        env = self._env
+        if self._debugsym is not None:
+            ds = [('/PDB:', self._debugsym)]
+        else:
+            ds = []
+        return [[env.LD, ('/OUT:', self._dest)] + env.LDFLAGS + ds +
+                self._src + env.LIBS]
+
+def add_sources(graph, proj, userenv):
+    pass
+
+def add_targets(graph, proj, userenv):
+    if platform.system() == 'Windows':
+        build_windows(graph, proj, userenv)
+
+def build_windows(graph, proj, userenv):
+    configs = {
+        'debug':   ('/Od /Oy-', '/MDd'),
+        'release': ('/O2 /Oy-', '/MT'),
+    }
+    try:
+        oflags, rtflags = configs[userenv.CONFIG]
+    except KeyError:
+        raise Exception('unsupported configuration: %r' % \
+            (env.CONFIG,))
+
+    # Get the user environment
+    ccwarn = '/W3 /WX-'
+    uenv = Environment(
+        ARCHS='x86 x64',
+        CC='cl.exe',
+        CXX='cl.exe',
+        CPPFLAGS='',
+        CFLAGS=oflags,
+        CXXFLAGS=oflags,
+        CWARN=ccwarn,
+        CXXWARN=ccwarn,
+        LD='link.exe',
+        LDFLAGS='',
+        LIBS='',
+    )
+    uenv.override(userenv)
 
     # Get the base environment
     defs = ['_CRT_SECURE_NO_DEPRECATE', 'WIN32', 'DEBUG', '_WINDOWS']
-    cppflags = ['/I' + p for p in obj.incldirs] + \
-        ['/D' + deff for deff in defs]
+    cppflags = ['/D' + deff for deff in defs]
     ccflags = [
         '/nologo',      # don't print version info
         '/EHsc',        # assume extern C never throws exceptions
@@ -146,67 +194,73 @@ def build(obj):
         'odbc32.lib',
         'odbccp32.lib',
     ]
-    baseenv = Environment(
+    penv = Environment(
+        proj.env,
         CPPFLAGS=cppflags,
         CFLAGS=ccflags,
         CXXFLAGS=ccflags,
         LDFLAGS=ldflags,
-        LIBS=libs
+        LIBS=libs,
     )
-    ccwarn = ['/W3', '/WX-']
-    if obj.opts.config == 'release':
-        ccflags = ['/O2', '/Oy-', '/MT']
-    elif obj.opts.config == 'debug':
-        ccflags = ['/Od', '/Oy-', '/MDd']
-    else:
-        print >>sys.stderr, 'unsupported configuration: %r' % \
-            (obj.opts.config,)
-        sys.exit(1)
-    userenv = Environment(
-        ARCHS='x86 x64',
-        CC='cl.exe',
-        CXX='cl.exe',
-        CPPFLAGS='',
-        CFLAGS=ccflags,
-        CXXFLAGS=ccflags,
-        CWARN=ccwarn,
-        CXXWARN=ccwarn,
-        LD='link.exe',
-        LDFLAGS='',
-        LIBS='',
-    )
-    userenv.override(obj.env)
 
-    for arch in userenv.ARCHS:
-        objdir = os.path.join('build', 'obj-' + arch)
-        cflags=['/Fd' + os.path.join(objdir, 'debug.pdb')]
-        archenv = Environment(
+    env = Environment(penv, uenv)
+    appname = env.EXE_WINDOWS
+    archs = env.ARCHS
+
+    # Get the environment for each architecture
+    archenvs = {}
+    for arch in archs:
+        objdir = Path('build/obj-' + arch)
+        cflags = [('/Fd', Path(objdir, 'debug.pdb'))]
+        aenv = Environment(
             LDFLAGS=['/MACHINE:' + arch],
             CFLAGS=cflags,
             CXXFLAGS=cflags,
         )
-        archenv.environ.update(get_sdk_environ(obj, arch, obj.opts.config))
-        env = Environment(baseenv, archenv, userenv)
+        aenv.environ.update(get_sdk_environ(arch, env.CONFIG))
+        archenvs[arch] = aenv
 
-        exename = userenv.EXE_WINDOWS
-        if arch != 'x86':
+    def lookupenv(atom):
+        try:
+            return archenvs[atom]
+        except KeyError:
+            return None
+
+    atomenv = atom.AtomEnv([lookupenv], penv, uenv, 'WINDOWS')
+
+    # Build the executable for each architecture
+    exes = []
+    types_cc = 'c', 'cxx'
+    types_ignore = 'h', 'hxx'
+    for arch in archs:
+        srcenv = atom.SourceEnv(proj, atomenv, arch)
+        objdir = Path('build/obj-' + arch)
+        if arch == 'x86':
+            exename = appname
+        else:
             exename = exename + '-' + arch
 
         # Build the sources
         objs = []
-        for src in obj.get_atoms(None, 'WINDOWS', native=True):
-            sbase, sext = os.path.splitext(src)
-            stype = path.EXTS[sext]
-            if stype in ('c', 'cxx'):
-                objf = os.path.join(objdir, sbase + '.obj')
-                build.add(cc(objf, src, env, stype))
-                objs.append(objf)
+        def handlec(source, env):
+            opath = Path(objdir, source.group.simple_name,
+                         source.grouppath.withext('.obj'))
+            objs.append(opath)
+            graph.add(CC(opath, source.relpath, env, source.sourcetype))
+        handlers = {}
+        for t in types_cc: handlers[t] = handlec
+        for t in types_ignore: handlers[t] = None
+        srcenv.apply(handlers)
 
-        # Build the executable
-        ldflags = ['/SUBSYSTEM:WINDOWS',
-                   '/PDB:' + os.path.join('build', 'product', exename + '.pdb')]
-        build.add(ld(os.path.join('build', 'product', exename + '.exe'),
-                     objs, Environment(env, LDFLAGS=ldflags)))
+        env = Environment(
+            srcenv.unionenv(),
+            LDFLAGS=['/SUBSYSTEM:WINDOWS'],
+        )
+        pdbpath = Path('build/product', exename + '.pdb')
+        exepath = Path('build/product', exename + '.exe')
+        graph.add(LD(exepath, objs, env, pdbpath))
+        exes.append(exepath)
+        exes.append(pdbpath)
 
-    return build
-
+    env = Environment(penv, uenv)
+    graph.add(target.DepTarget('build', exes, env))

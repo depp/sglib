@@ -51,7 +51,7 @@ def run(proj):
     env = Environment(venv, env)
 
     ms = []
-    for module in ('version', 'linux', 'osx'): # msvc
+    for module in ('version', 'linux', 'osx', 'msvc'):
         m = __import__('gen.build.' + module)
         m = getattr(m.build, module)
         ms.append(m)

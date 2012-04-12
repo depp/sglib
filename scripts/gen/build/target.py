@@ -111,6 +111,9 @@ class Commands(object):
                     print name, output
                 else:
                     print name
+        environ = env.environ
+        if not environ:
+            environ = None
         for cmd in self.commands():
             if not cmd:
                 raise ValueError('command is empty')
@@ -121,7 +124,7 @@ class Commands(object):
                 isinstance(cmd[1], Path) and isinstance(cmd[2], Path)):
                 shutil.copyfile(args[1], args[2])
             else:
-                proc = subprocess.Popen(args)
+                proc = subprocess.Popen(args, env=environ)
                 status = proc.wait()
                 if status:
                     return False
