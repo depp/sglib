@@ -4,6 +4,24 @@ import sys
 import platform
 from gen.path import Path
 
+VALID_VAR = re.compile(r'^[_a-zA-Z0-9]+$')
+class VarRef(object):
+    """A reference to a Makefile variable.
+
+    This is used to automatically generate Makefile rules.
+    """
+    __slots__ = ['_name']
+    def __init__(self, name):
+        if not isinstance(name, str):
+            raise TypeError('variable name must be str')
+        if not VALID_VAR.match(name):
+            raise ValueError('variable name must match [_a-zA-Z0-9]+')
+        self._name = name
+    def __repr__(self):
+        return 'VarRef(%r)' % (self._name,)
+    def __str__(self):
+        return '$(%s)' % (self._name,)
+
 class UnknownProperty(Exception):
     def __init__(self, name):
         self.name = name
@@ -128,6 +146,8 @@ class Program(EnvVar):
         except KeyError:
             pass
         value = EnvVar.__get__(self, instance, owner)
+        if isinstance(value, VarRef):
+            return value
         abspath = instance.prog_path(*value)
         instance._paths[self.name] = abspath
         return abspath
@@ -135,6 +155,8 @@ class Program(EnvVar):
     def check(self, value):
         if isinstance(value, str):
             return True, [value]
+        elif isinstance(value, VarRef):
+            return True, value
         else:
             return True, list(value)
 
@@ -154,13 +176,15 @@ class Flags(EnvVar):
     def check(self, value):
         if isinstance(value, str):
             return True, value.split()
+        elif isinstance(value, VarRef):
+            return True, [value]
         nvalue = list(value)
         for f in nvalue:
-            if isinstance(f, (str, Path)):
+            if isinstance(f, (str, Path, VarRef)):
                 continue
             elif isinstance(f, tuple):
                 for x in f:
-                    if not isinstance(x, (str, Path)):
+                    if not isinstance(x, (str, Path, VarRef)):
                         return False, None
             else:
                 return False, None

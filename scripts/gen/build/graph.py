@@ -43,6 +43,13 @@ class Graph(object):
         for t in self._pseudotargets.iterkeys():
             yield t
 
+    def targetobjs(self):
+        """Return a set of all targets."""
+        s = set()
+        s.update(self._filetargets.itervalues())
+        s.update(self._pseudotargets.itervalues())
+        return s
+
     def add(self, target):
         """Add a target to the build set.
 
@@ -266,7 +273,7 @@ class Graph(object):
             except AttributeError:
                 raise TypeError('cannot generate make rule for %s' %
                                 repr(t.__class__))
-            wr(f, False)
+            wr(f, generic)
             for i in t.input():
                 if isinstance(i, str):
                     phony.add(i)
@@ -277,4 +284,4 @@ class Graph(object):
         """Write the given targets as gmakefile rules."""
         targets = self._resolve(targets)
         buildable = list(self._closure(targets))
-        self._gen_gmake(buildable, False, f)
+        self._gen_gmake(buildable, True, f)

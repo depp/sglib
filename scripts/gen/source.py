@@ -170,6 +170,9 @@ class SourceList(object):
         self._groups = []
         self._gnames = {}
 
+    def groups(self):
+        return self._gnames.itervalues()
+
     def get_group(self, name, path):
         """Get the group with the given name, creating it if necessary."""
         g = Group(name, path)

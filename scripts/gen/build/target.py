@@ -4,7 +4,7 @@ import subprocess
 import shutil
 import re
 import sys
-from gen.env import Environment
+from gen.env import Environment, VarRef
 from gen import path
 
 Path = path.Path
@@ -63,28 +63,34 @@ def escape(x):
         return '\\ '
     raise ValueError('invalid character: %r' % (c,))
 
+def mkescapearg(x):
+    try:
+        return SPECIAL_ARG.sub(escape, x)
+    except ValueError:
+        raise ValueError('invalid character in %r' % (x,))
+
 def mkmkarg(x):
     if isinstance(x, str):
-        pass
+        x = mkescapearg(x)
     elif isinstance(x, Path):
-        x = x.posix
+        x = mkescapearg(x.posix)
+    elif isinstance(x, VarRef):
+        x = str(x)
     elif isinstance(x, tuple):
         a = ''
         for i in x:
             if isinstance(i, str):
-                pass
+                i = mkescapearg(i)
             elif isinstance(i, Path):
-                i = i.posix
+                i = mkescapearg(i.posix)
+            elif isinstance(i, VarRef):
+                i = str(i)
             else:
                 raise TypeError('invalid command argument: %r' % (x,))
             a += i
         x = a
     else:
         raise TypeError('invalid command argument: %r' % (x,))
-    try:
-        x = SPECIAL_ARG.sub(escape, x)
-    except ValueError:
-        raise ValueError('invalid character in %r' % (x,))
     return x
 
 def mkmkdep(x):
@@ -162,6 +168,8 @@ class Commands(Target):
                 for cmd in self.commands()]
         otarg = ' '.join(mkmkdep(x) for x in self.output())
         itarg = ' '.join(mkmkdep(x) for x in self.input())
+        if generic and isinstance(self, CC):
+            itarg += ' $(dirs_missing)'
         if not otarg:
             raise ValueError('target has no outputs')
         if itarg:
@@ -176,7 +184,7 @@ class Commands(Target):
             else:
                 name = name()
                 if generic:
-                    cmds = [['$(QE %s)' % name]] + \
+                    cmds = [['$(Q%s)' % name]] + \
                         [['$(QS)' + cmd[0]] + cmd[1:] for cmd in cmds]
                 elif not self._env.VERBOSE:
                     cmds = [['@echo %s $@' % name]] + \
@@ -322,8 +330,8 @@ class StaticFile(Target):
 
 class Template(Target):
     """Target which creates an file from a template."""
-    __slots__ = ['_dest', '_src', '_env']
-    def __init__(self, dest, src, env):
+    __slots__ = ['_dest', '_src', '_env', '_regex', '_vars']
+    def __init__(self, dest, src, env, regex=r'\${(\w+)}', **extra):
         if not isinstance(dest, Path):
             raise TypeError('destination must be path')
         if not isinstance(src, Path):
@@ -331,6 +339,8 @@ class Template(Target):
         self._dest = dest
         self._src = src
         self._env = env
+        self._regex = regex
+        self._vars = extra
 
     def input(self):
         yield self._src
@@ -347,9 +357,14 @@ class Template(Target):
             try:
                 return getattr(env, w)
             except AttributeError:
-                print >>sys.stderr, '%s: unknown variable %r' % (w, w)
-                return m.group(0)
-        data = re.sub(r'\${(\w+)}', repl, data)
+                pass
+            try:
+                return self._vars[w]
+            except KeyError:
+                pass
+            print >>sys.stderr, '%s: unknown variable %r' % (w, w)
+            return m.group(0)
+        data = re.sub(self._regex, repl, data)
         with open(self._dest.native, 'wb') as f:
             f.write(data)
         return True

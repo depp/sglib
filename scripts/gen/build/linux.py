@@ -3,9 +3,7 @@ import gen.build.nix as nix
 import gen.atom as atom
 from gen.env import Environment
 import gen.shell as shell
-import gen.path as path
-
-Path = path.Path
+from gen.path import Path
 
 class ExtractDebug(target.Commands):
     """Extract debug symbols from an executable."""
