@@ -1,10 +1,28 @@
 import os
 import re
+import sys
+import platform
+from gen.path import Path
 
-class EnvError(Exception):
-    pass
+VALID_VAR = re.compile(r'^[_a-zA-Z0-9]+$')
+class VarRef(object):
+    """A reference to a Makefile variable.
 
-class UnknownProperty(EnvError):
+    This is used to automatically generate Makefile rules.
+    """
+    __slots__ = ['_name']
+    def __init__(self, name):
+        if not isinstance(name, str):
+            raise TypeError('variable name must be str')
+        if not VALID_VAR.match(name):
+            raise ValueError('variable name must match [_a-zA-Z0-9]+')
+        self._name = name
+    def __repr__(self):
+        return 'VarRef(%r)' % (self._name,)
+    def __str__(self):
+        return '$(%s)' % (self._name,)
+
+class UnknownProperty(Exception):
     def __init__(self, name):
         self.name = name
     def __repr__(self):
@@ -12,7 +30,7 @@ class UnknownProperty(EnvError):
     def __str__(self):
         return 'unknown environment variable: %r' % (self.name,)
 
-class UnsetProperty(EnvError):
+class UnsetProperty(AttributeError):
     def __init__(self, prop, fallback=()):
         self.prop = prop
         self.fallback = fallback
@@ -28,7 +46,7 @@ class UnsetProperty(EnvError):
         else:
             return 'property not set: %s' % self.prop
 
-class InvalidProperty(EnvError):
+class InvalidProperty(ValueError):
     def __init__(self, prop, value):
         self.prop = prop
         self.value = value
@@ -46,7 +64,9 @@ class EnvVar(object):
     def __init__(self, name):
         self.name = name
 
-    def get(self, instance):
+    def __get__(self, instance, owner):
+        if instance is None:
+            return self
         try:
             return instance._props[self.name]
         except KeyError:
@@ -71,14 +91,14 @@ class EnvVar(object):
         except UnsetProperty, ex:
             raise UnsetProperty(self.name, (ex.prop,) + ex.fallback)
 
-    def set(self, instance, value):
+    def __set__(self, instance, value):
         isvalid, nvalue = self.check(value)
         if isvalid:
             instance._props[self.name] = nvalue
         else:
             raise InvalidProperty(self.name, value)
 
-    def delete(self, instance):
+    def __delete__(self, instance):
         del instance._props[self.name]
 
     def check(self, value):
@@ -118,12 +138,16 @@ class Program(EnvVar):
     is searched for each string until one is found.
     """
 
-    def get(self, instance):
+    def __get__(self, instance, owner):
+        if instance is None:
+            return self
         try:
             return instance._paths[self.name]
         except KeyError:
             pass
-        value = EnvVar.get(self, instance)
+        value = EnvVar.__get__(self, instance, owner)
+        if isinstance(value, VarRef):
+            return value
         abspath = instance.prog_path(*value)
         instance._paths[self.name] = abspath
         return abspath
@@ -131,8 +155,13 @@ class Program(EnvVar):
     def check(self, value):
         if isinstance(value, str):
             return True, [value]
+        elif isinstance(value, VarRef):
+            return True, value
         else:
             return True, list(value)
+
+    def as_string(self, value):
+        return ' '.join(value)
 
 class Flags(EnvVar):
     """Program flags environment variable.
@@ -147,9 +176,17 @@ class Flags(EnvVar):
     def check(self, value):
         if isinstance(value, str):
             return True, value.split()
+        elif isinstance(value, VarRef):
+            return True, [value]
         nvalue = list(value)
         for f in nvalue:
-            if not isinstance(f, str):
+            if isinstance(f, (str, Path, VarRef)):
+                continue
+            elif isinstance(f, tuple):
+                for x in f:
+                    if not isinstance(x, (str, Path, VarRef)):
+                        return False, None
+            else:
                 return False, None
         return True, nvalue
 
@@ -165,7 +202,7 @@ class Flags(EnvVar):
         return ' '.join(value)
 
 IS_TITLE = re.compile(r'^[-\w]+(?: [-\w]+)*$')
-IS_FILE = re.compile(r'\w+')
+IS_FILE = re.compile(r'^\w+$')
 IS_DOMAIN = re.compile(r'^[a-z0-9](?:[-a-z0-9]*[a-z0-9])?' 
                        r'(?:\.[a-z0-9](?:[-a-z0-9]*[a-z0-9])?)*$')
 
@@ -213,6 +250,16 @@ class Filename(EnvVar):
             return True, value
         return False, None
 
+class PathVar(EnvVar):
+    """A path environment variable."""
+
+    def check(self, value):
+        try:
+            p = Path(value)
+        except ValueError:
+            return False, None
+        return True, p
+
 class DomainName(EnvVar):
     """A domain name environment variable."""
 
@@ -221,43 +268,144 @@ class DomainName(EnvVar):
             return True, value
         return False, None
 
-PROGS = [Program(p) for p in ('CC', 'CXX', 'LD')]
-FLAGS = [Flags(p) for p in
-         ('CPPFLAGS', 'CFLAGS', 'CXXFLAGS', 'CWARN', 'CXXWARN',
-          'LDFLAGS', 'LIBS', 'ARCHS')]
-PKG = [
-    Title('PKG_NAME'),
-    DomainName('PKG_IDENT'),
-    Filename('PKG_FILENAME', 'PKG_NAME'),
-    EnvVar('PKG_URL'),
-    EnvVar('PKG_EMAIL'),
-    UEnvVar('PKG_COPYRIGHT'),
-    Title('EXE_NAME', 'PKG_NAME'),
-    Title('EXE_MAC', 'EXE_NAME'),
-    Filename('EXE_LINUX', 'EXE_NAME'),
-    Title('EXE_WINDOWS', 'EXE_NAME'),
-    Filename('EXE_MACICON'),
-    DomainName('PKG_APPLE_CATEGORY'),
-]
-VARS = PROGS + FLAGS + PKG
-VARS = dict((v.name, v) for v in VARS)
+IS_VERSION = re.compile(r'^[-+.A-Za-z0-9]+$')
+class Version(EnvVar):
+    """A version number environment variable."""
+
+    def check(self, value):
+        if IS_VERSION.match(value):
+            return True, value
+        return False, None
+
+IS_HASH = re.compile(r'^[0-9a-f]+$')
+class Hash(EnvVar):
+    """A hash (e.g., git SHA1) environment variable"""
+
+    def check(self, value):
+        if IS_HASH.match(value):
+            return True, value
+        return False, None
+
+TRUE = frozenset(['1', 'true', 'yes', 'on'])
+FALSE = frozenset(['0', 'false', 'no', 'off'])
+
+class BoolVar(EnvVar):
+    """A boolean environment variable.
+
+    Any of the values 1, True, Yes, or On is interpreted as true.  0,
+    False, No, and Off are false.  Not case sensitive.
+    """
+
+    def __init__(self, name, default=None):
+        EnvVar.__init__(self, name)
+        self._default = default
+
+    def check(self, value):
+        if isinstance(value, str):
+            v = value.lower()
+            if v in TRUE:
+                return True, True
+            elif v in FALSE:
+                return True, False
+            else:
+                return False, None
+        elif isinstance(value, bool):
+            return True, value
+        else:
+            return False, None
+
+    def default(self, instance):
+        if self._default is not None:
+            return self._default
+        raise UnsetProperty(self.name)
+
+    def as_string(self, value):
+        return '1' if value else '0'
+
+class Enum(EnvVar):
+    """An enumeration variable.
+
+    Possible values are strings from a fixed list.
+    """
+
+    def __init__(self, name, vals, default=None):
+        EnvVar.__init__(self, name)
+        self._default = default
+        self._vals = frozenset(vals)
+
+    def check(self, value):
+        if not isinstance(value, str) or value not in self._vals:
+            return False, None
+        return True, value
+
+    def default(self, instance):
+        if self._default is not None:
+            return self._default
+        raise UnsetProperty(self.name)
 
 class Environment(object):
+    """A set of environment variables and their values.
+
+    Environment variables can be set as properties or as indexes.
+    When accessed as properties, default values will be substituted if
+    the variable is not set.  When accessed as an index, an exception
+    will be raised instead.
+    """
+    __slots__ = ['_paths', 'environ', '_props']
+
+    VERBOSE = BoolVar('VERBOSE', False)
+    CONFIG  = Enum('CONFIG', ['debug', 'release'], default='release')
+
+    CC  = Program('CC')
+    CXX = Program('CXX')
+    LD  = Program('LD')
+    GIT = Program('GIT')
+
+    CPPFLAGS  = Flags('CPPFLAGS')
+    CPPPATH   = Flags('CPPPATH')
+    CFLAGS    = Flags('CFLAGS')
+    CXXFLAGS  = Flags('CXXFLAGS')
+    CWARN     = Flags('CWARN')
+    CXXWARN   = Flags('CXXWARN')
+    LDFLAGS   = Flags('LDFLAGS')
+    LIBS      = Flags('LIBS')
+    ARCHS     = Flags('ARCHS')
+
+    PKG_NAME       = Title('PKG_NAME')
+    PKG_IDENT      = DomainName('PKG_IDENT')
+    PKG_FILENAME   = Filename('PKG_FILENAME', 'PKG_NAME')
+    PKG_URL        = EnvVar('PKG_URL')
+    PKG_EMAIL      = EnvVar('PKG_EMAIL')
+    PKG_COPYRIGHT  = UEnvVar('PKG_COPYRIGHT')
+    PKG_APPLE_CATEGORY = DomainName('PKG_APPLE_CATEGORY')
+    PKG_SG_VERSION   = Version('PKG_SG_VERSION')
+    PKG_SG_COMMIT    = Hash('PKG_SG_COMMIT')
+    PKG_APP_VERSION  = Version('PKG_APP_VERSION')
+    PKG_APP_COMMIT   = Hash('PKG_APP_COMMIT')
+
+    EXE_NAME     = Title('EXE_NAME', 'PKG_NAME')
+    EXE_MAC      = Title('EXE_MAC', 'EXE_NAME')
+    EXE_LINUX    = Filename('EXE_LINUX', 'EXE_NAME')
+    EXE_WINDOWS  = Title('EXE_WINDOWS', 'EXE_NAME')
+    EXE_MACICON  = Filename('EXE_MACICON')
+
     def __init__(self, *args, **kw):
         self._paths = {}
         self.environ = {}
         self._props = {}
         for k, v in kw.iteritems():
             try:
-                var = VARS[k]
+                var = Environment.__dict__[k]
             except KeyError:
                 raise UnknownProperty(k)
-            var.set(self, v)
+            if not isinstance(var, EnvVar):
+                raise UnknownProperty(k)
+            var.__set__(self, v)
         if not args:
             return
         for arg in args:
             if not isinstance(arg, Environment):
-                raise TypeError
+                raise TypeError('argument is not an Environment')
             self.environ.update(arg.environ)
         props = dict(args[0]._props)
         for env in args[1:] + (self,):
@@ -267,68 +415,37 @@ class Environment(object):
                 except KeyError:
                     y = v
                 else:
-                    y = VARS[k].combine(x, v)
+                    var = Environment.__dict__[k]
+                    y = var.combine(x, v)
                 props[k] = y
         self._props = props
 
-    def __getattr__(self, name):
-        if not IS_ENVVAR.match(name):
-            return object.__getattr__(self, name)
-        try:
-            var = VARS[name]
-        except KeyError:
-            raise AttributeError(name)
-        return var.get(self)
-
-    def __setattr__(self, name, value):
-        if not IS_ENVVAR.match(name):
-            return object.__setattr__(self, name, value)
-        try:
-            var = VARS[name]
-        except KeyError:
-            raise AttributeError(name)
-        var.set(self, value)
-
-    def __delattr__(self, name):
-        if not IS_ENVVAR.match(name):
-            return object.__delattr__(self, name)
-        try:
-            var = VARS[name]
-        except KeyError:
-            raise AttributeError(name)
-        var.delete(self)
-
     def __getitem__(self, name):
-        try:
-            var = VARS[name]
-        except KeyError:
-            raise UnknownProperty(name)
-        try:
-            return var.get(self)
-        except UnsetProperty:
-            raise KeyError(name)
+        return self._props[name]
 
     def __setitem__(self, name, value):
         try:
-            var = VARS[name]
+            var = Environment.__dict__[name]
         except KeyError:
             raise UnknownProperty(name)
-        var.set(self, value)
+        if not isinstance(var, EnvVar):
+            raise UnknownProperty(name)
+        var.__set__(self, value)
 
     def __delitem__(self, name):
         try:
-            var = VARS[name]
+            var = Environment.__dict__[name]
         except KeyError:
             raise UnknownProperty(name)
-        return var.delete(self)
+        if not isinstance(var, EnvVar):
+            raise UnknownProperty(name)
+        del self._props[name]
 
     def override(self, env):
         """Override variables with values from the other environment."""
         if not isinstance(env, Environment):
             raise TypeError
-        p = self._props
-        for k, v in env._props.iteritems():
-            p[k] = v
+        self._props.update(env._props)
 
     def set(self, **kw):
         """Set many variables at the same time."""
@@ -337,16 +454,20 @@ class Environment(object):
 
     def dump(self):
         p = self._props
-        for var in sorted(VARS.itervalues(), key=lambda x: x.name):
-            try:
-                v = p[var.name]
-            except KeyError:
-                continue
-            print var.name, '=', var.as_string(v)
+        for k, v in sorted(p.iteritems(), key=lambda x: x[0]):
+            var = Environment.__dict__[k]
+            print k, '=', var.as_string(v)
 
     def remove(self, key, flag):
         """Remove all flags which match 'flag' in var."""
-        var = VARS[key]
+        try:
+            var = Environment.__dict__[key]
+        except KeyError:
+            raise UnknownProperty(name)
+        if not isinstance(var, EnvVar):
+            raise UnknownProperty(name)
+        if not isinstance(var, Flags):
+            raise Exception('not a flags variable: %s' % (key,))
         try:
             val = self._props[key]
         except KeyError:
@@ -354,7 +475,7 @@ class Environment(object):
         if flag not in val:
             return
         nval = [f for f in val if f != flag]
-        var.set(self, nval)
+        var.__set__(self, nval)
 
     def getenv(self, key):
         try:
@@ -365,11 +486,30 @@ class Environment(object):
     def prog_path(self, *progs):
         """Find the absolute path to a program if it exists."""
         paths = self.getenv('PATH').split(os.path.pathsep)
+        if platform.system() == 'Windows':
+            exts = self.getenv('PATHEXT').split(os.path.pathsep)
+            lexts = frozenset(ext.lower() for ext in exts)
+            def pnames(prog):
+                ext = os.path.splitext(prog)[1]
+                if ext and ext.lower() in lexts:
+                    yield prog
+                else:
+                    for ext in exts:
+                        yield prog + ext
+        else:
+            def pnames(prog):
+                yield prog
         for prog in progs:
+            pnamel = list(pnames(prog))
             for path in paths:
                 if not path:
                     continue
-                progpath = os.path.join(path, prog)
-                if os.access(progpath, os.X_OK):
-                    return progpath
+                for pname in pnamel:
+                    progpath = os.path.join(path, pname)
+                    if os.access(progpath, os.X_OK):
+                        return progpath
+        print >>sys.stderr, 'PATH:'
+        for path in paths:
+            if path:
+                print >>sys.stderr, '    ' + path
         raise Exception('program not found: %s' % prog)

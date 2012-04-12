@@ -2,7 +2,10 @@
    a number of threads to the CPU-bound tasks and a number of threads
    to disk-bound tasks.  Threads are created as necessary and expire
    if they wait too long without executing a task.  */
+#if !defined(__APPLE__)
+/* this condition might as well be voodoo magic... */
 #define _XOPEN_SOURCE 600
+#endif
 
 #include "dispatch.h"
 #include "dispatch_impl.h"
@@ -42,6 +45,43 @@ struct sg_dispatch_pthread_local {
 
 static struct sg_dispatch_pthread *sg_dispatch_pthread;
 
+#if defined(__linux__)
+
+static int
+sg_dispatch_async_ncpu(void)
+{
+    return sysconf(_SC_NPROCESSORS_ONLN);
+}
+
+#elif defined(__APPLE__)
+#include <sys/types.h>
+#include <sys/sysctl.h>
+
+static int
+sg_dispatch_async_ncpu(void)
+{
+    int mib[4], ncpu, r;
+    size_t len;
+    mib[0] = CTL_HW;
+    mib[1] = HW_NCPU;
+    len = sizeof(ncpu);
+    r = sysctl(mib, 2, &ncpu, &len, NULL, 0);
+    if (r < 0)
+        return -1;
+    return ncpu;
+}
+
+#else
+#warning "cannot get number of CPUS on this system"
+
+static int
+sg_dispatch_async_ncpu(void)
+{
+    return 1;
+}
+
+#endif
+
 void
 sg_dispatch_async_init(void)
 {
@@ -69,7 +109,7 @@ sg_dispatch_async_init(void)
     r = pthread_key_create(&p->key, NULL);
     if (r) goto err;
 
-    nproc = sysconf(_SC_NPROCESSORS_ONLN);
+    nproc = sg_dispatch_async_ncpu();
     if (nproc <= 1)
         p->max[0] = 1;
     else if (nproc >= 8)
@@ -138,7 +178,7 @@ sg_dispatch_pthread_gettime(struct timespec *ts)
 #endif
     if (r) goto err;
 #else
-    struct tv;
+    struct timeval tv;
     r = gettimeofday(&tv, NULL);
     if (r) goto err;
     ts->tv_sec = tv.tv_sec;

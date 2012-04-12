@@ -124,7 +124,7 @@ static void handleMouse(GDisplay *d, NSEvent *e, sg_event_type_t t, int button)
         [prevContext_ release];
         prevContext_ = nil;
         if (!cxt)
-            sg_resource_dirtytype(SG_RSRC_TEXTURE);
+            ;// FIXME sg_resource_dirtytype(SG_RSRC_TEXTURE);
     }
     if (!cxt) {
         cxt = [[NSOpenGLContext alloc] initWithFormat:fmt shareContext:nil];

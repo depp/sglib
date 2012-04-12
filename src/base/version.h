@@ -5,7 +5,10 @@ extern "C" {
 #endif
 struct sg_logger;
 
-extern const char SG_VERSION[];
+extern const char SG_SG_VERSION[];
+extern const char SG_SG_COMMIT[];
+extern const char SG_APP_VERSION[];
+extern const char SG_APP_COMMIT[];
 
 void
 sg_version_lib(struct sg_logger *lp, const char *libname,

@@ -3,40 +3,32 @@ import subprocess
 import re
 import sys
 
-def git(obj, path, *cmd):
-    git = obj.opts.git_path or 'git'
-    return shell.getoutput([git] + list(cmd), cwd=path)
+GOOD_VERSION = re.compile(r'^[0-9]+(?:\.[0-9]+)(?:-.+)?$')
 
-def get_version(obj, path):
-    """Get the current version as (X, Y, Z) where X, Y, Z are integers.
+def git(env, path, *cmd):
+    return shell.getoutput([env.GIT] + list(cmd), cwd=path)
 
-    If the repository is tagged, the most recent tag must be of the form
-    X[.Y[.Z]], where X, Y, and Z are integers.  Missing values are replaced
-    with 0.  If the tag has the wrong format or cannot be found, None is
-    returned and a warning is printed.
+def get_version(env, path):
+    """Get the version number from the Git repository.
+
+    This will use git-describe to get the version number.  If
+    git-describe fails, then this will return 0.0.
     """
     try:
-        desc = git(obj, path, 'describe', '--abbrev=0')
+        desc = git(env, path, 'describe', '--abbrev=0')
     except subprocess.CalledProcessError:
         print >>sys.stderr, 'warning: no git tags found'
-        return
+        return '0.0'
     desc = desc.strip()
-    try:
-        s = [int(x) for x in s.split('.')]
-    except ValueError:
-        print >>sys.stderr, 'warning: cannot parse git tag %r' % (desc,)
-        return
-    if len(s) > 3:
-        print >>sys.stderr, 'warning: version too long: %r' % (desc,)
-        s = s[:3]
-    elif len(s) < 3:
-        s = s + [0] * (3 - len(s))
-    return tuple(s)
+    if not GOOD_VERSION.match(desc):
+        print >>sys.stderr, \
+            'warning: cannot parse version string: %s' % (desc,)
+    return desc
 
-def get_sha1(obj, path):
+def get_sha1(env, path):
     try:
-        sha1 = git(obj, path, 'rev-parse', 'HEAD')
+        sha1 = git(env, path, 'rev-parse', 'HEAD')
     except subprocess.CalledProcessError:
         print >>sys.stderr, 'warning: no git HEAD found'
-        return None
+        return '0' * 40
     return sha1.strip()

@@ -1,5 +1,5 @@
 
-def cpu_count():
+def cpucount():
     ncpu = None
     try:
         import multiprocessing
@@ -8,6 +8,7 @@ def cpu_count():
     else:
         ncpu = multiprocessing.cpu_count()
     if ncpu is None:
+        import os
         if hasattr(os, "sysconf"):
             if 'SC_NPROCESSORS_ONLN' in os.sysconf_names:
                 ncpu = os.sysconf('SC_NPROCESSORS_ONLN')
