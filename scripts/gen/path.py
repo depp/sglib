@@ -113,7 +113,11 @@ class Path(object):
     def __div__(self, other):
         return Path(self._p, other._p)
     def __eq__(self, other):
-        return isinstance(other, Path) and self._p == other._p
+        if not isinstance(other, Path):
+            raise TypeError('can only compare against other Path objects')
+        return self._p == other._p
+    def __ne__(self, other):
+        return not (self == other)
     def __hash__(self):
         return hash(self._p)
     def withext(self, ext):
