@@ -205,7 +205,7 @@ def targetConfig(env):
         'GCC_ENABLE_FIX_AND_CONTINUE': True,
         'GCC_MODEL_TUNING': 'G5',
         'GCC_OPTIMIZATION_LEVEL': 0,
-        # 'INFOPLIST_FILE': FIXME
+        'INFOPLIST_FILE': 'resources/mac/Info.plist',
         'INSTALL_PATH': '$(HOME)/Applications',
         'PREBINDING': False,
         'PRODUCT_NAME': env.EXE_MAC,
