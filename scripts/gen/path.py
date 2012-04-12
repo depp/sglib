@@ -13,15 +13,20 @@ OBJC_EXTS = ['.m']
 OBJCXX_EXTS = ['.mm']
 
 TYPES = {'c': C_EXTS, 'h': H_EXTS, 'cxx': CXX_EXTS,
-         'hxx': HXX_EXTS, 'm': OBJC_EXTS, 'mm': OBJCXX_EXTS,
-         'plist': ['.plist'], 'xib': ['.xib']}
+         'hxx': HXX_EXTS, 'm': OBJC_EXTS, 'mm': OBJCXX_EXTS}
 def _compute_exts():
+    plain = [
+        'plist', 'xib', 'icns'
+    ]
+    for t in plain:
+        TYPES[t] = ['.' + t]
     exts = {}
     for what, texts in TYPES.iteritems():
         for ext in texts:
             exts[ext] = what
     return exts
 EXTS = _compute_exts()
+del _compute_exts
 
 def filterexts(paths, exts):
     """Return a list of the paths whose extensions are in exts."""
