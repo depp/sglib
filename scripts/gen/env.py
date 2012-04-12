@@ -376,7 +376,7 @@ class Environment(object):
             return
         for arg in args:
             if not isinstance(arg, Environment):
-                raise TypeError
+                raise TypeError('argument is not an Environment')
             self.environ.update(arg.environ)
         props = dict(args[0]._props)
         for env in args[1:] + (self,):
