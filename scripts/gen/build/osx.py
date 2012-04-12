@@ -200,10 +200,28 @@ class Plist(target.Commands):
     def name(self):
         return 'PLIST'
 
+class XcodeProject(target.StaticFile):
+    """Mac OS X: Create an Xcode project."""
+    __slots__ = ['_dest', '_env', '_proj']
+    def __init__(self, dest, env, proj):
+        target.StaticFile.__init__(self, dest, env)
+        self._proj = proj
+    def write(self, f):
+        import gen.xcode.create
+        gen.xcode.create.write_project(self._proj, self._env, f)
+
 def add_targets(graph, proj, userenv):
     import platform
     if platform.system() == 'Darwin':
         build_osx(graph, proj, userenv)
+    build_xcodeproj(graph, proj, userenv)
+
+def build_xcodeproj(graph, proj, userenv):
+    env = Environment(proj.env, userenv)
+    xp = Path(env.PKG_FILENAME + '.xcodeproj')
+    pbx = Path(xp, 'project.pbxproj')
+    graph.add(XcodeProject(pbx, userenv, proj))
+    graph.add(target.DepTarget('xcode', [pbx], userenv))
 
 def build_osx(graph, proj, userenv):
     """Generate targets for a normal Mac OS X build.
