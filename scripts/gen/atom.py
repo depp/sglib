@@ -112,3 +112,26 @@ class SourceEnv(object):
                 yield source, env
                 self._allatoms.update(source.atoms)
         self._complete = True
+
+    def apply(self, handlers):
+        """Apply handlers to each source file.
+        
+        The handlers are chosen by looking up the source file types
+        in the handlers dictionary.  Each handler should either be
+        None, or a callable that takes a source and an environment
+        for that source.  If the handler is None, sources of that type
+        will be ignored.
+
+        If there is no handler for a given source file, this will
+        raise an exception.
+        """
+        for source, env in self:
+            stype = source.sourcetype
+            try:
+                h = handlers[stype]
+            except KeyError:
+                raise Exception(
+                    'cannot handle file type %s for path %s' %
+                    (stype, source.relpath.posix))
+            if h is not None:
+                h(source, env)
