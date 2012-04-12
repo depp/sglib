@@ -132,7 +132,7 @@ class Graph(object):
         for t in buildlist:
             tnames.extend(t.output())
         buildlist.append(target.DepTarget('all', tnames, env))
-        makefile = '.Makefile.tmp'
+        makefile = 'build/Makefile.tmp'
         ncpu = cpucount.cpucount()
         cmd = ['make', '-f', makefile]
         if ncpu > 1:
@@ -272,7 +272,3 @@ class Graph(object):
         targets = self._resolve(targets)
         buildable = list(self._closure(targets))
         self._gen_gmake(buildable, False, f)
-
-MAKE_TEMPL = """
-
-"""
