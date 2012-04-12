@@ -5,6 +5,7 @@ from gen.env import Environment, VarRef
 from gen.path import Path
 import gen.build.graph
 import gen.build.linux as linux
+import platform
 
 def add_sources(graph, proj, userenv):
     pass
@@ -21,6 +22,22 @@ def get_example_source(proj):
                 raise Exception('cannot find source')
             return srcs[0]
 
+class AutoConf(target.Commands):
+    """Linux: Run autoconf etc."""
+    __slots__ = ['_env']
+
+    def input(self):
+        yield 'configure.ac'
+
+    def output(self):
+        yield Path('configure')
+
+    def name(self):
+        return 'AUTOCONF'
+
+    def commands(self):
+        return [['aclocal'], ['autoheader'], ['autoconf']]
+
 def add_targets(graph, proj, userenv):
     """Generate targets for autotools build on Linux."""
     env = Environment(proj.env, userenv)
@@ -33,8 +50,12 @@ def add_targets(graph, proj, userenv):
     source = get_example_source(proj)
     graph.add(target.Template(ccin, ccsrc, env,
                               regex=r'@(\w+)@', SRCFILE=source))
-    graph.add(target.DepTarget(
-            'gmake', [mf, cm, ccin, 'built-sources'], userenv))
+
+    deps = [mf, cm, ccin, 'built-sources']
+    if platform.system() in ('Linux', 'Darwin'):
+        graph.add(AutoConf(userenv))
+        deps.append(Path('configure'))
+    graph.add(target.DepTarget('gmake', deps, userenv))
 
 LIBS = ['LIBJPEG', 'GTK', 'LIBPNG', 'PANGO']
 FLAGS = ['CC', 'CXX',
