@@ -1,4 +1,5 @@
 from __future__ import with_statement
+import gen.atom as atom
 import gen.path as path
 import gen.build.target as target
 import gen.cpucount as cpucount
@@ -289,3 +290,12 @@ class Graph(object):
         targets = self._resolve(targets)
         buildable = list(self._closure(targets))
         self._gen_gmake(buildable, True, f)
+
+    def platform_built_sources(self, proj, platform):
+        """Get the built sources for the given platform."""
+        for source in proj.sourcelist.sources():
+            if source.relpath not in self._filetargets:
+                continue
+            pas = set(source.atoms) & atom.PLATFORMS
+            if not pas or platform in pas:
+                yield source.relpath

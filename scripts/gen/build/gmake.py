@@ -68,15 +68,17 @@ def add_targets(graph, proj, userenv):
     graph.add(target.Template(ccin, ccsrc, env,
                               regex=r'@(\w+)@', SRCFILE=source))
 
-    deps = [mf, cm, ccin, 'built-sources']
+    deps = [mf, cm, ccin]
     if platform.system() in ('Linux', 'Darwin'):
         graph.add(AutoConf(userenv))
         deps.append(Path('configure'))
+
+    deps.extend(graph.platform_built_sources(proj, 'LINUX'))
     graph.add(target.DepTarget('gmake', deps, userenv))
 
     if platform.system() == 'Linux':
         graph.add(Configure(userenv))
-        cdep = [Path('config.mak'), Path('Makefile')]
+        cdep = [Path('config.mak'), 'gmake']
         graph.add(target.DepTarget('config', cdep, userenv))
         graph.add(target.DepTarget('default', ['config'], userenv))
 
