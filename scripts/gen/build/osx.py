@@ -20,11 +20,11 @@ class InfoPlist(target.StaticFile):
         env = self._env
 
         try:
-            icon = env['EXE_MACICON']
-        except KeyError:
+            icon = env.EXE_MACICON
+        except AttributeError:
             icon = None
         else:
-            icon = unicode(icon.withext('').basename, 'ascii')
+            icon = unicode(icon, 'ascii')
 
         try:
             copyright = env['PKG_COPYRIGHT']
@@ -294,24 +294,20 @@ def build_osx(graph, proj, userenv):
     # build executable for each architecture
     exes = []
     types_cc = 'c', 'cxx', 'm', 'mm'
-    types_ignore = 'h', 'hxx', 'plist', 'xib'
+    types_rsrc = 'h', 'hxx', 'plist', 'xib', 'icns'
     for arch in archs:
         srcenv = atom.SourceEnv(proj, atomenv, arch)
         objext = '.%s.o' % (arch,)
         objs = []
-        for source, env in srcenv:
-            stype = source.sourcetype
-            if stype in types_cc:
-                opath = Path('build/obj', source.group.name,
-                             source.grouppath.withext(objext))
-                objs.append(opath)
-                graph.add(nix.CC(opath, source.relpath, env, stype))
-            elif stype in types_ignore:
-                pass
-            else:
-                raise Exception(
-                    'cannot handle file type %s for path %s' %
-                    (stype, source.relpath.posix))
+        def handlec(source, env):
+            opath = Path('build/obj', source.group.name,
+                         source.grouppath.withext(objext))
+            objs.append(opath)
+            graph.add(nix.CC(opath, source.relpath, env, source.sourcetype))
+        handlers = {}
+        for t in types_cc: handlers[t] = handlec
+        for t in types_rsrc: handlers[t] = None
+        srcenv.apply(handlers)
 
         env = srcenv.unionenv()
         exe = Path('build/exe', exename + '-' + arch)
@@ -319,14 +315,13 @@ def build_osx(graph, proj, userenv):
         exes.append(exe)
 
     env = Environment(penv, uenv)
+    appdeps = []
+    contents = Path('build/product', appname + '.app', 'Contents')
+    resources = Path(contents, 'Resources')
 
     # combine executables into universal
     exe_raw = Path('build/exe', exename)
     graph.add(Lipo(exe_raw, exes, env))
-
-    contents = Path('build/product', appname + '.app', 'Contents')
-
-    appdeps = []
 
     # produce stripped executable and dsym package
     exe = Path(contents, 'MacOS', exename)
@@ -335,7 +330,7 @@ def build_osx(graph, proj, userenv):
     graph.add(Strip(exe, exe_raw, env))
     graph.add(DSymUtil(dsym, exe_raw, env))
 
-    # Create Info.plist and PkgInfo
+    # Create Info.plist
     src_plist = Path('resources/mac/Info.plist')
     app_plist = Path(contents, 'Info.plist')
     pcmds = ['Set :CFBundleExecutable %s' % exename]
@@ -347,20 +342,21 @@ def build_osx(graph, proj, userenv):
     graph.add(PkgInfo(app_pinfo, env))
     appdeps.append(app_pinfo)
 
-    # Compile / copy resources
-    resources = Path(contents, 'Resources')
-    src_xib = Path('resources/mac/MainMenu.xib')
-    app_nib = Path(resources, 'MainMenu.nib')
-    graph.add(IBTool(app_nib, src_xib, env))
-    appdeps.append(app_nib)
-
-    try:
-        icon = env['EXE_MACICON']
-    except KeyError:
-        pass
-    else:
-        app_icon = Path(resources, icon.basename)
-        graph.add(target.CopyFile(app_icon, icon, env))
-        appdeps.append(app_icon)
+    # handle resources
+    srcenv = atom.SourceEnv(proj, atomenv)
+    handlers = {}
+    for t in types_cc + types_rsrc:
+        handlers[t] = None
+    def handle_icns(source, env):
+        targ = Path(resources, source.grouppath.basename)
+        graph.add(target.CopyFile(targ, source.relpath, env))
+        appdeps.append(targ)
+    def handle_xib(source, env):
+        targ = Path(resources, source.grouppath.withext('.nib').basename)
+        graph.add(IBTool(targ, source.relpath, env))
+        appdeps.append(targ)
+    handlers['icns'] = handle_icns
+    handlers['xib'] = handle_xib
+    srcenv.apply(handlers)
 
     graph.add(target.DepTarget('build', appdeps, env))

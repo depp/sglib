@@ -355,7 +355,7 @@ class Environment(object):
     EXE_MAC      = Title('EXE_MAC', 'EXE_NAME')
     EXE_LINUX    = Filename('EXE_LINUX', 'EXE_NAME')
     EXE_WINDOWS  = Title('EXE_WINDOWS', 'EXE_NAME')
-    EXE_MACICON  = PathVar('EXE_MACICON')
+    EXE_MACICON  = Filename('EXE_MACICON')
 
     def __init__(self, *args, **kw):
         self._paths = {}
