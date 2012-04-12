@@ -134,7 +134,7 @@ class Graph(object):
         buildlist.append(target.DepTarget('all', tnames, env))
         makefile = 'build/Makefile.tmp'
         ncpu = cpucount.cpucount()
-        cmd = ['make', '-f', makefile]
+        cmd = ['make', '-B', '-f', makefile]
         if ncpu > 1:
             cmd.append('-j%d' % ncpu)
         try:
