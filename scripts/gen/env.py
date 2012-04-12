@@ -2,10 +2,7 @@ import os
 import re
 from gen.path import Path
 
-class EnvError(Exception):
-    pass
-
-class UnknownProperty(EnvError):
+class UnknownProperty(Exception):
     def __init__(self, name):
         self.name = name
     def __repr__(self):
@@ -13,7 +10,7 @@ class UnknownProperty(EnvError):
     def __str__(self):
         return 'unknown environment variable: %r' % (self.name,)
 
-class UnsetProperty(EnvError):
+class UnsetProperty(AttributeError):
     def __init__(self, prop, fallback=()):
         self.prop = prop
         self.fallback = fallback
@@ -29,7 +26,7 @@ class UnsetProperty(EnvError):
         else:
             return 'property not set: %s' % self.prop
 
-class InvalidProperty(EnvError):
+class InvalidProperty(ValueError):
     def __init__(self, prop, value):
         self.prop = prop
         self.value = value
