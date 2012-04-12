@@ -133,13 +133,17 @@ class Graph(object):
     def _build_make(self, buildlist, env):
         """Build all targets in the given list using Make."""
         buildlist = list(buildlist)
-        if not buildlist:
+        for t in buildlist:
+            if not isinstance(t, target.DepTarget):
+                break
+        else:
             return True
         tnames = []
         for t in buildlist:
             tnames.extend(t.output())
         buildlist.append(target.DepTarget('all', tnames, env))
         makefile = 'build/Makefile.tmp'
+        self._mkdirs([Path(makefile)])
         ncpu = cpucount.cpucount()
         cmd = ['make', '-B', '-f', makefile]
         if ncpu > 1:
