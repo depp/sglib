@@ -26,9 +26,13 @@ class Graph(object):
     dependent targets.  A graph can also be exported as makefile
     rules, although not all targets can be preserved.
     """
+    __slots__ = ['_filetargets', '_pseudotargets',
+                 '_revdeps', '_depcount']
     def __init__(self):
         self._filetargets = {}
         self._pseudotargets = {}
+        self._revdeps = {}
+        self._depcount = {}
 
     def __getitem__(self, key):
         if isinstance(key, Path):
@@ -69,6 +73,16 @@ class Graph(object):
                 if t in self._pseudotargets:
                     raise ValueError('duplicate target: %s' % (t,))
                 self._pseudotargets[t] = target
+        inputs = set(target.input())
+        self._depcount[target] = len(inputs)
+        for t in set(target.input()):
+            try:
+                revdep = self._revdeps[t]
+            except KeyError:
+                revdep = [target]
+                self._revdeps[t] = revdep
+            else:
+                revdep.append(target)
 
     def _mkdirs(self, targets, verbose=False):
         """Make all necessary directories."""
@@ -106,6 +120,27 @@ class Graph(object):
                         pass
                     else:
                         z.add(tv)
+            y = z - x
+            x.update(z)
+        return x
+
+    def _rclosure(self, targets):
+        """Compute the reverse closure of the given target set.
+
+        The input should be a sequence of targets.  The output will be
+        a set of targets.
+        """
+        x = set(targets)
+        y = x
+        while y:
+            z = set()
+            for t in y:
+                for t2 in t.output():
+                    try:
+                        rd = self._revdeps[t2]
+                    except KeyError:
+                        pass
+                    z.update(rd)
             y = z - x
             x.update(z)
         return x
@@ -165,29 +200,20 @@ class Graph(object):
 
     def _build_direct(self, buildlist, env):
         """Build all targets in the given list directly."""
-        buildlist = list(buildlist)
+        buildlist = set(buildlist)
         if not buildlist:
             return True
         outputs = set()
         inputs = set()
-        req_counts = {}
-        rev_dep = {}
+        req_counts = dict(self._depcount)
+        rev_dep = self._revdeps # don't modify
         queue = []
         for t in buildlist:
             i = list(t.input())
-            inputs.update(i)
-            outputs.update(t.output())
-            for tt in i:
-                try:
-                    r = rev_dep[tt]
-                except KeyError:
-                    r = [t]
-                    rev_dep[tt] = r
-                else:
-                    r.append(t)
-            req_counts[t] = len(i)
             if not i:
                 queue.append(t)
+            outputs.update(t.output())
+            inputs.update(i)
 
         def post(t):
             """Mark a path or string as built and update the queue."""
@@ -196,6 +222,8 @@ class Graph(object):
             except KeyError:
                 return
             for tt in r:
+                if tt not in buildlist:
+                    continue
                 req_counts[tt] -= 1
                 if not req_counts[tt]:
                     queue.append(tt)
@@ -239,22 +267,40 @@ class Graph(object):
 
         # Use Make if we can
         if platform.system() in ('Linux', 'Darwin'):
-            directset = set()
-            for t in buildset:
+            # Divide targets into late / not late
+            all_late = []
+            for t in self.targetobjs():
+                if t.late():
+                    all_late.append(t)
+            all_late = self._rclosure(all_late)
+            late = buildset & all_late
+            notlate = buildset - all_late
+            del all_late
+            del buildset
+
+            # Divide not late targets into early / make
+            early = set()
+            for t in notlate:
                 try:
                     t.write_rule
                 except AttributeError:
-                    directset.add(t)
+                    early.add(t)
             try:
                 t = self._pseudotargets['built-sources']
             except KeyError:
                 pass
             else:
-                directset.update(self._closure([t]) & buildset)
-            directset = self._closure(directset)
-            if not self._build_direct(directset, env):
+                early.update(self._closure([t]) & notlate)
+            early = self._closure(early)
+            make = notlate - early
+            del notlate
+
+            # Run all build phases
+            if not self._build_direct(early, env):
                 return False
-            if not self._build_make(buildset - directset, env):
+            if not self._build_make(make, env):
+                return False
+            if not self._build_direct(late, env):
                 return False
             return True
         else:
