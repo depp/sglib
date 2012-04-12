@@ -71,6 +71,13 @@ class Project(object):
         """
         self._sources.read_list(name, path.replace('/', os.path.sep), ())
 
+    def add_sourcelist_str(self, name, gpath, text):
+        """Add a list of source files to the given group.
+
+        Like add_sourcelist, except with a string instead of a filename.
+        """
+        self._sources.read_list_str(name, Path(gpath), text, ())
+
     def includepath(self, *paths):
         """Search the given directories for header files."""
         for path in paths:

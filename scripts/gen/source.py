@@ -2,6 +2,7 @@
 
 All source files must be contained in groups.  Groups do not nest.
 """
+from __future__ import with_statement
 import os
 import gen.path
 import re
@@ -127,7 +128,15 @@ class Group(object):
         All files are added to this group.  Paths are interpreted as relative
         to the group.
         """
-        for line in open(path, 'r'):
+        with open(path, 'r') as f:
+            self._add_list(f, atoms)
+
+    def read_list_str(self, text, atoms):
+        """Add a list of source files from a given chunk of text."""
+        self._add_list(text.splitlines(), atoms)
+
+    def _add_list(self, lines, atoms):
+        for line in lines:
             line = line.strip()
             if not line or line.startswith('#'):
                 continue
@@ -174,6 +183,14 @@ class SourceList(object):
         gpath = gen.path.Path(dname.replace(os.path.sep, '/'))
         g = self.get_group(name, gpath)
         g.read_list(path, atoms)
+
+    def read_list_str(self, name, gpath, text, atoms):
+        """Like read_list, but with a string instead of filename.
+
+        The specified path is the root path for the group.
+        """
+        g = self.get_group(name, gpath)
+        g.read_list_str(text, atoms)
 
     def sources(self):
         """Iterate over all sources in the source list."""
