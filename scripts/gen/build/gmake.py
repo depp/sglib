@@ -31,6 +31,7 @@ class AutoConf(target.Commands):
 
     def output(self):
         yield Path('configure')
+        yield Path('config.h.in')
 
     def name(self):
         return 'AUTOCONF'
@@ -48,6 +49,7 @@ class Configure(target.Commands):
 
     def output(self):
         yield Path('config.mak')
+        yield Path('config.h')
 
     def name(self):
         return 'CONFIGURE'

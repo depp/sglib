@@ -5,6 +5,10 @@ import gen.git as git
 import optparse
 import sys
 
+MODULES = ['version', 'linux', 'osx', 'msvc', 'gmake']
+# archive must be last
+MODULES.append('archive')
+
 def run(proj):
     """Build the given project using the command line options.
 
@@ -51,7 +55,7 @@ def run(proj):
     env = Environment(venv, env)
 
     ms = []
-    for module in ('version', 'linux', 'osx', 'msvc', 'gmake'):
+    for module in MODULES:
         m = __import__('gen.build.' + module)
         m = getattr(m.build, module)
         ms.append(m)

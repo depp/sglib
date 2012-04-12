@@ -299,3 +299,11 @@ class Graph(object):
             pas = set(source.atoms) & atom.PLATFORMS
             if not pas or platform in pas:
                 yield source.relpath
+
+    def closure(self, targets):
+        """Compute the closure of the given target names.
+
+        Returns a new set of target objects.  The input is a sequence
+        of target names (paths or strings).
+        """
+        return self._closure(self._resolve(targets))
