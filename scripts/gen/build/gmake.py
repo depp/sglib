@@ -27,7 +27,7 @@ class AutoConf(target.Commands):
     __slots__ = ['_env']
 
     def input(self):
-        yield 'configure.ac'
+        yield Path('configure.ac')
 
     def output(self):
         yield Path('configure')
@@ -37,6 +37,23 @@ class AutoConf(target.Commands):
 
     def commands(self):
         return [['aclocal'], ['autoheader'], ['autoconf']]
+
+class Configure(target.Commands):
+    """Linux: Run configure."""
+    __slots__ = ['_env']
+
+    def input(self):
+        yield Path('configure')
+        yield Path('config.mak.in')
+
+    def output(self):
+        yield Path('config.mak')
+
+    def name(self):
+        return 'CONFIGURE'
+
+    def commands(self):
+        return [['./configure']]
 
 def add_targets(graph, proj, userenv):
     """Generate targets for autotools build on Linux."""
@@ -56,6 +73,12 @@ def add_targets(graph, proj, userenv):
         graph.add(AutoConf(userenv))
         deps.append(Path('configure'))
     graph.add(target.DepTarget('gmake', deps, userenv))
+
+    if platform.system() == 'Linux':
+        graph.add(Configure(userenv))
+        cdep = [Path('config.mak'), Path('Makefile')]
+        graph.add(target.DepTarget('config', cdep, userenv))
+        graph.add(target.DepTarget('default', ['config'], userenv))
 
 LIBS = ['LIBJPEG', 'GTK', 'LIBPNG', 'PANGO']
 FLAGS = ['CC', 'CXX',
