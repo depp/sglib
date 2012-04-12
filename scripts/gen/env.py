@@ -1,5 +1,7 @@
 import os
 import re
+import sys
+import platform
 from gen.path import Path
 
 class UnknownProperty(Exception):
@@ -454,11 +456,30 @@ class Environment(object):
     def prog_path(self, *progs):
         """Find the absolute path to a program if it exists."""
         paths = self.getenv('PATH').split(os.path.pathsep)
+        if platform.system() == 'Windows':
+            exts = self.getenv('PATHEXT').split(os.path.pathsep)
+            lexts = frozenset(ext.lower() for ext in exts)
+            def pnames(prog):
+                ext = os.path.splitext(prog)[1]
+                if ext and ext.lower() in lexts:
+                    yield prog
+                else:
+                    for ext in exts:
+                        yield prog + ext
+        else:
+            def pnames(prog):
+                yield prog
         for prog in progs:
+            pnamel = list(pnames(prog))
             for path in paths:
                 if not path:
                     continue
-                progpath = os.path.join(path, prog)
-                if os.access(progpath, os.X_OK):
-                    return progpath
+                for pname in pnamel:
+                    progpath = os.path.join(path, pname)
+                    if os.access(progpath, os.X_OK):
+                        return progpath
+        print >>sys.stderr, 'PATH:'
+        for path in paths:
+            if path:
+                print >>sys.stderr, '    ' + path
         raise Exception('program not found: %s' % prog)
