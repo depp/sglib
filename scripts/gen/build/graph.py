@@ -227,12 +227,18 @@ class Graph(object):
 
         # Use Make if we can
         if platform.system() in ('Linux', 'Darwin'):
-            directset = []
+            directset = set()
             for t in buildset:
                 try:
                     t.write_rule
                 except AttributeError:
-                    directset.append(t)
+                    directset.add(t)
+            try:
+                t = self._pseudotargets['built-sources']
+            except KeyError:
+                pass
+            else:
+                directset.update(self._closure([t]) & buildset)
             directset = self._closure(directset)
             if not self._build_direct(directset, env):
                 return False

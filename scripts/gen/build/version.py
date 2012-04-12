@@ -1,5 +1,6 @@
 from __future__ import with_statement
 from gen.path import Path
+import gen.build.target as target
 
 VERSION_TEMPL = """\
 /* Generated automatically by build system */
@@ -9,7 +10,7 @@ const char SG_APP_VERSION[] = "%s";
 const char SG_APP_COMMIT[] = "%s";
 """
 
-class VersionFile(object):
+class VersionFile(target.Target):
     __slots__ = ['_dest', '_env']
     def __init__(self, dest, env):
         self._dest = dest

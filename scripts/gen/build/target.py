@@ -9,6 +9,32 @@ from gen import path
 
 Path = path.Path
 
+class Target(object):
+    """Abstract base class for targets."""
+    def __hash__(self):
+        for x in self.output():
+            return hash(x)
+        return hash(())
+
+    def __eq__(self, other):
+        return self is other
+
+    def __ne__(self, other):
+        return self is not other
+
+    def __repr__(self):
+        n = self.__class__.__name__
+        i = n.rfind('.')
+        if i >= 0:
+            n = n[i + 1:]
+        x = '<none>'
+        for i in self.output():
+            x = i
+            if isinstance(x, Path):
+                x = x.posix
+            break
+        return '<%s %s>' % (n, x)
+
 def mkarg(x):
     if isinstance(x, str):
         pass
@@ -74,7 +100,7 @@ def mkmkdep(x):
         raise ValueError('invalid character in %r' % (x,))
     return x
 
-class Commands(object):
+class Commands(Target):
     """A target which runs a command.
 
     Requires an _env slot, which is initialized by the constructor.
@@ -266,7 +292,7 @@ class CopyFile(Commands):
     def name(self):
         return 'COPY'
 
-class StaticFile(object):
+class StaticFile(Target):
     """A target which creates a file from a string.
 
     Requires an _env and _dest slot, both of which are initialized by
@@ -294,7 +320,7 @@ class StaticFile(object):
             self.write(f)
         return True
 
-class Template(object):
+class Template(Target):
     """Target which creates an file from a template."""
     __slots__ = ['_dest', '_src', '_env']
     def __init__(self, dest, src, env):
