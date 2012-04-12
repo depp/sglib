@@ -236,7 +236,9 @@ def build_xcodeproj(graph, proj, userenv):
     xp = Path(env.PKG_FILENAME + '.xcodeproj')
     pbx = Path(xp, 'project.pbxproj')
     graph.add(XcodeProject(pbx, userenv, proj))
-    graph.add(target.DepTarget('xcode', [pbx, 'built-sources'], userenv))
+    deps = [pbx]
+    deps.extend(graph.platform_built_sources(proj, 'MACOSX'))
+    graph.add(target.DepTarget('xcode', deps, userenv))
 
 def build_osx(graph, proj, userenv):
     """Generate targets for a normal Mac OS X build.

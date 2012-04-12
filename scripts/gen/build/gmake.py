@@ -27,16 +27,35 @@ class AutoConf(target.Commands):
     __slots__ = ['_env']
 
     def input(self):
-        yield 'configure.ac'
+        yield Path('configure.ac')
 
     def output(self):
         yield Path('configure')
+        yield Path('config.h.in')
 
     def name(self):
         return 'AUTOCONF'
 
     def commands(self):
         return [['aclocal'], ['autoheader'], ['autoconf']]
+
+class Configure(target.Commands):
+    """Linux: Run configure."""
+    __slots__ = ['_env']
+
+    def input(self):
+        yield Path('configure')
+        yield Path('config.mak.in')
+
+    def output(self):
+        yield Path('config.mak')
+        yield Path('config.h')
+
+    def name(self):
+        return 'CONFIGURE'
+
+    def commands(self):
+        return [['./configure']]
 
 def add_targets(graph, proj, userenv):
     """Generate targets for autotools build on Linux."""
@@ -51,11 +70,19 @@ def add_targets(graph, proj, userenv):
     graph.add(target.Template(ccin, ccsrc, env,
                               regex=r'@(\w+)@', SRCFILE=source))
 
-    deps = [mf, cm, ccin, 'built-sources']
+    deps = [mf, cm, ccin]
     if platform.system() in ('Linux', 'Darwin'):
         graph.add(AutoConf(userenv))
         deps.append(Path('configure'))
+
+    deps.extend(graph.platform_built_sources(proj, 'LINUX'))
     graph.add(target.DepTarget('gmake', deps, userenv))
+
+    if platform.system() == 'Linux':
+        graph.add(Configure(userenv))
+        cdep = [Path('config.mak'), 'gmake']
+        graph.add(target.DepTarget('config', cdep, userenv))
+        graph.add(target.DepTarget('default', ['config'], userenv))
 
 LIBS = ['LIBJPEG', 'GTK', 'LIBPNG', 'PANGO']
 FLAGS = ['CC', 'CXX',

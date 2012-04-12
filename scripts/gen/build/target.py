@@ -35,6 +35,23 @@ class Target(object):
             break
         return '<%s %s>' % (n, x)
 
+    def late(self):
+        """Return whether the target should be built late.
+
+        This is a bit of a hack.  The build process generally has
+        three phases: early, make, and late.  Anything not marked as
+        'late' is divided into 'early' or 'make' based on whether it
+        can be built using a makefile.  Since anything in the early
+        phase will force all of its prerequesites to be early as well,
+        marking a target late allows its prerequisites to be built
+        during the make phase.
+        """
+        return False
+
+    def distinput(self):
+        """Iterate over input that should be distributed."""
+        return self.input()
+
 def mkarg(x):
     if isinstance(x, str):
         pass
@@ -368,3 +385,6 @@ class Template(Target):
         with open(self._dest.native, 'wb') as f:
             f.write(data)
         return True
+
+    def distinput(self):
+        return iter(())
