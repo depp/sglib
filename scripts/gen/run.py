@@ -1,4 +1,5 @@
 import gen.build.graph as graph
+import gen.build.target as target
 from gen.env import Environment
 import gen.git as git
 import optparse
@@ -49,10 +50,17 @@ def run(proj):
     )
     env = Environment(venv, env)
 
-    g = graph.Graph()
+    ms = []
     for module in ('version', 'linux', 'osx'): # msvc
         m = __import__('gen.build.' + module)
         m = getattr(m.build, module)
+        ms.append(m)
+
+    g = graph.Graph()
+    for m in ms:
+        m.add_sources(g, proj, env)
+    g.add(target.DepTarget('built-sources', g.targets(), env))
+    for m in ms:
         m.add_targets(g, proj, env)
 
     r = g.build(targets, env)

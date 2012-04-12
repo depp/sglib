@@ -13,7 +13,8 @@ OBJC_EXTS = ['.m']
 OBJCXX_EXTS = ['.mm']
 
 TYPES = {'c': C_EXTS, 'h': H_EXTS, 'cxx': CXX_EXTS,
-         'hxx': HXX_EXTS, 'm': OBJC_EXTS, 'mm': OBJCXX_EXTS}
+         'hxx': HXX_EXTS, 'm': OBJC_EXTS, 'mm': OBJCXX_EXTS,
+         'plist': ['.plist'], 'xib': ['.xib']}
 def _compute_exts():
     exts = {}
     for what, texts in TYPES.iteritems():

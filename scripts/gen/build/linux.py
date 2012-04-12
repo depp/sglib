@@ -86,6 +86,9 @@ def getmachine(env):
         raise Exception('unable to parse machine name: %r' % (m,))
     return m[:i]
 
+def add_sources(graph, proj, env):
+    pass
+
 def add_targets(graph, proj, userenv):
     import platform
     if platform.system() == 'Linux':

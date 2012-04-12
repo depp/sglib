@@ -36,6 +36,13 @@ class Graph(object):
             return self._pseudotargets[key]
         raise TypeError('invalid target name')
 
+    def targets(self):
+        """Iterate over all target names and paths."""
+        for t in self._filetargets.iterkeys():
+            yield t
+        for t in self._pseudotargets.iterkeys():
+            yield t
+
     def add(self, target):
         """Add a target to the build set.
 

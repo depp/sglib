@@ -44,10 +44,6 @@ class Project(object):
         self._sources.read_list(
             'sglib', os.path.join(sgpath, 'src/srclist-client.txt'), ('cxx',))
 
-        group = source.Group('version', Path('.'), ())
-        group.add(Path('version.c'), ())
-        self._sources.add_group(group)
-
     @property
     def sgpath(self):
         """The path to the sglib library root."""

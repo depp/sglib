@@ -3,6 +3,7 @@ import gen.build.nix as nix
 import gen.atom as atom
 from gen.env import Environment
 import gen.path as path
+import sys
 
 Path = path.Path
 
@@ -210,6 +211,20 @@ class XcodeProject(target.StaticFile):
         import gen.xcode.create
         gen.xcode.create.write_project(self._proj, self._env, f)
 
+def add_sources(graph, proj, userenv):
+    env = Environment(proj.env, userenv)
+    rsrc = proj.sourcelist.get_group('resources', Path('resources'))
+    atoms = ('MACOSX',)
+
+    src = rsrc.add(Path('mac/Info.plist'), atoms)
+    graph.add(InfoPlist(src.relpath, env))
+
+    src = rsrc.add(Path('mac/MainMenu.xib'), atoms)
+    graph.add(target.Template(
+        src.relpath,
+        Path(proj.sgpath, 'resources/mac/MainMenu.xib'),
+        env))
+
 def add_targets(graph, proj, userenv):
     import platform
     if platform.system() == 'Darwin':
@@ -221,7 +236,7 @@ def build_xcodeproj(graph, proj, userenv):
     xp = Path(env.PKG_FILENAME + '.xcodeproj')
     pbx = Path(xp, 'project.pbxproj')
     graph.add(XcodeProject(pbx, userenv, proj))
-    graph.add(target.DepTarget('xcode', [pbx], userenv))
+    graph.add(target.DepTarget('xcode', [pbx, 'built-sources'], userenv))
 
 def build_osx(graph, proj, userenv):
     """Generate targets for a normal Mac OS X build.
@@ -278,23 +293,25 @@ def build_osx(graph, proj, userenv):
 
     # build executable for each architecture
     exes = []
+    types_cc = 'c', 'cxx', 'm', 'mm'
+    types_ignore = 'h', 'hxx', 'plist', 'xib'
     for arch in archs:
         srcenv = atom.SourceEnv(proj, atomenv, arch)
         objext = '.%s.o' % (arch,)
         objs = []
         for source, env in srcenv:
             stype = source.sourcetype
-            if stype in ('c', 'cxx', 'm', 'mm'):
+            if stype in types_cc:
                 opath = Path('build/obj', source.group.name,
                              source.grouppath.withext(objext))
                 objs.append(opath)
                 graph.add(nix.CC(opath, source.relpath, env, stype))
-            elif stype in ('h', 'hxx'):
+            elif stype in types_ignore:
                 pass
             else:
                 raise Exception(
                     'cannot handle file type %s for path %s' %
-                    (stype, source.relpath.posixpath))
+                    (stype, source.relpath.posix))
 
         env = srcenv.unionenv()
         exe = Path('build/exe', exename + '-' + arch)
@@ -322,7 +339,6 @@ def build_osx(graph, proj, userenv):
     src_plist = Path('resources/mac/Info.plist')
     app_plist = Path(contents, 'Info.plist')
     pcmds = ['Set :CFBundleExecutable %s' % exename]
-    graph.add(InfoPlist(src_plist, env))
     graph.add(Plist(app_plist, src_plist, env, pcmds))
     appdeps.append(app_plist)
 
@@ -333,10 +349,8 @@ def build_osx(graph, proj, userenv):
 
     # Compile / copy resources
     resources = Path(contents, 'Resources')
-    tpl_xib = Path(proj.sgpath, 'resources/mac/MainMenu.xib')
     src_xib = Path('resources/mac/MainMenu.xib')
     app_nib = Path(resources, 'MainMenu.nib')
-    graph.add(target.Template(src_xib, tpl_xib, env))
     graph.add(IBTool(app_nib, src_xib, env))
     appdeps.append(app_nib)
 

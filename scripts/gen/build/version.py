@@ -42,5 +42,10 @@ class VersionFile(object):
         for line in self.contents().splitlines():
             f.write("\techo '%s' >> $@\n" % (line,))
 
-def add_targets(graph, proj, env):
-    graph.add(VersionFile(Path('version.c'), env))
+def add_sources(graph, proj, userenv):
+    g = proj.sourcelist.get_group('version', Path('.'))
+    g.add(Path('version.c'), ())
+    graph.add(VersionFile(Path('version.c'), userenv))
+
+def add_targets(graph, proj, userenv):
+    pass

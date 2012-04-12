@@ -1,9 +1,6 @@
 """Source files.
 
 All source files must be contained in groups.  Groups do not nest.
-All paths use the POSIX path convention (with a '/' separator), even
-on Windows.  The platform-specific build code is expected to convert
-the slashes to backslashes as necessary.
 """
 import os
 import gen.path
@@ -22,6 +19,7 @@ class Source(object):
     the 'add' method on a Group object.
     """
     __slots__ = ['_path', '_atoms', '_group', '_sourcetype']
+
     def __init__(self, path, atoms, group):
         if not isinstance(path, gen.path.Path):
             raise TypeError('path must be Path instance')
@@ -44,6 +42,7 @@ class Source(object):
         self._atoms = atoms
         self._group = group
         self._sourcetype = stype
+
     def __repr__(self):
         if self._atoms:
             return '<source %s %r atoms=%s>' % \
@@ -52,22 +51,27 @@ class Source(object):
         else:
             return '<source %s %r>' % \
                 (self._group.name, self._path.posix)
+
     @property
     def group(self):
         """The group which this file belongs to."""
         return self._group
+
     @property
     def grouppath(self):
         """The path of the file, relative to the group."""
         return self._path
+
     @property
     def relpath(self):
         """The path of the file, relative to the top level."""
         return self._group.relpath / self._path
+
     @property
     def atoms(self):
         """The atoms which apply to this file, a tuple."""
         return self._atoms
+
     @property
     def sourcetype(self):
         """The type of this source file."""
@@ -76,92 +80,103 @@ class Source(object):
 class Group(object):
     """A group of source files.
 
-    Each group has a root path, a name, and a set of atoms.
+    Each group has a root path, a name, and a list of sources.
     """
-    def __init__(self, name, path, atoms):
+    __slots__ = ['_name', '_path', '_sources', '_paths']
+
+    def __init__(self, name, path):
         if not _VALID_NAME.match(name):
             raise ValueError('invalid group name: %r' % (name,))
+        if not isinstance(path, gen.path.Path):
+            raise TypeError('group path must be Path')
         self._name = name
         self._path = path
         self._sources = []
-        self._atoms = list(atoms)
         self._paths = set()
+
     def add(self, path, atoms):
         """Add a source file to the group."""
         if path in self._paths:
             raise ValueError('duplicate path in group %s: %s' %
                              (self._name, path.posixpath))
         self._paths.add(path)
-        atoms = list(atoms)
-        atoms.extend(self._atoms)
         src = Source(path, tuple(atoms), self)
         self._sources.append(src)
+        return src
+
     def __repr__(self):
         return '<group name=%r root=%r>' % (self._name, self._path)
+
     @property
     def name(self):
         """The name of the group."""
         return self._name
+
     @property
     def relpath(self):
         """The path of the group relative to the top level."""
         return self._path
+
     def sources(self):
         """Iterate over all sources in the group."""
         return iter(self._sources)
+
+    def read_list(self, path, atoms):
+        """Read a list of source files at the given path.
+        
+        All files are added to this group.  Paths are interpreted as relative
+        to the group.
+        """
+        for line in open(path, 'r'):
+            line = line.strip()
+            if not line or line.startswith('#'):
+                continue
+            parts = line.split()
+            spath, atoms = parts[0], parts[1:]
+            spath = gen.path.Path(spath)
+            self.add(spath, atoms)
 
 class SourceList(object):
     """A list of all source files in a project.
 
     Logically consists of a list of source groups.
     """
+    __slots__ = ['_groups', '_gnames']
     def __init__(self):
         self._groups = []
-    def add_group(self, group):
-        for g in self._groups:
-            if g.name == group.name:
-                raise Exception('group exists with name %r' % (group.name,))
-        self._groups.append(group)
+        self._gnames = {}
+
+    def get_group(self, name, path):
+        """Get the group with the given name, creating it if necessary."""
+        try:
+            g = self._gnames[name]
+        except KeyError:
+            g = Group(name, path)
+            self._groups.append(g)
+            self._gnames[name] = g
+            return g
+        if g.relpath != path:
+            raise Exception(
+                'group %r has two paths: %r and %r' %
+                (name, path.posix, g.relpath.posix))
+        return g
+
     def read_list(self, name, path, atoms):
         """Read a list of source files at the given path.
 
-        If there is an existing group with the same name and same root
-        directory, then the files are added to the group.  Otherwise,
-        creates a new group for the source files using the given name.
-        The path to the source file list should use the native OS
-        conventions, but it must be a relative path.
+        Uses 'name' for the group name.  The group root path will be
+        the folder containing the given file.  Merges data with
+        existing groups.  Raises an exception if the group name
+        conflicts with an existing group name that has a different
+        path.
         """
         dname, fname = os.path.split(path)
         gpath = gen.path.Path(dname.replace(os.path.sep, '/'))
-        for g in self._groups:
-            if g.relpath == gpath:
-                if g.name == name:
-                    break
-            else:
-                if g.name == name:
-                    raise Exception(
-                        'group %r has two paths: %r and %r' %
-                        (name, gpath, g.relpath))
-        else:
-            g = Group(name, gpath, atoms)
-            self._groups.append(g)
-        for line in open(path, 'r'):
-            line = line.strip()
-            if not line or line.startswith('#'):
-                continue
-            parts = line.split()
-            path, atoms = parts[0], parts[1:]
-            path = gen.path.Path(path)
-            g.add(path, atoms)
+        g = self.get_group(name, gpath)
+        g.read_list(path, atoms)
+
     def sources(self):
         """Iterate over all sources in the source list."""
         for g in self._groups:
             for s in g.sources():
                 yield s
-    def atoms(self):
-        """Get a frozenset of all atoms used by any source."""
-        atoms = set()
-        for g in self._groups:
-            for s in g.sources():
-                atoms.update(s.atoms)
-        return frozenset(atoms)
