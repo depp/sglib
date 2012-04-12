@@ -43,7 +43,7 @@ class VersionFile(object):
             f.write("\techo '%s' >> $@\n" % (line,))
 
 def add_sources(graph, proj, userenv):
-    g = proj.sourcelist.get_group('version', Path('.'))
+    g = proj.sourcelist.get_group('Version', Path('.'))
     g.add(Path('version.c'), ())
     graph.add(VersionFile(Path('version.c'), userenv))
 

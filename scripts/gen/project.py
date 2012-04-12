@@ -40,9 +40,9 @@ class Project(object):
         self._sgpath = sgpath
 
         self._sources.read_list(
-            'sglib', os.path.join(sgpath, 'src/srclist-base.txt'), ())
+            'SGLib', os.path.join(sgpath, 'src/srclist-base.txt'), ())
         self._sources.read_list(
-            'sglib', os.path.join(sgpath, 'src/srclist-client.txt'), ('cxx',))
+            'SGLib', os.path.join(sgpath, 'src/srclist-client.txt'), ('cxx',))
 
     @property
     def sgpath(self):

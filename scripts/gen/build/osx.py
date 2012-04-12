@@ -213,7 +213,7 @@ class XcodeProject(target.StaticFile):
 
 def add_sources(graph, proj, userenv):
     env = Environment(proj.env, userenv)
-    rsrc = proj.sourcelist.get_group('resources', Path('resources'))
+    rsrc = proj.sourcelist.get_group('Resources', Path('resources'))
     atoms = ('MACOSX',)
 
     src = rsrc.add(Path('mac/Info.plist'), atoms)
@@ -300,7 +300,7 @@ def build_osx(graph, proj, userenv):
         objext = '.%s.o' % (arch,)
         objs = []
         def handlec(source, env):
-            opath = Path('build/obj', source.group.name,
+            opath = Path('build/obj', source.group.simple_name,
                          source.grouppath.withext(objext))
             objs.append(opath)
             graph.add(nix.CC(opath, source.relpath, env, source.sourcetype))

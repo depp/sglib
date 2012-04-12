@@ -165,7 +165,7 @@ def genbuild_linux(graph, proj, atomenv, machine):
                 'unknown extension %s for path %s' %
                 (ext, source.relpath.posixpath))
         if stype in ('c', 'cxx'):
-            opath = Path('build/obj', source.group.name,
+            opath = Path('build/obj', source.group.simple_name,
                          source.grouppath.withext('.o'))
             objs.append(opath)
             graph.add(nix.CC(opath, source.relpath, env, stype))

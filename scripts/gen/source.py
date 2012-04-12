@@ -7,7 +7,13 @@ import os
 import gen.path
 import re
 
-_VALID_NAME = re.compile('^[A-Za-z](?:[-_A-Za-z0-9]*[A-Za-z0-9])$')
+_VALID_NAME = re.compile('^[A-Za-z](?:[ -_A-Za-z0-9]*[A-Za-z0-9])$')
+def valid_name(x):
+    return _VALID_NAME.match(x) and '  ' not in x
+
+_NONSIMPLE_CHAR = re.compile('[^-A-Za-z0-9]+')
+def simple_name(x):
+    return _NONSIMPLE_CHAR.sub('_', x).strip('-').lower()
 
 class Source(object):
     """A source file.
@@ -82,15 +88,19 @@ class Group(object):
     """A group of source files.
 
     Each group has a root path, a name, and a list of sources.
+    The name has two variants, the full version (which can have
+    spaces) and the simple version (which can't).
     """
-    __slots__ = ['_name', '_path', '_sources', '_paths']
+    __slots__ = ['_name', '_sname', '_path', '_sources', '_paths']
 
     def __init__(self, name, path):
-        if not _VALID_NAME.match(name):
+        sname = simple_name(name)
+        if not valid_name(name) or not sname:
             raise ValueError('invalid group name: %r' % (name,))
         if not isinstance(path, gen.path.Path):
             raise TypeError('group path must be Path')
         self._name = name
+        self._sname = sname
         self._path = path
         self._sources = []
         self._paths = set()
@@ -112,6 +122,11 @@ class Group(object):
     def name(self):
         """The name of the group."""
         return self._name
+
+    @property
+    def simple_name(self):
+        """The simple name of the group."""
+        return self._sname
 
     @property
     def relpath(self):
@@ -157,17 +172,22 @@ class SourceList(object):
 
     def get_group(self, name, path):
         """Get the group with the given name, creating it if necessary."""
+        g = Group(name, path)
+        sn = g.simple_name
         try:
-            g = self._gnames[name]
+            g = self._gnames[sn]
         except KeyError:
-            g = Group(name, path)
             self._groups.append(g)
-            self._gnames[name] = g
+            self._gnames[sn] = g
             return g
         if g.relpath != path:
             raise Exception(
                 'group %r has two paths: %r and %r' %
                 (name, path.posix, g.relpath.posix))
+        if g.name != name:
+            raise Exception(
+                'name conflict between group %s and %s' %
+                (name, g.name))
         return g
 
     def read_list(self, name, path, atoms):
