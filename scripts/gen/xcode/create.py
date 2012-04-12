@@ -41,7 +41,7 @@ TYPES = {
     'icns': 'image.icns',
 }
 
-class Group(object):
+class SourceGroup(object):
     """Object for creating an Xcode group of source files."""
     __slots__ = ['_group', '_gpath', '_paths', '_project']
 
@@ -142,7 +142,7 @@ class Target(object):
 
 class Project(object):
     """Object for creating an Xcode project."""
-    __slots__ = ['_groups', '_sources', 'project']
+    __slots__ = ['_groups', '_sources', 'project', '_frameworks', '_fwk_group']
 
     def __init__(self):
         p = obj.Project()
@@ -151,6 +151,8 @@ class Project(object):
         p.mainGroup.add(p.productRefGroup)
         self._groups = {}
         self._sources = {}
+        self._frameworks = {}
+        self._fwk_group = None
         self.project = p
 
     def get_source(self, source):
@@ -159,9 +161,26 @@ class Project(object):
         try:
             g = self._groups[gname]
         except KeyError:
-            g = Group(self.project, source._group)
+            g = SourceGroup(self.project, source._group)
             self._groups[gname] = g
         return g.get_source(source)
+
+    def get_framework(self, name):
+        """Get the Xcode file reference for a given framework."""
+        try:
+            return self._frameworks[name]
+        except KeyError:
+            pass
+        g = self._fwk_group
+        root = '/System/Library/Frameworks'
+        if g is None:
+            g = obj.Group(root, name='Frameworks')
+            self._fwk_group = g
+            self.project.mainGroup.add(g)
+        x = obj.FileRef('%s/%s.framework' % (root, name), ltype='wrapper.framework')
+        g.add(x)
+        self._frameworks[name] = x
+        return x
 
     def application_target(self, name):
         pname = name
@@ -243,6 +262,11 @@ def write_project(proj, userenv, f):
     t = p.application_target(env.EXE_MAC)
     for source, source_env in srcenv:
         t.add_source(p.get_source(source))
+    fworks = ['Foundation', 'AppKit', 'CoreServices',
+              'CoreVideo', 'Carbon', 'OpenGL']
+    for fwork in fworks:
+        x = p.get_framework(fwork)
+        t.add_source(x)
     t.target.buildConfigurationList = targetConfig(env)
 
     p.write(f)
