@@ -131,10 +131,10 @@ def build_linux(graph, proj, env, settings):
             return env
 
     atomenv = atom.AtomEnv(proj, lookup_env, env)
-    products = genbuild_linux(graph, proj, atomenv, settings, machine)
+    products = genbuild_linux(graph, proj, atomenv, machine)
     graph.add(target.DepTarget('build', products))
 
-def genbuild_linux(graph, proj, atomenv, settings, machine):
+def genbuild_linux(graph, proj, atomenv, machine):
     """Generate all targets for any Linux build.
 
     The atomenv parameter should be an AtomEnv object for looking up
@@ -144,6 +144,7 @@ def genbuild_linux(graph, proj, atomenv, settings, machine):
     the executable.  It may be empty.
     """
 
+    apps = []
     types_cc = 'c', 'cxx'
     types_ignore = 'h', 'hxx'
     for module in proj.targets():
@@ -173,4 +174,8 @@ def genbuild_linux(graph, proj, atomenv, settings, machine):
         graph.add(ExtractDebug(dbgpath, rawpath, env))
         graph.add(Strip(exepath, rawpath, dbgpath, env))
 
-    return [exepath, rawpath]
+        pseudo = 'build-%s' % (mname,)
+        graph.add(target.DepTarget(pseudo, [exepath, rawpath]))
+        apps.append(pseudo)
+
+    return apps

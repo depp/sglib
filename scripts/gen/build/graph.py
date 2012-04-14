@@ -187,7 +187,7 @@ class Graph(object):
         try:
             with open(makefile, 'wb') as f:
                 f.write('all:\n')
-                self._gen_gmake(buildlist, False, f, settings)
+                self._gen_gmake(buildlist, f, False, settings.VERBOSE)
             print 'make'
             proc = subprocess.Popen(cmd)
             status = proc.wait()
@@ -307,7 +307,7 @@ class Graph(object):
         else:
             return self._build_direct(buildset, settings)
 
-    def _gen_gmake(self, targets, generic, f, settings):
+    def _gen_gmake(self, targets, f, generic, verbose):
         """Write the given targets as GNU make rules.
 
         No dependent targets will be written.  The 'generic' parameter
@@ -325,18 +325,19 @@ class Graph(object):
             except AttributeError:
                 raise TypeError('cannot generate make rule for %s' %
                                 repr(t.__class__))
-            wr(f, generic, settings.VERBOSE)
+            wr(f, generic, verbose)
             for i in t.input():
                 if isinstance(i, str):
                     phony.add(i)
         if phony:
             f.write('.PHONY: ' + ' '.join(sorted(phony)))
+            f.write('\n')
 
     def gen_gmake(self, targets, f):
         """Write the given targets as gmakefile rules."""
         targets = self._resolve(targets)
         buildable = list(self._closure(targets))
-        self._gen_gmake(buildable, True, f)
+        self._gen_gmake(buildable, f, True, False)
 
     def platform_built_sources(self, proj, platform):
         """Get the built sources for the given platform."""

@@ -182,16 +182,21 @@ class Commands(Target):
         """Write the makefile rule for this target to the given file."""
         cmds = [[mkmkarg(arg) for arg in cmd]
                 for cmd in self.commands()]
-        otarg = ' '.join(mkmkdep(x) for x in self.output())
+        out1 = None
+        for x in self.output():
+            if out1 is None:
+                out1 = mkmkdep(x)
+            else:
+                f.write('%s: %s\n' % (mkmkdep(x), out1))
         itarg = ' '.join(mkmkdep(x) for x in self.input())
         if generic and isinstance(self, CC):
             itarg += ' $(dirs_missing)'
-        if not otarg:
+        if not out1:
             raise ValueError('target has no outputs')
         if itarg:
-            f.write('%s: %s\n' % (otarg, itarg))
+            f.write('%s: %s\n' % (out1, itarg))
         else:
-            f.write('%s:\n' % (otarg,))
+            f.write('%s:\n' % (out1,))
         if cmds:
             try:
                 name = self.name
