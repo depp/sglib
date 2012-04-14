@@ -54,7 +54,7 @@ sg_pixbuf_loadpng(struct sg_pixbuf *pbuf, const void *data, size_t len,
     struct sg_pngbuf rbuf;
     png_uint_32 width, height;
     unsigned i;
-    int r, depth, ctype, ret;
+    int r, depth, ctype, ret, has_trns;
     sg_pixbuf_format_t pfmt;
     unsigned char **rowp;
     void *volatile tmp = NULL;
@@ -80,16 +80,15 @@ sg_pixbuf_loadpng(struct sg_pixbuf *pbuf, const void *data, size_t len,
     png_get_IHDR(pngp, infop, &width, &height, &depth, &ctype,
                  NULL, NULL, NULL);
 
+    has_trns = png_get_valid(pngp, infop, PNG_INFO_tRNS) != 0;
+    png_set_expand(pngp);
     switch (ctype) {
     case PNG_COLOR_TYPE_PALETTE:
-        pfmt = SG_RGB;
-        png_set_palette_to_rgb(pngp);
+        pfmt = has_trns ? SG_RGBA : SG_RGB;
         break;
 
     case PNG_COLOR_TYPE_GRAY:
-        pfmt = SG_Y;
-        if (depth < 8)
-            png_set_expand_gray_1_2_4_to_8(pngp);
+        pfmt = has_trns ? SG_YA : SG_Y;
         break;
 
     case PNG_COLOR_TYPE_GRAY_ALPHA:
@@ -97,7 +96,7 @@ sg_pixbuf_loadpng(struct sg_pixbuf *pbuf, const void *data, size_t len,
         break;
 
     case PNG_COLOR_TYPE_RGB:
-        pfmt = SG_RGB;
+        pfmt = has_trns ? SG_RGBA : SG_RGB;
         break;
 
     case PNG_COLOR_TYPE_RGB_ALPHA:
