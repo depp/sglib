@@ -87,7 +87,7 @@ class Key(object):
         try:
             return getattr(instance, name)
         except UnsetKey, ex:
-            raise UnsetKey(self.name, (ex.prop,) + ex.fallback)
+            raise UnsetKey(self.name, (ex.key,) + ex.fallback)
 
     def __set__(self, instance, value):
         try:
@@ -125,12 +125,12 @@ class UnicodeKey(Key):
     __slots__ = ['name']
 
     @staticmethod
-    def check(self, value):
+    def check(value):
         if isinstance(value, unicode):
-            value
+            return value
         elif isinstance(value, str):
             return unicode(value, 'ascii')
-        raise TypeError('not a string: %s' % (value,))
+        raise TypeError('not a string: %r' % (value,))
 
     @staticmethod
     def as_string(value):
@@ -386,6 +386,15 @@ class SmartDict(object, UserDict.DictMixin):
     def __iter__(self):
         return iter(self._props)
 
+    @classmethod
+    def haskey(klass, key):
+        """Determine whether the class has the given key."""
+        try:
+            kobj = getattr(klass, key)
+        except AttributeError:
+            return False
+        return isinstance(kobj, Key)
+
     def keys(self):
         return self._props.keys()
 
@@ -406,4 +415,4 @@ class SmartDict(object, UserDict.DictMixin):
 
     def set(self, **kw):
         """Convenience method for setting many keys."""
-        
+        self.update(kw)

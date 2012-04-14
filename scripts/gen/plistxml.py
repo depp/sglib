@@ -142,7 +142,7 @@ def dumpValue(doc, obj):
         for v in obj:
             n.appendChild(dumpValue(doc, v))
     else:
-        raise TypeErorr('unknown type: %r' % obj)
+        raise TypeError('unknown type: %r' % obj)
     return n
 
 def dump(obj):

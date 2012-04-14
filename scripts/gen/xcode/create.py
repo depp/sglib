@@ -66,7 +66,8 @@ class SourceGroup(object):
             pass
         else:
             if not isinstance(x, obj.Group):
-                raise Exception('group and FileRef have same path: %r' % (path,))
+                raise Exception('group and FileRef have same path: %r' %
+                                (path,))
             return x
         if path:
             abspath = posixpath.join(self._gpath, path)
@@ -75,10 +76,12 @@ class SourceGroup(object):
         if path:
             x = obj.Group(abspath)
             if path.startswith('/'):
-                raise Exception('no groups for absolute paths: %r' % (path,))
+                raise Exception('no groups for absolute paths: %r' %
+                                (path,))
             par, fname = posixpath.split(path)
             if fname.startswith('.'):
-                raise Exception('path component starts with period: %r' % (path,))
+                raise Exception('path component starts with period: %r' %
+                                (path,))
             y = self.get_dir(par)
             y.add(x)
         else:
@@ -101,7 +104,8 @@ class SourceGroup(object):
             pass
         else:
             if not isinstance(x, obj.FileRef):
-                raise Exception('group and FileRef have same path: %r' % (path,))
+                raise Exception('group and FileRef have same path: %r' %
+                                (path,))
             return x
         ft = source.sourcetype
         try:
@@ -142,7 +146,8 @@ class Target(object):
 
 class Project(object):
     """Object for creating an Xcode project."""
-    __slots__ = ['_groups', '_sources', 'project', '_frameworks', '_fwk_group']
+    __slots__ = ['_groups', '_sources', 'project',
+                 '_frameworks', '_fwk_group']
 
     def __init__(self):
         p = obj.Project()
@@ -177,7 +182,8 @@ class Project(object):
             g = obj.Group(root, name='Frameworks')
             self._fwk_group = g
             self.project.mainGroup.add(g)
-        x = obj.FileRef('%s/%s.framework' % (root, name), ltype='wrapper.framework')
+        x = obj.FileRef('%s/%s.framework' % (root, name),
+                        ltype='wrapper.framework')
         g.add(x)
         self._frameworks[name] = x
         return x
@@ -202,7 +208,7 @@ class Project(object):
                 x.children.sort()
         self.project.write(f)
 
-def projectConfig(env):
+def projectConfig():
     base = {
         'GCC_VERSION': '4.2',
         'WARNING_CFLAGS': ['-Wall', '-Wextra'],
@@ -217,19 +223,20 @@ def projectConfig(env):
     cr = obj.BuildConfiguration('Release', base, release)
     return obj.BuildConfigList([cd, cr], 'Release')
 
-def targetConfig(env):
+def targetConfig(module, env):
+    mname = module.atom.lower()
     base = {
         'ALWAYS_SEARCH_USER_PATHS': False,
         'GCC_DYNAMIC_NO_PIC': False,
         'GCC_ENABLE_FIX_AND_CONTINUE': True,
         'GCC_MODEL_TUNING': 'G5',
         'GCC_OPTIMIZATION_LEVEL': 0,
-        'INFOPLIST_FILE': 'resources/mac/Info.plist',
+        'INFOPLIST_FILE': 'resources/mac/%s/Info.plist' % (mname,),
         'INSTALL_PATH': '$(HOME)/Applications',
         'PREBINDING': False,
-        'PRODUCT_NAME': env.EXE_MAC,
+        'PRODUCT_NAME': module.info.EXE_MAC,
         'HEADER_SEARCH_PATHS':
-            ['$(HEADER_SEARCH_PATHS)'] + [p for p in env.CPPPATH],
+            ['$(HEADER_SEARCH_PATHS)'] + [p.posix for p in env.CPPPATH],
     }
     debug = {
         'COPY_PHASE_STRIP': False,
@@ -246,27 +253,28 @@ def targetConfig(env):
     cr = obj.BuildConfiguration('Release', base, release)
     return obj.BuildConfigList([cd, cr], 'Release')
 
-def write_project(proj, userenv, f):
+def write_project(proj, f):
     """Write a project as an Xcode project to the given file."""
 
     p = Project()
     for source in proj.sourcelist.sources():
         p.get_source(source)
-    p.project.buildConfigurationList = projectConfig(Environment(proj.env, userenv))
+    p.project.buildConfigurationList = projectConfig()
 
     def lookup(atom):
         return None
-    atomenv = atom.AtomEnv([lookup], proj.env, userenv, 'MACOSX')
-    srcenv = atom.SourceEnv(proj, atomenv)
-    env = srcenv.unionenv()
-    t = p.application_target(env.EXE_MAC)
-    for source, source_env in srcenv:
-        t.add_source(p.get_source(source))
-    fworks = ['Foundation', 'AppKit', 'CoreServices',
-              'CoreVideo', 'Carbon', 'OpenGL']
-    for fwork in fworks:
-        x = p.get_framework(fwork)
-        t.add_source(x)
-    t.target.buildConfigurationList = targetConfig(env)
+    atomenv = atom.AtomEnv(proj, lookup, Environment())
+    for module in proj.targets():
+        srcenv = atomenv.module_sources([module.atom], 'MACOSX')
+        t = p.application_target(module.info.EXE_MAC)
+        for source, source_env in srcenv:
+            t.add_source(p.get_source(source))
+        fworks = ['Foundation', 'AppKit', 'CoreServices',
+                  'CoreVideo', 'Carbon', 'OpenGL']
+        for fwork in fworks:
+            x = p.get_framework(fwork)
+            t.add_source(x)
+        t.target.buildConfigurationList = \
+            targetConfig(module, srcenv.unionenv())
 
     p.write(f)

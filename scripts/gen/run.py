@@ -7,7 +7,7 @@ import gen.git as git
 import optparse
 import sys
 
-MODULES = ['version', 'linux']
+MODULES = ['version', 'linux', 'osx']
 #MODULES = ['version', 'linux', 'osx', 'msvc', 'gmake']
 # archive must be last
 # MODULES.append('archive')

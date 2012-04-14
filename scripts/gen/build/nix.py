@@ -77,3 +77,21 @@ def get_default_env(settings):
         CXXWARN='-Wall -Wextra -Wpointer-arith -Wno-sign-compare',
     )
     return Environment(common_env, config_env[settings.CONFIG])
+
+def getmachine(env):
+    """Get the name of the target machine."""
+    m = shell.getoutput([env.CC, '-dumpmachine'] +
+                        list(env.CPPFLAGS) + list(env.CFLAGS))
+    i = m.find('-')
+    if i < 0:
+        raise Exception('unable to parse machine name: %r' % (m,))
+    m = m[:i]
+    if m == 'x86_64':
+        return 'x64'
+    if re.match('i\d86', m):
+        return 'x86'
+    if m == 'powerpc':
+        return 'ppc'
+    print >>sys.stderr, 'warning: unknown machine name: %r' % (m,)
+    return m
+

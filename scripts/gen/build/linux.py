@@ -77,15 +77,6 @@ def pkgconfig(pkg):
     """Get the environment for a package from pkg-config."""
     return customconfig(['pkg-config', pkg])
 
-def getmachine(env):
-    """Get the name of the target machine."""
-    m = shell.getoutput([env.CC, '-dumpmachine'] +
-                        list(env.CPPFLAGS) + list(env.CFLAGS))
-    i = m.find('-')
-    if i < 0:
-        raise Exception('unable to parse machine name: %r' % (m,))
-    return m[:i]
-
 def add_sources(graph, proj, env, settings):
     pass
 
@@ -94,11 +85,7 @@ def add_targets(graph, proj, env, settings):
     if platform.system() == 'Linux':
         build_linux(graph, proj, env, settings)
 
-def build_linux(graph, proj, env, settings):
-    """Generate targets for a normal Linux build.
-
-    This produces the actual executable as a target.
-    """
+def linux_env(env, settings):
     base_env = Environment(
         CFLAGS='-g',
         CXXFLAGS='-g',
@@ -107,13 +94,19 @@ def build_linux(graph, proj, env, settings):
     )
     user_env = nix.get_default_env(settings)
     user_env.update(env)
-    env = Environment(base_env, user_env)
-    del base_env, user_env
+    return Environment(base_env, user_env)
 
-    machine = getmachine(env)
-    if machine == 'x86_64':
+def build_linux(graph, proj, env, settings):
+    """Generate targets for a normal Linux build.
+
+    This produces the actual executable as a target.
+    """
+    env = linux_env(env, settings)
+
+    machine = nix.getmachine(env)
+    if machine == 'x64':
         machine = 'linux64'
-    elif re.match(r'i\d86', machine):
+    elif machine == 'x86':
         machine = 'linux32'
     else:
         print >>sys.stderr, 'warning: unknown machine %s' % machine
