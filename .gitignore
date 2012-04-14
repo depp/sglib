@@ -1,13 +1,34 @@
-Makefile
-aclocal.m4
-autom4te.cache
-build
-config.h
-config.h.in
-config.log
-config.mak
-config.mak.in
-config.status
-configure
-configure.ac
-version.c
+# Xcode
+/*.xcodeproj
+
+# Build directory (OS X / Linux)
+/build
+
+# Autotools
+/Makefile
+/aclocal.m4
+/autom4te.cache
+/config.h
+/config.h.in
+/config.log
+/config.mak
+/config.mak.in
+/config.status
+/configure
+/configure.ac
+/run.sh
+
+# Built sources
+/resources
+/version.c
+
+# Visual Studio
+/Debug
+/Release
+/x64
+/*.sln
+/*.sdf
+/*.suo
+/*.opensdf
+/*.vcxproj*
+/ipch
