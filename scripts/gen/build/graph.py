@@ -166,7 +166,7 @@ class Graph(object):
             raise ValueError('error: unknown targets:', ' '.join(unknown))
         return ts
 
-    def _build_make(self, buildlist, env):
+    def _build_make(self, buildlist, settings):
         """Build all targets in the given list using Make."""
         buildlist = list(buildlist)
         for t in buildlist:
@@ -177,7 +177,7 @@ class Graph(object):
         tnames = []
         for t in buildlist:
             tnames.extend(t.output())
-        buildlist.append(target.DepTarget('all', tnames, env))
+        buildlist.append(target.DepTarget('all', tnames))
         makefile = 'build/Makefile.tmp'
         self._mkdirs([Path(makefile)])
         ncpu = cpucount.cpucount()
@@ -187,7 +187,7 @@ class Graph(object):
         try:
             with open(makefile, 'wb') as f:
                 f.write('all:\n')
-                self._gen_gmake(buildlist, False, f)
+                self._gen_gmake(buildlist, f, False, settings.VERBOSE)
             print 'make'
             proc = subprocess.Popen(cmd)
             status = proc.wait()
@@ -198,7 +198,7 @@ class Graph(object):
                 pass
         return status == 0
 
-    def _build_direct(self, buildlist, env):
+    def _build_direct(self, buildlist, settings):
         """Build all targets in the given list directly."""
         buildlist = set(buildlist)
         if not buildlist:
@@ -238,9 +238,10 @@ class Graph(object):
         success = 0
         failure = 0
 
+        verbose = settings.VERBOSE
         while queue:
             t = queue.pop()
-            if t.build():
+            if t.build(verbose):
                 success += 1
                 for tt in t.output():
                     post(tt)
@@ -252,7 +253,7 @@ class Graph(object):
             (success, failure, skipped)
         return (not failure) and (not skipped)
 
-    def build(self, targets, env):
+    def build(self, targets, settings):
         """Build the given targets.
 
         Return True if successful, False if failed.
@@ -296,17 +297,17 @@ class Graph(object):
             del notlate
 
             # Run all build phases
-            if not self._build_direct(early, env):
+            if not self._build_direct(early, settings):
                 return False
-            if not self._build_make(make, env):
+            if not self._build_make(make, settings):
                 return False
-            if not self._build_direct(late, env):
+            if not self._build_direct(late, settings):
                 return False
             return True
         else:
-            return self._build_direct(buildset, env)
+            return self._build_direct(buildset, settings)
 
-    def _gen_gmake(self, targets, generic, f):
+    def _gen_gmake(self, targets, f, generic, verbose):
         """Write the given targets as GNU make rules.
 
         No dependent targets will be written.  The 'generic' parameter
@@ -324,18 +325,19 @@ class Graph(object):
             except AttributeError:
                 raise TypeError('cannot generate make rule for %s' %
                                 repr(t.__class__))
-            wr(f, generic)
+            wr(f, generic, verbose)
             for i in t.input():
                 if isinstance(i, str):
                     phony.add(i)
         if phony:
             f.write('.PHONY: ' + ' '.join(sorted(phony)))
+            f.write('\n')
 
     def gen_gmake(self, targets, f):
         """Write the given targets as gmakefile rules."""
         targets = self._resolve(targets)
         buildable = list(self._closure(targets))
-        self._gen_gmake(buildable, True, f)
+        self._gen_gmake(buildable, f, True, False)
 
     def platform_built_sources(self, proj, platform):
         """Get the built sources for the given platform."""

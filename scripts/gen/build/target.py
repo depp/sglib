@@ -142,14 +142,13 @@ class Commands(Target):
             raise TypeError('env must be an Environment object')
         self._env = env
 
-    def build(self):
+    def build(self, verbose):
         env = self._env
-        quiet = not env.VERBOSE
-        if quiet:
+        if not verbose:
             try:
                 name = self.name
             except AttributeError:
-                quiet = False
+                verbose = True
             else:
                 name = name()
                 output = ''
@@ -167,7 +166,7 @@ class Commands(Target):
             if not cmd:
                 raise ValueError('command is empty')
             args = [mkarg(arg) for arg in cmd]
-            if not quiet:
+            if verbose:
                 print ' '.join(args)
             if (cmd[0] == 'cp' and len(cmd) == 3 and
                 isinstance(cmd[1], Path) and isinstance(cmd[2], Path)):
@@ -179,20 +178,25 @@ class Commands(Target):
                     return False
         return True
 
-    def write_rule(self, f, generic):
+    def write_rule(self, f, generic, verbose):
         """Write the makefile rule for this target to the given file."""
         cmds = [[mkmkarg(arg) for arg in cmd]
                 for cmd in self.commands()]
-        otarg = ' '.join(mkmkdep(x) for x in self.output())
+        out1 = None
+        for x in self.output():
+            if out1 is None:
+                out1 = mkmkdep(x)
+            else:
+                f.write('%s: %s\n' % (mkmkdep(x), out1))
         itarg = ' '.join(mkmkdep(x) for x in self.input())
         if generic and isinstance(self, CC):
             itarg += ' $(dirs_missing)'
-        if not otarg:
+        if not out1:
             raise ValueError('target has no outputs')
         if itarg:
-            f.write('%s: %s\n' % (otarg, itarg))
+            f.write('%s: %s\n' % (out1, itarg))
         else:
-            f.write('%s:\n' % (otarg,))
+            f.write('%s:\n' % (out1,))
         if cmds:
             try:
                 name = self.name
@@ -203,20 +207,19 @@ class Commands(Target):
                 if generic:
                     cmds = [['$(Q%s)' % name]] + \
                         [['$(QS)' + cmd[0]] + cmd[1:] for cmd in cmds]
-                elif not self._env.VERBOSE:
+                elif not verbose:
                     cmds = [['@echo %s $@' % name]] + \
                         [['@' + cmd[0]] + cmd[1:] for cmd in cmds]
             for cmd in cmds:
                 f.write('\t' + ' '.join(cmd) + '\n')
 
-class DepTarget(Commands):
+class DepTarget(Target):
     """Target which does nothing, but depends on other targets.
 
     The name should be a string.
     """
-    __slots__ = ['_name', '_deps', '_env']
-    def __init__(self, name, deps, env):
-        Commands.__init__(self, env)
+    __slots__ = ['_name', '_deps']
+    def __init__(self, name, deps):
         if not isinstance(name, str):
             raise TypeError('name should be string')
         deps = list(deps)
@@ -233,8 +236,18 @@ class DepTarget(Commands):
     def output(self):
         yield self._name
 
-    def commands(self):
-        return ()
+    def build(self, verbose):
+        return True
+
+    def write_rule(self, f, generic, verbose):
+        """Write the makefile rule for this target to the given file."""
+        otarg = ' '.join(mkmkdep(x) for x in self.output())
+        itarg = ' '.join(mkmkdep(x) for x in self.input())
+        if itarg:
+            f.write('%s: %s\n' % (otarg, itarg))
+        else:
+            f.write('%s:\n' % (otarg,))
+
 
 class CC(Commands):
     """Compile a C, C++, or Objective C file.
@@ -324,13 +337,10 @@ class StaticFile(Target):
     the constructor.  Subclasess should override the 'write' method,
     which takes a file-like object and writes data to the file.
     """
-    def __init__(self, dest, env):
+    def __init__(self, dest):
         if not isinstance(dest, Path):
             raise TypeError('dest must be Path')
-        if not isinstance(env, Environment):
-            raise TypeError('env must be Environment')
         self._dest = dest
-        self._env = env
 
     def input(self):
         return iter(())
@@ -338,26 +348,28 @@ class StaticFile(Target):
     def output(self):
         yield self._dest
 
-    def build(self):
-        env = self._env
+    def build(self, verbose):
         print 'FILE', self._dest.posix
         with open(self._dest.native, 'wb') as f:
             self.write(f)
         return True
 
 class Template(Target):
-    """Target which creates an file from a template."""
-    __slots__ = ['_dest', '_src', '_env', '_regex', '_vars']
-    def __init__(self, dest, src, env, regex=r'\${(\w+)}', **extra):
+    """Target which creates an file from a template.
+
+    Takes a lookup function as an argument.
+    """
+    __slots__ = ['_dest', '_src', '_regex', '_lookup']
+
+    def __init__(self, dest, src, lookup, regex=r'\${(\w+)}'):
         if not isinstance(dest, Path):
             raise TypeError('destination must be path')
         if not isinstance(src, Path):
             raise TypeError('source must be path')
         self._dest = dest
         self._src = src
-        self._env = env
         self._regex = regex
-        self._vars = extra
+        self._lookup = lookup
 
     def input(self):
         yield self._src
@@ -365,22 +377,16 @@ class Template(Target):
     def output(self):
         yield self._dest
 
-    def build(self):
+    def build(self, verbose):
         print 'TEMPLATE', self._dest.posix
         data = open(self._src.native, 'rb').read()
-        env = self._env
         def repl(m):
             w = m.group(1)
-            try:
-                return getattr(env, w)
-            except AttributeError:
-                pass
-            try:
-                return self._vars[w]
-            except KeyError:
-                pass
-            print >>sys.stderr, '%s: unknown variable %r' % (w, w)
-            return m.group(0)
+            v = self._lookup(w)
+            if v is None:
+                print >>sys.stderr, '%s: unknown variable %r' % (w, w)
+                return m.group(0)
+            return v
         data = re.sub(self._regex, repl, data)
         with open(self._dest.native, 'wb') as f:
             f.write(data)

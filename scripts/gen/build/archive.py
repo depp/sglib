@@ -3,7 +3,7 @@ from gen.env import Environment
 from gen.path import Path
 import platform
 
-def add_sources(graph, proj, userenv):
+def add_sources(graph, proj, env, settings):
     pass
 
 class Tarball(target.Target):
@@ -28,11 +28,11 @@ class Tarball(target.Target):
     def input(self):
         return iter(self._src)
 
-    def build(self):
+    def build(self, verbose):
         import cStringIO
         import subprocess
         env = self._env
-        if not env.VERBOSE:
+        if not verbose:
             print 'TAR', self._dest.posix
         paths = [p.posix for p in self._src]
         paths.sort()
@@ -46,7 +46,7 @@ class Tarball(target.Target):
         cmd = ['tar', '-Jc', '-f', self._dest.posix, '-T', '-']
         if self._prefix:
             cmd.extend(('--transform', 's,^,%s,' % self._prefix))
-        if env.VERBOSE:
+        if verbose:
             print ' '.join(cmd)
         proc = subprocess.Popen(cmd, stdin=subprocess.PIPE)
         out, err = proc.communicate(slist)
@@ -56,9 +56,7 @@ class Tarball(target.Target):
     def late(self):
         return True
 
-def add_targets(graph, proj, userenv):
-    env = Environment(proj.env, userenv)
-
+def add_targets(graph, proj, env, settings):
     if platform.system() in ('Linux', 'Darwin'):
         source_targets = graph.closure(['built-sources'])
         all_targets = graph.closure(['gmake', 'xcode'])
@@ -72,7 +70,8 @@ def add_targets(graph, proj, userenv):
                     paths.add(x)
         for source in proj.sourcelist.sources():
             paths.add(source.relpath)
-        nm = '%s-%s-source' % (env.PKG_FILENAME, env.PKG_APP_VERSION)
+        nm = ('%s-%s-source' %
+              (proj.info.PKG_FILENAME, proj.info.PKG_APP_VERSION))
         sp = Path('build/product', nm + '.tar.xz')
         graph.add(Tarball(sp, paths, env, nm + '/'))
-        graph.add(target.DepTarget('source-dist', [sp], env))
+        graph.add(target.DepTarget('source-xz', [sp]))

@@ -7,7 +7,7 @@ import gen.build.graph
 import gen.build.linux as linux
 import platform
 
-def add_sources(graph, proj, userenv):
+def add_sources(graph, proj, env, settings):
     pass
 
 def get_example_source(proj):
@@ -15,7 +15,7 @@ def get_example_source(proj):
         if group.simple_name == 'sglib':
             srcs = []
             for source in group.sources():
-                if not source.atoms:
+                if source.atoms == ('SGLIB',):
                     srcs.append(source.relpath.posix)
             srcs.sort()
             if not srcs:
@@ -57,32 +57,44 @@ class Configure(target.Commands):
     def commands(self):
         return [['./configure']]
 
-def add_targets(graph, proj, userenv):
+class LookupAC(object):
+    """Class for looking up autoconf template variables."""
+    __slots__ = ['_proj']
+
+    def __init__(self, proj):
+        self._proj = proj
+
+    def __call__(self, x):
+        info = self._proj.info
+        if info.haskey(x):
+            return getattr(info, x)
+        if x == 'SRCFILE':
+            return get_example_source(self._proj)
+
+def add_targets(graph, proj, env, settings):
     """Generate targets for autotools build on Linux."""
-    env = Environment(proj.env, userenv)
     mf = Path('Makefile')
-    graph.add(Makefile(mf, env, proj))
+    graph.add(Makefile(mf, proj))
     cm = Path('config.mak.in')
-    graph.add(ConfigMak(cm, env))
+    graph.add(ConfigMak(cm))
     ccin = Path('configure.ac')
     ccsrc = Path(proj.sgpath, 'scripts/configure.ac')
-    source = get_example_source(proj)
-    graph.add(target.Template(ccin, ccsrc, env,
-                              regex=r'@(\w+)@', SRCFILE=source))
+    lookup = LookupAC(proj)
+    graph.add(target.Template(ccin, ccsrc, lookup, regex=r'@(\w+)@'))
 
     deps = [mf, cm, ccin]
     if platform.system() in ('Linux', 'Darwin'):
-        graph.add(AutoConf(userenv))
+        graph.add(AutoConf(env))
         deps.append(Path('configure'))
 
     deps.extend(graph.platform_built_sources(proj, 'LINUX'))
-    graph.add(target.DepTarget('gmake', deps, userenv))
+    graph.add(target.DepTarget('gmake', deps))
 
     if platform.system() == 'Linux':
-        graph.add(Configure(userenv))
+        graph.add(Configure(env))
         cdep = [Path('config.mak'), 'gmake']
-        graph.add(target.DepTarget('config', cdep, userenv))
-        graph.add(target.DepTarget('default', ['config'], userenv))
+        graph.add(target.DepTarget('config', cdep))
+        graph.add(target.DepTarget('default', ['config']))
 
 LIBS = ['LIBJPEG', 'GTK', 'LIBPNG', 'PANGO']
 FLAGS = ['CC', 'CXX',
@@ -91,16 +103,17 @@ FLAGS = ['CC', 'CXX',
 
 class Makefile(target.StaticFile):
     """Linux: Create a Makefile for autotools."""
-    __slots__ = ['_dest', '_env', '_proj']
-    def __init__(self, dest, env, proj):
-        target.StaticFile.__init__(self, dest, env)
+    __slots__ = ['_dest', '_proj']
+
+    def __init__(self, dest, proj):
+        target.StaticFile.__init__(self, dest)
         self._proj = proj
+
     def write(self, f):
-        env = self._env
         proj = self._proj
         g = gen.build.graph.Graph()
 
-        def lookup(atom):
+        def lookup_env(atom):
             if atom not in LIBS:
                 return None
             cflags = VarRef(atom + '_CFLAGS')
@@ -110,17 +123,19 @@ class Makefile(target.StaticFile):
                 LIBS=VarRef(atom + '_LIBS'),
             )
 
-        penv = Environment(proj.env)
-        penv.CFLAGS = VarRef('dep_args')
-        penv.CXXFLAGS = VarRef('dep_args')
-
-        uenv = Environment()
+        env = Environment()
         for flag in FLAGS:
-            uenv[flag] = VarRef(flag)
+            env[flag] = VarRef(flag)
+        env = Environment(
+            Environment(
+                CFLAGS=VarRef('dep_args'),
+                CXXFLAGS=VarRef('dep_args')
+            ), env)
 
-        atomenv = atom.AtomEnv([lookup], penv, uenv, 'LINUX')
+        atomenv = atom.AtomEnv(proj, lookup_env, env)
+
         ts = linux.genbuild_linux(g, self._proj, atomenv, None)
-        g.add(target.DepTarget('all', ts, uenv))
+        g.add(target.DepTarget('all', ts))
 
         targs = g.targetobjs()
         objs = []
@@ -152,7 +167,8 @@ class Makefile(target.StaticFile):
 
 class ConfigMak(target.StaticFile):
     """Linux: Create config.mak.in for autotools."""
-    __slots__ = ['_dest', '_env']
+    __slots__ = ['_dest']
+
     def write(self, f):
         def v(x):
             f.write('%s = @%s@\n' % (x, x))

@@ -11,10 +11,10 @@ const char SG_APP_COMMIT[] = "%s";
 """
 
 class VersionFile(target.Target):
-    __slots__ = ['_dest', '_env']
-    def __init__(self, dest, env):
+    __slots__ = ['_dest', '_info']
+    def __init__(self, dest, info):
         self._dest = dest
-        self._env = env
+        self._info = info
 
     def input(self):
         return iter(())
@@ -23,13 +23,13 @@ class VersionFile(target.Target):
         yield self._dest
 
     def contents(self):
-        env = self._env
+        info = self._info
         return VERSION_TEMPL % (
-            env.PKG_SG_VERSION, env.PKG_SG_COMMIT,
-            env.PKG_APP_VERSION, env.PKG_APP_COMMIT,
+            info.PKG_SG_VERSION, info.PKG_SG_COMMIT,
+            info.PKG_APP_VERSION, info.PKG_APP_COMMIT,
         )
 
-    def build(self):
+    def build(self, verbose):
         print 'VERSION', self._dest.posix
         data = self.contents()
         with open(self._dest.native, 'wb') as f:
@@ -43,10 +43,10 @@ class VersionFile(target.Target):
         for line in self.contents().splitlines():
             f.write("\techo '%s' >> $@\n" % (line,))
 
-def add_sources(graph, proj, userenv):
+def add_sources(graph, proj, env, settings):
     g = proj.sourcelist.get_group('Version', Path('.'))
     g.add(Path('version.c'), ())
-    graph.add(VersionFile(Path('version.c'), userenv))
+    graph.add(VersionFile(Path('version.c'), proj.info))
 
-def add_targets(graph, proj, userenv):
+def add_targets(graph, proj, env, settings):
     pass

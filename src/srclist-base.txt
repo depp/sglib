@@ -48,8 +48,8 @@ base/opengl.h
 base/pixbuf.c
 base/pixbuf_coregraphics.c MACOSX
 base/pixbuf.h
-base/pixbuf_libjpeg.c LIBJPEG
-base/pixbuf_libpng.c LIBPNG
+base/pixbuf_libjpeg.c LIBJPEG LINUX
+base/pixbuf_libpng.c LIBPNG LINUX
 base/pixbuf_loadimage.c
 base/pixbuf_wincodec.cpp WINDOWS
 base/rand.c
@@ -67,12 +67,12 @@ base/type.c
 base/type_coretext.c MACOSX
 base/type.h
 base/type_impl.h
-base/type_pango.c PANGO
+base/type_pango.c PANGO LINUX
 base/type_uniscribe.c WINDOWS
 #base/type_win.c
 base/version.c
 base/version.h
-platform/gtk.c GTK
+platform/gtk.c GTK LINUX
 platform/macosx/GApplication.h MACOSX
 platform/macosx/GApplication.m MACOSX
 platform/macosx/GController.h MACOSX
@@ -85,5 +85,5 @@ platform/macosx/GView.h MACOSX
 platform/macosx/GView.m MACOSX
 platform/macosx/GWindow.h MACOSX
 platform/macosx/GWindow.m MACOSX
-platform/sdl.c SDL
+# platform/sdl.c SDL
 platform/windows.c WINDOWS
