@@ -9,7 +9,7 @@ import sys
 
 MODULES = ['version', 'linux', 'osx', 'msvc', 'gmake']
 # archive must be last
-# MODULES.append('archive')
+MODULES.append('archive')
 
 def run(proj):
     """Build the given project using the command line options.
