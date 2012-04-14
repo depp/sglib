@@ -1,3 +1,3 @@
 [submodule "sglib"]
 	path = sglib
-	url = /home/depp/git/sglib.git
+	url = ../sglib
