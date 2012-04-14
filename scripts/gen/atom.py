@@ -96,7 +96,7 @@ class AtomEnv(object):
         except KeyError:
             m = self._proj.modules[atom]
             re = [self.module_env(r) for r in m.reqs]
-            e = Environment(*re, CPPPATH=m.ipath)
+            e = Environment(CPPPATH=m.ipath, *re)
             self._mod_cache[atom] = e
             return e
 
