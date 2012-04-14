@@ -69,12 +69,12 @@ class Program(smartdict.Key):
         path = instance.getenv('PATH')
         paths = path.split(os.path.pathsep)
         if platform.system() == 'Windows':
-            exts = self.getenv('PATHEXT')
+            exts = instance.getenv('PATHEXT')
             pkey = (path, exts)
             exts = exts.split(os.path.pathsep)
-            extset = frozenset(ext.lower() for ext in extlist)
+            extset = frozenset(ext.lower() for ext in exts)
             def with_exts(name):
-                ext = os.path.splitext(prog)[1]
+                ext = os.path.splitext(name)[1]
                 if ext and ext.lower() in extset:
                     return [name]
                 else:
