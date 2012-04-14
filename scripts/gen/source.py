@@ -7,13 +7,17 @@ import os
 import gen.path
 import re
 
-_VALID_NAME = re.compile('^[A-Za-z](?:[ -_A-Za-z0-9]*[A-Za-z0-9])$')
+_VALID_NAME = re.compile('^[A-Za-z0-9](?:[ -_A-Za-z0-9]*[A-Za-z0-9])$')
 def valid_name(x):
     return _VALID_NAME.match(x) and '  ' not in x
 
 _NONSIMPLE_CHAR = re.compile('[^-A-Za-z0-9]+')
 def simple_name(x):
     return _NONSIMPLE_CHAR.sub('_', x).strip('-').lower()
+
+_IS_ATOM = re.compile('^[_A-Za-z][_A-Za-z0-9]*$')
+def is_atom(x):
+    return bool(_IS_ATOM.match(x))
 
 class Source(object):
     """A source file.
@@ -156,9 +160,9 @@ class Group(object):
             if not line or line.startswith('#'):
                 continue
             parts = line.split()
-            spath, atoms = parts[0], parts[1:]
+            spath, satoms = parts[0], parts[1:]
             spath = gen.path.Path(spath)
-            self.add(spath, atoms)
+            self.add(spath, tuple(satoms) + atoms)
 
 class SourceList(object):
     """A list of all source files in a project.

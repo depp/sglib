@@ -1,199 +1,172 @@
 import os
 import re
-import sys
 import platform
 from gen.path import Path
+import gen.smartdict as smartdict
 
-VALID_VAR = re.compile(r'^[_a-zA-Z0-9]+$')
+_IS_VARREF = re.compile(r'^[_a-zA-Z0-9]+$')
+def is_varref(x):
+    return _IS_VARREF.match(x)
+
 class VarRef(object):
     """A reference to a Makefile variable.
 
-    This is used to automatically generate Makefile rules.
+    This is used to automatically generate Makefile rules.  A VarRef
+    can be used in place of a program or command line flag.
     """
     __slots__ = ['_name']
+
     def __init__(self, name):
         if not isinstance(name, str):
             raise TypeError('variable name must be str')
-        if not VALID_VAR.match(name):
+        if not is_varref(name):
             raise ValueError('variable name must match [_a-zA-Z0-9]+')
         self._name = name
+
     def __repr__(self):
         return 'VarRef(%r)' % (self._name,)
+
     def __str__(self):
         return '$(%s)' % (self._name,)
 
-class UnknownProperty(Exception):
-    def __init__(self, name):
-        self.name = name
-    def __repr__(self):
-        return 'UnknownProperty(%r)' % (self.name,)
-    def __str__(self):
-        return 'unknown environment variable: %r' % (self.name,)
-
-class UnsetProperty(AttributeError):
-    def __init__(self, prop, fallback=()):
-        self.prop = prop
-        self.fallback = fallback
-    def __repr__(self):
-        if self.fallback:
-            return 'UnsetProperty(%r)' % self.prop
-        else:
-            return 'UnsetProperty(%r, %r)' % (self.prop, self.fallback)
-    def __str__(self):
-        if self.fallback:
-            return 'property not set: %s (defaults from %s)' % \
-                (self.prop, ', '.join(self.fallback))
-        else:
-            return 'property not set: %s' % self.prop
-
-class InvalidProperty(ValueError):
-    def __init__(self, prop, value):
-        self.prop = prop
-        self.value = value
-    def __repr__(self):
-        return 'InvalidProperty(%r, %r)' % (self.prop, self.value)
-    def __str__(self):
-        return 'invalid value for %s property: %r' % \
-            (self.prop, self.value)
-
-IS_ENVVAR = re.compile(r'^[_A-Z]+$')
-
-class EnvVar(object):
-    """An environment variable."""
-
-    def __init__(self, name):
-        self.name = name
-
-    def __get__(self, instance, owner):
-        if instance is None:
-            return self
-        try:
-            return instance._props[self.name]
-        except KeyError:
-            pass
-        value = self.default(instance)
-        isvalid, nvalue = self.check(value)
-        if not isvalid:
-            raise InvalidProperty(self.name, value)
-        return nvalue
-
-    def default(self, instance):
-        """Return the default value if this variable is not set."""
-        raise UnsetProperty(self.name)
-
-    def default_var(self, instance, name):
-        """Use another variable as default.
-
-        Used to implement default in subclasses.
-        """
-        try:
-            return getattr(instance, name)
-        except UnsetProperty, ex:
-            raise UnsetProperty(self.name, (ex.prop,) + ex.fallback)
-
-    def __set__(self, instance, value):
-        isvalid, nvalue = self.check(value)
-        if isvalid:
-            instance._props[self.name] = nvalue
-        else:
-            raise InvalidProperty(self.name, value)
-
-    def __delete__(self, instance):
-        del instance._props[self.name]
-
-    def check(self, value):
-        """Check whether a definition is valid.
-
-        Returns (isvalid, newvalue), where isvalid is a boolean
-        indicating whether the value is valid, and newvalue is a
-        modified version of the value to store.
-        """
-        return True, value
-
-    def combine(self, value, other):
-        """Combine two definitions into one definition.
-
-        By default, the new definition replaces the old one.
-        """
-        return other
-
-    def as_string(self, value):
-        return value
-
-class UEnvVar(EnvVar):
-    """Unicode environment variable."""
-    def check(self, value):
-        if isinstance(value, unicode):
-            return True, value
-        elif isinstance(value, str):
-            return True, unicode(value, 'ascii')
-        return False, None
-    def as_string(self, value):
-        return value.encode('utf-8')
-
-class Program(EnvVar):
+_PROG_CACHE = {}
+class Program(smartdict.Key):
     """Program path environment variable.
 
-    This can be set to a list or a string.  If set to a list, the PATH
-    is searched for each string until one is found.
+    This can be set to an iterable of strings, a single string, or a
+    VarRef.  If not set to a VarRef, the PATH is searched until an
+    executable is found, and the absolute path is returned.
     """
+    __slots__ = ['name']
+
+    def notfound(self, instance):
+        name = self.name
+        value = ' '.join(smartdict.Key.__get__(self, instance, None))
+        path = instance.getenv('PATH')
+        raise Exception('program not found: %s; search: %s; PATH: %s' %
+                        (name, value, path))
 
     def __get__(self, instance, owner):
         if instance is None:
             return self
+
+        # Get the value from the environment's cache
         try:
-            return instance._paths[self.name]
+            abspath = instance._paths[self.name]
         except KeyError:
             pass
-        value = EnvVar.__get__(self, instance, owner)
-        if isinstance(value, VarRef):
-            return value
-        abspath = instance.prog_path(*value)
+        else:
+            if abspath is None:
+                self.notfound(instance)
+            return abspath
+
+        # Fall back to the global cache
+        prognames = smartdict.Key.__get__(self, instance, owner)
+        if isinstance(prognames, VarRef):
+            return prognames
+
+        # Get the cache for this value of PATH / PATHEXT
+        path = instance.getenv('PATH')
+        paths = path.split(os.path.pathsep)
+        if platform.system() == 'Windows':
+            exts = self.getenv('PATHEXT')
+            pkey = (path, exts)
+            exts = exts.split(os.path.pathsep)
+            extset = frozenset(ext.lower() for ext in extlist)
+            def with_exts(name):
+                ext = os.path.splitext(prog)[1]
+                if ext and ext.lower() in extset:
+                    return [name]
+                else:
+                    return [name + ext for ext in exts]
+        else:
+            pkey = path
+            def with_exts(name):
+                return [name]
+        try:
+            pcache = _PROG_CACHE[pkey]
+        except KeyError:
+            pcache = {}
+            _PROG_CACHE[pkey] = pcache
+
+        # Get the cached absolute path
+        for progname in prognames:
+            try:
+                abspath = pcache[progname]
+            except KeyError:
+                abspath = None
+                fnames = with_exts(progname)
+                for path in paths:
+                    if not path:
+                        continue
+                    for fname in fnames:
+                        progpath = os.path.join(path, fname)
+                        if os.access(progpath, os.X_OK):
+                            abspath = progpath
+                            break
+                    else:
+                        continue
+                    break
+                pcache[progname] = abspath
+            if abspath is not None:
+                break
+
+        # Cache the result in the local cache
         instance._paths[self.name] = abspath
+
+        if abspath is None:
+            self.notfound(instance)
         return abspath
 
-    def check(self, value):
+    @staticmethod
+    def check(value):
         if isinstance(value, str):
-            return True, [value]
+            return (value,)
         elif isinstance(value, VarRef):
-            return True, value
+            return value
         else:
-            return True, list(value)
+            value = tuple(value)
+            for x in value:
+                if not isinstance(x, str):
+                    raise TypeError
+        return value
 
     def as_string(self, value):
         return ' '.join(value)
 
-class Flags(EnvVar):
+class Flags(smartdict.Key):
     """Program flags environment variable.
 
     These can be set from strings or iterables, but are always stored
-    internally as a list of strings.
+    internally as a tuple.
     """
+    __slots__ = ['name', '_default']
+
     def __init__(self, name, default=None):
-        EnvVar.__init__(self, name)
+        smartdict.Key.__init__(self, name)
         self._default = default
 
-    def check(self, value):
+    @staticmethod
+    def check(value):
         if isinstance(value, str):
-            return True, value.split()
-        elif isinstance(value, VarRef):
-            return True, [value]
-        nvalue = list(value)
-        for f in nvalue:
-            if isinstance(f, (str, Path, VarRef)):
+            value = tuple(value.split())
+        elif isinstance(value, (VarRef, Path)):
+            return (value,)
+        else:
+            value = tuple(value)
+        for flag in value:
+            if isinstance(flag, (str, Path, VarRef)):
                 continue
             elif isinstance(f, tuple):
                 for x in f:
                     if not isinstance(x, (str, Path, VarRef)):
-                        return False, None
-            else:
-                return False, None
-        return True, nvalue
+                        raise TypeError
+        return value
 
     def default(self, instance):
         if self._default is not None:
             return self.default_var(instance, self._default)
-        return []
+        return ()
 
     def combine(self, value, other):
         return value + other
@@ -201,160 +174,25 @@ class Flags(EnvVar):
     def as_string(self, value):
         return ' '.join(value)
 
-IS_TITLE = re.compile(r'^[-\w]+(?: [-\w]+)*$')
-IS_FILE = re.compile(r'^\w+$')
-IS_DOMAIN = re.compile(r'^[a-z0-9](?:[-a-z0-9]*[a-z0-9])?' 
-                       r'(?:\.[a-z0-9](?:[-a-z0-9]*[a-z0-9])?)*$')
+class BuildSettings(smartdict.SmartDict):
+    """Build settings smart dictionary.
 
-class Title(EnvVar):
-    """A title environment variable.
-
-    Must be a sequence of 'words' separated by individual spaces.
-    Words may contain alphanumeric characterss, hyphens, and
-    underscores.
+    These can only be set by the user.
     """
+    __slots__ = ['_props']
 
-    def __init__(self, name, default=None):
-        EnvVar.__init__(self, name)
-        self._default = default
+    VERBOSE = smartdict.BoolKey('VERBOSE', False)
+    CONFIG = smartdict.EnumKey(
+        'CONFIG', ['debug', 'release'], default='release')
 
-    def default(self, instance):
-        if self._default is not None:
-            return self.default_var(instance, self._default)
-        EnvVar.default(self, instance)
+class Environment(smartdict.SmartDict):
+    """Dictionary of build environment variables.
 
-    def check(self, value):
-        if IS_TITLE.match(value):
-            return True, value
-        return False, None
-
-class Filename(EnvVar):
-    """A filename environment variable.
-
-    Must be a sequence of alphanumeric characters and underscores.  No
-    hyphens are allowed.
-    """
-
-    def __init__(self, name, default=None):
-        EnvVar.__init__(self, name)
-        self._default = default
-
-    def default(self, instance):
-        if self._default is not None:
-            value = self.default_var(instance, self._default)
-            return re.sub('[-_ ]+', '_', value)
-        EnvVar.default(self, instance)
-
-    def check(self, value):
-        if IS_FILE.match(value):
-            return True, value
-        return False, None
-
-class PathVar(EnvVar):
-    """A path environment variable."""
-
-    def check(self, value):
-        try:
-            p = Path(value)
-        except ValueError:
-            return False, None
-        return True, p
-
-class DomainName(EnvVar):
-    """A domain name environment variable."""
-
-    def check(self, value):
-        if IS_DOMAIN.match(value):
-            return True, value
-        return False, None
-
-IS_VERSION = re.compile(r'^[-+.A-Za-z0-9]+$')
-class Version(EnvVar):
-    """A version number environment variable."""
-
-    def check(self, value):
-        if IS_VERSION.match(value):
-            return True, value
-        return False, None
-
-IS_HASH = re.compile(r'^[0-9a-f]+$')
-class Hash(EnvVar):
-    """A hash (e.g., git SHA1) environment variable"""
-
-    def check(self, value):
-        if IS_HASH.match(value):
-            return True, value
-        return False, None
-
-TRUE = frozenset(['1', 'true', 'yes', 'on'])
-FALSE = frozenset(['0', 'false', 'no', 'off'])
-
-class BoolVar(EnvVar):
-    """A boolean environment variable.
-
-    Any of the values 1, True, Yes, or On is interpreted as true.  0,
-    False, No, and Off are false.  Not case sensitive.
-    """
-
-    def __init__(self, name, default=None):
-        EnvVar.__init__(self, name)
-        self._default = default
-
-    def check(self, value):
-        if isinstance(value, str):
-            v = value.lower()
-            if v in TRUE:
-                return True, True
-            elif v in FALSE:
-                return True, False
-            else:
-                return False, None
-        elif isinstance(value, bool):
-            return True, value
-        else:
-            return False, None
-
-    def default(self, instance):
-        if self._default is not None:
-            return self._default
-        raise UnsetProperty(self.name)
-
-    def as_string(self, value):
-        return '1' if value else '0'
-
-class Enum(EnvVar):
-    """An enumeration variable.
-
-    Possible values are strings from a fixed list.
-    """
-
-    def __init__(self, name, vals, default=None):
-        EnvVar.__init__(self, name)
-        self._default = default
-        self._vals = frozenset(vals)
-
-    def check(self, value):
-        if not isinstance(value, str) or value not in self._vals:
-            return False, None
-        return True, value
-
-    def default(self, instance):
-        if self._default is not None:
-            return self._default
-        raise UnsetProperty(self.name)
-
-class Environment(object):
-    """A set of environment variables and their values.
-
-    Environment variables can be set as properties or as indexes.
-    When accessed as properties, default values will be substituted if
-    the variable is not set.  When accessed as an index, an exception
-    will be raised instead.
+    This also includes a dictionary, environ, which contains OS
+    environment variables.  The values in environ will be used for
+    executing subprocess and for finding programs.
     """
     __slots__ = ['_paths', 'environ', '_props']
-
-    VERBOSE = BoolVar('VERBOSE', False)
-    CONFIG  = Enum('CONFIG', ['debug', 'release'], default='release')
 
     CC  = Program('CC')
     CXX = Program('CXX')
@@ -362,7 +200,7 @@ class Environment(object):
     GIT = Program('GIT')
 
     CPPFLAGS  = Flags('CPPFLAGS')
-    CPPPATH   = Flags('CPPPATH')
+    CPPPATH   = smartdict.PathListKey('CPPPATH')
     CFLAGS    = Flags('CFLAGS')
     CXXFLAGS  = Flags('CXXFLAGS')
     CWARN     = Flags('CWARN')
@@ -371,101 +209,21 @@ class Environment(object):
     LIBS      = Flags('LIBS')
     ARCHS     = Flags('ARCHS')
 
-    PKG_NAME       = Title('PKG_NAME')
-    PKG_IDENT      = DomainName('PKG_IDENT')
-    PKG_FILENAME   = Filename('PKG_FILENAME', 'PKG_NAME')
-    PKG_URL        = EnvVar('PKG_URL')
-    PKG_EMAIL      = EnvVar('PKG_EMAIL')
-    PKG_COPYRIGHT  = UEnvVar('PKG_COPYRIGHT')
-    PKG_APPLE_CATEGORY = DomainName('PKG_APPLE_CATEGORY')
-    PKG_SG_VERSION   = Version('PKG_SG_VERSION')
-    PKG_SG_COMMIT    = Hash('PKG_SG_COMMIT')
-    PKG_APP_VERSION  = Version('PKG_APP_VERSION')
-    PKG_APP_COMMIT   = Hash('PKG_APP_COMMIT')
-
-    EXE_NAME     = Title('EXE_NAME', 'PKG_NAME')
-    EXE_MAC      = Title('EXE_MAC', 'EXE_NAME')
-    EXE_LINUX    = Filename('EXE_LINUX', 'EXE_NAME')
-    EXE_WINDOWS  = Title('EXE_WINDOWS', 'EXE_NAME')
-    EXE_MACICON  = Filename('EXE_MACICON')
-
     def __init__(self, *args, **kw):
-        self._paths = {}
+        smartdict.SmartDict.__init__(self, *args, **kw)
         self.environ = {}
-        self._props = {}
-        for k, v in kw.iteritems():
-            try:
-                var = Environment.__dict__[k]
-            except KeyError:
-                raise UnknownProperty(k)
-            if not isinstance(var, EnvVar):
-                raise UnknownProperty(k)
-            var.__set__(self, v)
-        if not args:
-            return
-        for arg in args:
-            if not isinstance(arg, Environment):
-                raise TypeError('argument is not an Environment')
-            self.environ.update(arg.environ)
-        props = dict(args[0]._props)
-        for env in args[1:] + (self,):
-            for k, v in env._props.iteritems():
-                try:
-                    x = props[k]
-                except KeyError:
-                    y = v
-                else:
-                    var = Environment.__dict__[k]
-                    y = var.combine(x, v)
-                props[k] = y
-        self._props = props
+        for env in args:
+            self.environ.update(env.environ)
+        self._paths = {}
 
-    def __getitem__(self, name):
-        return self._props[name]
-
-    def __setitem__(self, name, value):
-        try:
-            var = Environment.__dict__[name]
-        except KeyError:
-            raise UnknownProperty(name)
-        if not isinstance(var, EnvVar):
-            raise UnknownProperty(name)
-        var.__set__(self, value)
-
-    def __delitem__(self, name):
-        try:
-            var = Environment.__dict__[name]
-        except KeyError:
-            raise UnknownProperty(name)
-        if not isinstance(var, EnvVar):
-            raise UnknownProperty(name)
-        del self._props[name]
-
-    def override(self, env):
-        """Override variables with values from the other environment."""
-        if not isinstance(env, Environment):
-            raise TypeError
-        self._props.update(env._props)
-
-    def set(self, **kw):
-        """Set many variables at the same time."""
-        for k, v in kw.iteritems():
-            setattr(self, k, v)
-
-    def dump(self):
-        p = self._props
-        for k, v in sorted(p.iteritems(), key=lambda x: x[0]):
-            var = Environment.__dict__[k]
-            print k, '=', var.as_string(v)
-
-    def remove(self, key, flag):
+    def remove_flag(self, key, flag):
         """Remove all flags which match 'flag' in var."""
         try:
             var = Environment.__dict__[key]
         except KeyError:
-            raise UnknownProperty(name)
-        if not isinstance(var, EnvVar):
-            raise UnknownProperty(name)
+            raise smartdict.UnknownKey(name)
+        if not isinstance(var, smartdict.Key):
+            raise smartdict.UnknownKey(name)
         if not isinstance(var, Flags):
             raise Exception('not a flags variable: %s' % (key,))
         try:
@@ -478,38 +236,8 @@ class Environment(object):
         var.__set__(self, nval)
 
     def getenv(self, key):
+        """Get the given OS environment variable."""
         try:
             return self.environ[key]
         except KeyError:
             return os.environ[key]
- 
-    def prog_path(self, *progs):
-        """Find the absolute path to a program if it exists."""
-        paths = self.getenv('PATH').split(os.path.pathsep)
-        if platform.system() == 'Windows':
-            exts = self.getenv('PATHEXT').split(os.path.pathsep)
-            lexts = frozenset(ext.lower() for ext in exts)
-            def pnames(prog):
-                ext = os.path.splitext(prog)[1]
-                if ext and ext.lower() in lexts:
-                    yield prog
-                else:
-                    for ext in exts:
-                        yield prog + ext
-        else:
-            def pnames(prog):
-                yield prog
-        for prog in progs:
-            pnamel = list(pnames(prog))
-            for path in paths:
-                if not path:
-                    continue
-                for pname in pnamel:
-                    progpath = os.path.join(path, pname)
-                    if os.access(progpath, os.X_OK):
-                        return progpath
-        print >>sys.stderr, 'PATH:'
-        for path in paths:
-            if path:
-                print >>sys.stderr, '    ' + path
-        raise Exception('program not found: %s' % prog)

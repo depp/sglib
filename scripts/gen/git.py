@@ -6,7 +6,7 @@ import sys
 GOOD_VERSION = re.compile(r'^[0-9]+(?:\.[0-9]+)(?:-.+)?$')
 
 def git(env, path, *cmd):
-    return shell.getoutput([env.GIT] + list(cmd), cwd=path)
+    return shell.getoutput([env.GIT] + list(cmd), cwd=path.native)
 
 def get_version(env, path):
     """Get the version number from the Git repository.

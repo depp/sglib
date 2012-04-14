@@ -85,5 +85,5 @@ platform/macosx/GView.h MACOSX
 platform/macosx/GView.m MACOSX
 platform/macosx/GWindow.h MACOSX
 platform/macosx/GWindow.m MACOSX
-platform/sdl.c SDL
+# platform/sdl.c SDL
 platform/windows.c WINDOWS

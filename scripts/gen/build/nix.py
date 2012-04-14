@@ -20,6 +20,7 @@ def buildline(cmd, target, tag):
 class CC(target.CC):
     """Compile a C, C++, or Objective C file."""
     __slots__ = ['_dest', '_src', '_env', '_sourcetype']
+
     def commands(self):
         env = self._env
         if self._sourcetype in ('c', 'm'):
@@ -34,42 +35,45 @@ class CC(target.CC):
             assert False
         return [[cc, '-o', self._dest, '-c', self._src] +
                 [('-I', p) for p in env.CPPPATH] +
-                env.CPPFLAGS + warn + cflags]
+                list(env.CPPFLAGS) + list(warn) + list(cflags)]
 
 class LD(target.LD):
-    """Link an executable."""
-    __slots__ = ['_dest', '_src', '_env']
+    """Link an executable.
+
+    The 'types' parameter is an iterable of all the types of sources
+    included.  It is used to choose between gcc and g++ for linking.
+    """
+    __slots__ = ['_dest', '_src', '_env', '_types']
+
+    def __init__(self, dest, src, env, types):
+        target.LD.__init__(self, dest, src, env)
+        self._types = frozenset(types)
+
     def commands(self):
         env = self._env
-        cc = env.CXX
-        return [[cc] + env.LDFLAGS + ['-o', self._dest] +
-                self._src + env.LIBS]
+        if 'cxx' in self._types:
+            cc = env.CXX
+        else:
+            cc = env.CC
+        return [[cc] + list(env.LDFLAGS) + ['-o', self._dest] +
+                self._src + list(env.LIBS)]
 
 _DEFAULT_CFLAGS = {
     'debug': '-O0',
     'release': '-O2',
 }
 
-def get_user_env(env):
-    """Get the default user environment for a GCC-based build.
-
-    The input is the user-specified environment.  Values from that
-    environment will not be combined, but they will be examined.
-    """
-    config = env.CONFIG
-    try:
-        cflags = _DEFAULT_CFLAGS[config]
-    except KeyError:
-        raise ValueError('unknown configuration: %r' % (config,))
-    return Environment(
+def get_default_env(settings):
+    """Get the default environment for a GCC-based build."""
+    config_env = {
+        'debug': Environment(CFLAGS='-O0', CXXFLAGS='-O0'),
+        'release': Environment(CFLAGS='-O2', CXXFLAGS='-O2')
+    }
+    common_env = Environment(
         CC='gcc',
         CXX='g++',
-        CPPFLAGS='',
-        CFLAGS=cflags,
-        CXXFLAGS=cflags,
         CWARN='-Wall -Wextra -Wpointer-arith -Wno-sign-compare ' \
             '-Wwrite-strings -Wstrict-prototypes -Wmissing-prototypes',
         CXXWARN='-Wall -Wextra -Wpointer-arith -Wno-sign-compare',
-        LDFLAGS='',
-        LIBS='',
     )
+    return Environment(common_env, config_env[settings.CONFIG])
