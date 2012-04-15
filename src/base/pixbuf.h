@@ -7,7 +7,9 @@ extern "C" {
 struct sg_error;
 
 typedef enum {
-    /* 8-bit formats.  Y means grayscale.  */
+    /* 8-bit formats.  Y means grayscale.  All formats with alpha are
+       assumed to use premultiplied alpha unless otherwise
+       specified.  */
     SG_Y,
     SG_YA,
     SG_RGB,
@@ -71,6 +73,11 @@ sg_pixbuf_loadpng(struct sg_pixbuf *pbuf, const void *data, size_t len,
 int
 sg_pixbuf_loadjpeg(struct sg_pixbuf *pbuf, const void *data, size_t len,
                    struct sg_error **err);
+
+/* Convert the alpha channel in the pixel buffer to a premultiplied
+   alpha channel.  */
+void
+sg_pixbuf_premultiply_alpha(struct sg_pixbuf *pbuf);
 
 #ifdef __cplusplus
 }

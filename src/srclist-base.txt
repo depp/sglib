@@ -51,6 +51,7 @@ base/pixbuf.h
 base/pixbuf_libjpeg.c LIBJPEG LINUX
 base/pixbuf_libpng.c LIBPNG LINUX
 base/pixbuf_loadimage.c
+base/pixbuf_premultiply_alpha.c
 base/pixbuf_wincodec.cpp WINDOWS
 base/rand.c
 base/rand.h

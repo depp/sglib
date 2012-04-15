@@ -129,6 +129,8 @@ sg_pixbuf_loadpng(struct sg_pixbuf *pbuf, const void *data, size_t len,
     png_read_image(pngp, rowp);
     png_read_end(pngp, NULL);
 
+    sg_pixbuf_premultiply_alpha(pbuf);
+
     ret = 0;
     goto done;
 
