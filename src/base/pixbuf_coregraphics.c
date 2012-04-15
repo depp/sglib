@@ -56,7 +56,8 @@ imageToPixbuf(struct sg_pixbuf *pbuf, CGImageRef img, struct sg_error **err)
     assert(cxt);
     CGColorSpaceRelease(colorSpace);
 
-    CGContextSetRGBFillColor(cxt, 0.0f, 0.0f, 0.0f, 1.0f);
+    CGContextSetBlendMode(cxt, kCGBlendModeCopy);
+    CGContextSetRGBFillColor(cxt, 0.0f, 0.0f, 0.0f, 0.0f);
     if (w < pw)
         CGContextFillRect(cxt, CGRectMake(w, 0, pw - w, h));
     if (h < ph)
