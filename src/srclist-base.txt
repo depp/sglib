@@ -10,10 +10,10 @@ base/dict.c
 base/dict.h
 base/dispatch.h
 base/dispatch_common.c
-#base/dispatch_coop.c
 base/dispatch_impl.h
 base/dispatch_pthread.c LINUX MACOSX
 base/dispatch_sync.c
+base/dispatch_windows.c WINDOWS
 base/entry.h
 base/error.c
 base/error.h
@@ -63,6 +63,7 @@ base/sys.c
 base/texture.c
 base/texture.h
 base/thread_pthread.c LINUX MACOSX
+base/thread_windows.c WINDOWS
 base/thread.h
 base/type.c
 base/type_coretext.c MACOSX
