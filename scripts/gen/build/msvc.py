@@ -2,10 +2,12 @@ import gen.path
 import gen.build.target as target
 from gen.env import Environment
 import gen.atom as atom
+import gen.version as version
 import subprocess
 import os
 import sys
 import platform
+import re
 
 Path = gen.path.Path
 
@@ -31,19 +33,70 @@ def msvc_fail(why):
     print >>sys.stderr, 'Cannot find MSVC environment: %s' % why
     sys.exit(1)
 
+_SDK_LOC = None
+def get_sdk_loc():
+    """Get the location of the latest Windows SDK."""
+    global _SDK_LOC
+    if _SDK_LOC is not None:
+        return _SDK_LOC
+    is_version = re.compile(r'^v\d')
+    import _winreg
+    h = None
+    try:
+        key = r'SOFTWARE\Microsoft\Microsoft SDKs\Windows'
+        h = _winreg.OpenKey(_winreg.HKEY_LOCAL_MACHINE, key)
+        i = 0
+        versions = []
+        while True:
+            try:
+                name = _winreg.EnumKey(h, i)
+            except WindowsError:
+                break
+            if is_version.match(name):
+                versions.append(name)
+            i += 1
+        _winreg.CloseKey(h)
+        h = None
+        if not versions:
+            msvc_fail('cannot parse registry')
+        versions.sort(version.version_cmp)
+        latest = versions[-1]
+        h = _winreg.OpenKey(_winreg.HKEY_LOCAL_MACHINE, key + '\\' + latest)
+        i = 0
+        subkeys = {}
+        while True:
+            try:
+                skname, skvalue, sktype = _winreg.EnumValue(h, i)
+            except WindowsError:
+                break
+            subkeys[skname] = skvalue
+            i += 1
+        _winreg.CloseKey(h)
+        try:
+            loc = subkeys['InstallationFolder']
+        except KeyError:
+            msvc_fail('cannot parse registry')
+        _SDK_LOC = loc
+        return loc
+    finally:
+        if h is not None:
+            _winreg.CloseKey(h)
+
 def get_sdk_environ(target, config):
     """Return the environment variables for the Windows SDK."""
+    print
     dumpenv = False
     if dumpenv:
         print '==== Initial environment ===='
         for k, v in sorted(os.environ.items()):
             print k, '=', v
         print
-    p = getreg(r'SOFTWARE\Microsoft\Microsoft SDKs\Windows',
-               'CurrentInstallFolder')
-    if p is None:
+
+    # Find the location of the latest Microsoft SDK
+    sdk_loc = get_sdk_loc()
+    if sdk_loc is None:
         msvc_fail('Windows SDK is not installed')
-    p = os.path.join(p, 'Bin', 'SetEnv.Cmd')
+    setenv = os.path.join(sdk_loc, 'Bin', 'SetEnv.Cmd')
     if target not in ('x86', 'x64', 'ia64'):
         msvc_fail('target must be x86, x64, or ia64')
     if config not in ('debug', 'release'):
@@ -51,14 +104,14 @@ def get_sdk_environ(target, config):
     args = ' '.join(['/' + config, '/' + target, '/xp'])
     tag = 'TAG8306'
     # It seems that setenv gives an exit status of 1 normally
-    cmd = 'cmd.exe /c "%s" %s & echo %s && set' % (p, args, tag)
+    cmd = 'cmd.exe /c "%s" %s & echo %s && set' % (setenv, args, tag)
     proc = subprocess.Popen(cmd, stdout=subprocess.PIPE,
                             stderr=subprocess.PIPE)
     out, err = proc.communicate()
     if proc.returncode:
         sys.stderr.write(out)
         sys.stderr.write(err)
-        msvc_fail('vcvarsall.bat failed (return code=%d)' % proc.returncode)
+        msvc_fail('setenv.cmd failed (return code=%d)' % proc.returncode)
     lines = iter(out.splitlines())
     for line in lines:
         line = line.rstrip()
