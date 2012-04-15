@@ -69,7 +69,7 @@ struct sg_resource_type {
    names.  For example, the FAILED state may be used to prevent the
    resource manager from loading a resource if it depends on another
    resource already being loaded.  */
-typedef enum __attribute__((packed)) {
+typedef enum {
     /* Initial state for any resource where sg_resource_update has
        never been called.  The manager moves this to UNLOADED.  */
     SG_RSRC_INITIAL,
@@ -118,7 +118,7 @@ struct sg_resource {
     unsigned short refcount;
 
     /* Private to the resource manager.  */
-    unsigned char action;
+    unsigned short action;
 
     /* The current resource state.  This may be modified both by the
        resource manager and by user code, although user code may only
