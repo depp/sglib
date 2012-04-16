@@ -1,3 +1,4 @@
+from __future__ import with_statement
 import gen.build.target as target
 import gen.build.nix as nix
 import gen.atom as atom
@@ -5,6 +6,7 @@ from gen.env import Environment
 import gen.path as path
 import sys
 import platform
+import os
 
 Path = path.Path
 
@@ -216,17 +218,35 @@ class Plist(target.Commands):
     def name(self):
         return 'PLIST'
 
-class XcodeProject(target.StaticFile):
+class XcodeProject(target.Target):
     """Mac OS X: Create an Xcode project."""
     __slots__ = ['_dest', '_proj']
 
     def __init__(self, dest, proj):
-        target.StaticFile.__init__(self, dest)
+        self._dest = dest
         self._proj = proj
 
-    def write(self, f):
+    def input(self):
+        return iter(())
+
+    def output(self):
+        yield self._dest
+
+    def build(self, verbose):
+        print 'XCODE', self._dest.posix
+        d = self._dest
+        import shutil
+        path = d.native
+        if os.path.exists(path):
+            shutil.rmtree(path)
+        os.mkdir(path)
+        pp = os.path.join(path, 'project.pbxproj')
+        up = os.path.join(path, 'default.pbxuser')
         import gen.xcode.create
-        gen.xcode.create.write_project(self._proj, f)
+        with open(pp, 'wb') as pf:
+            with open(up, 'wb') as uf:
+                gen.xcode.create.write_project(self._proj, pf, uf)
+        return True
 
 ########################################################################
 
@@ -267,9 +287,8 @@ def add_targets(graph, proj, env, settings):
 
 def build_xcodeproj(graph, proj, env, settings):
     xp = Path(proj.info.PKG_FILENAME + '.xcodeproj')
-    pbx = Path(xp, 'project.pbxproj')
-    graph.add(XcodeProject(pbx, proj))
-    deps = [pbx]
+    graph.add(XcodeProject(xp, proj))
+    deps = [xp]
     deps.extend(graph.platform_built_sources(proj, 'MACOSX'))
     graph.add(target.DepTarget('xcode', deps))
     if platform.system() == 'Darwin':

@@ -1,6 +1,7 @@
 import gen.xcode.obj as obj
-import gen.path
+from gen.path import Path
 from gen.env import Environment
+import gen.info
 import gen.atom as atom
 import posixpath
 
@@ -144,6 +145,13 @@ class Target(object):
         x = obj.BuildFile(ref)
         phase.add(x)
 
+    def add_executable(self, e):
+        exes = self.target.executables
+        if exes is None:
+            self.target.executables = [e]
+        else:
+            exes.append(e)
+
 class Project(object):
     """Object for creating an Xcode project."""
     __slots__ = ['_groups', '_sources', 'project',
@@ -192,6 +200,7 @@ class Project(object):
         pname = name
         pfile = obj.FileRef(pname + '.app', root='BUILT_PRODUCTS_DIR',
                             etype='wrapper.application')
+        pfile.includeInIndex = 0
         t = obj.NativeTarget('com.apple.product-type.application', name)
         t.productName = pname
         t.productReference = pfile
@@ -202,11 +211,18 @@ class Project(object):
         self.project.targets.append(t)
         return x
 
-    def write(self, f):
+    def add_executable(self, e):
+        exes = self.project.executables
+        if exes is None:
+            self.project.executables = [e]
+        else:
+            exes.append(e)
+
+    def write(self, pf, uf):
         for x in self.project.allobjs():
             if isinstance(x, obj.Group):
                 x.children.sort()
-        self.project.write(f)
+        self.project.write(pf, uf)
 
 def projectConfig():
     base = {
@@ -253,8 +269,34 @@ def targetConfig(module, env):
     cr = obj.BuildConfiguration('Release', base, release)
     return obj.BuildConfigList([cd, cr], 'Release')
 
-def write_project(proj, f):
-    """Write a project as an Xcode project to the given file."""
+def write_arg1(arg):
+    if isinstance(arg, str):
+        return arg
+    elif isinstance(arg, Path):
+        if arg.posix == '.':
+            return '$(PROJECT_DIR)'
+        else:
+            return '$(PROJECT_DIR)/' + arg.posix
+    else:
+        raise TypeError('invalid argument type: %r' % (arg,))
+
+def write_arg(arg):
+    if isinstance(arg, (str, Path)):
+        return write_arg1(arg)
+    elif isinstance(arg, tuple):
+        a = ''
+        for i in arg:
+            a += write_arg1(i)
+        return a
+    else:
+        raise TypeError('invalid argument type: %r' % (arg,))
+
+def write_project(proj, pf, uf):
+    """Write a project as an Xcode project to the given files.
+
+    The first parameter is the project file, the second parameter
+    is the user defaults file.
+    """
 
     p = Project()
     for source in proj.sourcelist.sources():
@@ -264,6 +306,7 @@ def write_project(proj, f):
     def lookup(atom):
         return None
     atomenv = atom.AtomEnv(proj, lookup, Environment())
+    proj_cvars = proj.info.DEFAULT_CVARS
     for module in proj.targets():
         srcenv = atomenv.module_sources([module.atom], 'MACOSX')
         t = p.application_target(module.info.EXE_MAC)
@@ -277,4 +320,14 @@ def write_project(proj, f):
         t.target.buildConfigurationList = \
             targetConfig(module, srcenv.unionenv())
 
-    p.write(f)
+        # Create executable + default arguments
+        e = obj.Executable(module.info.EXE_MAC)
+        cvars = gen.info.CVars.combine(
+            proj_cvars, module.info.DEFAULT_CVARS)
+        for k, v in cvars:
+            e.argumentStrings.extend(('-' + k, write_arg(v)))
+            e.activeArgIndices.extend((True, True))
+        t.add_executable(e)
+        p.add_executable(e)
+
+    p.write(pf, uf)

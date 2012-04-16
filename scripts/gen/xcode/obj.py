@@ -1,5 +1,5 @@
 """Objects which are part of an Xcode project."""
-import gen.path
+import sys
 
 # Sort order for class ISAs
 ISAS = [
@@ -7,6 +7,7 @@ ISAS = [
     'PBXFileReference',
     'PBXFrameworksBuildPhase',
     'PBXGroup',
+    'PBXExecutable',
     'PBXNativeTarget',
     'PBXProject',
     'PBXResourcesBuildPhase',
@@ -29,6 +30,23 @@ class optional(object):
     def __repr__(self):
         return 'optional(%s)' % repr(self.what)
 
+def objemit(w, x, ids):
+    if isinstance(x, dict):
+        w.start_dict()
+        for k, v in x.iteritems():
+            w.write_key(k)
+            objemit(w, v, ids)
+        w.end_dict()
+    elif isinstance(x, list):
+        w.start_list()
+        for v in x:
+            objemit(w, v, ids)
+        w.end_list()
+    elif isinstance(x, XcodeObject):
+        w.write_object(ids[x])
+    else:
+        w.write_object(x)
+
 class XcodeObject(object):
     """Root Xcode object, abstract.
 
@@ -39,6 +57,10 @@ class XcodeObject(object):
     default 'xkeys' implementation uses 'attrs'.
 
     The 'isa' property should provide the isa for the object class.
+
+    The 'userobj' property indicates that the object is emitted in the
+    user file (default.pbxuser).  The 'projectobj' property indicates
+    that the object is emitted in the project file (project.pbxproj).
     """
 
     def compact(self):
@@ -54,17 +76,18 @@ class XcodeObject(object):
         if self in dest:
             return
         dest.add(self)
-        for k, v in self.xitems():
-            if isinstance(v, list):
-                for x in v:
-                    if isinstance(x, XcodeObject):
-                        x._allobjs(dest)
-            elif isinstance(v, dict):
-                for x in v.itervalues():
-                    if isinstance(x, XcodeObject):
-                        x._allobjs(dest)
-            elif isinstance(v, XcodeObject):
-                v._allobjs(dest)
+        for items in (self.xitems, self.uitems):
+            for k, v in items():
+                if isinstance(v, list):
+                    for x in v:
+                        if isinstance(x, XcodeObject):
+                            x._allobjs(dest)
+                elif isinstance(v, dict):
+                    for x in v.itervalues():
+                        if isinstance(x, XcodeObject):
+                            x._allobjs(dest)
+                elif isinstance(v, XcodeObject):
+                    v._allobjs(dest)
 
     def allobjs(self):
         """Get a set of all objects reachable from this object."""
@@ -72,16 +95,22 @@ class XcodeObject(object):
         self._allobjs(objs)
         return objs
 
-    def xitems(self):
-        """Iterate over all (key, value) pairs in the object.
+    def xkeys(self):
+        """Iterate over the project keys in the object.
 
-        This is used for serializing the object to the project file.
-        Objects are serialized as dictionaries.  The default
-        implementation uses the results of 'xkeys' and 'getattr'.
-        This will raise an exception if any key in 'xkeys' which is
-        not marked as optional has a None value.
+        These are the keys for the project.pbxproj file.
         """
-        for key in self.xkeys():
+        return iter(())
+
+    def ukeys(self):
+        """Iterate over the user keys in the object.
+
+        These are the keys for the default.pbxuser file.
+        """
+        return iter(())
+
+    def _gitems(self, keys):
+        for key in keys:
             if isinstance(key, optional):
                 key = key.what
                 isoptional = True
@@ -95,36 +124,47 @@ class XcodeObject(object):
             else:
                 yield key, val
 
-    def emit(self, w, ids):
-        """Write this object to a file.
+    def xitems(self):
+        """Iterate over all (key, value) pairs in the object.
+
+        This is used for serializing the object to the project file.
+        Objects are serialized as dictionaries.  The default
+        implementation uses the results of 'xkeys' and 'getattr'.
+        This will raise an exception if any key in 'xkeys' which is
+        not marked as optional has a None value.
+        """
+        return self._gitems(self.xkeys())
+
+    def uitems(self):
+        """As xitems, but for user keys and values."""
+        return self._gitems(self.ukeys())
+
+    def _gemit(self, w, ids, *itemlists):
+        w.write_key(ids[self])
+        w.start_dict(self.compact())
+        for itemlist in itemlists:
+            for key, val in itemlist:
+                w.write_key(key)
+                objemit(w, val, ids)
+        w.end_dict()
+
+    def xemit(self, w, ids):
+        """Write this object to a project.
 
         The w parameter is the plist writer object.  The ids parameter is a
         map from xcode objects to object IDs in the resulting plist, and must
         be constructed in advance.
         """
-        def objemit(x):
-            if isinstance(x, dict):
-                w.start_dict()
-                for k, v in x.iteritems():
-                    w.write_key(k)
-                    objemit(v)
-                w.end_dict()
-            elif isinstance(x, list):
-                w.start_list()
-                for v in x:
-                    objemit(v)
-                w.end_list()
-            elif isinstance(x, XcodeObject):
-                w.write_object(ids[x])
+        if self.projectobj:
+            self._gemit(w, ids, [('isa', self.isa)], self.xitems())
+
+    def uemit(self, w, ids):
+        """As xemit, but for the user file."""
+        if self.userobj:
+            if self.projectobj:
+                self._gemit(w, ids, self.uitems())
             else:
-                w.write_object(x)
-        w.write_key(ids[self])
-        w.start_dict(self.compact())
-        w.write_pair('isa', self.isa)
-        for key, val in self.xitems():
-            w.write_key(key)
-            objemit(val)
-        w.end_dict()
+                self._gemit(w, ids, [('isa', self.isa)], self.uitems())
 
 def relpath(p, x):
     # This function doesn't work for all inputs
@@ -201,6 +241,8 @@ class Group(PathObject):
     __slots__ = ['children', 'name', 'path', 'sourceTree']
     isa = const('PBXGroup')
     csort = const(0)
+    projectobj = const(True)
+    userobj = const(False)
 
     def __init__(self, path, root=None, name=None):
         PathObject.__init__(self, path, root=root, name=name)
@@ -232,6 +274,8 @@ class FileRef(PathObject):
                  'includeInIndex', 'name', 'path', 'sourceTree']
     isa = const('PBXFileReference')
     csort = const(0)
+    projectobj = const(True)
+    userobj = const(False)
 
     def __init__(self, path, root=None, name=None, etype=None, ltype=None):
         # etype -> explicit file type
@@ -274,6 +318,8 @@ class BuildFile(XcodeObject):
     """
     __slots__ = ['fileRef']
     isa = const('PBXBuildFile')
+    projectobj = const(True)
+    userobj = const(False)
 
     def __init__(self, f):
         self.fileRef = f
@@ -290,6 +336,8 @@ class BuildPhase(XcodeObject):
     Each build phase will consist of a collection of BuildFile objects,
     as well as some extra metadata.
     """
+    projectobj = const(True)
+    userobj = const(False)
 
     def __init__(self):
         self.files = []
@@ -311,7 +359,8 @@ class FrameworksBuildPhase(BuildPhase):
     Build files are frameworks and libraries to link into the
     executable.
     """
-    __slots__ = ['files', 'buildActionMask', 'runOnlyForDeploymentPostprocessing']
+    __slots__ = ['files', 'buildActionMask',
+                 'runOnlyForDeploymentPostprocessing']
     isa = const('PBXFrameworksBuildPhase')
 
 class ResourcesBuildPhase(BuildPhase):
@@ -319,7 +368,8 @@ class ResourcesBuildPhase(BuildPhase):
 
     Build files are resources to copy into the application.
     """
-    __slots__ = ['files', 'buildActionMask', 'runOnlyForDeploymentPostprocessing']
+    __slots__ = ['files', 'buildActionMask',
+                 'runOnlyForDeploymentPostprocessing']
     isa = const('PBXResourcesBuildPhase')
 
 class SourcesBuildPhase(BuildPhase):
@@ -327,7 +377,8 @@ class SourcesBuildPhase(BuildPhase):
 
     Build files are source code files, not including headers.
     """
-    __slots__ = ['files', 'buildActionMask', 'runOnlyForDeploymentPostprocessing']
+    __slots__ = ['files', 'buildActionMask',
+                 'runOnlyForDeploymentPostprocessing']
     isa = const('PBXSourcesBuildPhase')
 
 class ShellScriptBuildPhase(BuildPhase):
@@ -364,8 +415,10 @@ class NativeTarget(XcodeObject):
     """Target which builds an executable."""
     __slots__ = ['buildConfigurationList', 'buildPhases', 'buildRules',
                  'dependencies', 'name', 'productName', 'productReference',
-                 'productType']
+                 'productType', 'executables']
     isa = const('PBXNativeTarget')
+    projectobj = const(True)
+    userobj = const(True)
 
     def __init__(self, ttype, name):
         self.buildConfigurationList = None # Object
@@ -376,6 +429,7 @@ class NativeTarget(XcodeObject):
         self.productName = None
         self.productReference = None
         self.productType = ttype
+        self.executables = None
 
     def xkeys(self):
         return iter((
@@ -384,11 +438,18 @@ class NativeTarget(XcodeObject):
             'productName', 'productReference', 'productType'
         ))
 
+    def ukeys(self):
+        return iter((
+            optional('executables'),
+        ))
+
 class BuildConfigList(XcodeObject):
     """List of build configurations (e.g., debug, release)."""
     __slots__ = ['buildConfigurations', 'defaultConfigurationIsVisible',
                  'defaultConfigurationName']
     isa = const('XCConfigurationList')
+    projectobj = const(True)
+    userobj = const(False)
 
     def __init__(self, items, default=None):
         self.buildConfigurations = list(items)
@@ -407,7 +468,10 @@ class BuildConfiguration(XcodeObject):
     This is basically a dictionary of values.  It can be used as a
     dictionary.
     """
+    __slots__ = ['buildSettings', 'name']
     isa = const('XCBuildConfiguration')
+    projectobj = const(True)
+    userobj = const(False)
 
     def __init__(self, name, *init):
         s = {}
@@ -444,6 +508,42 @@ class BuildConfiguration(XcodeObject):
     def values(self):
         return self.buildSettings.values()
 
+class Executable(XcodeObject):
+    """Information about an executable.
+
+    This only appears in the user file.
+    """
+    EKEYS = [
+        'activeArgIndices',
+        'argumentStrings',
+        #'autoAttachOnCrash',
+        #'breakpointsEnabled',
+        #'configStateDict',
+        #'customDataFormattersEnabled',
+        #'debuggerPlugin',
+        #'disassemblyDisplayState',
+        #'dylibVariantSuffix',
+        #'enableDebugStr',
+        #'environmentEntries',
+        #'executableSystemSymbolLevel',
+        #'executableUserSymbolLevel',
+        #'libgmallocEnabled',
+        'name',
+        #'sourceDirectories',
+    ]
+    __slots__ = EKEYS
+    isa = const('PBXExecutable')
+    projectobj = const(False)
+    userobj = const(True)
+
+    def __init__(self, name):
+        self.activeArgIndices = []
+        self.argumentStrings = []
+        self.name = name
+
+    def ukeys(self):
+        return iter(Executable.EKEYS)
+
 class Project(XcodeObject):
     """An Xcode project object.
     
@@ -451,8 +551,11 @@ class Project(XcodeObject):
     """
     __slots__ = ['buildConfigurationList', 'compatibilityVersion',
                  'hasScannedForEncodings', 'mainGroup', 'productRefGroup',
-                 'projectDirPath', 'projectRoot', 'targets']
+                 'projectDirPath', 'projectRoot', 'targets',
+                 'executables']
     isa = const('PBXProject')
+    projectobj = const(True)
+    userobj = const(True)
 
     def __init__(self):
         self.buildConfigurationList = None
@@ -463,6 +566,7 @@ class Project(XcodeObject):
         self.projectDirPath = ''
         self.projectRoot = ''
         self.targets = []
+        self.executables = None
 
     def xkeys(self):
         return iter((
@@ -471,8 +575,17 @@ class Project(XcodeObject):
             'projectDirPath', 'projectRoot', 'targets',
         ))
 
-    def write(self, f):
-        """Write this project to the given file."""
+    def ukeys(self):
+        return iter((
+            optional('executables'),
+        ))
+
+    def write(self, pf, uf):
+        """Write this project to the given files.
+
+        The first file is the project file, the second file is the user
+        defaults file.
+        """
         objs = self.allobjs()
 
         # Group objects in the output by isa
@@ -496,6 +609,7 @@ class Project(XcodeObject):
             try:
                 return isasort[isa]
             except KeyError:
+                print >>sys.stderr, 'warning: unknown isa %s' % (isa,)
                 return '999:' + isa
         groups.sort(key=getidx)
 
@@ -512,7 +626,8 @@ class Project(XcodeObject):
 
         # Write all objects
         import gen.plist
-        w = gen.plist.Writer(f)
+
+        w = gen.plist.Writer(pf)
         w.start_dict()
         w.write_pair('archiveVersion', 1)
         w.write_pair('classes', {})
@@ -522,7 +637,15 @@ class Project(XcodeObject):
         for groupname, groupobjs in groups:
             if groupobjs:
                 for obj in groupobjs:
-                    obj.emit(w, ids)
+                    obj.xemit(w, ids)
         w.end_dict()
         w.write_pair('rootObject', ids[self])
+        w.end_dict()
+
+        w = gen.plist.Writer(uf)
+        w.start_dict()
+        for groupname, groupobjs in groups:
+            if groupobjs:
+                for obj in groupobjs:
+                    obj.uemit(w, ids)
         w.end_dict()
