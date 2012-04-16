@@ -65,7 +65,7 @@ class InfoPlist(target.StaticFile):
             u'CFBundleSignature': u'????',
             u'CFBundleVersion':
                 unicode(pinfo.PKG_APP_VERSION, 'ascii'),
-            u'LSApplicationCategory': category,
+            u'LSApplicationCategoryType': category,
             # LSArchicecturePriority
             # LSFileQuarantineEnabled
             u'LSMinimumSystemVersion': u'10.5.0',
