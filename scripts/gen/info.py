@@ -43,7 +43,7 @@ class Title(smartdict.Key):
     def default(self, instance):
         if self._default is not None:
             return self.default_var(instance, self._default)
-        smartdict.Key.default(self, instance)
+        return smartdict.Key.default(self, instance)
 
     @staticmethod
     def check(value):
@@ -70,7 +70,7 @@ class Filename(smartdict.Key):
         if self._default is not None:
             value = self.default_var(instance, self._default)
             return re.sub('[^-A-Za-z0-9]+', '_', value)
-        smartdict.Key.default(self, instance)
+        return smartdict.Key.default(self, instance)
 
     @staticmethod
     def check(value):
