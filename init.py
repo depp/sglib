@@ -15,6 +15,7 @@ p.info.set(
     PKG_COPYRIGHT = u'Copyright \xa9 2011-2012 Dietrich Epp',
     DEFAULT_CVARS = [
         ('log.level.root', 'debug'),
+        ('path.data-path', Path('data')),
     ]
 )
 
@@ -22,9 +23,6 @@ p.add_module(Executable(
     'IMAGE', 'Image Test executable',
     reqs = 'SGLIB',
     EXE_NAME = 'Image Test',
-    DEFAULT_CVARS = [
-        ('path.data-path', Path('test/image/data')),
-    ]
 ))
 
 p.add_sourcelist_str('SGLib Tests', '.', """\

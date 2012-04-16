@@ -4,6 +4,7 @@
 #include <assert.h>
 #include <stddef.h>
 #include <stdio.h>
+#include <string.h>
 
 enum {
     PNG_I4,
@@ -58,8 +59,11 @@ sg_game_init(void)
 {
     int i;
     struct sg_error *err = NULL;
+    char buf[24];
     for (i = 0; i < NUMTEX; ++i) {
-        g_images[i] = sg_texture_image_new(IMAGE_NAMES[i], &err);
+        strcpy(buf, "imgtest/");
+        strcat(buf, IMAGE_NAMES[i]);
+        g_images[i] = sg_texture_image_new(buf, &err);
         assert(g_images[i]);
     }
 }
