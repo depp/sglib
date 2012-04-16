@@ -53,6 +53,13 @@ class Title(smartdict.Key):
             raise ValueError('invalid title')
         return value
 
+_FILENAME_INVALID_CHAR = re.compile('[^-A-Za-z0-9]+')
+def make_filename(x):
+    y = _FILENAME_INVALID_CHAR.sub('_', x)
+    if not is_filename(y):
+        raise ValueError('cannot change %s into filename' % (x,))
+    return y
+
 class Filename(smartdict.Key):
     """A filename environment variable.
 
@@ -69,7 +76,7 @@ class Filename(smartdict.Key):
     def default(self, instance):
         if self._default is not None:
             value = self.default_var(instance, self._default)
-            return re.sub('[^-A-Za-z0-9]+', '_', value)
+            return make_filename(value)
         return smartdict.Key.default(self, instance)
 
     @staticmethod

@@ -3,6 +3,7 @@ import gen.build.target as target
 from gen.env import Environment
 import gen.atom as atom
 import gen.version as version
+import gen.msvc as msvc
 import subprocess
 import os
 import sys
@@ -190,8 +191,30 @@ class LD(target.LD):
 def add_sources(graph, proj, env, settings):
     pass
 
+class VSFiles(target.Target):
+    """Target for creating visual studio files."""
+    __slots__ = ['_proj']
+
+    def __init__(self, proj):
+        self._proj = proj
+
+    def input(self):
+        return iter(())
+
+    def output(self):
+        return msvc.files_msvc(self._proj)
+
+    def build(self, verbose):
+        msvc.write_msvc(self._proj)
+        return True
+
 def add_targets(graph, proj, env, settings):
+    deps = list(msvc.files_msvc(proj))
+    deps.extend(graph.platform_built_sources(proj, 'WINDOWS'))
+    graph.add(VSFiles(proj))
+    graph.add(target.DepTarget('msvc', deps))
     if platform.system() == 'Windows':
+        graph.add(target.DepTarget('default', ['msvc']))
         build_windows(graph, proj, env, settings)
 
 def windows_env(env, settings):

@@ -59,7 +59,7 @@ class Tarball(target.Target):
 def add_targets(graph, proj, env, settings):
     if platform.system() in ('Linux', 'Darwin'):
         source_targets = graph.closure(['built-sources'])
-        all_targets = graph.closure(['gmake', 'xcode'])
+        all_targets = graph.closure(['gmake', 'xcode', 'msvc'])
         paths = set()
         for t in all_targets - source_targets:
             for x in t.distinput():
