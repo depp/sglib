@@ -1,6 +1,7 @@
 from gen.path import Path
 import gen.smartdict as smartdict
 import re
+import gen.env as env
 
 _IS_TITLE = re.compile(r'^[-\w]+(?: [-\w]+)*$')
 def is_title(x):
@@ -22,6 +23,10 @@ def is_version(x):
 _IS_HASH = re.compile(r'^[0-9a-f]+$')
 def is_hash(x):
     return bool(_IS_HASH.match(x))
+
+_IS_CVAR = re.compile(r'^[-_A-Za-z0-9]+(?:\.[-_A-Za-z0-9]+)+')
+def is_cvar(x):
+    return bool(_IS_CVAR.match(x))
 
 class Title(smartdict.Key):
     """A title environment variable.
@@ -105,6 +110,58 @@ class Hash(smartdict.Key):
             raise ValueError('invalid hash')
         return value
 
+class CVars(smartdict.Key):
+    """A set of configuration variables for SGLib.
+
+    When combined, later definitions of the same cvar override
+    earlier definitions.
+    """
+
+    @staticmethod
+    def check(value):
+        value = list(value)
+        value.reverse()
+        nvalue = []
+        keys = set()
+        for v in value:
+            if not isinstance(v, tuple):
+                raise TypeError('must be a tuple: %r' % (v,))
+            if not v:
+                raise ValueError('empty key/value')
+            k = v[0]
+            v = v[1:]
+            if not is_cvar(k):
+                raise ValueError('not a cvar name: %r' % (k,))
+            v = env.Flag.check(v)
+            if k not in keys:
+                keys.add(k)
+                nvalue.append((k, v))
+        nvalue.reverse()
+        return tuple(nvalue)
+
+    def default(self, instance):
+        return ()
+
+    @staticmethod
+    def as_string(value):
+        return '; '.join('%s=%s' % (k, env.Flag.as_string(v))
+                         for (k, v) in value)
+
+    @staticmethod
+    def combine(value, other):
+        if not value:
+            return other
+        if not other:
+            return value
+        nvalue = list(other)
+        nvalue.reverse()
+        keys = set(k for (k, v) in nvalue)
+        for v in reversed(value):
+            if v[0] not in keys:
+                nvalue.append(v)
+        nvalue.reverse()
+        return tuple(nvalue)
+
 class ProjectInfo(smartdict.SmartDict):
     """Project info dictionary."""
     __slots__ = ['_props']
@@ -121,6 +178,9 @@ class ProjectInfo(smartdict.SmartDict):
     PKG_APP_VERSION  = Version('PKG_APP_VERSION')
     PKG_APP_COMMIT   = Hash('PKG_APP_COMMIT')
 
+    # Default config vars for running all executables
+    DEFAULT_CVARS = CVars('DEFAULT_CVARS')
+
 class ExecInfo(smartdict.SmartDict):
     """Executable info dictionary."""
     __slots__ = ['_props']
@@ -132,3 +192,6 @@ class ExecInfo(smartdict.SmartDict):
     EXE_MACICON  = Filename('EXE_MACICON')
 
     EXE_APPLE_CATEGORY = DomainName('PKG_APPLE_CATEGORY')
+
+    # Default config vars for running the executable
+    DEFAULT_CVARS = CVars('DEFAULT_CVARS')
