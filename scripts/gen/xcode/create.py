@@ -201,6 +201,7 @@ class Project(object):
         pfile = obj.FileRef(pname + '.app', root='BUILT_PRODUCTS_DIR',
                             etype='wrapper.application')
         pfile.includeInIndex = 0
+        self.project.productRefGroup.add(pfile)
         t = obj.NativeTarget('com.apple.product-type.application', name)
         t.productName = pname
         t.productReference = pfile
