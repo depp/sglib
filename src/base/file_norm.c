@@ -149,5 +149,6 @@ sg_path_norm(char *buf, const char *path, size_t pathlen,
         }
     } while (co);
 
+    *op = '\0';
     return (int) (op - buf);
 }
