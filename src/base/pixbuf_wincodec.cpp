@@ -54,14 +54,23 @@ sg_pixbuf_loadwincodec(struct sg_pixbuf *pbuf, const void *data, size_t len,
 
     switch (chanCount) {
     case 1:
-        pfmt = SG_Y;
-        targetFormat = GUID_WICPixelFormat8bppGray;
+        if (pixelFormat == GUID_WICPixelFormat1bppIndexed ||
+            pixelFormat == GUID_WICPixelFormat2bppIndexed ||
+            pixelFormat == GUID_WICPixelFormat4bppIndexed ||
+            pixelFormat == GUID_WICPixelFormat8bppIndexed)
+        {
+            pfmt = SG_RGBA;
+            targetFormat = GUID_WICPixelFormat32bppPRGBA;
+        } else {
+            pfmt = SG_Y;
+            targetFormat = GUID_WICPixelFormat8bppGray;
+        }
         break;
 
     case 3:
     case 4:
         pfmt = SG_RGBA;
-        targetFormat = GUID_WICPixelFormat32bppRGBA;
+        targetFormat = GUID_WICPixelFormat32bppPRGBA;
         break;
 
     default:
