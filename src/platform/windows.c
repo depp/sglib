@@ -258,39 +258,39 @@ static LRESULT CALLBACK wndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
         return 0;
 
     case WM_KEYDOWN:
-        handleKey(wParam, SG_EVENT_KDOWN);
+        handleKey((int) wParam, SG_EVENT_KDOWN);
         return 0;
 
     case WM_KEYUP:
-        handleKey(wParam, SG_EVENT_KUP);
+        handleKey((int) wParam, SG_EVENT_KUP);
         return 0;
 
     case WM_LBUTTONDOWN:
-        handleMouse(lParam, SG_EVENT_MDOWN, SG_BUTTON_LEFT);
+        handleMouse((int) lParam, SG_EVENT_MDOWN, SG_BUTTON_LEFT);
         return 0;
 
     case WM_RBUTTONDOWN:
-        handleMouse(lParam, SG_EVENT_MDOWN, SG_BUTTON_RIGHT);
+        handleMouse((int) lParam, SG_EVENT_MDOWN, SG_BUTTON_RIGHT);
         return 0;
 
     case WM_MBUTTONDOWN:
-        handleMouse(lParam, SG_EVENT_MDOWN, SG_BUTTON_MIDDLE);
+        handleMouse((int) lParam, SG_EVENT_MDOWN, SG_BUTTON_MIDDLE);
         return 0;
 
     case WM_LBUTTONUP:
-        handleMouse(lParam, SG_EVENT_MUP, SG_BUTTON_LEFT);
+        handleMouse((int) lParam, SG_EVENT_MUP, SG_BUTTON_LEFT);
         return 0;
 
     case WM_RBUTTONUP:
-        handleMouse(lParam, SG_EVENT_MUP, SG_BUTTON_RIGHT);
+        handleMouse((int) lParam, SG_EVENT_MUP, SG_BUTTON_RIGHT);
         return 0;
 
     case WM_MBUTTONUP:
-        handleMouse(lParam, SG_EVENT_MUP, SG_BUTTON_MIDDLE);
+        handleMouse((int) lParam, SG_EVENT_MUP, SG_BUTTON_MIDDLE);
         return 0;
 
     case WM_MOUSEMOVE:
-        handleMouse(lParam, SG_EVENT_MMOVE, -1);
+        handleMouse((int) lParam, SG_EVENT_MMOVE, -1);
         return 0;
 
     case WM_SIZE:
@@ -339,13 +339,14 @@ cmdline_next(struct cmdline *c)
 {
     wchar_t *warg;
     size_t wlen;
-    int r;
-    size_t len;
+    int r, len;
     if (c->idx >= c->argc)
         return NULL;
     warg = c->wargv[c->idx++];
     wlen = wcslen(warg);
-    r = WideCharToMultiByte(CP_UTF8, 0, warg, wlen, NULL, 0, NULL, NULL);
+    if (wlen > INT_MAX)
+        return NULL;
+    r = WideCharToMultiByte(CP_UTF8, 0, warg, (int) wlen, NULL, 0, NULL, NULL);
     if (!r)
         abort();
     len = r;
@@ -359,7 +360,7 @@ cmdline_next(struct cmdline *c)
         if (!c->arg)
             abort();
     }
-    r = WideCharToMultiByte(CP_UTF8, 0, warg, wlen, c->arg, c->alloc, NULL, NULL);
+    r = WideCharToMultiByte(CP_UTF8, 0, warg, (int) wlen, c->arg, len, NULL, NULL);
     if (!r)
         abort();
     c->arg[len] = '\0';

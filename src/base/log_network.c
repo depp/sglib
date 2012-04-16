@@ -63,7 +63,7 @@ sg_log_network_msg(struct sg_log_listener *llp, struct sg_log_msg *msg)
 
     pos = 0;
     while (pos < len) {
-        r = send(sock, buf + pos, len - pos, 0);
+        r = send(sock, buf + pos, (int) (len - pos), 0);
         if (r < 0)
             goto error_errno;
         pos += r;
@@ -111,7 +111,7 @@ sg_log_network_init(void)
     struct sg_addr addr;
     char *addrname = NULL;
     int r;
-    int sock = NO_SOCKET;
+    SOCKET sock = NO_SOCKET;
 
     r = sg_cvar_gets("log", "netaddr", &addrstr);
     if (!r) return;

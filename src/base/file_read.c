@@ -20,7 +20,7 @@ sg_file_readall(struct sg_file *f, struct sg_buffer *fbuf, size_t maxsize)
         flen = f->length(f);
         if (flen < 0)
             return -1;
-        if (flen > maxsize)
+        if ((uint64_t) flen > maxsize)
             goto toobig;
         len = (size_t) flen + 1;
     } else {

@@ -7,7 +7,7 @@ unsigned
 murmur_hash(void const *data, size_t len, unsigned seed)
 {
     const unsigned char *p = data;
-    unsigned m = 0x5bd1e995, h = seed ^ len, k;
+    unsigned m = 0x5bd1e995u, h = seed ^ (unsigned) len, k;
     int r = 24;
     while (len >= 4) {
         k = *(unsigned *)data;

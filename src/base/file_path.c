@@ -93,10 +93,10 @@ sg_file_open(const char *path, size_t pathlen, int flags,
         extq = extp;
         extp = strchr(extp, ':');
         if (extp) {
-            extlen = extp - extq;
+            extlen = (unsigned) (extp - extq);
             extp++;
         } else {
-            extlen = strlen(extq);
+            extlen = (unsigned) strlen(extq);
         }
         if (nexts == MAX_EXTENSIONS) {
             sg_logs(sg_logger_get(NULL), LOG_ERROR,
@@ -213,12 +213,12 @@ sg_path_add(struct sg_paths *p, const char *path, size_t len, int flags)
     }
     pos = p->acount;
     if (npath.len > p->amaxlen)
-        p->amaxlen = npath.len;
+        p->amaxlen = (unsigned) npath.len;
     p->acount += 1;
     if (flags & SG_PATH_WRITABLE) {
         pos = p->wcount;
         if (npath.len > p->wmaxlen)
-            p->wmaxlen = npath.len;
+            p->wmaxlen = (unsigned) npath.len;
         p->wcount += 1;
     }
     memmove(p->a + pos + 1, p->a + pos,

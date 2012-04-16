@@ -30,7 +30,7 @@ sg_pixbuf_loadwincodec(struct sg_pixbuf *pbuf, const void *data, size_t len,
     hr = fac->CreateStream(&stream);
     if (hr != S_OK)
         goto failed;
-    hr = stream->InitializeFromMemory((BYTE *) data, len);
+    hr = stream->InitializeFromMemory((BYTE *) data, (DWORD) len);
     if (hr != S_OK)
         goto failed;
     hr = fac->CreateDecoderFromStream(stream, NULL, WICDecodeMetadataCacheOnDemand, &decoder);

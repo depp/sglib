@@ -11,7 +11,7 @@
 static unsigned
 round_up_pow2(unsigned x)
 {
-    size_t a = x - 1;
+    unsigned a = x - 1;
     a |= a >> 1;
     a |= a >> 2;
     a |= a >> 4;
@@ -133,7 +133,7 @@ void
 dict_erase(struct dict *d, struct dict_entry *e)
 {
     struct dict_entry *es = d->contents;
-    unsigned epos = e - d->contents, ppos, pos, n = d->capacity;
+    unsigned epos = (unsigned) (e - d->contents), ppos, pos, n = d->capacity;
     assert(epos < n);
     for (pos = epos + 1; ; ++pos) {
         pos = pos & (n - 1);

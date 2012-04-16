@@ -70,7 +70,7 @@ sg_net_inet_pton(int af, const char *src, void *dest)
 static const char * WSAAPI
 sg_net_inet_ntop(int af, const void *src, char *dest, size_t len)
 {
-    DWORD slen = len;
+    DWORD slen = (DWORD) len;
     int r;
     union {
         struct sockaddr addr;

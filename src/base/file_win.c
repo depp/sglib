@@ -23,7 +23,7 @@ sg_file_w_read(struct sg_file *f, void *buf, size_t amt)
 {
     struct sg_file_w *w = (struct sg_file_w *) f;
     DWORD ramt;
-    if (ReadFile(w->hdl, buf, amt > INT_MAX ? INT_MAX : amt, &ramt, NULL)) {
+    if (ReadFile(w->hdl, buf, amt > INT_MAX ? INT_MAX : (DWORD) amt, &ramt, NULL)) {
         return ramt;
     } else {
         sg_error_win32(&w->h.err, GetLastError());
@@ -36,7 +36,7 @@ sg_file_w_write(struct sg_file *f, const void *buf, size_t amt)
 {
     struct sg_file_w *w = (struct sg_file_w *) f;
     DWORD ramt;
-    if (WriteFile(w->hdl, buf, amt > INT_MAX ? INT_MAX : amt, &ramt, NULL)) {
+    if (WriteFile(w->hdl, buf, amt > INT_MAX ? INT_MAX : (DWORD) amt, &ramt, NULL)) {
         return ramt;
     } else {
         sg_error_win32(&w->h.err, GetLastError());
@@ -142,10 +142,13 @@ sg_path_getdir(pchar **abspath, size_t *abslen,
 {
     /* Relative, absolute, executable, and working directory path.  */
     wchar_t *rpath = NULL, *apath = NULL, *epath = NULL, *wpath = NULL;
-    size_t rlen, alen, elen, wlen;
+    int rlen, alen, elen, wlen;
     int r, ret;
     DWORD dr;
     BOOL br;
+
+    if (rellen > INT_MAX)
+        return 0;
 
     /* FIXME: log errors / warnings */
     if (!rellen)
@@ -154,14 +157,14 @@ sg_path_getdir(pchar **abspath, size_t *abslen,
         return 0;
 
     /* Convert relative path to Unicode.  */
-    r = MultiByteToWideChar(CP_UTF8, 0, relpath, rellen, NULL, 0);
+    r = MultiByteToWideChar(CP_UTF8, 0, relpath, (int) rellen, NULL, 0);
     if (!r)
         goto error;
     rlen = r;
     rpath = malloc(sizeof(wchar_t) * (rlen + 2));
     if (!rpath)
         goto nomem;
-    r = MultiByteToWideChar(CP_UTF8, 0, relpath, rellen, rpath, rlen);
+    r = MultiByteToWideChar(CP_UTF8, 0, relpath, (int) rellen, rpath, rlen);
     if (!r)
         goto error;
 
@@ -183,7 +186,7 @@ sg_path_getdir(pchar **abspath, size_t *abslen,
             dr = GetModuleFileNameW(NULL, epath, elen);
             if (!dr)
                 goto error;
-            if (dr < elen) {
+            if (dr < (DWORD) elen) {
                 elen = dr;
                 break;
             }

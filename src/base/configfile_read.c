@@ -91,7 +91,7 @@ section:
     ptr++;
     while (is_ident(*ptr) || *ptr == '.')
         ptr++;
-    slen = ptr - sptr;
+    slen = (unsigned) (ptr - sptr);
     while (is_white(*ptr))
         ptr++;
     if (*ptr != ']') {
@@ -114,7 +114,7 @@ variable:
     ptr++;
     while (is_ident(*ptr) || *ptr == '.')
         ptr++;
-    nlen = ptr - nptr;
+    nlen = (unsigned) (ptr - nptr);
     while (is_white(*ptr))
         ptr++;
     if (*ptr != '=') {
@@ -142,13 +142,13 @@ variable:
                 }
                 ptr++;
             }
-            vlen = ptr - vptr;
+            vlen = (unsigned) (ptr - vptr);
             ptr++;
         } else {
             vptr = ptr;
             while (is_value(*ptr) && *ptr != ';' && *ptr != '#')
                 ptr++;
-            vlen = ptr - vptr;
+            vlen = (unsigned) (ptr - vptr);
             while (vlen && is_white(ptr[vlen - 1]))
                 vlen--;
         }

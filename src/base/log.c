@@ -122,7 +122,7 @@ sg_logger_get(const char *name)
     }
     off = 0;
     while (1) {
-        q = memchr(name + off, len - off, '.');
+        q = memchr(name + off, '.', len - off);
         clen = q ? (size_t) (q - (name + off)) : (len - off);
         for (np = lp->child; np; np = np->next)
             if (!memcmp(np->name + off, name + off, clen))
@@ -163,7 +163,7 @@ sg_dologmem(struct sg_logger *logger, sg_log_level_t level,
     else if ((int) level > 3)
         level = 3;
     levelname = SG_LOGLEVEL[(int) level];
-    levellen = strlen(levelname);
+    levellen = (int) strlen(levelname);
 
     m.date = date;
     m.datelen = datelen;
