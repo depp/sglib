@@ -99,7 +99,7 @@ sg_game_draw(int x, int y, int width, int height, unsigned msec)
 {
     int ix, iy, t;
     float x0, x1, y0, y1, u0, u1, v0, v1, s;
-    float xoff, yoff;
+    float xoff, yoff, mod, mod2;
 
     glClear(GL_COLOR_BUFFER_BIT);
     glViewport(x, y, width, height);
@@ -112,7 +112,9 @@ sg_game_draw(int x, int y, int width, int height, unsigned msec)
     glPushAttrib(GL_ENABLE_BIT);
     glEnable(GL_TEXTURE_2D);
 
-    t = 0;
+    t = (msec >> 12) % 3;
+    mod = (float) (msec & ((1u << 12) - 1)) / (1 << 12);
+    mod2 = (float) (msec & ((1u << 13) - 1)) / (1 << 13);
     glBindTexture(GL_TEXTURE_2D, g_tex[t]->texnum);
     s = 1.0f / 256.0f;
     u1 = floorf((float)  width / 2); u0 = u1 - (float)  width;
@@ -120,12 +122,20 @@ sg_game_draw(int x, int y, int width, int height, unsigned msec)
     u0 *= s; u1 *= s; v0 *= s; v1 *= s;
     x0 = 0; x1 = (float) width;
     y0 = 0; y1 = (float) height;
+    glMatrixMode(GL_TEXTURE);
+    glLoadIdentity();
+    s = sinf((8 * atanf(1.0f)) * mod);
+    s = expf(logf(4) * s);
+    glScalef(s, s, s);
+    glRotatef(mod2 * 360, 0.0f, 0.0f, 1.0f);
     glBegin(GL_TRIANGLE_STRIP);
     glTexCoord2f(u0, v0); glVertex2f(x0, y0);
     glTexCoord2f(u1, v0); glVertex2f(x1, y0);
     glTexCoord2f(u0, v1); glVertex2f(x0, y1);
     glTexCoord2f(u1, v1); glVertex2f(x1, y1);
     glEnd();
+    glLoadIdentity();
+    glMatrixMode(GL_MODELVIEW);
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
