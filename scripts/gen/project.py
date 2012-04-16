@@ -5,7 +5,7 @@ import gen.smartdict as smartdict
 from gen.env import Environment
 from gen.path import Path
 from gen.info import ProjectInfo, ExecInfo
-__all__ = ['Module', 'Executable', 'Project']
+__all__ = ['Module', 'Executable', 'Project', 'Path']
 
 class Module(object):
     """Optional project module.

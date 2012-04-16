@@ -1,5 +1,5 @@
 import gen.xcode.obj as obj
-import gen.path
+from gen.path import Path
 from gen.env import Environment
 import gen.atom as atom
 import posixpath
@@ -144,6 +144,13 @@ class Target(object):
         x = obj.BuildFile(ref)
         phase.add(x)
 
+    def add_executable(self, e):
+        exes = self.target.executables
+        if exes is None:
+            self.target.executables = [e]
+        else:
+            exes.append(e)
+
 class Project(object):
     """Object for creating an Xcode project."""
     __slots__ = ['_groups', '_sources', 'project',
@@ -192,6 +199,8 @@ class Project(object):
         pname = name
         pfile = obj.FileRef(pname + '.app', root='BUILT_PRODUCTS_DIR',
                             etype='wrapper.application')
+        pfile.includeInIndex = 0
+        self.project.productRefGroup.add(pfile)
         t = obj.NativeTarget('com.apple.product-type.application', name)
         t.productName = pname
         t.productReference = pfile
@@ -202,11 +211,18 @@ class Project(object):
         self.project.targets.append(t)
         return x
 
-    def write(self, f):
+    def add_executable(self, e):
+        exes = self.project.executables
+        if exes is None:
+            self.project.executables = [e]
+        else:
+            exes.append(e)
+
+    def write(self, pf, uf):
         for x in self.project.allobjs():
             if isinstance(x, obj.Group):
                 x.children.sort()
-        self.project.write(f)
+        self.project.write(pf, uf)
 
 def projectConfig():
     base = {
@@ -223,8 +239,9 @@ def projectConfig():
     cr = obj.BuildConfiguration('Release', base, release)
     return obj.BuildConfigList([cd, cr], 'Release')
 
-def targetConfig(module, env):
-    mname = module.atom.lower()
+def targetConfig(targenv):
+    mname = targenv.simple_name
+    env = targenv.unionenv()
     base = {
         'ALWAYS_SEARCH_USER_PATHS': False,
         'GCC_DYNAMIC_NO_PIC': False,
@@ -234,7 +251,7 @@ def targetConfig(module, env):
         'INFOPLIST_FILE': 'resources/mac/%s/Info.plist' % (mname,),
         'INSTALL_PATH': '$(HOME)/Applications',
         'PREBINDING': False,
-        'PRODUCT_NAME': module.info.EXE_MAC,
+        'PRODUCT_NAME': targenv.EXE_MAC,
         'HEADER_SEARCH_PATHS':
             ['$(HEADER_SEARCH_PATHS)'] + [p.posix for p in env.CPPPATH],
     }
@@ -253,28 +270,58 @@ def targetConfig(module, env):
     cr = obj.BuildConfiguration('Release', base, release)
     return obj.BuildConfigList([cd, cr], 'Release')
 
-def write_project(proj, f):
-    """Write a project as an Xcode project to the given file."""
+def write_arg1(arg):
+    if isinstance(arg, str):
+        return arg
+    elif isinstance(arg, Path):
+        if arg.posix == '.':
+            return '$(PROJECT_DIR)'
+        else:
+            return '$(PROJECT_DIR)/' + arg.posix
+    else:
+        raise TypeError('invalid argument type: %r' % (arg,))
+
+def write_arg(arg):
+    if isinstance(arg, (str, Path)):
+        return write_arg1(arg)
+    elif isinstance(arg, tuple):
+        a = ''
+        for i in arg:
+            a += write_arg1(i)
+        return a
+    else:
+        raise TypeError('invalid argument type: %r' % (arg,))
+
+def write_project(proj, pf, uf):
+    """Write a project as an Xcode project to the given files.
+
+    The first parameter is the project file, the second parameter
+    is the user defaults file.
+    """
 
     p = Project()
     for source in proj.sourcelist.sources():
         p.get_source(source)
     p.project.buildConfigurationList = projectConfig()
 
-    def lookup(atom):
-        return None
-    atomenv = atom.AtomEnv(proj, lookup, Environment())
-    for module in proj.targets():
-        srcenv = atomenv.module_sources([module.atom], 'MACOSX')
-        t = p.application_target(module.info.EXE_MAC)
-        for source, source_env in srcenv:
+    projenv = atom.ProjectEnv(proj)
+    for targenv in projenv.targets('MACOSX'):
+        t = p.application_target(targenv.EXE_MAC)
+        for source, source_env in targenv:
             t.add_source(p.get_source(source))
         fworks = ['Foundation', 'AppKit', 'CoreServices',
                   'CoreVideo', 'Carbon', 'OpenGL']
         for fwork in fworks:
             x = p.get_framework(fwork)
             t.add_source(x)
-        t.target.buildConfigurationList = \
-            targetConfig(module, srcenv.unionenv())
+        t.target.buildConfigurationList = targetConfig(targenv)
 
-    p.write(f)
+        # Create executable + default arguments
+        e = obj.Executable(targenv.EXE_MAC)
+        for k, v in targenv.DEFAULT_CVARS:
+            e.argumentStrings.extend(('-' + k, write_arg(v)))
+            e.activeArgIndices.extend((True, True))
+        t.add_executable(e)
+        p.add_executable(e)
+
+    p.write(pf, uf)

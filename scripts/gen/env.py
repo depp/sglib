@@ -131,8 +131,72 @@ class Program(smartdict.Key):
                     raise TypeError
         return value
 
-    def as_string(self, value):
+    @staticmethod
+    def as_string(value):
         return ' '.join(value)
+
+# POSIX: special are |&;<>()$\\\"' *?[#~=%
+#        non-special are !+,-./:@]^_`{}
+# We escape some ones that are unnecessary
+_SHELL_SPECIAL = re.compile(r'[^-A-Za-z0-9+,./:@^_]')
+_SHELL_QSPECIAL = re.compile('["\\\\]')
+def escape1(x):
+    x = x.group(0)
+    i = ord(x)
+    if 32 <= i <= 126:
+        return '\\' + x
+    return '\\x%02x' % i
+def shellescape(x):
+    if _SHELL_SPECIAL.search(x):
+        return '"' + _SHELL_QSPECIAL.sub(escape1, x) + '"'
+    if not x:
+        return "''"
+    return x
+
+def flagstr(x):
+    if isinstance(x, str):
+        return shellescape(x)
+    elif isinstance(x, Path):
+        return shellescape(x.posix)
+    elif isinstance(x, VarRef):
+        return str(x)
+    else:
+        a = ''
+        for i in x:
+            if isinstance(i, str):
+                a += i
+            elif isinstance(i, Path):
+                a += i.posix
+            else:
+                raise TypeError
+        return shellescape(a)
+
+class Flag(smartdict.Key):
+    """Program flag environment variable.
+
+    This is not generally used by itself, but the methods are used
+    to construct other types of keys.
+    """
+    __slots__ = ['name']
+
+    @staticmethod
+    def check(value):
+        if isinstance(value, str):
+            return value
+        elif isinstance(value, (VarRef, Path)):
+            return value
+        else:
+            value = tuple(value)
+        for flag in value:
+            if isinstance(flag, (str, Path, VarRef)):
+                continue
+            else:
+                raise TypeError
+        return value
+
+    @staticmethod
+    def as_string(value):
+        return flagstr(value)
 
 class Flags(smartdict.Key):
     """Program flags environment variable.
@@ -168,11 +232,13 @@ class Flags(smartdict.Key):
             return self.default_var(instance, self._default)
         return ()
 
-    def combine(self, value, other):
+    @staticmethod
+    def combine(value, other):
         return value + other
 
-    def as_string(self, value):
-        return ' '.join(value)
+    @staticmethod
+    def as_string(value):
+        return ' '.join(flagstr(x) for x in value)
 
 class BuildSettings(smartdict.SmartDict):
     """Build settings smart dictionary.

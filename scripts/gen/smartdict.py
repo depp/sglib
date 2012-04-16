@@ -387,13 +387,20 @@ class SmartDict(object, UserDict.DictMixin):
         return iter(self._props)
 
     @classmethod
-    def haskey(klass, key):
-        """Determine whether the class has the given key."""
+    def getkey(klass, key):
+        """Get the given key, or return None if it does not exist."""
         try:
             kobj = getattr(klass, key)
         except AttributeError:
-            return False
-        return isinstance(kobj, Key)
+            return None
+        if not isinstance(kobj, Key):
+            return None
+        return kobj
+
+    @classmethod
+    def haskey(klass, key):
+        """Determine whether the class has the given key."""
+        return klass.getkey(key) is not None
 
     def keys(self):
         return self._props.keys()

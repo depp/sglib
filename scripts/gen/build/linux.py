@@ -130,15 +130,12 @@ def build_linux(graph, proj, env, settings):
             env.remove_flag('LIBS', '-Wl,--export-dynamic')
             return env
 
-    atomenv = atom.AtomEnv(proj, lookup_env, env)
-    products = genbuild_linux(graph, proj, atomenv, machine)
+    projenv = atom.ProjectEnv(proj, lookup_env, env)
+    products = genbuild_linux(graph, projenv, machine)
     graph.add(target.DepTarget('build', products))
 
-def genbuild_linux(graph, proj, atomenv, machine):
+def genbuild_linux(graph, projenv, machine):
     """Generate all targets for any Linux build.
-
-    The atomenv parameter should be an AtomEnv object for looking up
-    atom environments.
 
     The machine parameter is the machine name to add to the name of
     the executable.  It may be empty.
@@ -147,9 +144,8 @@ def genbuild_linux(graph, proj, atomenv, machine):
     apps = []
     types_cc = 'c', 'cxx'
     types_ignore = 'h', 'hxx'
-    for module in proj.targets():
-        mname = module.atom.lower()
-        srcenv = atomenv.module_sources([module.atom], 'LINUX')
+    for targetenv in projenv.targets('LINUX'):
+        mname = targetenv.simple_name
         objs = []
         def handlec(source, env):
             opath = Path('build/obj-%s-%s' %
@@ -160,17 +156,17 @@ def genbuild_linux(graph, proj, atomenv, machine):
         handlers = {}
         for t in types_cc: handlers[t] = handlec
         for t in types_ignore: handlers[t] = None
-        srcenv.apply(handlers)
+        targetenv.apply(handlers)
 
-        env = srcenv.unionenv()
-        exename = module.info.EXE_LINUX
+        env = targetenv.unionenv()
+        exename = targetenv.EXE_LINUX
         if machine:
             exename = '%s-%s' % (exename, machine)
         rawpath = Path('build/exe-%s' % (mname,), exename)
         exepath = Path('build/product', exename)
         dbgpath = Path('build/product', exename + '.dbg')
 
-        graph.add(nix.LD(rawpath, objs, env, srcenv.types()))
+        graph.add(nix.LD(rawpath, objs, env, targetenv.types()))
         graph.add(ExtractDebug(dbgpath, rawpath, env))
         graph.add(Strip(exepath, rawpath, dbgpath, env))
 
