@@ -279,18 +279,18 @@ def build_windows(graph, proj, env, settings):
             return aenv
         return None
 
-    atomenv = atom.AtomEnv(proj, lookup_env, env)
+    projenv = atom.ProjectEnv(proj, lookup_env, env)
 
     # Build the executable for each architecture
     apps = []
     types_cc = 'c', 'cxx'
     types_ignore = 'h', 'hxx'
-    for module in proj.targets():
-        mname = module.atom.lower()
-        appname = module.info.EXE_WINDOWS
+    for targenv in projenv.targets('WINDOWS'):
+        mname = targenv.simple_name
+        appname = targenv.EXE_WINDOWS
         exes = []
         for arch in archs:
-            srcenv = atomenv.module_sources([module.atom], 'WINDOWS', arch)
+            targenv.arch = arch
             objs = []
             objdir = Path('build/obj-%s-%s' % (mname, arch))
             debugfile = Path(objdir, 'debug.pdb')
@@ -303,14 +303,14 @@ def build_windows(graph, proj, env, settings):
             handlers = {}
             for t in types_cc: handlers[t] = handlec
             for t in types_ignore: handlers[t] = None
-            srcenv.apply(handlers)
+            targenv.apply(handlers)
 
             if arch == 'x86':
                 exename = appname
             else:
                 exename = '%s-%s' % (appname, arch)
             env = Environment(
-                srcenv.unionenv(),
+                targenv.unionenv(),
                 LDFLAGS=['/SUBSYSTEM:WINDOWS'],
             )
             pdbpath = Path('build/product', exename + '.pdb')

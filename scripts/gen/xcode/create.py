@@ -1,7 +1,6 @@
 import gen.xcode.obj as obj
 from gen.path import Path
 from gen.env import Environment
-import gen.info
 import gen.atom as atom
 import posixpath
 
@@ -240,8 +239,9 @@ def projectConfig():
     cr = obj.BuildConfiguration('Release', base, release)
     return obj.BuildConfigList([cd, cr], 'Release')
 
-def targetConfig(module, env):
-    mname = module.atom.lower()
+def targetConfig(targenv):
+    mname = targenv.simple_name
+    env = targenv.unionenv()
     base = {
         'ALWAYS_SEARCH_USER_PATHS': False,
         'GCC_DYNAMIC_NO_PIC': False,
@@ -251,7 +251,7 @@ def targetConfig(module, env):
         'INFOPLIST_FILE': 'resources/mac/%s/Info.plist' % (mname,),
         'INSTALL_PATH': '$(HOME)/Applications',
         'PREBINDING': False,
-        'PRODUCT_NAME': module.info.EXE_MAC,
+        'PRODUCT_NAME': targenv.EXE_MAC,
         'HEADER_SEARCH_PATHS':
             ['$(HEADER_SEARCH_PATHS)'] + [p.posix for p in env.CPPPATH],
     }
@@ -304,28 +304,21 @@ def write_project(proj, pf, uf):
         p.get_source(source)
     p.project.buildConfigurationList = projectConfig()
 
-    def lookup(atom):
-        return None
-    atomenv = atom.AtomEnv(proj, lookup, Environment())
-    proj_cvars = proj.info.DEFAULT_CVARS
-    for module in proj.targets():
-        srcenv = atomenv.module_sources([module.atom], 'MACOSX')
-        t = p.application_target(module.info.EXE_MAC)
-        for source, source_env in srcenv:
+    projenv = atom.ProjectEnv(proj)
+    for targenv in projenv.targets('MACOSX'):
+        t = p.application_target(targenv.EXE_MAC)
+        for source, source_env in targenv:
             t.add_source(p.get_source(source))
         fworks = ['Foundation', 'AppKit', 'CoreServices',
                   'CoreVideo', 'Carbon', 'OpenGL']
         for fwork in fworks:
             x = p.get_framework(fwork)
             t.add_source(x)
-        t.target.buildConfigurationList = \
-            targetConfig(module, srcenv.unionenv())
+        t.target.buildConfigurationList = targetConfig(targenv)
 
         # Create executable + default arguments
-        e = obj.Executable(module.info.EXE_MAC)
-        cvars = gen.info.CVars.combine(
-            proj_cvars, module.info.DEFAULT_CVARS)
-        for k, v in cvars:
+        e = obj.Executable(targenv.EXE_MAC)
+        for k, v in targenv.DEFAULT_CVARS:
             e.argumentStrings.extend(('-' + k, write_arg(v)))
             e.activeArgIndices.extend((True, True))
         t.add_executable(e)

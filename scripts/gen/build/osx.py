@@ -344,20 +344,20 @@ def build_osx(graph, proj, env, settings):
             )
         return None
 
-    atomenv = atom.AtomEnv(proj, lookup_env, env)
+    projenv = atom.ProjectEnv(proj, lookup_env, env)
 
     apps = []
     types_cc = 'c', 'cxx', 'm', 'mm'
     types_rsrc = 'h', 'hxx', 'plist', 'xib', 'icns'
-    for module in proj.targets():
-        mname = module.atom.lower()
-        appname = module.info.EXE_MAC
+    for targenv in projenv.targets('MACOSX'):
+        mname = targenv.simple_name
+        appname = targenv.EXE_MAC
         exename = appname
 
         # build executable for each architecture
         exes = []
         for arch in env.ARCHS:
-            srcenv = atomenv.module_sources([module.atom], 'MACOSX', arch)
+            targenv.arch = arch
             objs = []
             def handlec(source, env):
                 opath = Path(
@@ -370,15 +370,14 @@ def build_osx(graph, proj, env, settings):
             handlers = {}
             for t in types_cc: handlers[t] = handlec
             for t in types_rsrc: handlers[t] = None
-            srcenv.apply(handlers)
+            targenv.apply(handlers)
 
-            uenv = srcenv.unionenv()
+            uenv = targenv.unionenv()
             exe = Path('build/exe-%s' % (mname,),
                        '%s-%s' % (exename, arch))
-            graph.add(nix.LD(exe, objs, uenv, srcenv.types()))
+            graph.add(nix.LD(exe, objs, uenv, targenv.types()))
             exes.append(exe)
-
-        srcenv = atomenv.module_sources([module.atom], 'MACOSX')
+        targenv.arch = None
 
         appdeps = []
         contents = Path('build/product', appname + '.app', 'Contents')
@@ -413,7 +412,7 @@ def build_osx(graph, proj, env, settings):
             handlers[t] = None
         def handle_icns(source, env):
             targ = Path(resources, source.grouppath.basename)
-            graph.add(target.CopyFile(targ, source.relpath, env))
+            graph.add(targenv.CopyFile(targ, source.relpath, env))
             appdeps.append(targ)
         def handle_xib(source, env):
             targ = Path(resources, source.grouppath.withext('.nib').basename)
@@ -421,7 +420,7 @@ def build_osx(graph, proj, env, settings):
             appdeps.append(targ)
         handlers['icns'] = handle_icns
         handlers['xib'] = handle_xib
-        srcenv.apply(handlers)
+        targenv.apply(handlers)
 
         pseudo = 'build-%s' % (mname,)
         graph.add(target.DepTarget(pseudo, appdeps))

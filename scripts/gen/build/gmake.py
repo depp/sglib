@@ -132,9 +132,9 @@ class Makefile(target.StaticFile):
                 CXXFLAGS=VarRef('dep_args')
             ), env)
 
-        atomenv = atom.AtomEnv(proj, lookup_env, env)
+        projenv = atom.ProjectEnv(proj, lookup_env, env)
 
-        ts = linux.genbuild_linux(g, self._proj, atomenv, None)
+        ts = linux.genbuild_linux(g, projenv, None)
         g.add(target.DepTarget('all', ts))
 
         targs = g.targetobjs()
