@@ -41,7 +41,11 @@ class AutoConf(target.Commands):
 
 class Configure(target.Commands):
     """Linux: Run configure."""
-    __slots__ = ['_env']
+    __slots__ = ['_env', '_settings']
+
+    def __init__(self, env, settings):
+        self._env = env
+        self._settings = settings
 
     def input(self):
         yield Path('configure')
@@ -51,11 +55,18 @@ class Configure(target.Commands):
         yield Path('config.mak')
         yield Path('config.h')
 
-    def name(self):
-        return 'CONFIGURE'
-
     def commands(self):
-        return [['./configure']]
+        s = self._settings
+        cflags = {
+            'debug': '-O0 -g',
+            'release': '-O2 -g',
+        }
+        try:
+            cflags = cflags[s.CONFIG]
+        except KeyError:
+            raise ValueError('unknown configuration: %r' % (s.CONFIG,))
+        return [['./configure', '--enable-warnings=error',
+                 'CFLAGS=' + cflags, 'CXXFLAGS=' + cflags]]
 
 class LookupAC(object):
     """Class for looking up autoconf template variables."""
@@ -93,7 +104,7 @@ def add_targets(graph, proj, env, settings):
     graph.add(target.DepTarget('gmake', deps))
 
     if platform.system() == 'Linux':
-        graph.add(Configure(env))
+        graph.add(Configure(env, settings))
         cdep = [Path('config.mak'), 'gmake']
         graph.add(target.DepTarget('config', cdep))
         graph.add(target.DepTarget('default', ['config']))
