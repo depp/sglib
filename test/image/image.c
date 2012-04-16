@@ -25,7 +25,7 @@ enum {
     NUMTEX
 };
 
-static const char const IMAGE_NAMES[NUMTEX][12] = {
+static const char IMAGE_NAMES[NUMTEX][12] = {
     "png_i4",
     "png_i8",
     "png_ia4",
