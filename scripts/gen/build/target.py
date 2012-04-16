@@ -6,6 +6,7 @@ import re
 import sys
 from gen.env import Environment, VarRef
 from gen import path
+import platform
 
 Path = path.Path
 
@@ -350,9 +351,24 @@ class StaticFile(Target):
 
     def build(self, verbose):
         print 'FILE', self._dest.posix
-        with open(self._dest.native, 'wb') as f:
+        if self.executable() and platform.system() != 'Windows':
+            # THIS IS HACKY
+            fd = os.open(self._dest.native,
+                         os.O_WRONLY | os.O_CREAT | os.O_TRUNC,
+                         0777)
+            f = os.fdopen(fd, 'wb')
             self.write(f)
+        else:
+            with open(self._dest.native, 'wb') as f:
+                self.write(f)
         return True
+
+    def executable(self):
+        """Returns whether the file should be made executable.
+
+        Defaults to False.
+        """
+        return False
 
 class Template(Target):
     """Target which creates an file from a template.
