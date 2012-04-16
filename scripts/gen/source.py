@@ -88,6 +88,14 @@ class Source(object):
         """The type of this source file."""
         return self._sourcetype
 
+    def __cmp__(self, other):
+        if not isinstance(other, Source):
+            return NotImplemented
+        c = cmp(self._group._name, other._group._name)
+        if c:
+            return c
+        return cmp(self._path, other._path)
+
 class Group(object):
     """A group of source files.
 
