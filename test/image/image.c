@@ -2,6 +2,7 @@
 #include "base/entry.h"
 #include "base/texture.h"
 #include <assert.h>
+#include <math.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <string.h>
@@ -23,10 +24,10 @@ enum {
     PNG_YA8,
     PNG_YA16,
 
-    NUMTEX
+    NUM_IMG
 };
 
-static const char IMAGE_NAMES[NUMTEX][12] = {
+static const char IMAGE_NAMES[NUM_IMG][12] = {
     "png_i4",
     "png_i8",
     "png_ia4",
@@ -52,19 +53,32 @@ static const signed char IMAGE_LOCS[5][6] = {
     { -1, -1, PNG_RGB16, PNG_RGBA16, PNG_Y16, PNG_YA16 }
 };
 
-static struct sg_texture_image *g_images[NUMTEX];
+enum {
+    NUM_TEX = 3
+};
+
+static const char TEX_NAMES[NUM_TEX][12] = { "brick", "ivy", "roughstone" };
+
+static struct sg_texture_image *g_images[NUM_IMG];
+static struct sg_texture_image *g_tex[NUM_TEX];
 
 void
 sg_game_init(void)
 {
     int i;
     struct sg_error *err = NULL;
-    char buf[24];
-    for (i = 0; i < NUMTEX; ++i) {
+    char buf[32];
+    for (i = 0; i < NUM_IMG; ++i) {
         strcpy(buf, "imgtest/");
         strcat(buf, IMAGE_NAMES[i]);
         g_images[i] = sg_texture_image_new(buf, &err);
         assert(g_images[i]);
+    }
+    for (i = 0; i < NUM_TEX; ++i) {
+        strcpy(buf, "tex/");
+        strcat(buf, TEX_NAMES[i]);
+        g_tex[i] = sg_texture_image_new(buf, &err);
+        assert(g_tex[i]);
     }
 }
 
@@ -84,7 +98,8 @@ void
 sg_game_draw(int x, int y, int width, int height, unsigned msec)
 {
     int ix, iy, t;
-    float x0, x1, y0, y1, u0, u1, v0, v1;
+    float x0, x1, y0, y1, u0, u1, v0, v1, s;
+    float xoff, yoff;
 
     glClear(GL_COLOR_BUFFER_BIT);
     glViewport(x, y, width, height);
@@ -96,8 +111,26 @@ sg_game_draw(int x, int y, int width, int height, unsigned msec)
 
     glPushAttrib(GL_ENABLE_BIT);
     glEnable(GL_TEXTURE_2D);
+
+    t = 0;
+    glBindTexture(GL_TEXTURE_2D, g_tex[t]->texnum);
+    s = 1.0f / 256.0f;
+    u1 = floorf((float)  width / 2); u0 = u1 - (float)  width;
+    v1 = floorf((float) height / 2); v0 = v1 - (float) height;
+    u0 *= s; u1 *= s; v0 *= s; v1 *= s;
+    x0 = 0; x1 = (float) width;
+    y0 = 0; y1 = (float) height;
+    glBegin(GL_TRIANGLE_STRIP);
+    glTexCoord2f(u0, v0); glVertex2f(x0, y0);
+    glTexCoord2f(u1, v0); glVertex2f(x1, y0);
+    glTexCoord2f(u0, v1); glVertex2f(x0, y1);
+    glTexCoord2f(u1, v1); glVertex2f(x1, y1);
+    glEnd();
+
     glEnable(GL_BLEND);
     glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+    xoff = -128 * 6 / 2 + floorf((float)  width / 2);
+    yoff = -128 * 5 / 2 + floorf((float) height / 2);
     for (ix = 0; ix < 6; ++ix) {
         for (iy = 0; iy < 5; ++iy) {
             t = IMAGE_LOCS[iy][ix];
@@ -105,9 +138,8 @@ sg_game_draw(int x, int y, int width, int height, unsigned msec)
                 continue;
             glBindTexture(GL_TEXTURE_2D, g_images[t]->texnum);
             u0 = 0.0f; u1 = 1.0f; v0 = 1.0f; v1 = 0.0f;
-            x0 = (float)(32 + 128 * ix); x1 = x0 + 64;
-            y0 = (float)(32 + 128 * (4 - iy)); y1 = y0 + 64;
-            glColor4ub(255, 255, 255, 255);
+            x0 = xoff + (float)(32 + 128 * ix); x1 = x0 + 64;
+            y0 = yoff + (float)(32 + 128 * (4 - iy)); y1 = y0 + 64;
             glBegin(GL_TRIANGLE_STRIP);
             glTexCoord2f(u0, v0); glVertex2f(x0, y0);
             glTexCoord2f(u1, v0); glVertex2f(x1, y0);
