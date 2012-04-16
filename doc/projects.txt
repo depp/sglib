@@ -1,0 +1,251 @@
+Creating SGLib projects
+=======================
+
+The SGLib project is designed to be incorporated into games as source,
+not as a separate library per se.  It includes a build system capable
+of building games on Linux, Mac OS X, and Windows.
+
+Creating a build script
+-----------------------
+
+Create a Python script somewhere in your project.  The typical name is
+'init.py'.  It is recommended that all of your source code and the
+SGLib source code exist below this location in your directory tree.
+Call this location the "project root".  The build script has to do
+four things:
+
+First, It must locate and import the SGLib build script modules.  This
+will require modifying sys.path.
+
+    import os, sys
+    root = sys.path[0]
+    sys.path.insert(1, os.path.join(root, 'sglib', 'scripts'))
+    from gen.project import *
+
+The project object
+------------------
+
+Then the script must create a Project object.  There is no real point
+to creating multiple Project objects.  The project info dictionary
+should be filled with information about the project.
+
+    p = Project(root)
+    p.info.set(
+        PKG_NAME = 'My Cool Game',
+        PKG_IDENT = 'com.example.my-cool-game,
+        PKG_EMAIL = 'dev@example.com',
+        PKG_URL = 'http://example.com/my-cool-game/',
+        PKG_COPYRIGHT = u'Copyright \xa9 2012 Example Corp',
+        DEFAULT_CVARS = [
+            ('log.level.root', 'debug'),
+            ('path.data-path', Path('data'),
+        ]
+    )
+
+The project info dictionary has the following keys:
+
+    PKG_NAME: The package name, human-readable.  Only alphanumeric
+    characters, hyphens, and spaces should be used.  (This field may
+    become more flexible in the future.)
+
+    PKG_IDENT: Reverse domain name identifying package.  This is
+    required for Mac OS X support, it is used to locate the game
+    preferences file.
+
+    PKG_FILENAME: A name for files related to the project, such as
+    source archives or Xcode projects.  This may not contain spaces.
+    By default, this is derived from the package name.
+
+    PKG_URL: A web site URL for the project.
+
+    PKG_EMAIL: The maintainer's email address.
+
+    PKG_COPYRIGHT: The package copyright information.  This can be a
+    Unicode string, and should contain \xa9 as the "copyright"
+    character.
+
+    DEFAULT_CVARS: Discussed later.
+
+Module objects
+--------------
+
+After creating the project object, create one or more modules.
+Typically, you only need to create on Executable module.  It also has
+an info dictionary.
+
+    p.add_module(Executable(
+        'MAIN', 'My Cool Game executable',
+        reqs = 'SGLIB',
+        EXE_NAME = 'My Cool Game',
+        EXE_MACICON = 'MyCoolGame',
+    ))
+
+The first parameter, 'MAIN' in the example, is the module identifier.
+It is used internally to figure out which sources should be built.
+The module identifier can by any identifier string (it must start with
+a letter, and only contain alphanumeric characters and underscores).
+Identifiers starting with 'SG' are reserved for SGLib.
+
+The second parameter is the module description.  The module
+description is only used by the build system to print out help
+information.
+
+The remaining parameters are:
+
+    reqs: A list of module identifiers, or a string of module
+    identifiers specified by spaces.  All named modules are included
+    when building the given module.  Inclusions are done recursively.
+
+    ipath: A list of locations to search for header files.  Paths must
+    use POSIX separators (forward slashes, not backwards) or be Path
+    objects.
+
+    EXE_NAME: The name of the executable, human readable (as
+    PKG_NAME).  Spaces are allowed.
+
+    EXE_MAC: The name of the executable on Mac OS X.  Defaults to
+    EXE_NAME.
+
+    EXE_LINUX: The name of the executable on Linux. Defaults to
+    EXE_NAME, but with spaces removed.  Spaces are not allowed.
+
+    EXE_WINDOWS: The name of the executable on Windows.  Defaults to
+    EXE_NAME.
+
+    EXE_MACICON: The name of the icon file for the application icon on
+    Mac OS X.  Note that the icon file must be included as a source
+    file, or the icon will not work.  This paramater should be the
+    filename of the icon file, without the extension.
+
+    EXE_APPLE_CATEGORY: The category of the game, according to Apple's
+    classification.  The default is public.app-category.games.  As of
+    today, Apple has 19 different categories for games.  Search for
+    LSApplicationCategoryType to see a list.
+
+    DEFAULT_CVARS: Discussed later.
+
+Source code
+-----------
+
+Now that you have a project and executable, you will need to add
+source code.  Source code must be added in 'groups'; a 'group' is a
+collection of source code below a certain directory.  Groups are
+mainly used for organizing the source code in IDEs.
+
+    p.add_sourcelist(
+        'My Game', os.path.join('src', 'srclist.txt'), 'MAIN')
+
+In the above example, lines will be read from src/srclist.txt.  Each
+line can specify a single source file as well as a sequence of 'atoms'
+that apply to the source code.  Comments start with a # character, and
+must span the entire line.  The paths are relative to the source list
+file.  For example,
+
+    main.c
+    net.h
+    net_windows.c WINDOWS
+    net_posix.c MACOSX LINUX
+    game.h
+    game.c
+    graphics.h
+    graphics.c
+    level.h
+    level.c
+    # editor.c broken
+    MyCoolGame.icns MACOSX
+
+In this example, the files are located at src/main.c, src/net.h, et
+cetera.  The 'src/editor.c' file is not included.  All paths must use
+the forward slash (/) and not the backwards slash (\).
+
+The two main types of atoms are platform atoms and module atoms.
+
+A platform atom is one of LINUX, MACOSX, or WINDOWS.  A source code
+file with one of these atoms will only be built on platforms
+specified.  Multiple platforms can be specified.  Note that the icons
+file is marked as MACOSX, if you try to build include an icons file on
+Linux or Windows you will get a build error.
+
+A module atom is the name of a module, like MAIN in the example
+above.  A file marked with module names will only be built if ALL of
+the modules listed are being built.
+
+In the above example, the MAIN atom applies to all of the source code
+in the list, since MAIN was supplied to the add_sourcelist method.
+The add_sourcelist method can be given any number of atoms as
+parameters, all atoms will be applied to all source files in the
+list.
+
+Footer
+------
+
+Finally, at the end of the build script, you must execute the 'run'
+method on the Project.
+
+    p.run()
+
+CVars
+-----
+
+Specifying DEFAULT_CVARS (CVars are 'configuration variables') is a
+convenience for development.  When creating an IDE project or makefile
+target, the default CVars will be passed to the executable when it is
+run.  Note that the command-line syntax for specifying CVars is quite
+different on each platform.
+
+The CVars must be a list of tuples starting with a key.  The remaining
+items in the tuple will be concatenated to compute the value of the
+CVar.  If a CVar appears multiple times, only the last version will
+take effect.
+
+Items in the tuple must be either strings or Path objects.  For
+example,
+
+    ('log.level.root', 'debug'),
+    ('my.list-of-paths',
+     Path('data/base'), ':', Path('data/editor')),
+
+The CVar 'my.list-of-paths' will be set to a value like this:
+
+    data/base:data/editor
+
+The reason Path objects are necesssary is because the value will be
+different on different platforms, and will need special support from
+IDEs.  For example, in Xcode the path will be converted to:
+
+    $(PROJECT_DIR)/data/base:$(PROJECT_DIR)/data/editor
+
+In Visual Studio, the path will be:
+
+    $(ProjectDir)data\base:$(ProjectDir)data\editor
+
+Version control
+---------------
+
+It is assumed that you are using Git to manage versions.
+
+The version number for your project will be taken directly from the
+most recent Git tag, or it will default to '0.0' if there are no tags.
+The version number of the SGLib repository will also be queried.
+
+Ideally, the tags should just be version numbers.  For example,
+
+    good:     1.0, 1.1, 1.2
+    not good: v1.0, v1.1, v1.2
+    terrible: engine, boxcar, caboose
+
+Version numbers have to be used by lots of different systems.  They
+are used in the source tarball filenames so they should be easy to
+sort -- how do write a program that sorts 'engine' before 'boxcar'?
+The version numbers are also used automatically by operating systems
+so that when a user installs a package, the operating system knows
+that it's a newer version of an existing package.
+
+The recommended formats for version numbers are:
+
+    X.Y
+    X.Y.Z
+
+X, Y, and Z can be any non-negative integer with no extra leading
+zeroes.  You can mix the two formats, where X.Y is a shorter way of
+specifying X.Y.0.

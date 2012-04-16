@@ -1,0 +1,125 @@
+Building SGLib projects
+=======================
+
+Build scripts can be invoked directly, and have useful defaults so no
+parameters need to be specified.  Suppose your build script is named
+'init.py'; then you only need to run:
+
+    ./init.py
+
+From the output of the script, you should be able to figure out what
+to do next.
+
+Targets
+-------
+
+You can specify targets as arguments to the build script.  Targets are
+either paths or abstract targets.
+
+To regenerate the 'version.c' file:
+
+    ./init.py version.c
+
+To build the 'xcode' abstract target:
+
+    ./init.py xcode
+
+The 'xcode' target is abstract for convenience.  The actual file names
+of the generated Xcode projects will depend on the name of the
+project.
+
+Common targets
+--------------
+
+gmake: Create a configure script and Makefile for building on Linux.
+
+config: Like gmake, but run the configure script with some default
+options.  This is the default target on Linux.
+
+xcode: Create an Xcode project for building on Mac OS X.  This is the
+default target on Mac OS X.
+
+msvc: Create a Visual Studio 2010 Express solution and projects for
+building on Windows.  This is the default target on Windows.
+
+source-xz: Create a .tar.xz of the source code.  The file will be
+named using the project version number, and it will include the gmake,
+xcode, and msvc output.  In general, this will only include the
+sources specified in the build script; other files will not be
+included.
+
+build: Build the products on the current platform directly.  The
+products will be placed in build/products, and the debugging symbols
+will be placed in separate files in the same directory.
+
+Variables
+---------
+
+Variables are set with VAR=VALUE on the command line.  Shell
+environment variables are ignored, variables must be set as explicit
+command line parameters.
+
+    CFLAGS=-O3 ./init.py # WRONG!
+
+    ./init.py CFLAGS=-O3 # correct
+
+All of the 'project info dictionary' variables can be set on the
+command line, as well as environment variables and build settings.
+With one exception, environment variables control compilation when
+building the product directly, they do not affect the contents of
+makefiles or IDE projects.  (The exception is the GIT variable, which
+must be used to determine version numbers.)
+
+Build settings
+--------------
+
+CONFIG: Either 'debug' or 'release'.  Affects optimization flags and
+which architectures are built; only the current architecture is built
+for debug builds.
+
+VERBOSE: Boolean.  When true, the command line for every command will
+be printed out.
+
+Program environment variables
+-----------------------------
+
+Note: Except for 'GIT', these variables only affect the 'build'
+target.
+
+CC: C compiler.
+
+CXX: C++ compiler.
+
+LD: Linker (Windows only, ignored on Mac OS X / Windows).
+
+GIT: Git executable.
+
+Program flags environment variables
+-----------------------------------
+
+Note: Except for 'GIT', these variables only affect the 'build'
+target.
+
+CPPFLAGS: Flags for the C preprocessor.  Thes are passed to the C
+compiler and the C++ compiler.
+
+CPPPATH: List of locations to search for header files.  All paths in
+this list must be relative to the project root.
+
+CFLAGS: Flags for the C compiler.  These flags are not passed to the
+C++ compiler.
+
+CXXFLAGS: Flags for the C++ compiler, not passed to the C compiler.
+
+CWARN: Warning flags for the C compiler.
+
+CXXWARN: Warning flags for the C++ compiler.
+
+LDFLAGS: Flags for the linker.  These flags will appear very early in
+the linker command line.
+
+LIBS: Libraries to link in, specified as flags for the linker.  These
+flags will appear late in the command line.
+
+ARCHS: List of architectures to target.  Valid architectures are x86,
+x64, and ppc.  Only applies to Mac OS X and Windows.

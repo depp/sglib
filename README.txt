@@ -1,10 +1,9 @@
-Dietrich's Game
-===============
+SGLib
+=====
 
-This is a small collection of mostly incomplete games, some not even
-prototypes.  It started out as a set of separate games, one even
-dating back to 1999 or so.  All of the separate games were integrated
-into the same tree so they could share code more effectively.
+This is a library for building games, with a Python-based build system
+that will produce executables for Linux, Mac OS X, and Windows; as
+well as IDE projects for Xcode and Visual Studio.
 
 Much of the platform-specific code reimplements the kind of
 functionality found in LibSDL.  One of the goals of this project is to
@@ -25,7 +24,7 @@ Linux:
 * OpenGL
 * LibPNG
 * LibJPEG
-* C++ compiler
+* C++ compiler (actually optional)
 * Evdev (no other keyboard input is supported, sorry)
 
 Mac OS X:
@@ -35,24 +34,11 @@ Mac OS X:
 Windows:
 * Windows XP SP3 or more recent
 
-Building
---------
+More information
+----------------
 
-On Linux, use the standard build procedure.  The configuration step is
-optional but recommended.  The makefile will generate a "run.sh"
-script which sets up the data paths correctly.
-
-    $ ./configure
-    $ make -j4
-    $ ./run.sh
-
-On Mac OS X, use the provided Xcode projects.  They target Xcode 3.1
-and Mac OS X 10.5.
-
-On Windows, Visual Studio projects are no longer provided.  However,
-they are easy enough to create yourself.  You can also use the
-directions in HACKING.txt to use CMake to create a Visual Studio
-project.
+This repository does not include examples.  It does, however, include
+documentation in the 'doc' folder.
 
 Known limitations
 -----------------
