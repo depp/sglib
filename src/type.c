@@ -26,17 +26,29 @@ static struct sg_layout *g_text1, *g_text2, *g_text3;
 void
 sg_game_init(void)
 {
+    struct sg_style *sp;
+
+    sp = sg_style_new();
+    sg_style_setsize(sp, 36.0f);
+
     g_text1 = sg_layout_new();
     assert(g_text1);
     sg_layout_settext(g_text1, TEXT1, strlen(TEXT1));
+    sg_layout_setstyle(g_text1, sp);
 
     g_text2 = sg_layout_new();
     assert(g_text2);
     sg_layout_settext(g_text2, TEXT2, strlen(TEXT2));
+    sg_layout_setstyle(g_text2, sp);
+
+    sg_style_setsize(sp, 16.0f);
 
     g_text3 = sg_layout_new();
     assert(g_text3);
     sg_layout_settext(g_text3, TEXT3, strlen(TEXT3));
+    sg_layout_setstyle(g_text2, sp);
+
+    sg_style_decref(sp);
 }
 
 void
