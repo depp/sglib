@@ -26,6 +26,7 @@ static struct sg_layout *g_text1, *g_text2, *g_text3;
 void
 sg_game_init(void)
 {
+    int a = SG_VALIGN_TOP | SG_HALIGN_LEFT;
     struct sg_style *sp;
 
     sp = sg_style_new();
@@ -35,11 +36,13 @@ sg_game_init(void)
     assert(g_text1);
     sg_layout_settext(g_text1, TEXT1, strlen(TEXT1));
     sg_layout_setstyle(g_text1, sp);
+    sg_layout_setboxalign(g_text1, a);
 
     g_text2 = sg_layout_new();
     assert(g_text2);
     sg_layout_settext(g_text2, TEXT2, strlen(TEXT2));
     sg_layout_setstyle(g_text2, sp);
+    sg_layout_setboxalign(g_text2, a);
 
     sg_style_setsize(sp, 16.0f);
 
@@ -48,6 +51,7 @@ sg_game_init(void)
     sg_layout_settext(g_text3, TEXT3, strlen(TEXT3));
     sg_layout_setstyle(g_text3, sp);
     sg_layout_setwidth(g_text3, 500);
+    sg_layout_setboxalign(g_text3, a);
 
     sg_style_decref(sp);
 }
@@ -110,17 +114,45 @@ sg_game_draw(int x, int y, int width, int height, unsigned msec)
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
+    /* Test box alignment */
+
     glPushMatrix();
-    glTranslatef(10, height - 30, 0);
+    glTranslatef(10, height - 10, 0);
+    sg_layout_setboxalign(g_text1, SG_VALIGN_TOP | SG_HALIGN_LEFT);
     sg_layout_draw(g_text1);
     if (mark) sg_layout_drawmarks(g_text1);
     glPopMatrix();
 
     glPushMatrix();
-    glTranslatef(10, height - 60, 0);
+    glTranslatef(10, 10, 0);
+    sg_layout_setboxalign(g_text1, SG_VALIGN_BOTTOM | SG_HALIGN_LEFT);
+    sg_layout_draw(g_text1);
+    if (mark) sg_layout_drawmarks(g_text1);
+    glPopMatrix();
+
+    glPushMatrix();
+    glTranslatef(width - 10, height - 10, 0);
+    sg_layout_setboxalign(g_text1, SG_VALIGN_TOP | SG_HALIGN_RIGHT);
+    sg_layout_draw(g_text1);
+    if (mark) sg_layout_drawmarks(g_text1);
+    glPopMatrix();
+
+    glPushMatrix();
+    glTranslatef(width - 10, 10, 0);
+    sg_layout_setboxalign(g_text1, SG_VALIGN_BOTTOM | SG_HALIGN_RIGHT);
+    sg_layout_draw(g_text1);
+    if (mark) sg_layout_drawmarks(g_text1);
+    glPopMatrix();
+
+    /* Test non-ASCII characters */
+
+    glPushMatrix();
+    glTranslatef(10, height - 50, 0);
     sg_layout_draw(g_text2);
     if (mark) sg_layout_drawmarks(g_text2);
     glPopMatrix();
+
+    /* Test wrapping */
 
     glPushMatrix();
     glTranslatef(10, height - 90, 0);
