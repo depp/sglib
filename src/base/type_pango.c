@@ -1,6 +1,7 @@
 #include "pixbuf.h"
 #include "type_impl.h"
 #include "version.h"
+#include <math.h>
 #include <pango/pango.h>
 #include <pango/pangocairo.h>
 #include <stdlib.h>
@@ -85,8 +86,10 @@ sg_layout_calcbounds(struct sg_layout *lp, struct sg_layout_bounds *b)
     pf = pango_font_description_new();
     if (!pf)
         abort();
-    pango_font_description_set_family(pf, "Serif");
-    pango_font_description_set_absolute_size(pf, 16 * PANGO_SCALE);
+    pango_font_description_set_family(
+        pf, lp->family ? lp->family : "Serif");
+    pango_font_description_set_absolute_size(
+        pf, floorf(lp->size * PANGO_SCALE + 0.5f));
     pango_layout_set_font_description(pl, pf);
     pango_layout_set_alignment(pl, PANGO_ALIGN_LEFT);
     pango_layout_set_text(pl, lp->text, lp->textlen);
