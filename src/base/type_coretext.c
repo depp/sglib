@@ -11,6 +11,7 @@ struct sg_layout_impl {
     /* Version which supports wrapping */
     CTFramesetterRef framesetter;
     CTFrameRef frame;
+    float xoff, yoff;
 };
 
 struct sg_layout_impl *
@@ -151,7 +152,10 @@ sg_layout_impl_calcbounds(struct sg_layout_impl *li,
                 r.origin.y += origins[i].y;
                 ibounds = CGRectUnion(ibounds, r);
             }
-            ibounds.origin.y -= FRAME_HEIGHT;
+            li->xoff = -origins[0].x;
+            li->yoff = -origins[0].y;
+            ibounds.origin.x += li->xoff;
+            ibounds.origin.y += li->yoff;
             free(origins);
         } else {
             ibounds = CGRectZero;
@@ -177,7 +181,9 @@ sg_layout_impl_render(struct sg_layout_impl *li, struct sg_pixbuf *pbuf,
         color_space, 0);
 
     if (li->frame) {
-        CGContextTranslateCTM(context, xoff, yoff - FRAME_HEIGHT);
+        xoff += li->xoff;
+        yoff += li->yoff;
+        CGContextTranslateCTM(context, xoff, yoff);
         CTFrameDraw(li->frame, context);
     } else {
         CGContextSetTextPosition(context, xoff, yoff);
