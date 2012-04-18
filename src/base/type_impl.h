@@ -17,6 +17,8 @@ struct sg_layout {
 
     struct sg_layout_impl *impl;
 
+    float width;
+
     char *family;
     float size;
 };

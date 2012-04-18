@@ -32,6 +32,13 @@ sg_layout_settext(struct sg_layout *lp, const char *text, unsigned length);
 void
 sg_layout_draw(struct sg_layout *lp);
 
+/* Set the width of the layout.  Lines that extend beyond this width
+   are wrapped or truncated.  A negative width indicates unlimited
+   width, which is the default.  Note that the actual pixel bounds may
+   extend beyond this.  */
+void
+sg_layout_setwidth(struct sg_layout *lp, float width);
+
 /* Set the base style of the entire layout.  This uses the current
    value of the style; the style can be modified or freed afterwards
    without affecting the layout.  */

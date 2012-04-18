@@ -10,6 +10,13 @@ struct sg_layout_impl {
     PangoLayout *layout;
 };
 
+/* Convert a floating point number to integer Pango units.  */
+static int
+pango_size(float x)
+{
+    return floorf(x * PANGO_SCALE + 0.5f);
+}
+
 void
 sg_layout_impl_free(struct sg_layout_impl *li)
 {
@@ -87,11 +94,12 @@ sg_layout_calcbounds(struct sg_layout *lp, struct sg_layout_bounds *b)
     if (!pf)
         abort();
     pango_font_description_set_family(
-        pf, lp->family ? lp->family : "Serif");
-    pango_font_description_set_absolute_size(
-        pf, floorf(lp->size * PANGO_SCALE + 0.5f));
+        pf, lp->family ? lp->family : "Liberation Sans");
+    pango_font_description_set_absolute_size(pf, pango_size(lp->size));
     pango_layout_set_font_description(pl, pf);
     pango_layout_set_alignment(pl, PANGO_ALIGN_LEFT);
+    if (lp->width >= 0)
+        pango_layout_set_width(pl, pango_size(lp->width));
     pango_layout_set_text(pl, lp->text, lp->textlen);
     b->x = 0;
     b->y = -(pango_layout_get_baseline(pl) / PANGO_SCALE);

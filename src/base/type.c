@@ -17,8 +17,9 @@ sg_layout_new(void)
     lp->textlen = 0;
     lp->texnum = 0;
     lp->impl = NULL;
+    lp->width = -1.0f;
     lp->family = NULL;
-    lp->size = 16.0;
+    lp->size = 16.0f;
 
     return lp;
 }
@@ -159,6 +160,12 @@ sg_layout_setstyle(struct sg_layout *lp, struct sg_style *sp)
         free(lp->family);
     lp->family = f;
     lp->size = sp->size;
+}
+
+void
+sg_layout_setwidth(struct sg_layout *lp, float width)
+{
+    lp->width = width;
 }
 
 struct sg_style *
