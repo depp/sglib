@@ -32,6 +32,10 @@ sg_layout_settext(struct sg_layout *lp, const char *text, unsigned length);
 void
 sg_layout_draw(struct sg_layout *lp);
 
+/* Draw the border and origin.  Used for debugging layouts.  */
+void
+sg_layout_drawmarks(struct sg_layout *lp);
+
 /* Set the width of the layout.  Lines that extend beyond this width
    are wrapped or truncated.  A negative width indicates unlimited
    width, which is the default.  Note that the actual pixel bounds may

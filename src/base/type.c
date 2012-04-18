@@ -119,19 +119,6 @@ sg_layout_draw(struct sg_layout *lp)
     if (!lp->texnum)
         sg_layout_load(lp);
 
-    if (0) {
-        glPushAttrib(GL_ENABLE_BIT | GL_CURRENT_BIT);
-        glDisable(GL_TEXTURE_2D);
-        glColor4ub(0, 0, 255, 128);
-        glBegin(GL_TRIANGLE_STRIP);
-        glVertex2f(lp->vx0, lp->vy0);
-        glVertex2f(lp->vx1, lp->vy0);
-        glVertex2f(lp->vx0, lp->vy1);
-        glVertex2f(lp->vx1, lp->vy1);
-        glEnd();
-        glPopAttrib();
-    }
-
     glPushAttrib(GL_ENABLE_BIT);
     glEnable(GL_TEXTURE_2D);
     glBindTexture(GL_TEXTURE_2D, lp->texnum);
@@ -140,6 +127,28 @@ sg_layout_draw(struct sg_layout *lp)
     glTexCoord2f(lp->tx1, lp->ty0); glVertex2f(lp->vx1, lp->vy0);
     glTexCoord2f(lp->tx0, lp->ty1); glVertex2f(lp->vx0, lp->vy1);
     glTexCoord2f(lp->tx1, lp->ty1); glVertex2f(lp->vx1, lp->vy1);
+    glEnd();
+    glPopAttrib();
+}
+
+void
+sg_layout_drawmarks(struct sg_layout *lp)
+{
+    if (!lp->texnum)
+        sg_layout_load(lp);
+
+    glPushAttrib(GL_CURRENT_BIT);
+    glBegin(GL_LINE_LOOP);
+    glVertex2f(lp->vx0 + 0.5f, lp->vy0 + 0.5f);
+    glVertex2f(lp->vx1 - 0.5f, lp->vy0 + 0.5f);
+    glVertex2f(lp->vx1 - 0.5f, lp->vy1 - 0.5f);
+    glVertex2f(lp->vx0 + 0.5f, lp->vy1 - 0.5f);
+    glEnd();
+    glBegin(GL_LINE_LOOP);
+    glVertex2f( 4.5f, 4.5f);
+    glVertex2f(-4.5f, 4.5f);
+    glVertex2f(-4.5f,-4.5f);
+    glVertex2f( 4.5f,-4.5f);
     glEnd();
     glPopAttrib();
 }
