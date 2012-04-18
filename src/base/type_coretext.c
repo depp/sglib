@@ -6,6 +6,56 @@ struct sg_layout_impl {
     CTLineRef line;
 };
 
+struct sg_layout_impl *
+sg_layout_impl_new(struct sg_layout *lp)
+{
+    struct sg_layout_impl *li;
+    CFStringRef string = NULL;
+    CGColorRef white = NULL;
+    CTFontRef font = NULL;
+    CFStringRef keys[2], fname;
+    CFTypeRef vals[2];
+    CFDictionaryRef attr = NULL;
+    CFAttributedStringRef attrstring = NULL;
+    CTLineRef line = NULL;
+
+    string = CFStringCreateWithBytes(
+        kCFAllocatorDefault, (const UInt8 *) lp->text, lp->textlen,
+        kCFStringEncodingUTF8, false);
+    white = CGColorCreateGenericGray(1.0f, 1.0f);
+    if (lp->family) {
+        fname = CFStringCreateWithBytes(
+            NULL, (UInt8 *) lp->family, strlen(lp->family),
+            kCFStringEncodingUTF8, false);
+        font = CTFontCreateWithName(fname, lp->size, NULL);
+        CFRelease(fname);
+    }
+    font = CTFontCreateWithName(CFSTR("Helvetica"), lp->size, NULL);
+
+    keys[0] = kCTFontAttributeName;
+    vals[0] = font;
+    keys[1] = kCTForegroundColorAttributeName;
+    vals[1] = white;
+
+    attr = CFDictionaryCreate(
+        kCFAllocatorDefault, (const void **) keys, (const void **) vals, 2,
+        &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
+    attrstring = CFAttributedStringCreate(kCFAllocatorDefault, string, attr);
+    line = CTLineCreateWithAttributedString(attrstring);
+
+    CFRelease(attrstring);
+    CFRelease(attr);
+    CFRelease(font);
+    CFRelease(white);
+    CFRelease(string);
+
+    li = malloc(sizeof(*li));
+    if (!li) abort();
+    li->line = line;
+
+    return li;
+}
+
 void
 sg_layout_impl_free(struct sg_layout_impl *li)
 {
@@ -46,69 +96,24 @@ sg_layout_dummycontext(void)
 }
 
 void
-sg_layout_calcbounds(struct sg_layout *lp, struct sg_layout_bounds *b)
+sg_layout_impl_calcbounds(struct sg_layout_impl *li,
+                          struct sg_layout_bounds *b)
 {
-    CFStringRef string = NULL;
-    CGColorRef white = NULL;
-    CTFontRef font = NULL;
-    CFStringRef keys[2], fname;
-    CFTypeRef vals[2];
-    CFDictionaryRef attr = NULL;
-    CFAttributedStringRef attrstring = NULL;
-    CTLineRef line = NULL;
     CGRect ibounds;
 
-    string = CFStringCreateWithBytes(
-        kCFAllocatorDefault, (const UInt8 *) lp->text, lp->textlen,
-        kCFStringEncodingUTF8, false);
-    white = CGColorCreateGenericGray(1.0f, 1.0f);
-    if (lp->family) {
-        fname = CFStringCreateWithBytes(
-            NULL, (UInt8 *) lp->family, strlen(lp->family),
-            kCFStringEncodingUTF8, false);
-        font = CTFontCreateWithName(fname, lp->size, NULL);
-        CFRelease(fname);
-    }
-    font = CTFontCreateWithName(CFSTR("Helvetica"), lp->size, NULL);
-
-    keys[0] = kCTFontAttributeName;
-    vals[0] = font;
-    keys[1] = kCTForegroundColorAttributeName;
-    vals[1] = white;
-
-    attr = CFDictionaryCreate(
-        kCFAllocatorDefault, (const void **) keys, (const void **) vals, 2,
-        &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
-    attrstring = CFAttributedStringCreate(kCFAllocatorDefault, string, attr);
-    line = CTLineCreateWithAttributedString(attrstring);
-    ibounds = CTLineGetImageBounds(line, sg_layout_dummycontext());
+    ibounds = CTLineGetImageBounds(li->line, sg_layout_dummycontext());
     b->x = 0;
     b->y = 0;
     sg_layout_copyrect(&b->ibounds, &ibounds);
-
-    CFRelease(attrstring);
-    CFRelease(attr);
-    CFRelease(font);
-    CFRelease(white);
-    CFRelease(string);
-
-    if (!lp->impl) {
-        lp->impl = malloc(sizeof(struct sg_layout_impl));
-        if (!lp->impl)
-            abort();
-        lp->impl->line = NULL;
-    }
-    lp->impl->line = line;
 }
 
-/* FIXME: lp->impl could be NULL? */
 void
-sg_layout_render(struct sg_layout *lp, struct sg_pixbuf *pbuf,
-                 int xoff, int yoff)
+sg_layout_impl_render(struct sg_layout_impl *li, struct sg_pixbuf *pbuf,
+                      int xoff, int yoff)
 {
     CGColorSpaceRef color_space = NULL;
     CGContextRef context = NULL;
-    CTLineRef line = lp->impl->line;
+    CTLineRef line = li->line;
 
     color_space = CGColorSpaceCreateWithName(kCGColorSpaceGenericGray);
     context = CGBitmapContextCreate(
@@ -119,7 +124,4 @@ sg_layout_render(struct sg_layout *lp, struct sg_pixbuf *pbuf,
 
     CFRelease(color_space);
     CFRelease(context);
-    CFRelease(line);
-
-    lp->impl->line = NULL;
 }
