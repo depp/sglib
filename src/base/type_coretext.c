@@ -51,7 +51,7 @@ sg_layout_calcbounds(struct sg_layout *lp, struct sg_layout_bounds *b)
     CFStringRef string = NULL;
     CGColorRef white = NULL;
     CTFontRef font = NULL;
-    CFStringRef keys[2];
+    CFStringRef keys[2], fname;
     CFTypeRef vals[2];
     CFDictionaryRef attr = NULL;
     CFAttributedStringRef attrstring = NULL;
@@ -62,7 +62,14 @@ sg_layout_calcbounds(struct sg_layout *lp, struct sg_layout_bounds *b)
         kCFAllocatorDefault, (const UInt8 *) lp->text, lp->textlen,
         kCFStringEncodingUTF8, false);
     white = CGColorCreateGenericGray(1.0f, 1.0f);
-    font = CTFontCreateWithName(CFSTR("Helvetica"), 16.0f, NULL);
+    if (lp->family) {
+        fname = CFStringCreateWithBytes(
+            NULL, (UInt8 *) lp->family, strlen(lp->family),
+            kCFStringEncodingUTF8, false);
+        font = CTFontCreateWithName(fname, lp->size, NULL);
+        CFRelease(fname);
+    }
+    font = CTFontCreateWithName(CFSTR("Helvetica"), lp->size, NULL);
 
     keys[0] = kCTFontAttributeName;
     vals[0] = font;
