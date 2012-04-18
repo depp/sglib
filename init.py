@@ -25,8 +25,8 @@ p.add_module(Executable(
     EXE_NAME = 'Image Test',
 ))
 
-p.add_sourcelist_str('SGLib Tests', '.', """\
-test/image/image.c
+p.add_sourcelist_str('SGLib Tests', 'src', """\
+image.c
 """, 'IMAGE')
 
 p.run()
