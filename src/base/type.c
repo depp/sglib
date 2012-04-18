@@ -17,6 +17,7 @@ sg_layout_new(void)
     lp->textlen = 0;
     lp->texnum = 0;
     lp->width = -1.0f;
+    lp->boxalign = 0;
     lp->family = NULL;
     lp->size = 16.0f;
 
@@ -64,7 +65,6 @@ static void
 sg_layout_load(struct sg_layout *lp)
 {
     struct sg_layout_impl *li;
-    struct sg_layout_bounds b;
     struct sg_pixbuf pbuf;
     struct sg_error *err = NULL;
     int r, xoff, yoff;
@@ -72,31 +72,33 @@ sg_layout_load(struct sg_layout *lp)
 
     li = sg_layout_impl_new(lp);
 
-    sg_layout_impl_calcbounds(li, &b);
-
-    lp->vx0 = (float) (b.ibounds.x - b.x);
-    lp->vx1 = (float) (b.ibounds.x - b.x + b.ibounds.width);
-    lp->vy0 = (float) (b.ibounds.y - b.y);
-    lp->vy1 = (float) (b.ibounds.y - b.y + b.ibounds.height);
+    sg_layout_impl_calcbounds(li, &lp->bounds);
 
     sg_pixbuf_init(&pbuf);
-    r = sg_pixbuf_set(&pbuf, SG_Y, b.ibounds.width, b.ibounds.height, &err);
+    r = sg_pixbuf_set(
+        &pbuf, SG_Y,
+        lp->bounds.pixel.width,
+        lp->bounds.pixel.height,
+        &err);
     if (r)
         abort();
     r = sg_pixbuf_calloc(&pbuf, &err);
     if (r)
         abort();
 
-    xoff = (pbuf.pwidth - b.ibounds.width) >> 1;
-    yoff = (pbuf.pheight - b.ibounds.height) >> 1;
+    xoff = (pbuf.pwidth - lp->bounds.pixel.width) >> 1;
+    yoff = (pbuf.pheight - lp->bounds.pixel.height) >> 1;
     xscale = 1.0f / pbuf.pwidth;
     yscale = 1.0f / pbuf.pheight;
     lp->tx0 = xscale * xoff;
-    lp->tx1 = xscale * (xoff + b.ibounds.width);
+    lp->tx1 = xscale * (xoff + lp->bounds.pixel.width);
     lp->ty0 = yscale * (pbuf.pheight - yoff);
-    lp->ty1 = yscale * (pbuf.pheight - yoff - b.ibounds.height);
+    lp->ty1 = yscale * (pbuf.pheight - yoff - lp->bounds.pixel.height);
 
-    sg_layout_impl_render(li, &pbuf, xoff - b.ibounds.x, yoff - b.ibounds.y);
+    sg_layout_impl_render(
+        li, &pbuf,
+        xoff - lp->bounds.pixel.x,
+        yoff - lp->bounds.pixel.y);
 
     sg_layout_impl_free(li);
 
@@ -113,44 +115,108 @@ sg_layout_load(struct sg_layout *lp)
     glPopAttrib();
 }
 
+static struct sg_layout_point
+sg_layout_getoff(struct sg_layout *lp)
+{
+    struct sg_layout_point p;
+
+    switch (lp->boxalign & SG_VALIGN_MASK) {
+    default:
+    case SG_VALIGN_ORIGIN:
+        p.y = lp->bounds.y;
+        break;
+
+    case SG_VALIGN_TOP:
+        p.y = lp->bounds.logical.y + lp->bounds.logical.height;
+        break;
+
+    case SG_VALIGN_CENTER:
+        p.y = lp->bounds.logical.y + (lp->bounds.logical.height >> 1);
+        break;
+
+    case SG_VALIGN_BOTTOM:
+        p.y = lp->bounds.logical.y;
+        break;
+    }
+
+    switch (lp->boxalign & SG_HALIGN_MASK) {
+    default:
+    case SG_HALIGN_ORIGIN:
+        p.x = lp->bounds.x;
+        break;
+
+    case SG_HALIGN_LEFT:
+        p.x = lp->bounds.logical.x;
+        break;
+
+    case SG_HALIGN_CENTER:
+        p.x = lp->bounds.logical.x + (lp->bounds.logical.width >> 1);
+        break;
+
+    case SG_HALIGN_RIGHT:
+        p.x = lp->bounds.logical.x + lp->bounds.logical.width;
+        break;
+    }
+
+    return p;
+}
+
 void
 sg_layout_draw(struct sg_layout *lp)
 {
+    struct sg_layout_point orig;
+    float tx0, tx1, ty0, ty1;
+    float vx0, vx1, vy0, vy1;
     if (!lp->texnum)
         sg_layout_load(lp);
+
+    orig = sg_layout_getoff(lp);
+    tx0 = lp->tx0; tx1 = lp->tx1; ty0 = lp->ty0; ty1 = lp->ty1;
+    vx0 = (float) (lp->bounds.pixel.x - orig.x);
+    vx1 = (float) (lp->bounds.pixel.x - orig.x + lp->bounds.pixel.width);
+    vy0 = (float) (lp->bounds.pixel.y - orig.y);
+    vy1 = (float) (lp->bounds.pixel.y - orig.y + lp->bounds.pixel.height);
 
     glPushAttrib(GL_ENABLE_BIT);
     glEnable(GL_TEXTURE_2D);
     glBindTexture(GL_TEXTURE_2D, lp->texnum);
     glBegin(GL_TRIANGLE_STRIP);
-    glTexCoord2f(lp->tx0, lp->ty0); glVertex2f(lp->vx0, lp->vy0);
-    glTexCoord2f(lp->tx1, lp->ty0); glVertex2f(lp->vx1, lp->vy0);
-    glTexCoord2f(lp->tx0, lp->ty1); glVertex2f(lp->vx0, lp->vy1);
-    glTexCoord2f(lp->tx1, lp->ty1); glVertex2f(lp->vx1, lp->vy1);
+    glTexCoord2f(tx0, ty0); glVertex2f(vx0, vy0);
+    glTexCoord2f(tx1, ty0); glVertex2f(vx1, vy0);
+    glTexCoord2f(tx0, ty1); glVertex2f(vx0, vy1);
+    glTexCoord2f(tx1, ty1); glVertex2f(vx1, vy1);
     glEnd();
     glPopAttrib();
 }
 
+
 void
 sg_layout_drawmarks(struct sg_layout *lp)
 {
+    struct sg_layout_point orig;
+    float vx0, vx1, vy0, vy1;
     if (!lp->texnum)
         sg_layout_load(lp);
 
-    glPushAttrib(GL_CURRENT_BIT);
+    orig = sg_layout_getoff(lp);
+    vx0 = (float) (lp->bounds.pixel.x - orig.x);
+    vx1 = (float) (lp->bounds.pixel.x - orig.x + lp->bounds.pixel.width);
+    vy0 = (float) (lp->bounds.pixel.y - orig.y);
+    vy1 = (float) (lp->bounds.pixel.y - orig.y + lp->bounds.pixel.height);
+
     glBegin(GL_LINE_LOOP);
-    glVertex2f(lp->vx0 + 0.5f, lp->vy0 + 0.5f);
-    glVertex2f(lp->vx1 - 0.5f, lp->vy0 + 0.5f);
-    glVertex2f(lp->vx1 - 0.5f, lp->vy1 - 0.5f);
-    glVertex2f(lp->vx0 + 0.5f, lp->vy1 - 0.5f);
+    glVertex2f(vx0 + 0.5f, vy0 + 0.5f);
+    glVertex2f(vx1 - 0.5f, vy0 + 0.5f);
+    glVertex2f(vx1 - 0.5f, vy1 - 0.5f);
+    glVertex2f(vx0 + 0.5f, vy1 - 0.5f);
     glEnd();
+
     glBegin(GL_LINE_LOOP);
     glVertex2f( 4.5f, 4.5f);
     glVertex2f(-4.5f, 4.5f);
     glVertex2f(-4.5f,-4.5f);
     glVertex2f( 4.5f,-4.5f);
     glEnd();
-    glPopAttrib();
 }
 
 void
@@ -177,6 +243,12 @@ void
 sg_layout_setwidth(struct sg_layout *lp, float width)
 {
     lp->width = width;
+}
+
+void
+sg_layout_setboxalign(struct sg_layout *lp, int align)
+{
+    lp->boxalign = align;
 }
 
 struct sg_style *

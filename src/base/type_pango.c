@@ -108,8 +108,8 @@ sg_layout_impl_calcbounds(struct sg_layout_impl *li,
     b->y = -(pango_layout_get_baseline(pl) / PANGO_SCALE);
     pango_layout_get_pixel_extents(pl, &ibounds, &lbounds);
 
-    sg_layout_copyrect(&b->ibounds, &ibounds);
-    sg_layout_copyrect(&b->lbounds, &lbounds);
+    sg_layout_copyrect(&b->pixel, &ibounds);
+    sg_layout_copyrect(&b->logical, &lbounds);
 }
 
 void

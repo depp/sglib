@@ -14,6 +14,28 @@ struct sg_layout;
 /* Information about the text style.  */
 struct sg_style;
 
+/* Bounding box alignment.  Not to be confused with text alignment.
+   Any vertical alignment can be ORed with any horizontal alignment.
+   The default alignment is the left baseline.  */
+enum {
+    /* Vertical alignment of bounding box.  */
+    SG_VALIGN_ORIGIN = 00,
+    SG_VALIGN_TOP = 01,
+    SG_VALIGN_CENTER = 02,
+    SG_VALIGN_BOTTOM = 03,
+
+    /* Horizontal alignment of bounding box.  */
+    SG_HALIGN_ORIGIN = 00,
+    SG_HALIGN_LEFT = 04,
+    SG_HALIGN_CENTER = 010,
+    SG_HALIGN_RIGHT = 014,
+
+    SG_VALIGN_MASK = 03,
+    SG_HALIGN_MASK = 014
+};
+
+/**********************************************************************/
+
 struct sg_layout *
 sg_layout_new(void);
 
@@ -48,6 +70,13 @@ sg_layout_setwidth(struct sg_layout *lp, float width);
    without affecting the layout.  */
 void
 sg_layout_setstyle(struct sg_layout *lp, struct sg_style *sp);
+
+/* Set the bounding box alignment of the layout.  Not to be confused
+   with text alignment.  */
+void
+sg_layout_setboxalign(struct sg_layout *lp, int align);
+
+/**********************************************************************/
 
 struct sg_style *
 sg_style_new(void);
