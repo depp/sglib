@@ -2,8 +2,15 @@
 #include "type_impl.h"
 #include <ApplicationServices/ApplicationServices.h>
 
+static const float FRAME_HEIGHT = 2048.0f;
+
 struct sg_layout_impl {
+    /* Simple (no wrap) version */
     CTLineRef line;
+
+    /* Version which supports wrapping */
+    CTFramesetterRef framesetter;
+    CTFrameRef frame;
 };
 
 struct sg_layout_impl *
@@ -18,6 +25,10 @@ sg_layout_impl_new(struct sg_layout *lp)
     CFDictionaryRef attr = NULL;
     CFAttributedStringRef attrstring = NULL;
     CTLineRef line = NULL;
+    CTFramesetterRef framesetter = NULL;
+    CTFrameRef frame = NULL;
+    CGRect bounds;
+    CGMutablePathRef path;
 
     string = CFStringCreateWithBytes(
         kCFAllocatorDefault, (const UInt8 *) lp->text, lp->textlen,
@@ -41,7 +52,18 @@ sg_layout_impl_new(struct sg_layout *lp)
         kCFAllocatorDefault, (const void **) keys, (const void **) vals, 2,
         &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
     attrstring = CFAttributedStringCreate(kCFAllocatorDefault, string, attr);
-    line = CTLineCreateWithAttributedString(attrstring);
+
+    if (lp->width >= 0) {
+        bounds = CGRectMake(0.0, 0.0, lp->width, FRAME_HEIGHT);
+        path = CGPathCreateMutable();
+        CGPathAddRect(path, NULL, bounds);
+        framesetter = CTFramesetterCreateWithAttributedString(attrstring);
+        CFRelease(path);
+        frame = CTFramesetterCreateFrame(
+            framesetter, CFRangeMake(0, CFStringGetLength(string)), path, NULL);
+    } else {
+        line = CTLineCreateWithAttributedString(attrstring);
+    }
 
     CFRelease(attrstring);
     CFRelease(attr);
@@ -52,6 +74,8 @@ sg_layout_impl_new(struct sg_layout *lp)
     li = malloc(sizeof(*li));
     if (!li) abort();
     li->line = line;
+    li->framesetter = framesetter;
+    li->frame = frame;
 
     return li;
 }
@@ -61,6 +85,10 @@ sg_layout_impl_free(struct sg_layout_impl *li)
 {
     if (li->line)
         CFRelease(li->line);
+    if (li->framesetter)
+        CFRelease(li->framesetter);
+    if (li->frame)
+        CFRelease(li->frame);
     free(li);
 }
 
@@ -99,9 +127,38 @@ void
 sg_layout_impl_calcbounds(struct sg_layout_impl *li,
                           struct sg_layout_bounds *b)
 {
-    CGRect ibounds;
-
-    ibounds = CTLineGetImageBounds(li->line, sg_layout_dummycontext());
+    CGContextRef cxt = sg_layout_dummycontext();
+    CGRect ibounds, r;
+    CFArrayRef array;
+    CGPoint *origins;
+    CFIndex n, i;
+    CTLineRef line;
+    if (li->frame) {
+        array = CTFrameGetLines(li->frame);
+        n = CFArrayGetCount(array);
+        if (n > 0) {
+            origins = malloc(sizeof(*origins) * n);
+            if (!origins) abort();
+            CTFrameGetLineOrigins(li->frame, CFRangeMake(0, n), origins);
+            line = CFArrayGetValueAtIndex(array, 0);
+            ibounds = CTLineGetImageBounds(line, cxt);
+            ibounds.origin.x += origins[0].x;
+            ibounds.origin.y += origins[0].y;
+            for (i = 1; i < n; ++i) {
+                line = CFArrayGetValueAtIndex(array, i);
+                r = CTLineGetImageBounds(line, cxt);
+                r.origin.x += origins[i].x;
+                r.origin.y += origins[i].y;
+                ibounds = CGRectUnion(ibounds, r);
+            }
+            ibounds.origin.y -= FRAME_HEIGHT;
+            free(origins);
+        } else {
+            ibounds = CGRectZero;
+        }
+    } else {
+        ibounds = CTLineGetImageBounds(li->line, cxt);
+    }
     b->x = 0;
     b->y = 0;
     sg_layout_copyrect(&b->ibounds, &ibounds);
@@ -113,14 +170,19 @@ sg_layout_impl_render(struct sg_layout_impl *li, struct sg_pixbuf *pbuf,
 {
     CGColorSpaceRef color_space = NULL;
     CGContextRef context = NULL;
-    CTLineRef line = li->line;
 
     color_space = CGColorSpaceCreateWithName(kCGColorSpaceGenericGray);
     context = CGBitmapContextCreate(
         pbuf->data, pbuf->pwidth, pbuf->pheight, 8, pbuf->rowbytes,
         color_space, 0);
-    CGContextSetTextPosition(context, xoff, yoff);
-    CTLineDraw(line, context);
+
+    if (li->frame) {
+        CGContextTranslateCTM(context, xoff, yoff - FRAME_HEIGHT);
+        CTFrameDraw(li->frame, context);
+    } else {
+        CGContextSetTextPosition(context, xoff, yoff);
+        CTLineDraw(li->line, context);
+    }
 
     CFRelease(color_space);
     CFRelease(context);
