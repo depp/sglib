@@ -46,7 +46,7 @@ sg_game_init(void)
     g_text3 = sg_layout_new();
     assert(g_text3);
     sg_layout_settext(g_text3, TEXT3, strlen(TEXT3));
-    sg_layout_setstyle(g_text2, sp);
+    sg_layout_setstyle(g_text3, sp);
 
     sg_style_decref(sp);
 }
