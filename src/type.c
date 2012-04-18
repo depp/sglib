@@ -47,6 +47,7 @@ sg_game_init(void)
     assert(g_text3);
     sg_layout_settext(g_text3, TEXT3, strlen(TEXT3));
     sg_layout_setstyle(g_text3, sp);
+    sg_layout_setwidth(g_text3, 500);
 
     sg_style_decref(sp);
 }
@@ -118,13 +119,10 @@ sg_game_draw(int x, int y, int width, int height, unsigned msec)
     sg_layout_draw(g_text2);
     glPopMatrix();
 
-#if 0
-    /* Later, when we get paragraph wrapping... */
     glPushMatrix();
     glTranslatef(10, height - 90, 0);
     sg_layout_draw(g_text3);
     glPopMatrix();
-#endif
 
     (void) msec;
 }
