@@ -25,8 +25,15 @@ p.add_module(Executable(
     EXE_NAME = 'Image Test',
 ))
 
+p.add_module(Executable(
+    'TYPE', 'Type (font) test executable',
+    reqs = 'SGLIB',
+    EXE_NAME = 'Type Test',
+))
+
 p.add_sourcelist_str('SGLib Tests', 'src', """\
-image.c
-""", 'IMAGE')
+image.c IMAGE
+type.c TYPE
+""")
 
 p.run()
