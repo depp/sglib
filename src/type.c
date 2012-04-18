@@ -69,9 +69,10 @@ sg_game_draw(int x, int y, int width, int height, unsigned msec)
 {
     float x0, x1, y0, y1;
     float mod;
-    int mode;
+    int mode, mark;
 
     mode = (msec >> 12) & 1;
+    mark = !((msec >> 11) & 1);
 
     if (!mode)
         glClearColor(0.0, 0.0, 0.0, 0.0);
@@ -112,16 +113,19 @@ sg_game_draw(int x, int y, int width, int height, unsigned msec)
     glPushMatrix();
     glTranslatef(10, height - 30, 0);
     sg_layout_draw(g_text1);
+    if (mark) sg_layout_drawmarks(g_text1);
     glPopMatrix();
 
     glPushMatrix();
     glTranslatef(10, height - 60, 0);
     sg_layout_draw(g_text2);
+    if (mark) sg_layout_drawmarks(g_text2);
     glPopMatrix();
 
     glPushMatrix();
     glTranslatef(10, height - 90, 0);
     sg_layout_draw(g_text3);
+    if (mark) sg_layout_drawmarks(g_text3);
     glPopMatrix();
 
     (void) msec;
