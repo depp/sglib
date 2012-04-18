@@ -16,6 +16,15 @@ struct sg_layout {
     float tx0, tx1, ty0, ty1;
 
     struct sg_layout_impl *impl;
+
+    char *family;
+    float size;
+};
+
+struct sg_style {
+    unsigned refcount;
+    char *family;
+    float size;
 };
 
 /* The rectangle uses OpenGL-style coordinates (origin at bottom

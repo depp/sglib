@@ -17,6 +17,8 @@ sg_layout_new(void)
     lp->textlen = 0;
     lp->texnum = 0;
     lp->impl = NULL;
+    lp->family = NULL;
+    lp->size = 16.0;
 
     return lp;
 }
@@ -139,11 +141,83 @@ sg_layout_draw(struct sg_layout *lp)
     glPopAttrib();
 }
 
-#if defined(HAVE_CORETEXT)
+void
+sg_layout_setstyle(struct sg_layout *lp, struct sg_style *sp)
+{
+    char *f;
+    size_t s;
+    if (sp->family) {
+        s = strlen(sp->family);
+        f = malloc(s + 1);
+        if (!f)
+            abort();
+        memcpy(f, sp->family, s + 1);
+    } else {
+        f = NULL;
+    }
+    if (lp->family)
+        free(lp->family);
+    lp->family = f;
+    lp->size = sp->size;
+}
 
-#elif defined(HAVE_PANGOCAIRO)
+struct sg_style *
+sg_style_new(void)
+{
+    struct sg_style *sp;
+    sp = malloc(sizeof(*sp));
+    if (!sp)
+        abort();
+    sp->refcount = 1;
+    sp->family = NULL;
+    sp->size = 16.0f;
+    return sp;
+}
 
-#elif defined(_WIN32)
+static void
+sg_style_free(struct sg_style *sp)
+{
+    if (sp->family)
+        free(sp->family);
+    free(sp);
+}
 
-#endif
+void
+sg_style_incref(struct sg_style *sp)
+{
+    if (sp)
+        sp->refcount++;
+}
+
+void
+sg_style_decref(struct sg_style *sp)
+{
+    if (sp && --sp->refcount == 0)
+        sg_style_free(sp);
+}
+
+void
+sg_style_setfamily(struct sg_style *sp, const char *family)
+{
+    char *f;
+    size_t s;
+    if (family) {
+        s = strlen(family);
+        f = malloc(s + 1);
+        if (!f)
+            abort();
+        memcpy(f, family, s + 1);
+    } else {
+        f = NULL;
+    }
+    if (sp->family)
+        free(sp->family);
+    sp->family = f;
+}
+
+void
+sg_style_setsize(struct sg_style *sp, float size)
+{
+    sp->size = size;
+}
 
