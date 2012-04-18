@@ -17,14 +17,6 @@ pango_size(float x)
     return floorf(x * PANGO_SCALE + 0.5f);
 }
 
-void
-sg_layout_impl_free(struct sg_layout_impl *li)
-{
-    if (li->layout)
-        g_object_unref(li->layout);
-    free(li);
-}
-
 static void
 sg_layout_copyrect(struct sg_layout_rect *dest, PangoRectangle *src)
 {
@@ -64,31 +56,24 @@ sg_layout_sharedcontext(cairo_t *cr)
     return shared_pc;
 }
 
-void
-sg_layout_calcbounds(struct sg_layout *lp, struct sg_layout_bounds *b)
+struct sg_layout_impl *
+sg_layout_impl_new(struct sg_layout *lp)
 {
     struct sg_layout_impl *li;
     PangoContext *pc;
     PangoLayout *pl;
     PangoFontDescription *pf;
-    PangoRectangle ibounds, lbounds;
+
+    li = malloc(sizeof(*li));
+    if (!li)
+        abort();
+    li->layout = NULL;
 
     pc = sg_layout_sharedcontext(NULL);
-    li = lp->impl;
-    if (!li) {
-        li = malloc(sizeof(*li));
-        if (!li)
-            abort();
-        li->layout = NULL;
-        lp->impl = li;
-    }
-    pl = li->layout;
-    if (!pl) {
-        pl = pango_layout_new(pc);
-        if (!pl)
-            abort();
-        li->layout = pl;
-    }
+
+    pl = pango_layout_new(pc);
+    if (!pl) abort();
+    li->layout = pl;
 
     pf = pango_font_description_new();
     if (!pf)
@@ -101,6 +86,24 @@ sg_layout_calcbounds(struct sg_layout *lp, struct sg_layout_bounds *b)
     if (lp->width >= 0)
         pango_layout_set_width(pl, pango_size(lp->width));
     pango_layout_set_text(pl, lp->text, lp->textlen);
+    return li;
+}
+
+void
+sg_layout_impl_free(struct sg_layout_impl *li)
+{
+    if (li->layout)
+        g_object_unref(li->layout);
+    free(li);
+}
+
+void
+sg_layout_impl_calcbounds(struct sg_layout_impl *li,
+                          struct sg_layout_bounds *b)
+{
+    PangoLayout *pl = li->layout;
+    PangoRectangle ibounds, lbounds;
+
     b->x = 0;
     b->y = -(pango_layout_get_baseline(pl) / PANGO_SCALE);
     pango_layout_get_pixel_extents(pl, &ibounds, &lbounds);
@@ -109,14 +112,13 @@ sg_layout_calcbounds(struct sg_layout *lp, struct sg_layout_bounds *b)
     sg_layout_copyrect(&b->lbounds, &lbounds);
 }
 
-/* FIXME: assums li is not NULL? */
 void
-sg_layout_render(struct sg_layout *lp, struct sg_pixbuf *pbuf,
-                 int xoff, int yoff)
+sg_layout_impl_render(struct sg_layout_impl *li, struct sg_pixbuf *pbuf,
+                      int xoff, int yoff)
 {
     cairo_surface_t *surf;
     cairo_t *cr;
-    PangoLayout *pl;
+    PangoLayout *pl = li->layout;
 
     surf = cairo_image_surface_create_for_data(
         pbuf->data, CAIRO_FORMAT_A8,
@@ -129,13 +131,8 @@ sg_layout_render(struct sg_layout *lp, struct sg_pixbuf *pbuf,
     cairo_translate(cr, xoff, pbuf->pheight - yoff);
 
     (void) sg_layout_sharedcontext(cr);
-    pl = lp->impl->layout;
-    if (!pl)
-        abort();
     pango_layout_context_changed(pl);
     pango_cairo_show_layout(cr, pl);
-    g_object_unref(pl);
-    lp->impl->layout = NULL;
 
     cairo_destroy(cr);
     cairo_surface_destroy(surf);

@@ -16,7 +16,6 @@ sg_layout_new(void)
     lp->text = NULL;
     lp->textlen = 0;
     lp->texnum = 0;
-    lp->impl = NULL;
     lp->width = -1.0f;
     lp->family = NULL;
     lp->size = 16.0f;
@@ -29,8 +28,6 @@ sg_layout_free(struct sg_layout *lp)
 {
     if (lp->texnum)
         glDeleteTextures(1, &lp->texnum);
-    if (lp->impl)
-        sg_layout_impl_free(lp->impl);
     free(lp);
 }
 
@@ -66,13 +63,16 @@ sg_layout_settext(struct sg_layout *lp, const char *text, unsigned length)
 static void
 sg_layout_load(struct sg_layout *lp)
 {
+    struct sg_layout_impl *li;
     struct sg_layout_bounds b;
     struct sg_pixbuf pbuf;
     struct sg_error *err = NULL;
     int r, xoff, yoff;
     float xscale, yscale;
 
-    sg_layout_calcbounds(lp, &b);
+    li = sg_layout_impl_new(lp);
+
+    sg_layout_impl_calcbounds(li, &b);
 
     lp->vx0 = (float) (b.ibounds.x - b.x);
     lp->vx1 = (float) (b.ibounds.x - b.x + b.ibounds.width);
@@ -96,7 +96,9 @@ sg_layout_load(struct sg_layout *lp)
     lp->ty0 = yscale * (pbuf.pheight - yoff);
     lp->ty1 = yscale * (pbuf.pheight - yoff - b.ibounds.height);
 
-    sg_layout_render(lp, &pbuf, xoff - b.ibounds.x, yoff - b.ibounds.y);
+    sg_layout_impl_render(li, &pbuf, xoff - b.ibounds.x, yoff - b.ibounds.y);
+
+    sg_layout_impl_free(li);
 
     if (!lp->texnum)
         glGenTextures(1, &lp->texnum);

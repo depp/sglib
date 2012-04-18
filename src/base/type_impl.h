@@ -7,18 +7,22 @@ struct sg_pixbuf;
 
 struct sg_layout {
     unsigned refcount;
+
+    /* Layout text contents */
     char *text;
     unsigned textlen;
 
+    /* OpenGL texture */
     unsigned texnum;
 
+    /* Texture and vertex coordinates */
     float vx0, vx1, vy0, vy1;
     float tx0, tx1, ty0, ty1;
 
-    struct sg_layout_impl *impl;
-
+    /* Layout width, or -1 for unlimited */
     float width;
 
+    /* Style */
     char *family;
     float size;
 };
@@ -51,18 +55,26 @@ struct sg_layout_bounds {
     struct sg_layout_rect lbounds;
 };
 
-/* Free the 'impl' field from an sg_layout structure.  */
+/* Backend-specific layout implementation state.  Created temporarily
+   to draw the layout.  */
+struct sg_layout_impl;
+
+/* Create a layout implementation object from the given layout.  */
+struct sg_layout_impl *
+sg_layout_impl_new(struct sg_layout *lp);
+
 void
 sg_layout_impl_free(struct sg_layout_impl *li);
 
 /* Calculate the bounds of the given layout.  */
 void
-sg_layout_calcbounds(struct sg_layout *lp, struct sg_layout_bounds *b);
+sg_layout_impl_calcbounds(struct sg_layout_impl *li,
+                          struct sg_layout_bounds *b);
 
 /* Render the layout at the given location in a pixel buffer.  */
 void
-sg_layout_render(struct sg_layout *lp, struct sg_pixbuf *pbuf,
-                 int xoff, int yoff);
+sg_layout_impl_render(struct sg_layout_impl *li, struct sg_pixbuf *pbuf,
+                      int xoff, int yoff);
 
 #ifdef __cplusplus
 }
