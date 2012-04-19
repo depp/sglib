@@ -4,12 +4,12 @@
 #include "type_impl.h"
 #include <Windows.h>
 #include <usp10.h>
+#include <math.h>
 
 #pragma comment(lib, "Usp10.lib")
 
 static int sg_uniscribe_initted;
 static SCRIPT_DIGITSUBSTITUTE sg_uniscribe_psds;
-static SCRIPT_CACHE sg_uniscribe_cache;
 static HDC sg_uniscribe_dc;
 
 /* All coordinates are Windows pixel coordinates,
@@ -28,6 +28,7 @@ struct sg_layout_item {
 };
 
 struct sg_layout_impl {
+    struct sg_layout *lp;
     HDC dc;
 
     /* Line info */
@@ -45,18 +46,14 @@ struct sg_layout_impl {
     int *gadvances; /* Advance of each glyph */
 };
 
-static HDC
-sg_layout_initdc(void)
+static void
+sg_layout_setfont(HDC dc, struct sg_layout *lp)
 {
-    HDC dc;
     LOGFONTW f;
     HFONT fh;
 
-    dc = CreateCompatibleDC(NULL);
-    if (!dc)
-        abort();
-
-    f.lfHeight = -16;
+    f.lfHeight = -(long) floorf(lp->size + 0.5f);
+    // f.lfHeight = -16;
     f.lfWidth = 0;
     f.lfEscapement = 0;
     f.lfOrientation = 0;
@@ -74,8 +71,6 @@ sg_layout_initdc(void)
     if (!fh)
         abort();
     SelectObject(dc, fh);
-
-    return dc;
 }
 
 static void
@@ -97,6 +92,7 @@ sg_layout_impl_new(struct sg_layout *lp)
     ABC abc;
     TEXTMETRIC metrics;
     BOOL br;
+    SCRIPT_CACHE cache = NULL;
 
     /* UTF-16 text */
     int wtextlen;
@@ -160,7 +156,8 @@ alloc_items:
     }
 
     /* Get the device context handle */
-    dc = sg_layout_initdc();
+    dc = CreateCompatibleDC(NULL);
+    sg_layout_setfont(dc, lp);
 
     /***** Place each item *****/
     /* Creates new item array, and all the glyph arrays (glyphs, offsets, advances) */
@@ -197,7 +194,7 @@ alloc_items:
             maxg = avisattr;
         hr = ScriptShape(
             dc,
-            &sg_uniscribe_cache,
+            &cache,
             wtext + cstart,
             clen,
             maxg,
@@ -237,7 +234,7 @@ alloc_items:
 
         hr = ScriptPlace(
             dc,
-            &sg_uniscribe_cache,
+            &cache,
             glyphs + curglyph,
             nglyphs,
             visattr,
@@ -271,6 +268,7 @@ alloc_items:
     li = malloc(sizeof(*li));
     if (!li) goto error;
 
+    li->lp = lp;
     li->dc = dc;
     li->nlines = 1;
     li->lines = lines;
@@ -281,6 +279,9 @@ alloc_items:
     li->goffsets = goffsets;
     li->gadvances = gadvances;
 
+    if (cache)
+        ScriptFreeCache(&cache);
+
     free(wtext);
     free(sitems);
     free(clusters);
@@ -290,6 +291,9 @@ alloc_items:
 
 error:
     abort(); /* Since the caller can't handle errors from here yet */
+
+    if (cache)
+        ScriptFreeCache(&cache);
 
     if (dc)
         DeleteDC(dc);
@@ -371,6 +375,7 @@ sg_layout_impl_render(struct sg_layout_impl *li, struct sg_pixbuf *pbuf,
 {
     HDC dc;
     HRESULT hr;
+    SCRIPT_CACHE cache = NULL;
 
     /* Bitmap info */
     HBITMAP hbit;
@@ -392,6 +397,7 @@ sg_layout_impl_render(struct sg_layout_impl *li, struct sg_pixbuf *pbuf,
     int x, y, w, h;
 
     dc = li->dc;
+    sg_layout_setfont(dc, li->lp);
     w = pbuf->pwidth;
     h = pbuf->pheight;
 
@@ -432,7 +438,7 @@ sg_layout_impl_render(struct sg_layout_impl *li, struct sg_pixbuf *pbuf,
         for (; curitem < enditem; ++curitem) {
             hr = ScriptTextOut(
                 dc,
-                &sg_uniscribe_cache,
+                &cache,
                 items[curitem].xoff + xoff,
                 ypos,
                 ETO_CLIPPED,
@@ -463,10 +469,14 @@ sg_layout_impl_render(struct sg_layout_impl *li, struct sg_pixbuf *pbuf,
         dptr += orb;
     }
 
+    if (cache)
+        ScriptFreeCache(&cache);
     DeleteObject(hbit);
     return;
 
 error:
     abort();
+    if (cache)
+        ScriptFreeCache(&cache);
     DeleteObject(hbit);
 }
