@@ -71,6 +71,7 @@ sg_layout_setfont(HDC dc, struct sg_layout *lp)
     if (!fh)
         abort();
     SelectObject(dc, fh);
+    DeleteObject(fh);
 }
 
 static void
