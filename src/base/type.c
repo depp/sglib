@@ -211,6 +211,18 @@ sg_layout_drawmarks(struct sg_layout *lp)
     glVertex2f(vx0 + 0.5f, vy1 - 0.5f);
     glEnd();
 
+    vx0 = (float) (lp->bounds.logical.x - orig.x);
+    vx1 = (float) (lp->bounds.logical.x - orig.x + lp->bounds.logical.width);
+    vy0 = (float) (lp->bounds.logical.y - orig.y);
+    vy1 = (float) (lp->bounds.logical.y - orig.y + lp->bounds.logical.height);
+
+    glBegin(GL_LINE_LOOP);
+    glVertex2f(vx0 + 0.5f, vy0 + 0.5f);
+    glVertex2f(vx1 - 0.5f, vy0 + 0.5f);
+    glVertex2f(vx1 - 0.5f, vy1 - 0.5f);
+    glVertex2f(vx0 + 0.5f, vy1 - 0.5f);
+    glEnd();
+
     glBegin(GL_LINE_LOOP);
     glVertex2f( 4.5f, 4.5f);
     glVertex2f(-4.5f, 4.5f);
