@@ -11,7 +11,6 @@ struct sg_layout_impl {
     /* Version which supports wrapping */
     CTFramesetterRef framesetter;
     CTFrameRef frame;
-    float xoff, yoff;
 };
 
 struct sg_layout_impl *
@@ -124,14 +123,37 @@ sg_layout_dummycontext(void)
     return dummy_context;
 }
 
+static CGRect
+sg_layout_ctline_pixbounds(CTLineRef line, CGPoint off, CGContextRef cxt)
+{
+    CGRect r = CTLineGetImageBounds(line, cxt);
+    r.origin.x += off.x;
+    r.origin.y += off.y;
+    return r;
+}
+
+static CGRect
+sg_layout_ctline_logbounds(CTLineRef line, CGPoint off)
+{
+    double lwidth;
+    CGFloat ascent, descent;
+    CGRect r;
+    lwidth = CTLineGetTypographicBounds(line, &ascent, &descent, NULL);
+    r.origin.x = off.x;
+    r.origin.y = off.y - descent;
+    r.size.width = lwidth;
+    r.size.height = ascent + descent;
+    return r;
+}
+
 void
 sg_layout_impl_calcbounds(struct sg_layout_impl *li,
                           struct sg_layout_bounds *b)
 {
     CGContextRef cxt = sg_layout_dummycontext();
-    CGRect ibounds, r;
+    CGRect pixbounds, logbounds, r;
     CFArrayRef array;
-    CGPoint *origins;
+    CGPoint *origins, origin;
     CFIndex n, i;
     CTLineRef line;
     if (li->frame) {
@@ -142,30 +164,35 @@ sg_layout_impl_calcbounds(struct sg_layout_impl *li,
             if (!origins) abort();
             CTFrameGetLineOrigins(li->frame, CFRangeMake(0, n), origins);
             line = CFArrayGetValueAtIndex(array, 0);
-            ibounds = CTLineGetImageBounds(line, cxt);
-            ibounds.origin.x += origins[0].x;
-            ibounds.origin.y += origins[0].y;
+            origin = origins[0];
+            pixbounds = sg_layout_ctline_pixbounds(line, origin, cxt);
+            logbounds = sg_layout_ctline_logbounds(line, origin);
             for (i = 1; i < n; ++i) {
                 line = CFArrayGetValueAtIndex(array, i);
-                r = CTLineGetImageBounds(line, cxt);
-                r.origin.x += origins[i].x;
-                r.origin.y += origins[i].y;
-                ibounds = CGRectUnion(ibounds, r);
+                origin = origins[i];
+                r = sg_layout_ctline_pixbounds(line, origin, cxt);
+                pixbounds = CGRectUnion(pixbounds, r);
+                r = sg_layout_ctline_logbounds(line, origin);
+                logbounds = CGRectUnion(logbounds, r);
             }
-            li->xoff = -origins[0].x;
-            li->yoff = -origins[0].y;
-            ibounds.origin.x += li->xoff;
-            ibounds.origin.y += li->yoff;
+            b->x = (int) floorf(origins[0].x + 0.5f);
+            b->y = (int) floorf(origins[0].y + 0.5f);
             free(origins);
         } else {
-            ibounds = CGRectZero;
+            pixbounds = CGRectZero;
+            logbounds = CGRectZero;
+            b->x = 0;
+            b->y = 0;
         }
     } else {
-        ibounds = CTLineGetImageBounds(li->line, cxt);
+        line = li->line;
+        pixbounds = CTLineGetImageBounds(line, cxt);
+        logbounds = sg_layout_ctline_logbounds(line, CGPointZero);
+        b->x = 0;
+        b->y = 0;
     }
-    b->x = 0;
-    b->y = 0;
-    sg_layout_copyrect(&b->ibounds, &ibounds);
+    sg_layout_copyrect(&b->pixel, &pixbounds);
+    sg_layout_copyrect(&b->logical, &logbounds);
 }
 
 void
@@ -181,8 +208,6 @@ sg_layout_impl_render(struct sg_layout_impl *li, struct sg_pixbuf *pbuf,
         color_space, 0);
 
     if (li->frame) {
-        xoff += li->xoff;
-        yoff += li->yoff;
         CGContextTranslateCTM(context, xoff, yoff);
         CTFrameDraw(li->frame, context);
     } else {
