@@ -1,5 +1,7 @@
 #include "base/opengl.h"
 #include "base/entry.h"
+#include "base/event.h"
+#include "base/keycode/keycode.h"
 #include "base/type.h"
 #include <assert.h>
 #include <math.h>
@@ -21,7 +23,12 @@ static const char TEXT3[] =
 "blessed him, equine in its length, and at the light untonsured hair, "
 "grained and hued like pale oak.";
 
-static struct sg_layout *g_text1, *g_text2, *g_text3;
+static const char TEXT4[] =
+"1: invert, 2: boxes";
+
+static struct sg_layout *g_text1, *g_text2, *g_text3, *g_text4;
+
+static int g_dark, g_boxes;
 
 void
 sg_game_init(void)
@@ -53,6 +60,12 @@ sg_game_init(void)
     sg_layout_setwidth(g_text3, 500);
     sg_layout_setboxalign(g_text3, a);
 
+    g_text4 = sg_layout_new();
+    assert(g_text4);
+    sg_layout_settext(g_text4, TEXT4, strlen(TEXT4));
+    sg_layout_setstyle(g_text4, sp);
+    sg_layout_setboxalign(g_text4, SG_VALIGN_BOTTOM | SG_HALIGN_CENTER);
+
     sg_style_decref(sp);
 }
 
@@ -65,7 +78,21 @@ sg_game_getinfo(struct sg_game_info *info)
 void
 sg_game_event(union sg_event *evt)
 {
-    (void) evt;
+    switch (evt->type) {
+    case SG_EVENT_KDOWN:
+        switch (evt->key.key) {
+        case KEY_1:
+            g_dark = !g_dark;
+            break;
+        case KEY_2:
+            g_boxes = !g_boxes;
+            break;
+        }
+        break;
+
+    default:
+        break;
+    }
 }
 
 void
@@ -73,12 +100,8 @@ sg_game_draw(int x, int y, int width, int height, unsigned msec)
 {
     float x0, x1, y0, y1;
     float mod;
-    int mode, mark;
 
-    mode = (msec >> 12) & 1;
-    mark = !((msec >> 11) & 1);
-
-    if (!mode)
+    if (!g_dark)
         glClearColor(0.0, 0.0, 0.0, 0.0);
     else
         glClearColor(1.0, 1.0, 1.0, 1.0);
@@ -96,7 +119,7 @@ sg_game_draw(int x, int y, int width, int height, unsigned msec)
 
     x0 = mod; x1 = mod + 64.0f;
     y0 = 0; y1 = height;
-    if (!mode)
+    if (!g_dark)
         glColor3ub(51, 51, 51);
     else
         glColor3ub(204, 204, 204);
@@ -107,7 +130,7 @@ sg_game_draw(int x, int y, int width, int height, unsigned msec)
     glVertex2f(x1, y1);
     glEnd();
 
-    if (!mode)
+    if (!g_dark)
         glColor3ub(255, 255, 255);
     else
         glColor3ub(0, 0, 0);
@@ -120,28 +143,28 @@ sg_game_draw(int x, int y, int width, int height, unsigned msec)
     glTranslatef(10, height - 10, 0);
     sg_layout_setboxalign(g_text1, SG_VALIGN_TOP | SG_HALIGN_LEFT);
     sg_layout_draw(g_text1);
-    if (mark) sg_layout_drawmarks(g_text1);
+    if (g_boxes) sg_layout_drawmarks(g_text1);
     glPopMatrix();
 
     glPushMatrix();
     glTranslatef(10, 10, 0);
     sg_layout_setboxalign(g_text1, SG_VALIGN_BOTTOM | SG_HALIGN_LEFT);
     sg_layout_draw(g_text1);
-    if (mark) sg_layout_drawmarks(g_text1);
+    if (g_boxes) sg_layout_drawmarks(g_text1);
     glPopMatrix();
 
     glPushMatrix();
     glTranslatef(width - 10, height - 10, 0);
     sg_layout_setboxalign(g_text1, SG_VALIGN_TOP | SG_HALIGN_RIGHT);
     sg_layout_draw(g_text1);
-    if (mark) sg_layout_drawmarks(g_text1);
+    if (g_boxes) sg_layout_drawmarks(g_text1);
     glPopMatrix();
 
     glPushMatrix();
     glTranslatef(width - 10, 10, 0);
     sg_layout_setboxalign(g_text1, SG_VALIGN_BOTTOM | SG_HALIGN_RIGHT);
     sg_layout_draw(g_text1);
-    if (mark) sg_layout_drawmarks(g_text1);
+    if (g_boxes) sg_layout_drawmarks(g_text1);
     glPopMatrix();
 
     /* Test non-ASCII characters */
@@ -149,7 +172,7 @@ sg_game_draw(int x, int y, int width, int height, unsigned msec)
     glPushMatrix();
     glTranslatef(10, height - 50, 0);
     sg_layout_draw(g_text2);
-    if (mark) sg_layout_drawmarks(g_text2);
+    if (g_boxes) sg_layout_drawmarks(g_text2);
     glPopMatrix();
 
     /* Test wrapping */
@@ -157,7 +180,15 @@ sg_game_draw(int x, int y, int width, int height, unsigned msec)
     glPushMatrix();
     glTranslatef(10, height - 90, 0);
     sg_layout_draw(g_text3);
-    if (mark) sg_layout_drawmarks(g_text3);
+    if (g_boxes) sg_layout_drawmarks(g_text3);
+    glPopMatrix();
+
+    /* Instructions */
+
+    glPushMatrix();
+    glTranslatef(width / 2, 10, 0);
+    sg_layout_draw(g_text4);
+    if (g_boxes) sg_layout_drawmarks(g_text4);
     glPopMatrix();
 
     (void) msec;
