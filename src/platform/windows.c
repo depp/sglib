@@ -51,6 +51,7 @@ sg_platform_failv(const char *fmt, va_list ap)
     abort();
 }
 
+static struct sg_game_info g_info;
 static HDC hDC;
 static HGLRC hRC;
 static HWND hWnd;
@@ -126,7 +127,7 @@ static PIXELFORMATDESCRIPTOR pfd = {
     0, 0, 0 // layer masks
 };
 
-BOOL createWindow(struct sg_game_info *info, int nCmdShow)
+BOOL createWindow(int nCmdShow)
 {
     GLuint pixelFormat;
     WNDCLASSEXW wc;
@@ -135,9 +136,9 @@ BOOL createWindow(struct sg_game_info *info, int nCmdShow)
     RECT windowRect;
 
     windowRect.left = 0;
-    windowRect.right = info->default_width;
+    windowRect.right = g_info.default_width;
     windowRect.top = 0;
-    windowRect.bottom = info->default_height;
+    windowRect.bottom = g_info.default_height;
 
     hInstance = GetModuleHandle(NULL);
     wc.cbSize = sizeof(wc);
@@ -209,7 +210,7 @@ BOOL createWindow(struct sg_game_info *info, int nCmdShow)
     ShowWindow(hWnd, nCmdShow);
     SetForegroundWindow(hWnd);
     SetFocus(hWnd);
-    handleResize(info->default_width, info->default_height);
+    handleResize(g_info.default_width, g_info.default_height);
 
     return TRUE;
 }
@@ -296,6 +297,20 @@ static LRESULT CALLBACK wndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
     case WM_SIZE:
         handleResize(LOWORD(lParam), HIWORD(lParam));
         return 0;
+
+    case WM_GETMINMAXINFO:
+        {
+            LPMINMAXINFO ifo = (LPMINMAXINFO) lParam;
+            RECT wrect, crect;
+            int bw, bh;
+            GetWindowRect(hWnd, &wrect);
+            GetClientRect(hWnd, &crect);
+            bw = (wrect.right - wrect.left) - (crect.right - crect.left);
+            bh = (wrect.bottom - wrect.top) - (crect.bottom - crect.top);
+            ifo->ptMinTrackSize.x = g_info.min_width + bw;
+            ifo->ptMinTrackSize.y = g_info.min_height + bh;
+            return 0;
+        }
     }
 
     return DefWindowProcW(hWnd, uMsg, wParam, lParam);
@@ -407,11 +422,10 @@ static void
 init(int nCmdShow)
 {
     HRESULT hr;
-    struct sg_game_info gameinfo;
 
     cmdline_parse();
     sg_sys_init();
-    sg_sys_getinfo(&gameinfo);
+    sg_sys_getinfo(&g_info);
 
     hr = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
     if (FAILED(hr)) {
@@ -419,7 +433,7 @@ init(int nCmdShow)
         exit(1);
     }
 
-    if (!createWindow(&gameinfo, nCmdShow))
+    if (!createWindow(nCmdShow))
         exit(0);
     glBlendColor = (void (APIENTRY *)(GLclampf, GLclampf, GLclampf, GLclampf))
         wglGetProcAddress("glBlendColor");
