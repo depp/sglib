@@ -41,13 +41,13 @@ sg_game_init(void)
 
     g_text1 = sg_layout_new();
     assert(g_text1);
-    sg_layout_settext(g_text1, TEXT1, strlen(TEXT1));
+    sg_layout_settext(g_text1, TEXT1, (unsigned) strlen(TEXT1));
     sg_layout_setstyle(g_text1, sp);
     sg_layout_setboxalign(g_text1, a);
 
     g_text2 = sg_layout_new();
     assert(g_text2);
-    sg_layout_settext(g_text2, TEXT2, strlen(TEXT2));
+    sg_layout_settext(g_text2, TEXT2, (unsigned) strlen(TEXT2));
     sg_layout_setstyle(g_text2, sp);
     sg_layout_setboxalign(g_text2, a);
 
@@ -55,14 +55,14 @@ sg_game_init(void)
 
     g_text3 = sg_layout_new();
     assert(g_text3);
-    sg_layout_settext(g_text3, TEXT3, strlen(TEXT3));
+    sg_layout_settext(g_text3, TEXT3, (unsigned) strlen(TEXT3));
     sg_layout_setstyle(g_text3, sp);
     sg_layout_setwidth(g_text3, 500);
     sg_layout_setboxalign(g_text3, a);
 
     g_text4 = sg_layout_new();
     assert(g_text4);
-    sg_layout_settext(g_text4, TEXT4, strlen(TEXT4));
+    sg_layout_settext(g_text4, TEXT4, (unsigned) strlen(TEXT4));
     sg_layout_setstyle(g_text4, sp);
     sg_layout_setboxalign(g_text4, SG_VALIGN_BOTTOM | SG_HALIGN_CENTER);
 
@@ -118,7 +118,7 @@ sg_game_draw(int x, int y, int width, int height, unsigned msec)
     mod = (1.0f + sinf((8 * atanf(1.0f)) * mod)) * 0.5f * (width - 64);
 
     x0 = mod; x1 = mod + 64.0f;
-    y0 = 0; y1 = height;
+    y0 = 0; y1 = (float) height;
     if (!g_dark)
         glColor3ub(51, 51, 51);
     else
@@ -140,7 +140,7 @@ sg_game_draw(int x, int y, int width, int height, unsigned msec)
     /* Test box alignment */
 
     glPushMatrix();
-    glTranslatef(10, height - 10, 0);
+    glTranslatef(10, (float) height - 10, 0);
     sg_layout_setboxalign(g_text1, SG_VALIGN_TOP | SG_HALIGN_LEFT);
     sg_layout_draw(g_text1);
     if (g_boxes) sg_layout_drawmarks(g_text1);
@@ -154,14 +154,14 @@ sg_game_draw(int x, int y, int width, int height, unsigned msec)
     glPopMatrix();
 
     glPushMatrix();
-    glTranslatef(width - 10, height - 10, 0);
+    glTranslatef((float) width - 10, (float) height - 10, 0);
     sg_layout_setboxalign(g_text1, SG_VALIGN_TOP | SG_HALIGN_RIGHT);
     sg_layout_draw(g_text1);
     if (g_boxes) sg_layout_drawmarks(g_text1);
     glPopMatrix();
 
     glPushMatrix();
-    glTranslatef(width - 10, 10, 0);
+    glTranslatef((float) width - 10, 10, 0);
     sg_layout_setboxalign(g_text1, SG_VALIGN_BOTTOM | SG_HALIGN_RIGHT);
     sg_layout_draw(g_text1);
     if (g_boxes) sg_layout_drawmarks(g_text1);
@@ -170,7 +170,7 @@ sg_game_draw(int x, int y, int width, int height, unsigned msec)
     /* Test non-ASCII characters */
 
     glPushMatrix();
-    glTranslatef(10, height - 50, 0);
+    glTranslatef(10, (float) height - 50, 0);
     sg_layout_draw(g_text2);
     if (g_boxes) sg_layout_drawmarks(g_text2);
     glPopMatrix();
@@ -178,7 +178,7 @@ sg_game_draw(int x, int y, int width, int height, unsigned msec)
     /* Test wrapping */
 
     glPushMatrix();
-    glTranslatef(10, height - 90, 0);
+    glTranslatef(10, (float) height - 90, 0);
     sg_layout_draw(g_text3);
     if (g_boxes) sg_layout_drawmarks(g_text3);
     glPopMatrix();
@@ -186,7 +186,7 @@ sg_game_draw(int x, int y, int width, int height, unsigned msec)
     /* Instructions */
 
     glPushMatrix();
-    glTranslatef(width / 2, 10, 0);
+    glTranslatef((float) width / 2, 10, 0);
     sg_layout_draw(g_text4);
     if (g_boxes) sg_layout_drawmarks(g_text4);
     glPopMatrix();
