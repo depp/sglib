@@ -15,6 +15,7 @@ p.info.set(
     PKG_COPYRIGHT = u'Copyright \xa9 2011-2012 Dietrich Epp',
     DEFAULT_CVARS = [
         ('log.level.root', 'debug'),
+        ('log.winconsole', 'yes'),
         ('path.data-path', Path('data')),
     ]
 )
