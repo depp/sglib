@@ -62,6 +62,7 @@ sg_log_console_init(void)
 #include <Windows.h>
 #include <io.h>
 #include <fcntl.h>
+#include "cvar.h"
 
 #define BUFFER_SIZE BUFSIZ
 
@@ -88,6 +89,9 @@ static int
 sg_log_console_create(void)
 {
     BOOL br;
+    int flag;
+    if (!sg_cvar_getb("log", "winconsole", &flag) || !flag)
+        return 0;
     br = AllocConsole();
     if (!br)
         return 0;
