@@ -186,7 +186,7 @@ sg_game_draw(int x, int y, int width, int height, unsigned msec)
     /* Instructions */
 
     glPushMatrix();
-    glTranslatef((float) width / 2, 10, 0);
+    glTranslatef((float) (width / 2), 10, 0);
     sg_layout_draw(g_text4);
     if (g_boxes) sg_layout_drawmarks(g_text4);
     glPopMatrix();
