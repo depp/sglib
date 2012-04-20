@@ -5,8 +5,21 @@
 #include <Windows.h>
 #include <usp10.h>
 #include <math.h>
+#include <limits.h>
 
 #pragma comment(lib, "Usp10.lib")
+
+static int
+round_up_pow2(unsigned x)
+{
+    x -= 1;
+    x |= x >> 1;
+    x |= x >> 2;
+    x |= x >> 4;
+    x |= x >> 8;
+    x |= x >> 16;
+    return x + 1;
+}
 
 static int sg_uniscribe_initted;
 static SCRIPT_DIGITSUBSTITUTE sg_uniscribe_psds;
@@ -87,25 +100,28 @@ struct sg_layout_impl *
 sg_layout_impl_new(struct sg_layout *lp)
 {
     struct sg_layout_impl *li = NULL;
-    int r, i, j, len, cstart, clen, maxg, nalloc, curx;
+    int r, i, j, len, cstart, clen, maxg, nalloc;
+    int curx, cury, nx, adv, width, c, wrem;
     HRESULT hr;
     HDC dc;
     ABC abc;
     TEXTMETRIC metrics;
     BOOL br;
     SCRIPT_CACHE cache = NULL;
+    SCRIPT_ANALYSIS analysis;
 
     /* UTF-16 text */
     int wtextlen;
     wchar_t *wtext = NULL;
 
     /* line arrays */
-    struct sg_layout_line *lines; /* only one for now... */
+    int nlines, alines, curline;
+    struct sg_layout_line *lines, *newlines;
 
     /* item arrays */
-    int aitems, nitems, curitem;
+    int aitems, curitem, firstitem, nsitems, cursitem, asitems;
     SCRIPT_ITEM *sitems = NULL;
-    struct sg_layout_item *items = NULL;
+    struct sg_layout_item *items = NULL, *newitems;
     int maxilen; /* Maximum length, in characters, of any item */
 
     /* glyph arrays */
@@ -118,6 +134,10 @@ sg_layout_impl_new(struct sg_layout *lp)
     int avisattr;
     SCRIPT_VISATTR *visattr = NULL;
 
+    /* character logattr (temporary) */
+    int alogattr;
+    SCRIPT_LOGATTR *logattr = NULL;
+
     /***** Convert text to UTF-16 *****/
     r = MultiByteToWideChar(CP_UTF8, 0, lp->text, lp->textlen, NULL, 0);
     if (!r) goto error;
@@ -128,18 +148,18 @@ sg_layout_impl_new(struct sg_layout *lp)
 
     /***** Break text into items *****/
     /* This is a guess, given by the ScriptItemize documentation */
-    aitems = wtextlen / 16 + 4;
+    asitems = wtextlen / 16 + 4;
 alloc_items:
-    sitems = malloc(sizeof(*sitems) * (aitems + 1));
+    sitems = malloc(sizeof(*sitems) * (asitems + 1));
     if (!sitems)
         abort();
-    hr = ScriptItemize(wtext, wtextlen, aitems, NULL, NULL, sitems, &nitems);
+    hr = ScriptItemize(wtext, wtextlen, asitems, NULL, NULL, sitems, &nsitems);
     if (FAILED(hr)) {
-        if (hr == E_OUTOFMEMORY && aitems < wtextlen) {
+        if (hr == E_OUTOFMEMORY && asitems < wtextlen) {
             free(sitems);
-            aitems *= 2;
-            if (aitems > wtextlen)
-                aitems = wtextlen;
+            asitems *= 2;
+            if (asitems > wtextlen)
+                asitems = wtextlen;
             goto alloc_items;
         }
         goto error;
@@ -148,8 +168,8 @@ alloc_items:
     /* Find length of longest item */
     maxilen = 0;
     i = sitems[0].iCharPos;
-    for (curitem = 0; curitem < nitems; ++curitem) {
-        j = sitems[curitem + 1].iCharPos;
+    for (cursitem = 0; cursitem < nsitems; ++cursitem) {
+        j = sitems[cursitem + 1].iCharPos;
         len = j - i;
         i = j;
         if (len > maxilen)
@@ -162,7 +182,8 @@ alloc_items:
 
     /***** Place each item *****/
     /* Creates new item array, and all the glyph arrays (glyphs, offsets, advances) */
-    items = malloc(sizeof(*items) * nitems);
+    aitems = nsitems;
+    items = malloc(sizeof(*items) * aitems);
     if (!items) goto error;
 
     clusters = malloc(sizeof(*clusters) * maxilen);
@@ -180,16 +201,35 @@ alloc_items:
     visattr = malloc(sizeof(*visattr) * avisattr);
     if (!visattr) goto error;
 
-    lines = malloc(sizeof(*lines));
+    alines = 1;
+    nlines = 0;
+    curline = 0;
+    lines = malloc(sizeof(*lines) * alines);
     if (!lines) goto error;
 
+    width = (lp->width >= 0) ? (int) floorf(lp->width + 0.5f) : INT_MAX;
     curglyph = 0;
     curx = 0;
-    for (curitem = 0; curitem < nitems; ++curitem) {
-        cstart = sitems[curitem].iCharPos;
-        clen = sitems[curitem + 1].iCharPos - cstart;
+    cury = 0;
+    br = GetTextMetrics(dc, &metrics);
+    if (!br) goto error;
+
+    curitem = 0;
+    curline = 0;
+    firstitem = 0;
+    for (cursitem = 0; cursitem < nsitems; ++cursitem) {
+        cstart = sitems[cursitem].iCharPos;
+        clen = sitems[cursitem + 1].iCharPos - cstart;
+        analysis = sitems[cursitem].a;
 
     shape_again:
+        if (curitem >= aitems) {
+            nalloc = aitems * 2;
+            newitems = realloc(items, sizeof(*items) * nalloc);
+            if (!newitems) goto error;
+            items = newitems;
+            aitems = nalloc;
+        }
         maxg = aglyphs - curglyph;
         if (avisattr < maxg)
             maxg = avisattr;
@@ -199,7 +239,7 @@ alloc_items:
             wtext + cstart,
             clen,
             maxg,
-            &sitems[curitem].a,
+            &analysis,
             glyphs + curglyph,
             clusters,
             visattr,
@@ -220,6 +260,8 @@ alloc_items:
                     newgoffsets = realloc(goffsets, sizeof(*goffsets) * nalloc);
                     if (!newgoffsets) goto error;
                     goffsets = newgoffsets;
+
+                    aglyphs = nalloc;
                 }
                 if (maxg == avisattr) {
                     nalloc = avisattr * 2;
@@ -239,41 +281,146 @@ alloc_items:
             glyphs + curglyph,
             nglyphs,
             visattr,
-            &sitems[curitem].a,
+            &analysis,
             gadvances + curglyph,
             goffsets + curglyph,
             &abc);
         if (FAILED(hr))
             goto error;
 
+        nx = curx + abc.abcA + abc.abcB + abc.abcC;
+        if (nx > width) {
+            /* Find the first glyph past the limit */
+            /* i = first glyph */
+            wrem = width - curx;
+            for (i = 0; i < nglyphs; ++i) {
+                adv = gadvances[curglyph + i];
+                if (adv > wrem)
+                    break;
+                wrem -= adv;
+            }
+
+            /* Find the first character corresponding to
+               a cluster containing the glyph after the break */
+            for (j = 0; j < clen; ++j) {
+                c = clusters[j];
+                if (c >= i) {
+                    if (c > i && j > 0) {
+                        j--;
+                        c = clusters[j];
+                        while (j > 0 && clusters[j - 1] == c)
+                            j--;
+                    }
+                    break;
+                }
+            }
+
+            /* Analyze characters in item */
+            if (logattr && clen > alogattr) {
+                free(logattr);
+                logattr = NULL;
+            }
+            if (!logattr) {
+                alogattr = round_up_pow2(clen);
+                logattr = malloc(sizeof(*logattr) * alogattr);
+                if (!logattr) goto error;
+            }
+            hr = ScriptBreak(
+                wtext + cstart,
+                clen,
+                &analysis,
+                logattr);
+
+            /* Scan for a break character no later than j */
+            i = (j >= clen) ? clen - 1 : j;
+            for (; i >= 0; --i) {
+                if (logattr[i].fWhiteSpace) {
+                    j = i + 1;
+                    break;
+                } else if (logattr[i].fSoftBreak) {
+                    j = i;
+                    break;
+                }
+            }
+
+            /* i = # of characters in this line
+               j = relative offset of first character in next line */
+
+            if (i > 0) {
+                /* Rerun the analysis to get an accurate ABC */
+                nglyphs = clusters[i];
+                hr = ScriptPlace(
+                    dc,
+                    &cache,
+                    glyphs + curglyph,
+                    nglyphs,
+                    visattr,
+                    &analysis,
+                    gadvances + curglyph,
+                    goffsets + curglyph,
+                    &abc);
+                if (FAILED(hr))
+                    goto error;
+                nx = curx + abc.abcA + abc.abcB + abc.abcC;
+                cstart += i;
+                clen -= i;
+            } else {
+                /* If we can't break the line, don't */
+                cstart = 0;
+                clen = 0;
+            }
+        } else {
+            cstart = 0;
+            clen = 0;
+        }
         items[curitem].analysis = sitems[curitem].a;
         items[curitem].xoff = curx;
         items[curitem].glyph_off = curglyph;
         items[curitem].glyph_count = nglyphs;
-
         curglyph += nglyphs;
-        curx += abc.abcA + abc.abcB + abc.abcC;
-    }
-    nglyphs = curglyph;
+        curx = nx;
+        curitem++;
 
-    br = GetTextMetrics(dc, &metrics);
-    if (!br) goto error;
-    lines[0].yoff = metrics.tmAscent;
-    lines[0].xoff = 0;
-    lines[0].width = curx;
-    lines[0].ascent = metrics.tmAscent;
-    lines[0].descent = metrics.tmDescent;
-    lines[0].item_off = 0;
-    lines[0].item_count = nitems;
+        if (clen > 0) {
+            if (curline >= alines) {
+                nalloc = alines * 2;
+                newlines = realloc(lines, sizeof(*lines) * nalloc);
+                if (!newlines) goto error;
+                lines = newlines;
+                alines = nalloc;
+            }
+            lines[curline].xoff = 0;
+            lines[curline].yoff = metrics.tmAscent + cury;
+            lines[curline].width = curx;
+            lines[curline].ascent = metrics.tmAscent;
+            lines[curline].descent = metrics.tmDescent;
+            lines[curline].item_off = firstitem;
+            lines[curline].item_count = curitem - firstitem;
+            curline++;
+            firstitem = curitem;
+            cury += metrics.tmAscent + metrics.tmDescent;
+            curx = 0;
+            goto shape_again;
+        }
+    }
+    lines[curline].xoff = 0;
+    lines[curline].yoff = metrics.tmAscent + cury;
+    lines[curline].width = curx;
+    lines[curline].ascent = metrics.tmAscent;
+    lines[curline].descent = metrics.tmDescent;
+    lines[curline].item_off = firstitem;
+    lines[curline].item_count = curitem - firstitem;
+    curline++;
+    nglyphs = curglyph;
 
     li = malloc(sizeof(*li));
     if (!li) goto error;
 
     li->lp = lp;
     li->dc = dc;
-    li->nlines = 1;
+    li->nlines = curline;
     li->lines = lines;
-    li->nitems = nitems;
+    li->nitems = nsitems;
     li->items = items;
     li->nglyphs = nglyphs;
     li->glyphs = glyphs;
@@ -287,6 +434,7 @@ alloc_items:
     free(sitems);
     free(clusters);
     free(visattr);
+    free(logattr);
 
     return li;
 
@@ -310,6 +458,7 @@ error:
     free(items);
     free(clusters);
     free(visattr);
+    free(logattr);
 
     return NULL;
 }
@@ -476,7 +625,6 @@ sg_layout_impl_render(struct sg_layout_impl *li, struct sg_pixbuf *pbuf,
     return;
 
 error:
-    abort();
     if (cache)
         ScriptFreeCache(&cache);
     DeleteObject(hbit);
