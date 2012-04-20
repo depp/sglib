@@ -350,10 +350,10 @@ cmdline_next(struct cmdline *c)
     if (!r)
         abort();
     len = r;
-    if (len + 1 > c->alloc) {
+    if ((unsigned) len + 1 > c->alloc) {
         if (!c->alloc)
             c->alloc = 256;
-        while (len + 1 > c->alloc)
+        while ((unsigned) len + 1 > c->alloc)
             c->alloc *= 2;
         free(c->arg);
         c->arg = malloc(c->alloc);
