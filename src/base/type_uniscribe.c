@@ -569,6 +569,8 @@ sg_layout_impl_render(struct sg_layout_impl *li, struct sg_pixbuf *pbuf,
     if (!hbit)
         goto error;
     SelectObject(dc, hbit);
+    SetBkColor(dc, RGB(0, 0, 0));
+    SetTextColor(dc, RGB(255, 255, 255));
 
     /***** Draw glyphs *****/
 
@@ -614,7 +616,7 @@ sg_layout_impl_render(struct sg_layout_impl *li, struct sg_pixbuf *pbuf,
     orb = pbuf->rowbytes;
     for (y = 0; y < h; ++y) {
         for (x = 0; x < w; ++x)
-            dptr[x] = (~sptr[x*4+0]);
+            dptr[x] = sptr[x*4+0];
         sptr += irb;
         dptr += orb;
     }
