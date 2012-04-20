@@ -77,7 +77,7 @@ sg_layout_setfont(HDC dc, struct sg_layout *lp)
     f.lfCharSet = ANSI_CHARSET;
     f.lfOutPrecision = OUT_OUTLINE_PRECIS;
     f.lfClipPrecision = CLIP_DEFAULT_PRECIS;
-    f.lfQuality = CLEARTYPE_QUALITY;
+    f.lfQuality = ANTIALIASED_QUALITY;
     f.lfPitchAndFamily = DEFAULT_PITCH;
     wcscpy(f.lfFaceName, L"Arial");
     fh = CreateFontIndirectW(&f);
@@ -616,7 +616,7 @@ sg_layout_impl_render(struct sg_layout_impl *li, struct sg_pixbuf *pbuf,
     orb = pbuf->rowbytes;
     for (y = 0; y < h; ++y) {
         for (x = 0; x < w; ++x)
-            dptr[x] = sptr[x*4+0];
+            dptr[x] = sptr[x*4];
         sptr += irb;
         dptr += orb;
     }
