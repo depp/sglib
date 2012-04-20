@@ -126,7 +126,7 @@ static PIXELFORMATDESCRIPTOR pfd = {
     0, 0, 0 // layer masks
 };
 
-BOOL createWindow(LPCWSTR title, int width, int height, int nCmdShow)
+BOOL createWindow(struct sg_game_info *info, int nCmdShow)
 {
     GLuint pixelFormat;
     WNDCLASSEXW wc;
@@ -135,9 +135,9 @@ BOOL createWindow(LPCWSTR title, int width, int height, int nCmdShow)
     RECT windowRect;
 
     windowRect.left = 0;
-    windowRect.right = width;
+    windowRect.right = info->default_width;
     windowRect.top = 0;
-    windowRect.bottom = height;
+    windowRect.bottom = info->default_height;
 
     hInstance = GetModuleHandle(NULL);
     wc.cbSize = sizeof(wc);
@@ -163,7 +163,7 @@ BOOL createWindow(LPCWSTR title, int width, int height, int nCmdShow)
     dwStyle |= WS_CLIPSIBLINGS | WS_CLIPCHILDREN;
 
     AdjustWindowRectEx(&windowRect, dwStyle, FALSE, dwExStyle);
-    hWnd = CreateWindowExW(dwExStyle, L"OpenGL", title, dwStyle, 0, 0,
+    hWnd = CreateWindowExW(dwExStyle, L"OpenGL", L"Game", dwStyle, 0, 0,
                            windowRect.right - windowRect.left,
                            windowRect.bottom - windowRect.top,
                            NULL, NULL, hInstance, NULL);
@@ -209,7 +209,7 @@ BOOL createWindow(LPCWSTR title, int width, int height, int nCmdShow)
     ShowWindow(hWnd, nCmdShow);
     SetForegroundWindow(hWnd);
     SetFocus(hWnd);
-    handleResize(width, height);
+    handleResize(info->default_width, info->default_height);
 
     return TRUE;
 }
@@ -407,9 +407,11 @@ static void
 init(int nCmdShow)
 {
     HRESULT hr;
+    struct sg_game_info gameinfo;
 
     cmdline_parse();
     sg_sys_init();
+    sg_sys_getinfo(&gameinfo);
 
     hr = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
     if (FAILED(hr)) {
@@ -417,7 +419,7 @@ init(int nCmdShow)
         exit(1);
     }
 
-    if (!createWindow(L"Game", 768, 480, nCmdShow))
+    if (!createWindow(&gameinfo, nCmdShow))
         exit(0);
     glBlendColor = (void (APIENTRY *)(GLclampf, GLclampf, GLclampf, GLclampf))
         wglGetProcAddress("glBlendColor");
