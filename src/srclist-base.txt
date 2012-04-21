@@ -1,3 +1,12 @@
+base/audio.h
+base/audio_alsa.c LINUX LIBASOUND
+base/audio_copy.c
+base/audio_file.c
+base/audio_file.h
+base/audio_pcm.c
+base/audio_system.c
+base/audio_util.h
+base/audio_wav.c
 base/binary.h
 base/clock.c
 base/clock.h

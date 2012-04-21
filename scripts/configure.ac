@@ -155,6 +155,12 @@ AC_SUBST([HAVE_PANGO])
 AC_SUBST([PANGO_CFLAGS])
 AC_SUBST([TYPE_LIBS])
 
+dnl Check for audio
+PKG_CHECK_MODULES([LIBASOUND], [alsa], [
+  AC_DEFINE([HAVE_LIBASOUND], [1], [LibPNG is available])
+  HAVE_LIBASOUND=yes
+], [:])
+
 dnl Enable warnings with --enable-warnings
 AC_ARG_ENABLE(warnings,
   AS_HELP_STRING([--enable-warnings], [enable warnings for GCC]),
