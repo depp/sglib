@@ -19,6 +19,8 @@
 extern "C" {
 #endif
 
+struct sg_error;
+
 typedef enum {
     LOG_DEBUG, /* Fine-graned information */
     LOG_INFO,  /* Runtime events, e.g., application progress */
@@ -64,6 +66,21 @@ sg_logf(struct sg_logger *logger, sg_log_level_t level,
 void
 sg_logv(struct sg_logger *logger, sg_log_level_t level,
         const char *msg, va_list ap);
+
+/* Same as above, but with an error object to show.  */
+
+void
+sg_logerrs(struct sg_logger *logger, sg_log_level_t level,
+           struct sg_error *err, const char *msg);
+
+
+void
+sg_logerrf(struct sg_logger *logger, sg_log_level_t level,
+           struct sg_error *err, const char *msg, ...);
+
+void
+sg_logerrv(struct sg_logger *logger, sg_log_level_t level,
+           struct sg_error *err, const char *msg, va_list ap);
 
 #ifdef __cplusplus
 }

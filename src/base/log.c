@@ -1,5 +1,6 @@
 #include "clock.h"
 #include "cvar.h"
+#include "error.h"
 #include "log.h"
 #include "log_impl.h"
 #include "thread.h"
@@ -190,19 +191,40 @@ sg_dologmem(struct sg_logger *logger, sg_log_level_t level,
     sg_lock_release(&sg_logger_lock);
 }
 
+/* Be careful because the MSC version of the sprintf family behaves
+   differently. */
+#ifdef _MSC_VER
+#define vsnprintf _vsnprintf
+#define snprintf _snprintf
+#endif
+
 static void
 sg_dologv(struct sg_logger *logger, sg_log_level_t level,
-          const char *msg, va_list ap)
+          struct sg_error *err, const char *msg, va_list ap)
 {
     char buf[LOG_BUFSZ];
-    int r;
-#ifdef _MSC_VER
-    r = _vsnprintf(buf, sizeof(buf), msg, ap);
-#else
+    int r, s;
     r = vsnprintf(buf, sizeof(buf), msg, ap);
-#endif
-    if (r < 0 || (size_t) r > sizeof(buf))
+    if (r < 0)
+        r = 0;
+    else if ((size_t) r >= sizeof(buf))
         r = sizeof(buf) - 1;
+    if (err) {
+        if (err->code) {
+            s = snprintf(
+                buf - r, sizeof(buf) - r,
+                ": %s (%s %ld)", err->msg, err->domain->name, err->code);
+        } else {
+            s = snprintf(
+                buf - r, sizeof(buf) - r,
+                ": %s (%s)", err->msg, err->domain->name);
+        }
+        if (s > 0) {
+            r += s;
+            if ((size_t) r >= sizeof(buf))
+                r = sizeof(buf) - 1;
+        }
+    }
     sg_dologmem(logger, level, buf, r);
 }
 
@@ -223,7 +245,7 @@ sg_logf(struct sg_logger *logger, sg_log_level_t level,
     if (level < logger->level)
         return;
     va_start(ap, msg);
-    sg_dologv(logger, level, msg, ap);
+    sg_dologv(logger, level, NULL, msg, ap);
     va_end(ap);
 }
 
@@ -233,5 +255,33 @@ sg_logv(struct sg_logger *logger, sg_log_level_t level,
 {
     if (level < logger->level)
         return;
-    sg_dologv(logger, level, msg, ap);
+    sg_dologv(logger, level, NULL, msg, ap);
+}
+
+void
+sg_logerrs(struct sg_logger *logger, sg_log_level_t level,
+           struct sg_error *err, const char *msg)
+{
+    sg_logerrf(logger, level, err, "%s", msg);
+}
+
+void
+sg_logerrf(struct sg_logger *logger, sg_log_level_t level,
+           struct sg_error *err, const char *msg, ...)
+{
+    va_list ap;
+    if (level < logger->level)
+        return;
+    va_start(ap, msg);
+    sg_dologv(logger, level, err, msg, ap);
+    va_end(ap);
+}
+
+void
+sg_logerrv(struct sg_logger *logger, sg_log_level_t level,
+           struct sg_error *err, const char *msg, va_list ap)
+{
+    if (level < logger->level)
+        return;
+    sg_dologv(logger, level, err, msg, ap);
 }
