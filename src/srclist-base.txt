@@ -1,3 +1,4 @@
+base/binary.h
 base/clock.c
 base/clock.h
 base/configfile.c
@@ -57,6 +58,7 @@ base/rand.c
 base/rand.h
 base/resource.c
 base/resource.h
+base/sgendian.h
 base/strbuf.c
 base/strbuf.h
 base/sys.c
