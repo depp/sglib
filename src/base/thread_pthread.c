@@ -1,6 +1,7 @@
 #define _XOPEN_SOURCE 600
 
 #include "thread.h"
+#include <errno.h>
 #include <stdlib.h>
 
 void
@@ -43,6 +44,19 @@ sg_lock_acquire(struct sg_lock *p)
     return;
 
 err:
+    abort();
+}
+
+int
+sg_lock_try(struct sg_lock *p)
+{
+    int r;
+    r = pthread_mutex_trylock(&p->m);
+    if (r == EBUSY)
+        return 0;
+    if (r == 0)
+        return 1;
+
     abort();
 }
 

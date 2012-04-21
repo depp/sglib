@@ -35,6 +35,11 @@ sg_lock_destroy(struct sg_lock *p);
 void
 sg_lock_acquire(struct sg_lock *p);
 
+/* Try to acquire the lock.  Do not block.  Return 1 if successful, 0
+   if failed.  */
+int
+sg_lock_try(struct sg_lock *p);
+
 void
 sg_lock_release(struct sg_lock *p);
 
