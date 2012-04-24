@@ -17,6 +17,11 @@ def buildline(cmd, target, tag):
     else:
         return '[%s] %s %s' % (tag, cmd, target)
 
+def mkdef(k, v):
+    if v is None:
+        return '-D%s' % (k,)
+    return '-D%s=%s' % (k, v)
+
 class CC(target.CC):
     """Compile a C, C++, or Objective C file."""
     __slots__ = ['_dest', '_src', '_env', '_sourcetype']
@@ -35,6 +40,7 @@ class CC(target.CC):
             assert False
         return [[cc, '-o', self._dest, '-c', self._src] +
                 [('-I', p) for p in env.CPPPATH] +
+                [mkdef(k, v) for k, v in env.DEFS] +
                 list(env.CPPFLAGS) + list(warn) + list(cflags)]
 
 class LD(target.LD):

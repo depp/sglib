@@ -133,6 +133,11 @@ def get_sdk_environ(target, config):
         print
     return env
 
+def mkdef(k, v):
+    if v is None:
+        return '/D%s' % (k,)
+    return '/D%s#%s' % (k, v)
+
 class CC(target.CC):
     """Windows: Compile a C or C++ file."""
     __slots__ = ['_dest', '_src', '_env', '_sourcetype', '_debugfile']
@@ -161,6 +166,7 @@ class CC(target.CC):
             dflags = []
         return [[cc, '/c', ('/Fo', self._dest), lflag] +
                 [('/I', p) for p in env.CPPPATH] +
+                [mkdef(k, v) for k, v in env.DEFS] +
                 list(env.CPPFLAGS) + list(warn) + list(cflags) +
                 dflags + [self._src]]
 

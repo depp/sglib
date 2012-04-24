@@ -1,6 +1,11 @@
 import UserDict
 from gen.path import Path
 import gen.source as source
+import re
+
+_IS_CIDENT = re.compile('^[_A-Za-z][_A-Za-z0-9]*$')
+def is_cident(x):
+    return bool(_IS_CIDENT.match(x))
 
 # This is NOT a KeyError and it is NOT supposed to be
 class UnknownKey(Exception):
@@ -297,6 +302,59 @@ class PathListKey(Key):
 
     def as_string(self, value):
         return ' '.join(p.posix for p in value)
+
+def strkv(k, v):
+    if v is None:
+        return k
+    return '%s=%s' % (k, v)
+
+class CDefsKey(Key):
+    """A key for C preprocessor definitions.
+
+    When combining values, duplicates will be removed.
+    """
+
+    @staticmethod
+    def check(value):
+        if isinstance(value, str):
+            nvalue = [(x, None) for x in value.split()]
+        else:
+            nvalue = list(value)
+        ks = set()
+        nvalue.reverse()
+        acc = []
+        for (k, v) in nvalue:
+            if k in ks:
+                continue
+            if not is_cident(k):
+                raise ValueError('invalid identifier: %r' % (k,))
+            acc.append((k, v))
+            ks.add(k)
+        acc.reverse()
+        return tuple(acc)
+
+    def default(self, instance):
+        return ()
+
+    @staticmethod
+    def combine(value, other):
+        if not value:
+            return other
+        if not other:
+            return value
+        ks = set(k for k, v in other)
+        nvalue = list(other)
+        nvalue.reverse()
+        for k, v in reversed(value):
+            if k in ks:
+                continue
+            ks.add(k)
+            nvalue.append((k, v))
+        nvalue.reverse()
+        return tuple(nvalue)
+
+    def as_string(self, value):
+        return ' '.join(strkv(k, v) for k, v in value)
 
 class SmartDict(object, UserDict.DictMixin):
     """Abstract superclass for smart dictionary objects.

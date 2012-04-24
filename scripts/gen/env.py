@@ -267,6 +267,7 @@ class Environment(smartdict.SmartDict):
 
     CPPFLAGS  = Flags('CPPFLAGS')
     CPPPATH   = smartdict.PathListKey('CPPPATH')
+    DEFS      = smartdict.CDefsKey('DEFS')
     CFLAGS    = Flags('CFLAGS')
     CXXFLAGS  = Flags('CXXFLAGS')
     CWARN     = Flags('CWARN')

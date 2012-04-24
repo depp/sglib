@@ -135,7 +135,7 @@ class ProjectEnv(object):
         except KeyError:
             m = self._proj.modules[atom]
             re = [self.module_env(r) for r in m.reqs]
-            e = Environment(CPPPATH=m.ipath, *re)
+            e = Environment(CPPPATH=m.ipath, DEFS=m.defs, *re)
             self._mod_cache[atom] = e
             return e
 

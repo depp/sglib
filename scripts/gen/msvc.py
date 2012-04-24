@@ -17,6 +17,11 @@ def _textelt(doc, name, content):
     n.appendChild(doc.createTextNode(content))
     return n
 
+def mkdef(k, v):
+    if v is None:
+        return k
+    return '%s=%s' % (k, v)
+
 class Sources(object):
     """Sources for a project."""
 
@@ -212,7 +217,7 @@ def vcxproj_emit(pname, targenv, sources):
 
                 sg = doc.createElement('ClCompile')
                 dg.appendChild(sg)
-                defs = [
+                defs = [mkdef(k, v) for k, v in env.DEFS] + [
                     '_CRT_SECURE_NO_DEPRECATE',
                     'WIN32',
                     cdef,

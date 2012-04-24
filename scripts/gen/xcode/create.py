@@ -239,6 +239,11 @@ def projectConfig():
     cr = obj.BuildConfiguration('Release', base, release)
     return obj.BuildConfigList([cd, cr], 'Release')
 
+def mkdef(k, v):
+    if v is None:
+        return k
+    return '%s=%s' % (k, v)
+
 def targetConfig(targenv):
     mname = targenv.simple_name
     env = targenv.unionenv()
@@ -254,6 +259,8 @@ def targetConfig(targenv):
         'PRODUCT_NAME': targenv.EXE_MAC,
         'HEADER_SEARCH_PATHS':
             ['$(HEADER_SEARCH_PATHS)'] + [p.posix for p in env.CPPPATH],
+        'GCC_PREPROCESSOR_DEFINITIONS':
+            [mkdef(k, v) for k, v in env.DEFS],
     }
     debug = {
         'COPY_PHASE_STRIP': False,

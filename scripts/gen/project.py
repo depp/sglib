@@ -15,12 +15,13 @@ class Module(object):
     Enabling a module will also add header paths to the target, and
     enable all modules that the module depends on.
     """
-    __slots__ = ['_atom', '_desc', '_ipath', '_reqs']
+    __slots__ = ['_atom', '_desc', '_ipath', '_defs', '_reqs']
 
-    def __init__(self, atom, desc, ipath=(), reqs=()):
+    def __init__(self, atom, desc, ipath=(), reqs=(), defs=()):
         self._atom = smartdict.AtomKey.check(atom)
         self._desc = desc
         self._ipath = smartdict.PathListKey.check(ipath)
+        self._defs = smartdict.CDefsKey.check(defs)
         self._reqs = smartdict.AtomListKey.check(reqs)
 
     @property
@@ -37,6 +38,11 @@ class Module(object):
     def ipath(self):
         """Header search paths for this module."""
         return self._ipath
+
+    @property
+    def defs(self):
+        """C preprocessor definitions."""
+        return self._defs
 
     @property
     def reqs(self):
