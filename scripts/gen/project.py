@@ -5,6 +5,7 @@ import gen.smartdict as smartdict
 from gen.env import Environment
 from gen.path import Path
 from gen.info import ProjectInfo, ExecInfo
+from gen.version import version_cmp
 __all__ = ['Module', 'Executable', 'Project', 'Path']
 
 class Module(object):
@@ -68,7 +69,8 @@ class Project(object):
     A project consists of a project info dictionary, a list of source
     files, and a list of modules.
     """
-    __slots__ = ['_sources', '_info', '_sgpath', '_modules']
+    __slots__ = ['_sources', '_info', '_sgpath', '_modules',
+                 '_libavail']
 
     def __init__(self, rootdir):
         rootpath = os.path.abspath(rootdir)
@@ -179,3 +181,37 @@ class Project(object):
         for m in self._modules.itervalues():
             if isinstance(m, Executable):
                 yield m
+
+    def _find_library(self, name):
+        """Get the path to the given library."""
+        libpath = Path(self._sgpath, 'lib')
+        try:
+            libavail = self._libavail
+        except AttributeError:
+            libavail = {}
+            for fname in os.listdir(libpath.native):
+                i = fname.find('-')
+                if i >= 0:
+                    libname = fname[:i]
+                    libver = fname[i+1:]
+                else:
+                    libname = fname
+                    libver = ''
+                try:
+                    vers = libavail[libname]
+                except KeyError:
+                    vers = []
+                    libavail[libname] = vers
+                vers.append((libver, fname))
+            self._libavail = libavail
+        try:
+            libvers = libavail[name]
+        except KeyError:
+            print >>sys.stderr, 'error: library not found: %s' % (name,)
+            print >>sys.stderr, 'please extract library code in %s' % \
+                (libpath.native,)
+            sys.exit(1)
+        libvers.sort(cmp=lambda x, y: version_cmp(x[0], y[0]))
+        libver, fname = libvers[-1]
+        print >>sys.stderr, 'using %s version %s' % (name, libver)
+        return Path(libpath, fname)
