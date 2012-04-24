@@ -38,6 +38,8 @@ class CC(target.CC):
             warn = env.CXXWARN
         else:
             assert False
+        if env._EXTERNAL:
+            warn = []
         return [[cc, '-o', self._dest, '-c', self._src] +
                 [('-I', p) for p in env.CPPPATH] +
                 [mkdef(k, v) for k, v in env.DEFS] +

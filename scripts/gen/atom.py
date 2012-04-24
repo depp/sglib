@@ -147,7 +147,10 @@ class ProjectEnv(object):
         try:
             return self._lib_cache[atom]
         except KeyError:
-            e = self._lookup(atom)
+            if atom == 'EXTERNAL':
+                e = Environment(_EXTERNAL=True)
+            else:
+                e = self._lookup(atom)
             self._lib_cache[atom] = e
             return e
 

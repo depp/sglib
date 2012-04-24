@@ -276,6 +276,8 @@ class Environment(smartdict.SmartDict):
     LIBS      = Flags('LIBS')
     ARCHS     = Flags('ARCHS')
 
+    _EXTERNAL = smartdict.BoolKey('_EXTERNAL', False)
+
     def __init__(self, *args, **kw):
         smartdict.SmartDict.__init__(self, *args, **kw)
         self.environ = {}
