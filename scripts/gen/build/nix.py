@@ -80,8 +80,10 @@ def get_default_env(settings):
     common_env = Environment(
         CC='gcc',
         CXX='g++',
+        # -Wstrict-prototypes is nice
+        # but GTK and GLEW headers both trip it
         CWARN='-Wall -Wextra -Wpointer-arith -Wno-sign-compare ' \
-            '-Wwrite-strings -Wstrict-prototypes -Wmissing-prototypes',
+            '-Wwrite-strings -Wmissing-prototypes',
         CXXWARN='-Wall -Wextra -Wpointer-arith -Wno-sign-compare',
     )
     return Environment(common_env, config_env[settings.CONFIG])

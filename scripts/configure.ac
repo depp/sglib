@@ -160,7 +160,7 @@ AC_ARG_ENABLE(warnings,
   AS_HELP_STRING([--enable-warnings], [enable warnings for GCC]),
   [enable_warnings=$enableval], [enable_warnings=no])
 if test "x$enable_warnings" != xno ; then
-  CWARN="-Wall -Wextra -Wpointer-arith -Wno-sign-compare -Wwrite-strings -Wstrict-prototypes -Wmissing-prototypes"
+  CWARN="-Wall -Wextra -Wpointer-arith -Wno-sign-compare -Wwrite-strings -Wmissing-prototypes"
   CXXWARN="-Wall -Wextra -Wpointer-arith -Wno-sign-compare"
   warnings=yes
   if test "x$enable_warnings" == xerror ; then
