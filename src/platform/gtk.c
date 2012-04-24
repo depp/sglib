@@ -35,6 +35,7 @@ static int sg_window_width, sg_window_height;
 static int sg_update_size;
 static unsigned sg_gtk_status;
 static GtkWindow *sg_window;
+static int sg_glew_initted;
 
 static void
 quit(void)
@@ -119,10 +120,21 @@ handle_expose(GtkWidget *area)
     GtkAllocation a;
     GdkGLContext *context = gtk_widget_get_gl_context(area);
     GdkGLDrawable *drawable = gtk_widget_get_gl_drawable(area);
+    GLenum err;
 
     if (!gdk_gl_drawable_gl_begin(drawable, context)) {
         fputs("Could not begin GL drawing\n", stderr);
         exit(1);
+    }
+
+    if (!sg_glew_initted) {
+        sg_glew_initted = 1;
+        err = glewInit();
+        if (err != GLEW_OK) {
+            fprintf(stderr, "GLEW initialization failed: %s\n",
+                    glewGetErrorString(err));
+            exit(1);
+        }
     }
 
     if (sg_update_size) {

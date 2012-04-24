@@ -1,3 +1,4 @@
+#import "base/opengl.h"
 #import <Carbon/Carbon.h>
 #import "GDisplay.h"
 #import "GView.h"
@@ -7,6 +8,8 @@
 #import "base/keycode/keyid.h"
 #import "base/keycode/keytable.h"
 #import "base/resource.h"
+
+static int sg_glew_initted;
 
 @interface GDisplay (Private)
 
@@ -84,6 +87,7 @@ static void handleMouse(GDisplay *d, NSEvent *e, sg_event_type_t t, int button)
     int i = 0;
     GLuint glmode;
     bool windowed;
+    GLenum err;
 
     switch (mode_) {
     case GDisplayWindow:
@@ -145,6 +149,16 @@ static void handleMouse(GDisplay *d, NSEvent *e, sg_event_type_t t, int button)
         height_ = CGDisplayPixelsHigh(display_);
     }
 
+    if (!sg_glew_initted) {
+        sg_glew_initted = 1;
+        [cxt makeCurrentContext];
+        err = glewInit();
+        if (err != GLEW_OK) {
+            fprintf(stderr, "GLEW initialization failed: %s\n",
+                    glewGetErrorString(err));
+            abort();
+        }
+    }
     if (1) {
         // OS X 10.4 and later only
         CVDisplayLinkCreateWithActiveCGDisplays(&link_);

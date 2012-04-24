@@ -63,6 +63,13 @@ class Executable(Module):
         """The executable info dictionary."""
         return self._info
 
+GLEW_SOURCE = """\
+src/glew.c
+include/GL/glew.h
+include/GL/glxew.h
+include/GL/wglew.h
+"""
+
 class Project(object):
     """Top level project.
 
@@ -113,10 +120,17 @@ class Project(object):
             ('SGLIBXX',))
         self.add_module(
             Module('SGLIB', 'SGLib C client code',
-                   ipath=sgincpath))
+                   ipath=sgincpath, reqs='LIBGLEW'))
         self.add_module(
             Module('SGLIBXX', 'SGLib C++ client code',
                    ipath=sgincpath, reqs='SGLIB'))
+
+        p = self._find_library('glew')
+        self.add_module(
+            Module('LIBGLEW', 'GLEW source code',
+                   ipath=Path(p, 'include'), defs='GLEW_STATIC'))
+        self.add_sourcelist_str('GLEW', p, GLEW_SOURCE,
+                                'LIBGLEW', 'EXTERNAL')
 
     @property
     def modules(self):
