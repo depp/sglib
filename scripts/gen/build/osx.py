@@ -297,7 +297,8 @@ def build_xcodeproj(graph, proj, env, settings):
 def osx_env(env, settings):
     libs = []
     fworks = ['Foundation', 'AppKit', 'OpenGL',
-              'CoreServices', 'CoreVideo', 'Carbon']
+              'CoreServices', 'CoreVideo', 'Carbon',
+              'CoreAudio', 'AudioUnit']
     for fwork in fworks:
         libs.extend(('-framework', fwork))
     base_env = Environment(

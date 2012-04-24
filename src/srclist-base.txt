@@ -1,6 +1,7 @@
 base/audio.h
 base/audio_alsa.c LINUX LIBASOUND
 base/audio_copy.c
+base/audio_coreaudio.c MACOSX
 base/audio_file.c
 base/audio_file.h
 base/audio_pcm.c
