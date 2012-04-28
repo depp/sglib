@@ -5,10 +5,10 @@
 #include <string.h>
 
 void
-sg_dispatch_queue_push(struct sg_dispatch_queue *queue,
+sg_dispatch_queue_push(struct sg_dispatch_queue *restrict queue,
                       int priority, void *cxt, void (*func)(void *))
 {
-    struct sg_dispatch_task *tasks;
+    struct sg_dispatch_task *restrict tasks;
     int cprio;
     unsigned uprio, ctr, m, n, nn, depth, ndepth;
 
@@ -40,7 +40,7 @@ sg_dispatch_queue_push(struct sg_dispatch_queue *queue,
         nn = (n - 1) >> 1;
         if ((uprio ^ m) <= (tasks[nn].priority ^ m))
             break;
-        memcpy(&tasks[n], &tasks[nn], sizeof(*tasks));
+        tasks[n] = tasks[nn];
         n = nn;
     }
     tasks[n].priority = uprio;
@@ -53,17 +53,17 @@ nomem:
 }
 
 void
-sg_dispatch_queue_pop(struct sg_dispatch_queue *queue,
-                      struct sg_dispatch_task *task)
+sg_dispatch_queue_pop(struct sg_dispatch_queue *restrict queue,
+                      struct sg_dispatch_task *restrict task)
 {
-    struct sg_dispatch_task *tasks;
+    struct sg_dispatch_task *restrict tasks;
     unsigned ntasks, n, m, p, p1, p2, nn, pp;
 
     ntasks = queue->count;
     assert(ntasks > 0);
     queue->count = --ntasks;
     tasks = queue->tasks;
-    memcpy(task, &tasks[0], sizeof(*task));
+    *task = tasks[0];
     if (!ntasks)
         return;
 
@@ -83,18 +83,18 @@ sg_dispatch_queue_pop(struct sg_dispatch_queue *queue,
             }
             if (p >= pp)
                 break;
-            memcpy(&tasks[n], &tasks[nn], sizeof(*task));
+            tasks[n] = tasks[nn];
             n = nn;
         } else {
             nn = 2*n+1;
             if (nn < ntasks && (tasks[nn].priority ^ m) > p) {
-                memcpy(&tasks[n], &tasks[nn], sizeof(*task));
+                tasks[n] = tasks[nn];
                 n = nn;
             }
             break;
         }
     }
-    memcpy(&tasks[n], &tasks[ntasks], sizeof(*task));
+    tasks[n] = tasks[ntasks];
 }
 
 void
