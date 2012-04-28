@@ -15,12 +15,6 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-/* Get the path to the running executable, or the main bundle on Mac
-   OS X.  Store the result in a malloc'd buffer in buf/len and return
-   1.  Return 0 if unimplemented, or -1 if an error occurs.  */
-static int
-sg_path_getexepath(char **buf, size_t *len);
-
 void
 sg_buffer_destroy(struct sg_buffer *fbuf)
 {
@@ -151,122 +145,23 @@ sg_file_tryopen(struct sg_file **f, const char *path, int flags,
 }
 
 int
-sg_path_getdir(pchar **abspath, size_t *abslen,
-               const char *relpath, size_t rellen,
-               int flags)
+sg_path_checkdir(const pchar *path)
 {
     struct sg_logger *logger;
-    char *dpath = NULL, *apath = NULL, *rpath = NULL, *bpath = NULL, *real;
-    size_t dlen, aalloc, rlen, blen;
-    int r, ret, bslash, pslash, e;
-
+    int r, e;
     logger = sg_logger_get("path");
-
-    /* FIXME: log errors / warnings */
-    if (!rellen)
-        return 0;
-    if (memchr(relpath, '\0', rellen))
-        return 0;
-
-    pslash = relpath[rellen - 1] != '/';
-    if (relpath[0] == '/') {
-        rlen = rellen;
-        rpath = malloc(rellen + pslash + 1);
-        if (!rpath)
-            goto nomem;
-        memcpy(rpath, relpath, rellen);
-        if (pslash)
-            rpath[rlen++] = '/';
-    } else {
-        if (flags & SG_PATH_EXEDIR) {
-            r = sg_path_getexepath(&bpath, &blen);
-            if (!r)
-                goto error;
-            blen -= 1;
-            while (blen > 0 && bpath[blen-1] != '/')
-                blen--;
-            if (!blen)
-                goto error;
-        } else {
-            bpath = getcwd(0, 0);
-            if (!bpath)
-                goto error;
-            blen = strlen(bpath);
-            if (!blen)
-                goto error;
-        }
-        bslash = bpath[blen - 1] != '/';
-        rpath = malloc(blen + bslash + rellen + pslash + 1);
-        if (!rpath)
-            goto nomem;
-        memcpy(rpath, bpath, blen);
-        if (bslash)
-            rpath[blen] = '/';
-        memcpy(rpath + blen + bslash, relpath, rellen);
-        if (pslash)
-            rpath[blen + bslash + rellen] = '/';
-        rlen = blen + bslash + rellen + pslash;
-    }
-    rpath[rlen] = '\0';
-
-    aalloc = PATH_MAX > 0 ? PATH_MAX : 1024;
-    apath = malloc(aalloc);
-    if (!apath)
-        goto nomem;
-    real = realpath(rpath, apath);
-    if (real) {
-        dlen = strlen(real);
-        pslash = real[dlen - 1] != '/';
-        dpath = malloc(dlen + pslash + 1);
-        if (!dpath)
-            goto nomem;
-        memcpy(dpath, real, dlen);
-        if (pslash)
-            dpath[dlen++] = '/';
-        dpath[dlen] = '\0';
-        r = access(dpath, F_OK | X_OK);
-        if (r) {
-            if (LOG_INFO >= logger->level) {
-                e = errno;
-                sg_logf(logger, LOG_INFO,
-                        "path skipped: %s (%s)", dpath, strerror(e));
-            }
-            ret = 0;
-        } else {
-            if (LOG_INFO >= logger->level)
-                sg_logf(logger, LOG_INFO, "path: %s", dpath);
-            *abspath = dpath;
-            *abslen = dlen;
-            dpath = NULL;
-            ret = 1;
-        }
-    } else if (flags & SG_PATH_NODISCARD) {
-        if (LOG_INFO >= logger->level)
-            sg_logf(logger, LOG_INFO, "path: %s", rpath);
-        *abspath = rpath;
-        *abslen = rlen;
-        rpath = NULL;
-        ret = 1;
-    } else {
+    r = access(path, R_OK | X_OK);
+    if (r) {
+        e = errno;
         if (LOG_INFO >= logger->level) {
-            e = errno;
-            sg_logf(logger, LOG_INFO, "path skipped: %s (%s)",
-                    rpath, strerror(e));
+            sg_logf(logger, LOG_INFO,
+                    "path skipped: %s (%s)", path, strerror(e));
         }
-        ret = 0;
+        return 0;
+    } else {
+        sg_logf(logger, LOG_INFO, "path: %s", path);
+        return 1;
     }
-
-    free(dpath);
-    free(apath);
-    free(rpath);
-    free(bpath);
-    return ret;
-
-error:
-    abort();
-
-nomem:
-    abort();
 }
 
 #if defined(__APPLE__)
@@ -274,15 +169,13 @@ nomem:
 #include <sys/param.h>
 
 /* Mac OS X implementation */
-static int
-sg_path_getexepath(char **buf, size_t *len)
+int
+sg_path_getexepath(char *buf, size_t len)
 {
-    size_t bsz = PATH_MAX > 0 ? PATH_MAX : 256;
     CFBundleRef bundle;
     CFURLRef url = NULL;
     Boolean r;
     int ret = 0;
-    char *str = NULL;
 
     bundle = CFBundleGetMainBundle();
     if (!bundle)
@@ -290,48 +183,31 @@ sg_path_getexepath(char **buf, size_t *len)
     url = CFBundleCopyBundleURL(bundle);
     if (!url)
         goto done;
-    str = malloc(bsz);
-    if (!str)
-        goto nomem;
     r = CFURLGetFileSystemRepresentation(
-        url, true, (UInt8 *) str, bsz);
+        url, true, (UInt8 *) buf, len);
     if (!r)
         goto done;
     ret = 1;
-    *len = strlen(str);
-    *buf = str;
-    str = NULL;
 
 done:
     if (url)
         CFRelease(url);
-    free(str);
     return ret;
-
-nomem:
-    abort();
 }
 
 #elif defined(__linux__)
 #include <sys/param.h>
 
 /* Linux implementation */
-static int
-sg_path_getexepath(char **buf, size_t *len)
+int
+sg_path_getexepath(char *buf, size_t len)
 {
-    char *str;
-    ssize_t sz;
-    size_t rlen = PATH_MAX > 0 ? PATH_MAX : 1024;
-    str = malloc(rlen);
-    if (!str)
-        return 0;
-    sz = readlink("/proc/self/exe", str, rlen);
-    if (sz > 0) {
-        *buf = str;
-        *len = sz;
+    ssize_t r;
+    r = readlink("/proc/self/exe", buf, len - 1);
+    if (r > 0 && (size_t) r < len - 1) {
+        buf[r] = '\0';
         return 1;
     } else {
-        free(str);
         return 0;
     }
 }
@@ -340,12 +216,12 @@ sg_path_getexepath(char **buf, size_t *len)
 
 #warning "Can't find executable directory on this platform"
 
-static int
-sg_path_getexedir(char *buf, unsigned len)
+int
+sg_path_getexepath(char *buf, size_t len)
 {
     (void) buf;
     (void) len;
-    return 0;
+    return -1;
 }
 
 #endif
