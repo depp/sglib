@@ -58,9 +58,9 @@ sg_layout_impl_new(struct sg_layout *lp)
         path = CGPathCreateMutable();
         CGPathAddRect(path, NULL, bounds);
         framesetter = CTFramesetterCreateWithAttributedString(attrstring);
-        CFRelease(path);
         frame = CTFramesetterCreateFrame(
             framesetter, CFRangeMake(0, CFStringGetLength(string)), path, NULL);
+        CFRelease(path);
     } else {
         line = CTLineCreateWithAttributedString(attrstring);
     }
