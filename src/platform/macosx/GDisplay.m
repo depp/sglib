@@ -356,17 +356,17 @@ error:
     [self stateChanged];
 }
 
-- (void)showWindow:(id)sender {
+- (IBAction)showWindow:(id)sender {
     (void)sender;
     [self setMode:GDisplayWindow];
 }
 
-- (void)showFullScreen:(id)sender {
+- (IBAction)showFullScreen:(id)sender {
     (void)sender;
     [self setMode:GDisplayFSWindow];
 }
 
-- (void)toggleFullScreen:(id)sender {
+- (IBAction)toggleFullScreen:(id)sender {
     if (mode_ == GDisplayWindow)
         [self showFullScreen:sender];
     else if (mode_ == GDisplayFSWindow || mode_ == GDisplayFSCapture)

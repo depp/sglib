@@ -46,8 +46,9 @@ typedef enum {
 - (void)setMinSize:(NSSize)size;
 - (void)setDefaultSize:(NSSize)size;
 - (void)setMode:(GDisplayMode)mode;
-- (void)showWindow:(id)sender;
-- (void)showFullScreen:(id)sender;
+- (IBAction)showWindow:(id)sender;
+- (IBAction)showFullScreen:(id)sender;
+- (IBAction)toggleFullScreen:(id)sender;
 
 - (void)handleUIEvent:(union sg_event *)event;
 
