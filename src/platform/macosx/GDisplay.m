@@ -366,7 +366,7 @@ error:
     [self setMode:GDisplayFSWindow];
 }
 
-- (IBAction)toggleFullScreen:(id)sender {
+- (IBAction)toggleGFullScreen:(id)sender {
     if (mode_ == GDisplayWindow)
         [self showFullScreen:sender];
     else if (mode_ == GDisplayFSWindow || mode_ == GDisplayFSCapture)
@@ -505,7 +505,7 @@ error:
 
 // Note: this won't get called in "capture" fullscreen mode but it doesn't matter since you can't see the menubar anyway.
 - (BOOL)validateMenuItem:(NSMenuItem *)item {
-    if ([item action] == @selector(toggleFullScreen:)) {
+    if ([item action] == @selector(toggleGFullScreen:)) {
         if (mode_ == GDisplayWindow) {
             [item setTitle:NSLocalizedString(@"Enter Full Screen", nil)];
         } else {

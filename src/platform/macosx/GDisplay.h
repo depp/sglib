@@ -48,7 +48,7 @@ typedef enum {
 - (void)setMode:(GDisplayMode)mode;
 - (IBAction)showWindow:(id)sender;
 - (IBAction)showFullScreen:(id)sender;
-- (IBAction)toggleFullScreen:(id)sender;
+- (IBAction)toggleGFullScreen:(id)sender;
 
 - (void)handleUIEvent:(union sg_event *)event;
 
