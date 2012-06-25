@@ -242,6 +242,7 @@ static void handleMouse(GDisplay *d, NSEvent *e, sg_event_type_t t, int button)
     NSNotificationCenter *c = [NSNotificationCenter defaultCenter];
     [c addObserver:self selector:@selector(applicationDidHide:) name:NSApplicationDidHideNotification object:NSApp];
     [c addObserver:self selector:@selector(applicationDidUnhide:) name:NSApplicationDidUnhideNotification object:NSApp];
+    [c addObserver:self selector:@selector(applicationDidChangeScreenParameters:) name:NSApplicationDidChangeScreenParametersNotification object:NSApp];
 
     minSize_ = NSMakeSize(320, 180);
     defaultSize_ = NSMakeSize(1280, 720);
@@ -444,6 +445,20 @@ error:
 - (void)applicationDidUnhide:(NSNotification *)notification {
     (void) notification;
     [self stateChanged];
+}
+
+- (void)applicationDidChangeScreenParameters:(NSNotification *)notification {
+    (void) notification;
+    switch (mode_) {
+    case GDisplayNone:
+    case GDisplayWindow:
+        break;
+
+    case GDisplayFSWindow:
+    case GDisplayFSCapture:
+        [self setMode:GDisplayWindow];
+        break;
+    }
 }
 
 - (BOOL)handleEvent:(NSEvent *)event {
