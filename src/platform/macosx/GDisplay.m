@@ -301,6 +301,7 @@ error:
     mode_ = mode;
 
     if (isWindowedMode(mode)) {
+        // Note: "mainScreen" is the screen containing the key window
         NSScreen *s = [NSScreen mainScreen];
         NSRect r;
         NSUInteger style;
@@ -310,7 +311,8 @@ error:
             r.size = defaultSize_;
             style = NSTitledWindowMask | NSClosableWindowMask | NSMiniaturizableWindowMask | NSResizableWindowMask;
         } else {
-            r = [s frame];
+            r.origin = NSMakePoint(0, 0);
+            r.size = [s frame].size;
             style = NSBorderlessWindowMask;
         }
         if (nswindow_) {
