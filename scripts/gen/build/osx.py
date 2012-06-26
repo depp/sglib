@@ -412,7 +412,7 @@ def build_osx(graph, proj, env, settings):
             handlers[t] = None
         def handle_icns(source, env):
             targ = Path(resources, source.grouppath.basename)
-            graph.add(targenv.CopyFile(targ, source.relpath, env))
+            graph.add(target.CopyFile(targ, source.relpath, env))
             appdeps.append(targ)
         def handle_xib(source, env):
             targ = Path(resources, source.grouppath.withext('.nib').basename)
