@@ -3,6 +3,14 @@
 #ifndef BASE_DEFS_H
 #define BASE_DEFS_H
 
+#if __STDC_VERSION__ < 19901L
+#if __GNUC__
+#define restrict __restrict__
+#else
+#define restrict
+#endif
+#endif
+
 #ifdef _MSC_VER
 
 #if !defined(__cplusplus)

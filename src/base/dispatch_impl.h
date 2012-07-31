@@ -1,5 +1,6 @@
 #ifndef BASE_DISPATCH_IMPL_H
 #define BASE_DISPATCH_IMPL_H
+#include "defs.h"
 #ifdef __cplusplus
 extern "C" {
 #endif
