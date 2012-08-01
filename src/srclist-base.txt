@@ -11,6 +11,7 @@ base/audio_wav.c
 base/binary.h
 base/clock.c
 base/clock.h
+base/clock_impl.h
 base/configfile.c
 base/configfile.h
 base/configfile_read.c
