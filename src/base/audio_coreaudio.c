@@ -1,5 +1,6 @@
 #include "audio.h"
 #include "clock.h"
+#include "clock_impl.h"
 #include "log.h"
 #include <AudioUnit/AudioUnit.h>
 #include <CoreAudio/CoreAudio.h>
@@ -25,7 +26,7 @@ sg_audio_callback(
 
     if (ioData->mNumberBuffers < 1)
         return 0;
-    time = sg_clock_get();
+    time = sg_clock_convert(inTimeStamp->mHostTime);
     buf = &ioData->mBuffers[0];
     if (buf->mNumberChannels != 2)
         return 0;
