@@ -1,23 +1,27 @@
 #ifndef BASE_UTIL_H
 #define BASE_UTIL_H
 #include "defs.h"
-#ifdef __cplusplus
-extern "C" {
+#include <stddef.h>
+
+#if defined(SG_UTIL)
+# define SG_INL SG_EXTERN_INLINE
+#else
+# define SG_INL SG_INLINE
 #endif
 
-inline size_t
+SG_INL size_t
 sg_align(size_t x);
 
-inline unsigned
+SG_INL unsigned
 sg_round_up_pow2(unsigned x);
 
-inline size_t
+SG_INL size_t
 sg_align(size_t x)
 {
     return (x + (sizeof(void *) - 1)) & -sizeof(void *);
 }
 
-inline unsigned
+SG_INL unsigned
 sg_round_up_pow2(unsigned x)
 {
     unsigned a = x - 1;
@@ -29,7 +33,6 @@ sg_round_up_pow2(unsigned x)
     return a + 1;
 }
 
-#ifdef __cplusplus
-}
-#endif
+#undef SG_INL
+
 #endif
