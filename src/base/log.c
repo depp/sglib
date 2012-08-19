@@ -212,11 +212,11 @@ sg_dologv(struct sg_logger *logger, sg_log_level_t level,
     if (err) {
         if (err->code) {
             s = snprintf(
-                buf - r, sizeof(buf) - r,
+                buf + r, sizeof(buf) - r,
                 ": %s (%s %ld)", err->msg, err->domain->name, err->code);
         } else {
             s = snprintf(
-                buf - r, sizeof(buf) - r,
+                buf + r, sizeof(buf) - r,
                 ": %s (%s)", err->msg, err->domain->name);
         }
         if (s > 0) {
