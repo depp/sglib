@@ -16,7 +16,7 @@ p.info.set(
     DEFAULT_CVARS = [
         ('log.level.root', 'debug'),
         ('log.winconsole', 'yes'),
-        ('path.data-path', Path('data')),
+        ('path.data', Path('data')),
     ]
 )
 
@@ -38,10 +38,17 @@ p.add_module(Executable(
     EXE_NAME = 'Audio Test',
 ))
 
+p.add_module(Executable(
+    'AUDIO2', 'Audio 2 test executable',
+    reqs = 'SGLIB',
+    EXE_NAME = 'Audio 2 test',
+))
+
 p.add_sourcelist_str('SGLib Tests', 'src', """\
 image.c IMAGE
 type.c TYPE
 audio.c AUDIO
+audio2.c AUDIO2
 """)
 
 p.run()
