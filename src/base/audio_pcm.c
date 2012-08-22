@@ -1,6 +1,7 @@
-#include "audio_util.h"
+#include "audio_pcm.h"
 #include <stdlib.h>
-#include <math.h>
+
+#include <stdio.h>
 
 void
 sg_audio_pcm_init(struct sg_audio_pcm *pcm)
@@ -33,52 +34,36 @@ sg_audio_pcm_destroy(struct sg_audio_pcm *pcm)
     free(pcm->data);
 }
 
-int
-sg_audio_pcm_fill(struct sg_audio_pcm *pcm, float *buf, int nframes,
-                  int rate, int pos)
+void
+sg_audio_pcm_resample(struct sg_audio_pcm *pcm, float *buf, int buflen,
+                      int offset, int rate)
 {
-    float rrate = (float) rate / (float) pcm->rate;
-    int i, j, nframe = pcm->nframe;
-    float l1, r1, l2, r2, p, jf, frac, *data = pcm->data;
-    p = rrate * pos;
+    const float *restrict ip;
+    float *restrict op;
+    double rr;
+    int i, pos, plen;
+    float x;
 
+    rr = (double) pcm->rate / rate;
+    // printf("ratio: %f\n", rr);
+    ip = pcm->data;
+    op = buf;
+    plen = pcm->nframe;
     switch (pcm->nchan) {
-    case 1: 
-        for (i = 0; i < nframes; ++i, p += rrate) {
-            jf = floorf(p);
-            frac = p - jf;
-            j = (int) jf;
-            if (j < 0 || j >= nframe)
-                break;
-            l1 = data[j];
-            l2 = data[j + 1];
-            l1 = l1 * (1.0f - frac) + l2 * frac;
-            buf[i*2+0] = l1;
-            buf[i*2+1] = l1;
-        }
-        break;
-
-    case 2:
-        for (i = 0; i < nframes; ++i, p += rrate) {
-            jf = floorf(p);
-            frac = p - jf;
-            j = (int) jf;
-            if (j < 0 || j >= nframe)
-                break;
-            l1 = data[j*2+0];
-            r1 = data[j*2+1];
-            l2 = data[j*2+2];
-            r2 = data[j*2+3];
-            l1 = l1 * (1.0f - frac) + l2 * frac;
-            r1 = r1 * (1.0f - frac) + r2 * frac;
-            buf[i*2+0] = l1;
-            buf[i*2+1] = r2;
+    case 1:
+        for (i = 0; i < buflen; ++i) {
+            pos = (int) (rr * (i - offset));
+            if (pos < 0 || pos >= plen)
+                x = 0.0f;
+            else
+                x = ip[pos];
+            op[2*i+0] = x;
+            op[2*i+1] = x;
         }
         break;
 
     default:
-        return 0;
+        puts("sg_audio_pcm_resample: not supported\n");
+        break;
     }
-
-    return i;
 }

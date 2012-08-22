@@ -1,6 +1,7 @@
 #define _XOPEN_SOURCE 600
 
-#include "audio.h"
+#include "audio_mixdown.h"
+#include "audio_system.h"
 #include "clock.h"
 #include "clock_impl.h"
 #include "cvar.h"
@@ -22,7 +23,7 @@ struct sg_audio_alsa {
     int req_bufsize;
 
     snd_pcm_t *pcm;
-    struct sg_audio_system *sys;
+    struct sg_audio_mixdown *mix;
     float *buffer;
     int rate;
     int bufsize;
@@ -76,7 +77,7 @@ static void *
 sg_audio_loop(void *ptr)
 {
     struct sg_audio_alsa *alsa = ptr;
-    struct sg_audio_system *sys = alsa->sys;
+    struct sg_audio_mixdown *mix = alsa->mix;
     snd_pcm_t *pcm = alsa->pcm;
     float *buf = alsa->buffer;
     unsigned periodsize = alsa->periodsize, bufsize = alsa->bufsize,
@@ -108,7 +109,7 @@ sg_audio_loop(void *ptr)
         ts.tv_nsec = nsec % 1000000000;
         time = sg_clock_convert(&ts);
 
-        sg_audio_system_pull(sys, time, buf, periodsize);
+        sg_audio_mixdown_read(mix, time, buf);
         pos = 0;
         while (pos < periodsize) {
             r = snd_pcm_writei(pcm, buf + pos, periodsize - pos);
@@ -153,7 +154,7 @@ done:
 }
 
 void
-sg_audio_initsys(void)
+sg_audio_sys_pstart(void)
 {
     struct sg_error *err = NULL;
     struct sg_audio_alsa *alsa;
@@ -173,7 +174,7 @@ sg_audio_initsys(void)
     if (!alsa)
         goto nomem;
     alsa->pcm = NULL;
-    alsa->sys = NULL;
+    alsa->mix = NULL;
 
     /* Open ALSA PCM connection */
     sg_audio_alsa_getinfo(alsa);
@@ -291,10 +292,10 @@ sg_audio_initsys(void)
 
     /* ==================== */
 
-    alsa->sys = sg_audio_system_new(rate, &err);
-    if (!alsa->sys) {
+    alsa->mix = sg_audio_mixdown_new(rate, periodsize, &err);
+    if (!alsa->mix) {
         sg_logerrs(sg_audio_alsa_logger, LOG_ERROR, err,
-                   "could not create audio subsystem");
+                   "could not create audio mixdown");
         sg_error_clear(&err);
         goto cleanup;
     }
@@ -327,8 +328,8 @@ cleanup:
     if (alsa) {
         if (alsa->pcm)
             snd_pcm_close(alsa->pcm);
-        if (alsa->sys)
-            sg_audio_system_free(alsa->sys);
+        if (alsa->mix)
+            sg_audio_mixdown_free(alsa->mix);
         if (alsa)
             free(alsa);
     }
@@ -339,3 +340,7 @@ nomem:
             "out of memory");
     abort();
 }
+
+void
+sg_audio_sys_pstop(void)
+{ }

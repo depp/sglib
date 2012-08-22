@@ -1,5 +1,6 @@
-#ifndef BASE_AUDIO_UTIL_H
-#define BASE_AUDIO_UTIL_H
+#ifndef BASE_AUDIO_PCM_H
+#define BASE_AUDIO_PCM_H
+#include "defs.h"
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -28,15 +29,22 @@ sg_audio_pcm_alloc(struct sg_audio_pcm *pcm);
 void
 sg_audio_pcm_destroy(struct sg_audio_pcm *pcm);
 
-int
-sg_audio_pcm_fill(struct sg_audio_pcm *pcm, float *buf, int nframes,
-                  int rate, int pos);
-
-/* Copy float32 data to float32 data.  If swap is true, this will swap
-   the byte order in the copy.  */
 void
 sg_audio_copy_float32(void *dest, const void *src,
                       unsigned nelem, int swap);
+
+/*
+  Resample PCM audio data.  The target buffer is has 'buflen' stereo
+  frammes and runs at the given sample rate.  The source PCM will be
+  written starting at the sample given by 'offset', which is measured
+  in frames in the target buffer.
+
+  For example, a rate of 48000 and an offset of 24000 means that the
+  PCM will be written starting 500 ms into the buffer.
+*/
+void
+sg_audio_pcm_resample(struct sg_audio_pcm *pcm, float *buf, int buflen,
+                      int offset, int rate);
 
 #ifdef __cplusplus
 }

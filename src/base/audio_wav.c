@@ -1,5 +1,5 @@
 #include "audio_file.h"
-#include "audio_util.h"
+#include "audio_wav.h"
 #include "binary.h"
 #include "error.h"
 #include "log.h"
