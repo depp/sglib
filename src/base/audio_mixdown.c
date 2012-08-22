@@ -38,6 +38,9 @@ struct sg_audio_mixchan {
 #define NTIMESAMP 3
 
 struct sg_audio_mixdown {
+    /* Pointer to free in order to free the mixdown */
+    void *root;
+
     /* ========== General info ========== */
 
     /* Nominal audio sample rate, in Hz */
@@ -107,6 +110,10 @@ struct sg_audio_mixdown {
     unsigned chancount;
     /* Index of first channel in freelist */
     int chanfree;
+
+    /* ========== Sample buffers ========== */
+    float *buf_mix;
+    float *buf_samp;
 };
 
 /* ========================================
@@ -458,7 +465,9 @@ sg_audio_mixdown_new(int rate, int bufsize, struct sg_error **err)
     struct sg_audio_mixsrc *restrict srcs;
     struct sg_audio_mixchan *restrict chans;
     unsigned i, nsrc, nchan, index;
-    size_t srcoffset, chanoffset, size;
+    size_t bufslen, srcoffset, chanoffset, size;
+    unsigned char *root;
+    float *bufs;
 
     if (bufsize > 0x8000 || bufsize < 32 || (bufsize & (bufsize - 1))) {
         /* FIXME: proper error */
@@ -476,17 +485,20 @@ sg_audio_mixdown_new(int rate, int bufsize, struct sg_error **err)
     nchan = SG_AUDIO_MAXCHAN;
     assert(nsrc > 0 && nchan > 0);
 
-    srcoffset = sg_align(sizeof(*mp));
+    bufslen = sg_align(sizeof(float) * 4 * bufsize);
+    srcoffset = bufslen + sg_align(sizeof(*mp));
     chanoffset = srcoffset + sg_align(sizeof(*mp->srcs) * nsrc);
     size = chanoffset + sg_align(sizeof(*mp->chans) * nchan);
 
-    mp = malloc(size);
-    if (!mp) {
+    root = malloc(size);
+    if (!root) {
         sg_error_nomem(err);
         return NULL;
     }
-    srcs = (void *) ((unsigned char *) mp + srcoffset);
-    chans = (void *) ((unsigned char *) mp + chanoffset);
+    bufs = (void *) root;
+    mp = (void *) (root + bufslen);
+    srcs = (void *) (root + srcoffset);
+    chans = (void *) (root + chanoffset);
 
     for (i = 0; i < nsrc; ++i) {
         srcs[i].chan = -1;
@@ -499,6 +511,8 @@ sg_audio_mixdown_new(int rate, int bufsize, struct sg_error **err)
         chans[i].src = i + 1;
     }
     chans[nchan-1].src = -1;
+
+    mp->root = root;
 
     mp->samplerate = rate;
     mp->abufsize = bufsize;
@@ -519,6 +533,9 @@ sg_audio_mixdown_new(int rate, int bufsize, struct sg_error **err)
     mp->chans = chans;
     mp->chancount = nchan;
     mp->chanfree = 0;
+
+    mp->buf_mix = bufs;
+    mp->buf_samp = bufs + 2 * bufsize;
 
     sg_lock_acquire(&sp->slock);
 
@@ -554,7 +571,7 @@ sg_audio_mixdown_free(struct sg_audio_mixdown *restrict mp)
     sg_lock_release(&sp->slock);
 
     free(mp->mbuf);
-    free(mp);
+    free(mp->root);
 }
 
 /* ========================================
@@ -563,19 +580,23 @@ sg_audio_mixdown_free(struct sg_audio_mixdown *restrict mp)
 
 static void
 sg_audio_mixdown_render(struct sg_audio_mixdown *restrict mp,
-                        float *buf)
+                        float *restrict bufout)
 {
     struct sg_audio_mixchan *restrict chans;
     struct sg_audio_file *restrict fp;
-    unsigned i, nchan, bufsz, rate;
+    unsigned i, j, nchan, bufsz, rate;
     int r, pos;
-
-    memset(buf, 0, sizeof(float) * 2 * mp->abufsize);
+    float *restrict bufmix, *restrict bufsamp;
 
     bufsz = mp->abufsize;
     nchan = mp->chancount;
     chans = mp->chans;
     rate = mp->samplerate;
+    bufmix = mp->buf_mix;
+    bufsamp = mp->buf_samp;
+
+    memset(bufmix, 0, sizeof(float) * 2 * bufsz);
+
     for (i = 0; i < nchan; ++i) {
         fp = chans[i].file;
         if (!chans[i].flags)
@@ -587,9 +608,17 @@ sg_audio_mixdown_render(struct sg_audio_mixdown *restrict mp,
         r = sg_lock_try(&fp->lock);
         if (r) {
             // printf("pos: %d\n", pos);
-            if (fp->type == SG_AUDIO_PCM)
-                sg_audio_pcm_resample(&fp->data.pcm, buf, bufsz, pos, rate);
-            sg_lock_release(&fp->lock);
+            if (fp->type == SG_AUDIO_PCM) {
+                sg_audio_pcm_resample(&fp->data.pcm, bufsamp,
+                                      bufsz, pos, rate);
+                sg_lock_release(&fp->lock);
+                for (j = 0; j < bufsz; ++j) {
+                    bufmix[j*2+0] += bufsamp[j*2+0];
+                    bufmix[j*2+1] += bufsamp[j*2+1];
+                }
+            } else {
+                sg_lock_release(&fp->lock);
+            }
             pos -= bufsz;
             chans[i].pos = pos;
             /* FIXME: use actual length */
@@ -603,6 +632,8 @@ sg_audio_mixdown_render(struct sg_audio_mixdown *restrict mp,
 
         pos += bufsz;
     }
+
+    memcpy(bufout, bufmix, sizeof(float) * 2 * bufsz);
 }
 
 /* ========================================
