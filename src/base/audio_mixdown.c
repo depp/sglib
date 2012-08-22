@@ -460,6 +460,18 @@ sg_audio_mixdown_new(int rate, int bufsize, struct sg_error **err)
     unsigned i, nsrc, nchan, index;
     size_t srcoffset, chanoffset, size;
 
+    if (bufsize > 0x8000 || bufsize < 32 || (bufsize & (bufsize - 1))) {
+        /* FIXME: proper error */
+        sg_error_nomem(err);
+        return NULL;
+    }
+
+    if (rate < 11025 || rate > 192000) {
+        /* FIXME: proper error */
+        sg_error_nomem(err);
+        return NULL;
+    }
+
     nsrc = SG_AUDIO_MAXSOURCE;
     nchan = SG_AUDIO_MAXCHAN;
     assert(nsrc > 0 && nchan > 0);
