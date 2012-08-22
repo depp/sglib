@@ -242,6 +242,7 @@ static void handleMouse(GDisplay *d, NSEvent *e, sg_event_type_t t, int button)
     NSNotificationCenter *c = [NSNotificationCenter defaultCenter];
     [c addObserver:self selector:@selector(applicationDidHide:) name:NSApplicationDidHideNotification object:NSApp];
     [c addObserver:self selector:@selector(applicationDidUnhide:) name:NSApplicationDidUnhideNotification object:NSApp];
+    [c addObserver:self selector:@selector(applicationDidChangeScreenParameters:) name:NSApplicationDidChangeScreenParametersNotification object:NSApp];
 
     minSize_ = NSMakeSize(320, 180);
     defaultSize_ = NSMakeSize(1280, 720);
@@ -301,6 +302,7 @@ error:
     mode_ = mode;
 
     if (isWindowedMode(mode)) {
+        // Note: "mainScreen" is the screen containing the key window
         NSScreen *s = [NSScreen mainScreen];
         NSRect r;
         NSUInteger style;
@@ -310,7 +312,8 @@ error:
             r.size = defaultSize_;
             style = NSTitledWindowMask | NSClosableWindowMask | NSMiniaturizableWindowMask | NSResizableWindowMask;
         } else {
-            r = [s frame];
+            r.origin = NSMakePoint(0, 0);
+            r.size = [s frame].size;
             style = NSBorderlessWindowMask;
         }
         if (nswindow_) {
@@ -356,17 +359,17 @@ error:
     [self stateChanged];
 }
 
-- (void)showWindow:(id)sender {
+- (IBAction)showWindow:(id)sender {
     (void)sender;
     [self setMode:GDisplayWindow];
 }
 
-- (void)showFullScreen:(id)sender {
+- (IBAction)showFullScreen:(id)sender {
     (void)sender;
     [self setMode:GDisplayFSWindow];
 }
 
-- (void)toggleFullScreen:(id)sender {
+- (IBAction)toggleGFullScreen:(id)sender {
     if (mode_ == GDisplayWindow)
         [self showFullScreen:sender];
     else if (mode_ == GDisplayFSWindow || mode_ == GDisplayFSCapture)
@@ -444,6 +447,20 @@ error:
     [self stateChanged];
 }
 
+- (void)applicationDidChangeScreenParameters:(NSNotification *)notification {
+    (void) notification;
+    switch (mode_) {
+    case GDisplayNone:
+    case GDisplayWindow:
+        break;
+
+    case GDisplayFSWindow:
+    case GDisplayFSCapture:
+        [self setMode:GDisplayWindow];
+        break;
+    }
+}
+
 - (BOOL)handleEvent:(NSEvent *)event {
     switch ([event type]) {
     case NSLeftMouseDown:
@@ -505,7 +522,7 @@ error:
 
 // Note: this won't get called in "capture" fullscreen mode but it doesn't matter since you can't see the menubar anyway.
 - (BOOL)validateMenuItem:(NSMenuItem *)item {
-    if ([item action] == @selector(toggleFullScreen:)) {
+    if ([item action] == @selector(toggleGFullScreen:)) {
         if (mode_ == GDisplayWindow) {
             [item setTitle:NSLocalizedString(@"Enter Full Screen", nil)];
         } else {

@@ -32,14 +32,10 @@ static struct sg_paths sg_paths;
 static void
 sg_path_copy(pchar *dest, const char *src, size_t len)
 {
-#if SG_PATH_DIRSEP != '/'
+#if defined(_WIN32)
     size_t i;
     for (i = 0; i < len; ++i)
         dest[i] = src[i] == '/' ? SG_PATH_DIRSEP : src[i];
-#elif defined(SG_PATH_UNICODE)
-    size_t i;
-    for (i = 0; i < len; ++i)
-        dest[i] = src[i];
 #else
     memcpy(dest, src, len);
 #endif
@@ -49,7 +45,7 @@ sg_path_copy(pchar *dest, const char *src, size_t len)
 static void
 sg_path_copy2(pchar *dest, const char *src, size_t len)
 {
-#if defined(SG_PATH_UNICODE)
+#if defined(_WIN32)
     size_t i;
     for (i = 0; i < len; ++i)
         dest[i] = src[i];
@@ -188,73 +184,149 @@ done:
     return f;
 }
 
-/* Add a path to the given search paths.  Return >0 on success, 0 if
-   the path is discarded, and <0 if some other error occurred.  */
-static int
-sg_path_add(struct sg_paths *p, const char *path, size_t len, int flags)
+/* Add a path to the given search paths.  The path should be malloc'd,
+   NUL-terminated, and must end with the directory separator.  This
+   function assumes ownership of the path pointer, either freeing it
+   or using it.  */
+
+static void
+sg_path_add(struct sg_paths *p, pchar *path, int writable)
 {
-    struct sg_path npath, *na;
+    struct sg_path *na;
+    size_t pathlen;
     unsigned nalloc, pos;
     int r;
 
-    r = sg_path_getdir(&npath.path, &npath.len, path, len, flags);
-    if (r <= 0)
-        return r;
+    r = sg_path_checkdir(path);
+    if (!r) {
+        free(path);
+        return;
+    }
+
+#if defined(_WIN32)
+    pathlen = wcslen(path);
+#else
+    pathlen = strlen(path);
+#endif
 
     if (p->acount >= p->alloc) {
         nalloc = p->alloc ? p->alloc * 2 : SG_PATH_INITSZ;
         na = realloc(p->a, sizeof(*na) * nalloc);
-        if (!na) {
-            free(npath.path);
-            goto nomem;
-        }
+        if (!na) goto nomem;
         p->a = na;
         p->alloc = nalloc;
     }
     pos = p->acount;
-    if (npath.len > p->amaxlen)
-        p->amaxlen = (unsigned) npath.len;
+    if (pathlen > p->amaxlen)
+        p->amaxlen = (unsigned) pathlen;
     p->acount += 1;
-    if (flags & SG_PATH_WRITABLE) {
+    if (writable) {
         pos = p->wcount;
-        if (npath.len > p->wmaxlen)
-            p->wmaxlen = (unsigned) npath.len;
+        if (pathlen > p->wmaxlen)
+            p->wmaxlen = (unsigned) pathlen;
         p->wcount += 1;
     }
     memmove(p->a + pos + 1, p->a + pos,
             sizeof(*p->a) * (p->acount - pos - 1));
-    memcpy(p->a + pos, &npath, sizeof(npath));
-    return 1;
+    p->a[pos].path = path;
+    p->a[pos].len = pathlen;
+    return;
 
 nomem:
     abort();
-    return -1;
+    return;
 }
+
+#if PATH_MAX > 0
+#define PATH_BUFSZ PATH_MAX
+#else
+#define PATH_BUFSZ 1024
+#endif
+
+static const struct {
+    char dirname[5];
+    char varname[5];
+} sg_path_defaults[2] = {
+    { "User", "user" },
+    { "Data", "data" }
+};
 
 void
 sg_path_init(void)
 {
-    const char *p, *sep;
-    int r;
+    const char *paths, *p, *start, *end;
+    pchar buf[PATH_BUFSZ], *str = NULL;
+    int r, i, writable;
+    size_t elen = 0, dlen, slen;
 
-    r = sg_cvar_gets("path", "data-dir", &p);
-    if (!r)
-        p = "data";
+    for (i = 0; i < 2; ++i) {
+        writable = !i;
+        r = sg_cvar_gets("path", sg_path_defaults[i].varname, &paths);
+        if (r && *paths) {
+            /* Use a path from the config settings */
 
-    sg_path_add(&sg_paths, p, strlen(p), SG_PATH_EXEDIR);
+            p = paths;
+            do {
+                start = p;
+                end = strchr(p, SG_PATH_PATHSEP);
+                if (end) {
+                    p = end + 1;
+                } else {
+                    end = p + strlen(p);
+                    p = end;
+                }
+                if (start != end) {
+                    dlen = end - start;
+#if defined(_WIN32)
+                    r = MultiByteToWideChar(
+                        CP_UTF8, 0, start, (int) dlen, NULL, 0);
+                    if (!r) goto fail;
+                    slen = r;
+                    str = malloc(sizeof(wchar_t) * (slen + 2));
+                    if (!str) goto fail;
+                    r = MultiByteToWideChar(
+                        CP_UTF8, 0, start, (int) dlen, str, (int) slen);
+                    if (!r) goto fail;
+#else
+                    slen = dlen;
+                    str = malloc(dlen + 2);
+                    if (!str) goto fail;
+                    memcpy(str, start, dlen);
+#endif
+                    if (str[slen-1] != SG_PATH_DIRSEP)
+                        str[slen++] = SG_PATH_DIRSEP;
+                    str[slen] = '\0';
+                    sg_path_add(&sg_paths, str, writable);
+                    str = NULL;
+                }
+            } while (*end);
+        } else {
+            /* Use a default EXE-relative path */
 
-    r = sg_cvar_gets("path", "data-path", &p);
-    if (!r)
-        p = "";
-    while (*p) {
-        sep = strchr(p, SG_PATH_PATHSEP);
-        if (!sep) {
-            if (*p)
-                sg_path_add(&sg_paths, p, strlen(p), 0);
-            break;
+            if (!elen) {
+                r = sg_path_getexepath(buf, PATH_BUFSZ);
+                if (!r) goto fail;
+                p = pathrchr(buf, SG_PATH_DIRSEP);
+                if (!p) goto fail;
+                p++;
+                elen = p - buf;
+            }
+
+            dlen = strlen(sg_path_defaults[i].dirname);
+            str = malloc(sizeof(pchar) * (elen + dlen + 2));
+            if (!str) goto fail;
+            memcpy(str, buf, sizeof(pchar) * elen);
+            sg_path_copy2(str + elen, sg_path_defaults[i].dirname, dlen);
+            str[elen+dlen] = SG_PATH_DIRSEP;
+            str[elen+dlen+1] = '\0';
+
+            sg_path_add(&sg_paths, str, writable);
+            str = NULL;
         }
-        if (p != sep)
-            sg_path_add(&sg_paths, p, sep - p, 0);
-        p = sep + 1;
     }
+
+    return;
+
+fail:
+    abort();
 }

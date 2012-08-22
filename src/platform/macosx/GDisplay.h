@@ -16,7 +16,7 @@ typedef enum {
     GDisplayFSCapture // Captured display, kiosk mode is mandatory
 } GDisplayMode;
 
-@interface GDisplay : NSObject <NSLocking, GEventCapture> {
+@interface GDisplay : NSObject <NSLocking, GEventCapture, NSWindowDelegate> {
     // Always valid
     pthread_mutex_t lock_;
     BOOL modeChange_;
@@ -46,8 +46,9 @@ typedef enum {
 - (void)setMinSize:(NSSize)size;
 - (void)setDefaultSize:(NSSize)size;
 - (void)setMode:(GDisplayMode)mode;
-- (void)showWindow:(id)sender;
-- (void)showFullScreen:(id)sender;
+- (IBAction)showWindow:(id)sender;
+- (IBAction)showFullScreen:(id)sender;
+- (IBAction)toggleGFullScreen:(id)sender;
 
 - (void)handleUIEvent:(union sg_event *)event;
 

@@ -1,5 +1,10 @@
 #include "clock.h"
 #include "clock_impl.h"
+#include <stdio.h>
+
+#if defined(_MSC_VER)
+#define snprintf _snprintf
+#endif
 
 #if defined(SG_CLOCK_APPLE)
 
@@ -103,35 +108,13 @@ sg_clock_get(void)
 #error "No clock implementation!"
 #endif
 
-static void
-sg_clock_fmtfield(char *p, int width, int n)
-{
-    int i;
-    for (i = 0; i < width; ++i) {
-        p[width - 1 - i] = '0' + (n % 10);
-        n /= 10;
-    }
-}
-
 static int
 sg_clock_fmtdate(char *date, int year, int month, int day,
                  int hour, int minute, int sec, int msec)
 {
-    sg_clock_fmtfield(date, 4, year);
-    date[4] = '-';
-    sg_clock_fmtfield(date + 5, 2, month);
-    date[7] = '-';
-    sg_clock_fmtfield(date + 8, 2, day);
-    date[10] = 'T';
-    sg_clock_fmtfield(date + 11, 2, hour);
-    date[13] = ':';
-    sg_clock_fmtfield(date + 14, 2, minute);
-    date[16] = ':';
-    sg_clock_fmtfield(date + 17, 2, sec);
-    date[19] = '.';
-    sg_clock_fmtfield(date + 20, 3, msec);
-    date[23] = 'Z';
-    return 24;
+    return snprintf(
+        date, SG_DATE_LEN, "%04d-%02d-%02dT%02d:%02d:%02d.%03dZ",
+        year, month, day, hour, minute, sec, msec);
 }
 
 #if defined(_WIN32)

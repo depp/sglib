@@ -5,7 +5,7 @@ extern "C" {
 #endif
 
 /* The minimum buffer size for sg_clock_getdate.  */
-#define SG_DATE_LEN 24
+#define SG_DATE_LEN 25
 
 /* Initialize the timer, setting the current time to zero.  */
 void
