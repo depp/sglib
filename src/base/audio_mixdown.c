@@ -3,6 +3,7 @@
 #include "audio_pcm.h"
 #include "audio_sysprivate.h"
 #include "error.h"
+#include "log.h"
 #include "util.h"
 #include <assert.h>
 #include <math.h>
@@ -281,7 +282,7 @@ sg_audio_mixdown_getmsg(struct sg_audio_mixdown *restrict mp)
     len = (end - start) & (sz - 1);
     if (len > mp->mbufalloc - mp->mbufsize) {
         if (len > SG_AUDIO_MIXMAXBUF - mp->mbufsize)
-            goto fail; /* FIXME: log message */
+            goto fail;
         nalloc = sg_round_up_pow2(len + mp->mbufsize);
         mbuf = realloc(mp->mbuf, nalloc);
         if (!mbuf)
@@ -305,6 +306,8 @@ sg_audio_mixdown_getmsg(struct sg_audio_mixdown *restrict mp)
     return;
 
 fail:
+    sg_logs(sg_audio_system_global.log, LOG_ERROR,
+            "message queue overflow");
     abort();
 }
 
@@ -343,8 +346,11 @@ sg_audio_mixdown_srcplay(struct sg_audio_mixdown *restrict mp,
         return;
     sg_audio_mixdown_srcstop(mp, src, sample);
     chan = mp->chanfree;
-    if (chan < 0)
-        return; /* Dropped FIXME: log message */
+    if (chan < 0) {
+        sg_logs(sg_audio_system_global.log, LOG_WARN,
+                "sound dropped");
+        return;
+    }
     mp->srcs[src].chan = chan;
     chanp = &mp->chans[chan];
     mp->chanfree = chanp->src;
