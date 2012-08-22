@@ -585,7 +585,7 @@ sg_audio_mixdown_render(struct sg_audio_mixdown *restrict mp,
     struct sg_audio_mixchan *restrict chans;
     struct sg_audio_file *restrict fp;
     unsigned i, j, nchan, bufsz, rate;
-    int r, pos;
+    int r, pos, length;
     float *restrict bufmix, *restrict bufsamp;
 
     bufsz = mp->abufsize;
@@ -616,13 +616,15 @@ sg_audio_mixdown_render(struct sg_audio_mixdown *restrict mp,
                     bufmix[j*2+0] += bufsamp[j*2+0];
                     bufmix[j*2+1] += bufsamp[j*2+1];
                 }
+                length = (int) fp->data.pcm.nframe *
+                    ((double) rate / fp->data.pcm.rate);
             } else {
                 sg_lock_release(&fp->lock);
+                length = rate;
             }
             pos -= bufsz;
             chans[i].pos = pos;
-            /* FIXME: use actual length */
-            if (pos < -48000) {
+            if (pos < -length) {
                 chans[i].flags = 0;
                 chans[i].file = 0;
                 chans[i].src = mp->chanfree;
