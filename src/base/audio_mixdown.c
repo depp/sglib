@@ -631,6 +631,8 @@ sg_audio_mixdown_render(struct sg_audio_mixdown *restrict mp,
             pos -= bufsz;
             chans[i].pos = pos;
             if (pos < -length) {
+                if (chans[i].src >= 0)
+                    mp->srcs[chans[i].src].chan = -1;
                 chans[i].flags = 0;
                 chans[i].file = 0;
                 chans[i].src = mp->chanfree;
