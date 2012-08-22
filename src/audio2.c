@@ -143,6 +143,37 @@ func1(unsigned msec)
     g_state = state;
 }
 
+static void
+func2(unsigned msec)
+{
+    static int g_chan = -1, g_state, g_mod;
+    int state = get_state(1);
+    struct sg_audio_file *fp;
+    float pan = 0.0f;
+
+    if (state && !g_state) {
+        if (g_chan < 0)
+            g_chan = sg_audio_source_open();
+        fp = NULL;
+        switch (g_mod / 3) {
+        case 0: fp = g_snd_clank; break;
+        case 1: fp = g_snd_donk;  break;
+        case 2: fp = g_snd_tink;  break;
+        }
+        switch (g_mod % 3) {
+        case 0: pan = 0.0f; break;
+        case 1: pan = -1.0f; break;
+        case 2: pan = 1.0f; break;
+        }
+        g_mod = (g_mod + 1) % 9;
+        sg_audio_source_pset(g_chan, SG_AUDIO_PAN, msec, pan);
+        sg_audio_source_play(g_chan, msec, fp, 0);
+    }
+
+    draw_key(1, state);
+    g_state = state;
+}
+
 void
 sg_game_draw(int x, int y, int width, int height, unsigned msec)
 {
@@ -156,6 +187,7 @@ sg_game_draw(int x, int y, int width, int height, unsigned msec)
     glLoadIdentity();
 
     func1(msec);
+    func2(msec);
 
     sg_audio_source_commit(msec, msec);
 }
