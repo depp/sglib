@@ -510,7 +510,7 @@ sg_audio_source_bufcommit(struct sg_audio_system *restrict sp,
     rpos = sp->bufrpos;
     mind = (sp->bufwpos - rpos) & (sz - 1);
     for (i = 0; i < SG_AUDIO_MAXMIX; ++i) {
-        if (sp->mix[i].pos == (unsigned) -1)
+        if ((sp->mixmask & (1u << i)) == 0)
             continue;
         d = (sp->mix[i].pos - rpos) & (sz - 1);
         if (d < mind)
@@ -589,10 +589,9 @@ sg_audio_source_bufprocess(struct sg_audio_system *restrict sp,
 {
     const struct sg_audio_msghdr *restrict mhdr;
     const struct sg_audio_msgplay *restrict mplay;
-    unsigned pos, wtime;
+    unsigned pos;
     int r;
 
-    wtime = sp->wtime;
     while (1) {
         pos = bp->pos;
         mhdr = sg_audio_source_bufread(bp, sizeof(*mhdr));
@@ -607,6 +606,7 @@ sg_audio_source_bufprocess(struct sg_audio_system *restrict sp,
             break;
 
         case SG_AUDIO_MSG_STOP:
+        case SG_AUDIO_MSG_RESET:
         case SG_AUDIO_MSG_STOPLOOP:
             break;
 
@@ -621,6 +621,8 @@ sg_audio_source_bufprocess(struct sg_audio_system *restrict sp,
             break;
         }
     }
+
+    sp->bufrpos = bp->pos;
 }
 
 /*
