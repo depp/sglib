@@ -16,7 +16,7 @@ typedef enum {
     GDisplayFSCapture // Captured display, kiosk mode is mandatory
 } GDisplayMode;
 
-@interface GDisplay : NSObject <NSLocking, GEventCapture, NSWindowDelegate> {
+@interface GDisplay : NSObject <NSLocking, GEventCapture> {
     // Always valid
     pthread_mutex_t lock_;
     BOOL modeChange_;
