@@ -1,11 +1,12 @@
-#include "audio.h"
+#include "audio_mixdown.h"
+#include "audio_system.h"
 #include "clock.h"
 #include "clock_impl.h"
 #include "log.h"
 #include <AudioUnit/AudioUnit.h>
 #include <CoreAudio/CoreAudio.h>
 
-static struct sg_audio_system *sg_audio_ca_system;
+static struct sg_audio_mixdown *sg_audio_ca_mixdown;
 static struct sg_logger *sg_audio_ca_logger;
 
 static OSStatus
@@ -22,6 +23,7 @@ sg_audio_callback(
     (void) inRefCon;
     (void) ioActionFlags;
     (void) inTimeStamp;
+    (void) inNumberFrames;
     (void) inBusNumber;
 
     if (ioData->mNumberBuffers < 1)
@@ -30,13 +32,12 @@ sg_audio_callback(
     buf = &ioData->mBuffers[0];
     if (buf->mNumberChannels != 2)
         return 0;
-    sg_audio_system_pull(
-        sg_audio_ca_system, time, buf->mData, inNumberFrames);
+    sg_audio_mixdown_read(sg_audio_ca_mixdown, time, buf->mData);
     return 0;
 }
 
 void
-sg_audio_initsys(void)
+sg_audio_sys_pstart(void)
 {
     ComponentDescription desc;
     Component comp;
@@ -45,7 +46,7 @@ sg_audio_initsys(void)
     AURenderCallbackStruct callback;
     OSStatus e = 0;
     Float64 sampleRate;
-    UInt32 size;
+    UInt32 size, bufsize;
     const char *why, *ewhy;
     struct sg_error *err = NULL;
 
@@ -123,18 +124,45 @@ sg_audio_initsys(void)
         goto error;
     }
 
+    /*
+    bufsize = 32;
+    e = AudioUnitSetProperty(
+        output,
+        kAudioDevicePropertyBufferFrameSize,
+        kAudioUnitScope_Global,
+        0,
+        &bufsize, sizeof(bufsize));
+    if (e) {
+        sg_logs(sg_audio_ca_logger, LOG_INFO, "could not set bufsize");
+    }
+    */
+
+    size = sizeof(bufsize);
+    e = AudioUnitGetProperty(
+        output,
+        kAudioDevicePropertyBufferFrameSize,
+        kAudioUnitScope_Global,
+        0,
+        &bufsize,
+        &size);
+    if (e) {
+        why = "could not get buffer size";
+        goto error;
+    }
+
+    sg_logf(sg_audio_ca_logger, LOG_INFO, "audio buffer size: %u", bufsize);
+    sg_logf(sg_audio_ca_logger, LOG_INFO, "audio sample rate: %g", sampleRate);
+
+    sg_audio_ca_mixdown = sg_audio_mixdown_new((int) floor(sampleRate + 0.5), bufsize, &err);
+    if (!sg_audio_ca_mixdown) {
+        why = "could not create audio system";
+        goto error2;
+    }
+
     e = AudioOutputUnitStart(output);
     if (e) {
         why = "could not start audio output";
         goto error;
-    }
-
-    sg_logf(sg_audio_ca_logger, LOG_INFO, "sample rate: %g", sampleRate);
-
-    sg_audio_ca_system = sg_audio_system_new((int) floor(sampleRate + 0.5), &err);
-    if (!sg_audio_ca_system) {
-        why = "could not create audio system";
-        goto error2;
     }
 
     return;
@@ -168,5 +196,6 @@ simple_error:
     goto cleanup;
 
 cleanup:
+    /* FIXME: do actual cleanup here */
     return;
 }
