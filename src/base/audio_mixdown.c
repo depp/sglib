@@ -17,10 +17,24 @@
 /* Maximum size of message queue */
 #define SG_AUDIO_MIXMAXBUF 4096
 
+/* Ratio of parameter sample buffers to audio sample buffers */
+#define SG_AUDIO_PARAMBITS 5
+#define SG_AUDIO_PARAMRATE (1 << (SG_AUDIO_PARAMBITS))
+
 struct sg_audio_mixsrc {
     int chan;
-    float volume;
-    float pan;
+    float params[SG_AUDIO_PARAMCOUNT];
+};
+
+/* A mix parameter records the most recent segment of parameter
+   automation.  It records a value going from val[0] at pos[0], to
+   val[1] at pos[1].  The positions are measured in samples.
+
+   In the sample buffer for parameters, positions prior to pos[0] are
+   already filled with samples.  */
+struct sg_audio_mixparam {
+    int pos[2];
+    float val[2];
 };
 
 struct sg_audio_mixchan {
@@ -32,6 +46,8 @@ struct sg_audio_mixchan {
        mixdown's sample rate, and is relative to the start of the
        current buffer.  */
     int pos;
+
+    struct sg_audio_mixparam params[SG_AUDIO_PARAMCOUNT];
 };
 
 #define SG_AUDIO_MIXDTBITS 9
@@ -115,6 +131,7 @@ struct sg_audio_mixdown {
     /* ========== Sample buffers ========== */
     float *buf_mix;
     float *buf_samp;
+    float *buf_param;
 };
 
 /* ========================================
@@ -327,6 +344,81 @@ sg_audio_mixdown_updatepos(struct sg_audio_mixdown *restrict mp)
 }
 
 /* ========================================
+   Parameter automation
+   ======================================== */
+
+#define S2C(x) (((x) + (1 << SG_AUDIO_PARAMBITS) - 1) >> SG_AUDIO_PARAMBITS)
+
+/*
+  Fill a paremeter sample buffer to the given audio sample position.
+  All samples strictly before the given position will be filled in.
+  Note: all sample positions are audio sample positions, parameter
+  sample positions are only used internally.  This may also update the
+  parameter data.
+*/
+static void
+sg_audio_mixdown_paramfill(struct sg_audio_mixdown *restrict mp,
+                           int chan, int param, int sample)
+{
+    float *restrict pbuf;
+    struct sg_audio_mixparam *restrict pp;
+    int bufsz, pbufsz, bufnum, ca, cb, cc, ci;
+    float y0, y1, dy, y;
+
+    pp = &mp->chans[chan].params[param];
+
+    if (sample <= pp->pos[0])
+        return;
+
+    bufsz = mp->abufsize;
+    pbufsz = bufsz >> SG_AUDIO_PARAMBITS;
+    bufnum = chan * SG_AUDIO_PARAMCOUNT + param;
+    pbuf = mp->buf_param + pbufsz * bufnum;
+
+    if (sample > bufsz)
+        sample = bufsz;
+
+    /* ca: first parameter sample in the linear section */
+    ca = S2C(pp->pos[0]);
+    /* cb: first parameter sample in the constant section */
+    cb = S2C(pp->pos[1]);
+    /* cc: first parameter sample beyond all sections */
+    cc = S2C(sample);
+
+    assert(ca >= 0 && cc <= pbufsz);
+
+    if (cc < cb)
+        cb = cc;
+
+    y0 = pp->val[0];
+    y1 = pp->val[1];
+
+    if (pp->pos[1] > pp->pos[0]) {
+        dy = (y1 - y0) * (pp->pos[1] - pp->pos[0]);
+        y = y0 + (pp->pos[0] - ca * SG_AUDIO_PARAMRATE) * dy;
+        for (ci = ca; ci < cb; ++ci)
+            pbuf[ci] = y + (ci - cb) * SG_AUDIO_PARAMRATE * dy;
+    } else {
+        dy = 0.0f; /* to quash warning */
+    }
+    for (ci = cb; ci < cc; ++ci)
+        pbuf[ci] = y1;
+
+    if (sample < pp->pos[1]) {
+        y = y0 + (sample - pp->pos[0]) * dy;
+        pp->pos[0] = sample;
+        pp->val[0] = y;
+    } else {
+        pp->pos[0] = sample;
+        pp->pos[1] = sample;
+        pp->val[0] = y1;
+        pp->val[1] = y1;
+    }
+}
+
+#undef S2C
+
+/* ========================================
    Commands & message processing
    ======================================== */
 
@@ -337,10 +429,11 @@ sg_audio_mixdown_srcstop(struct sg_audio_mixdown *restrict mp,
 static void
 sg_audio_mixdown_srcplay(struct sg_audio_mixdown *restrict mp,
                          int src, int sample,
-                         const struct sg_audio_msgplay *mplay)
+                         const struct sg_audio_msgplay *restrict mplay)
 {
-    int chan;
+    int chan, param;
     struct sg_audio_mixchan *chanp;
+    struct sg_audio_mixparam *pp;
 
     if ((unsigned) src >= mp->srccount)
         return;
@@ -351,6 +444,7 @@ sg_audio_mixdown_srcplay(struct sg_audio_mixdown *restrict mp,
                 "sound dropped");
         return;
     }
+    assert(chan < mp->chancount);
     mp->srcs[src].chan = chan;
     chanp = &mp->chans[chan];
     mp->chanfree = chanp->src;
@@ -360,6 +454,12 @@ sg_audio_mixdown_srcplay(struct sg_audio_mixdown *restrict mp,
     /* FIXME: retain, once thread safe to do so */
     chanp->file = mplay->file;
     chanp->pos = sample;
+
+    for (param = 0; param < SG_AUDIO_PARAMCOUNT; ++param) {
+        pp = &chanp->params[param];
+        pp->pos[0] = pp->pos[1] = 0;
+        pp->pos[0] = pp->val[1] = mp->srcs[src].params[param];
+    }
 }
 
 static void
@@ -375,6 +475,7 @@ sg_audio_mixdown_srcstop(struct sg_audio_mixdown *restrict mp,
     mp->srcs[src].chan = -1;
     if (chan < 0)
         return; /* Already stopped */
+    assert(chan < mp->chancount);
     chanp = &mp->chans[chan];
     chanp->src = -1;
 
@@ -393,12 +494,56 @@ sg_audio_mixdown_srcstoploop(struct sg_audio_mixdown *restrict mp,
 static void
 sg_audio_mixdown_srcparam(struct sg_audio_mixdown *restrict mp,
                           int src, int sample,
-                          const struct sg_audio_msgparam *mparam)
+                          const struct sg_audio_msgparam *restrict pe)
 {
-    (void) mp;
-    (void) src;
-    (void) sample;
-    (void) mparam;
+    int chan, dt;
+    double dtf, rate;
+    struct sg_audio_mixchan *chanp;
+    struct sg_audio_mixparam *pp;
+
+    if ((unsigned) src >= mp->srccount)
+        return;
+    mp->srcs[src].params[pe->param] = pe->val;
+    chan = mp->srcs[src].chan;
+    if (chan < 0)
+        return;
+    assert(chan < mp->chancount);
+    chanp = &mp->chans[chan];
+
+    rate = 0.001 * mp->samplerate;
+    sg_audio_mixdown_paramfill(mp, chan, pe->param, sample);
+    pp = &chanp->params[pe->param];
+    switch (pe->type) {
+    case SG_AUDIO_PSET:
+        pp->pos[1] = pp->pos[0];
+        pp->val[0] = pe->val;
+        pp->val[1] = pe->val;
+        break;
+
+    case SG_AUDIO_PLINEAR:
+        dt = pe->d.ptime;
+        if (dt < 0)
+            dt = 0;
+        else if (dt > SG_AUDIO_MAXPTIME)
+            dt = SG_AUDIO_MAXPTIME;
+        dt = (int) (rate * dt);
+        pp->pos[1] = pp->pos[0] + dt;
+        pp->val[1] = pe->val;
+        break;
+
+    case SG_AUDIO_PSLOPE:
+        dtf = fabs((pe->val - pp->val[0]) / (pe->d.pslope * 0.001));
+        if (!(dtf >= 0.0f)) {
+            dt = 0.0f;
+        } else {
+            if (!(dtf <= SG_AUDIO_MAXPTIME))
+                dtf = SG_AUDIO_MAXPTIME;
+            dt = (int) (dtf * rate);
+        }
+        pp->pos[1] = pp->pos[0] + dt;
+        pp->val[1] = pe->val;
+        break;
+    }
 }
 
 static const unsigned
@@ -470,8 +615,8 @@ sg_audio_mixdown_new(int rate, int bufsize, struct sg_error **err)
     struct sg_audio_mixdown *restrict mp;
     struct sg_audio_mixsrc *restrict srcs;
     struct sg_audio_mixchan *restrict chans;
-    unsigned i, nsrc, nchan, index;
-    size_t bufslen, srcoffset, chanoffset, size;
+    unsigned i, j, nsrc, nchan, index;
+    size_t bufscount, bufslen, srcoffset, chanoffset, size;
     unsigned char *root;
     float *bufs;
 
@@ -491,7 +636,9 @@ sg_audio_mixdown_new(int rate, int bufsize, struct sg_error **err)
     nchan = SG_AUDIO_MAXCHAN;
     assert(nsrc > 0 && nchan > 0);
 
-    bufslen = sg_align(sizeof(float) * 4 * bufsize);
+    bufscount = 4 * bufsize + 
+        nchan * SG_AUDIO_PARAMCOUNT * (bufsize >> SG_AUDIO_PARAMBITS);
+    bufslen = sg_align(sizeof(float) * bufscount);
     srcoffset = bufslen + sg_align(sizeof(*mp));
     chanoffset = srcoffset + sg_align(sizeof(*mp->srcs) * nsrc);
     size = chanoffset + sg_align(sizeof(*mp->chans) * nchan);
@@ -508,8 +655,8 @@ sg_audio_mixdown_new(int rate, int bufsize, struct sg_error **err)
 
     for (i = 0; i < nsrc; ++i) {
         srcs[i].chan = -1;
-        srcs[i].volume = 0.0f;
-        srcs[i].pan = 0.0f;
+        for (j = 0; j < SG_AUDIO_PARAMCOUNT; ++j)
+            srcs[i].params[j] = 0.0f;
     }
 
     for (i = 0; i < nchan; ++i) {
@@ -542,6 +689,7 @@ sg_audio_mixdown_new(int rate, int bufsize, struct sg_error **err)
 
     mp->buf_mix = bufs;
     mp->buf_samp = bufs + 2 * bufsize;
+    mp->buf_param = bufs + 4 * bufsize;
 
     sg_lock_acquire(&sp->slock);
 
@@ -585,29 +733,80 @@ sg_audio_mixdown_free(struct sg_audio_mixdown *restrict mp)
    ======================================== */
 
 static void
+sg_audio_mixdown_cvolpan(float *restrict bp0, float *restrict bp1,
+                         int bufsz)
+{
+    float vol, pan, g, g0, g1;
+    int i;
+    for (i = 0; i < bufsz; ++i) {
+        vol = bp0[i];
+        pan = bp1[i];
+        if (vol < 0.0f) {
+            if (vol > -80.0f) {
+                g = expf(vol * (logf(10) / 20));
+                if (vol > -60.0f)
+                    g *= 0.05f * (g + 80.0f);
+            } else {
+                g = 0.0f;
+            }
+        } else {
+            g = 1.0f;
+        }
+        if (pan > -1.0f) {
+            if (pan < 1.0f) {
+                g0 = sqrtf(0.5f - 0.5f * pan);
+                g1 = sqrtf(0.5f + 0.5f * pan);
+            } else {
+                g0 = 0.0f;
+                g1 = g;
+            }
+        } else {
+            g0 = g;
+            g1 = 0.0f;
+        }
+        bp0[i] = g0;
+        bp1[i] = g1;
+    }
+}
+
+static void
 sg_audio_mixdown_render(struct sg_audio_mixdown *restrict mp,
                         float *restrict bufout)
 {
-    struct sg_audio_mixchan *restrict chans;
+    struct sg_audio_mixchan *chans;
     struct sg_audio_file *restrict fp;
-    unsigned i, j, nchan, bufsz, rate;
+    unsigned i, pi, chan, param, nchan, bufsz, pbufsz, rate;
     int r, pos, length;
     float *restrict bufmix, *restrict bufsamp;
+    float *bufparam, *restrict bp0, *restrict bp1;
 
     bufsz = mp->abufsize;
+    pbufsz = bufsz >> SG_AUDIO_PARAMBITS;
     nchan = mp->chancount;
     chans = mp->chans;
     rate = mp->samplerate;
     bufmix = mp->buf_mix;
     bufsamp = mp->buf_samp;
+    bufparam = mp->buf_param;
 
     memset(bufmix, 0, sizeof(float) * 2 * bufsz);
 
-    for (i = 0; i < nchan; ++i) {
-        fp = chans[i].file;
-        if (!chans[i].flags)
+    for (chan = 0; chan < nchan; ++chan) {
+        fp = chans[chan].file;
+        if (!chans[chan].flags)
             continue;
-        pos = chans[i].pos;
+        pos = chans[chan].pos;
+
+        bp0 = bufparam + pbufsz * SG_AUDIO_PARAMCOUNT * chan;
+        bp1 = bp0 + pbufsz;
+
+        for (param = 0; param < SG_AUDIO_PARAMCOUNT; ++param) {
+            sg_audio_mixdown_paramfill(mp, chan, param, bufsz);
+            chans[chan].params[param].pos[0] -= bufsz;
+            chans[chan].params[param].pos[1] -= bufsz;
+        }
+
+        sg_audio_mixdown_cvolpan(bp0, bp1, pbufsz);
 
         /* FIXME: we could actually use atomics here, maybe? */
         /* FIXME: don't use locks... */
@@ -618,9 +817,10 @@ sg_audio_mixdown_render(struct sg_audio_mixdown *restrict mp,
                 sg_audio_pcm_resample(&fp->data.pcm, bufsamp,
                                       bufsz, pos, rate);
                 sg_lock_release(&fp->lock);
-                for (j = 0; j < bufsz; ++j) {
-                    bufmix[j*2+0] += bufsamp[j*2+0];
-                    bufmix[j*2+1] += bufsamp[j*2+1];
+                for (i = 0; i < bufsz; ++i) {
+                    pi = i >> SG_AUDIO_PARAMBITS;
+                    bufmix[i*2+0] += bufsamp[i*2+0] * bp0[pi];
+                    bufmix[i*2+1] += bufsamp[i*2+1] * bp1[pi];
                 }
                 length = (int) fp->data.pcm.nframe *
                     ((double) rate / fp->data.pcm.rate);
@@ -629,14 +829,14 @@ sg_audio_mixdown_render(struct sg_audio_mixdown *restrict mp,
                 length = rate;
             }
             pos -= bufsz;
-            chans[i].pos = pos;
+            chans[chan].pos = pos;
             if (pos < -length) {
-                if (chans[i].src >= 0)
-                    mp->srcs[chans[i].src].chan = -1;
-                chans[i].flags = 0;
-                chans[i].file = 0;
-                chans[i].src = mp->chanfree;
-                mp->chanfree = i;
+                if (chans[chan].src >= 0)
+                    mp->srcs[chans[chan].src].chan = -1;
+                chans[chan].flags = 0;
+                chans[chan].file = 0;
+                chans[chan].src = mp->chanfree;
+                mp->chanfree = chan;
             }
         }
 

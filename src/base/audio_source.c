@@ -331,36 +331,13 @@ done:
     sg_lock_release(&sp->slock);
 }
 
-/* Parameter automation event type */
-typedef enum {
-    SG_AUDIO_PSET,
-    SG_AUDIO_PLINEAR,
-    SG_AUDIO_PSLOPE
-} sg_audio_msgparamtype_t;
-
-/* Parameter automation event */
-struct sg_audio_paramevt {
-    sg_audio_param_t param;
-    sg_audio_msgparamtype_t type;
-    /* start time */
-    unsigned time;
-    /* ending value */
-    float val;
-    union {
-        /* For PLINEAR: delta time */
-        int ptime;
-        /* For PSLOPE: slope value, units per second */
-        float pslope;
-    } d;
-};
-
 /*
   Apply a parameter automation message to a parameter automation
   segment, producing the next segment of parameter automation.
 */
 static void
 sg_audio_source_papply(struct sg_audio_param *restrict pp,
-                       const struct sg_audio_paramevt *restrict pe)
+                       const struct sg_audio_msgparam *restrict pe)
 {
     float minv, maxv, v1, v2, dt;
     int dt1, dt2, dti;
@@ -433,12 +410,11 @@ error:
 }
 
 static void
-sg_audio_source_pmsg(int src, struct sg_audio_paramevt *restrict pe)
+sg_audio_source_pmsg(int src, struct sg_audio_msgparam *restrict pe)
 {
     struct sg_audio_system *restrict sp = &sg_audio_system_global;
     struct sg_audio_source *srcp;
     struct sg_audio_param *curp;
-    struct sg_audio_msgparam mdat;
 
     if ((unsigned) pe->param >= SG_AUDIO_PARAMCOUNT)
         return;
@@ -455,13 +431,9 @@ sg_audio_source_pmsg(int src, struct sg_audio_paramevt *restrict pe)
 
     curp = &srcp->param[pe->param];
     sg_audio_source_papply(curp, pe);
-    mdat.param = pe->param;
-    mdat.endtime = curp->time[1];
-    mdat.v1 = curp->val[0];
-    mdat.v2 = curp->val[1];
     sg_audio_sysmsg(
         sp, SG_AUDIO_MSG_PARAM, src,
-        pe->time, &mdat, sizeof(mdat));
+        pe->time, pe, sizeof(*pe));
 
 done:
     sg_lock_release(&sp->slock);
@@ -471,7 +443,7 @@ void
 sg_audio_source_pset(int src, sg_audio_param_t param,
                      unsigned time, float value)
 {
-    struct sg_audio_paramevt pe;
+    struct sg_audio_msgparam pe;
     pe.param = param;
     pe.type = SG_AUDIO_PSET;
     pe.time = time;
@@ -484,7 +456,7 @@ sg_audio_source_plinear(int src, sg_audio_param_t param,
                         unsigned time_start, unsigned time_end,
                         float value)
 {
-    struct sg_audio_paramevt pe;
+    struct sg_audio_msgparam pe;
     pe.param = param;
     pe.type = SG_AUDIO_PLINEAR;
     pe.time = time_start;
@@ -497,7 +469,7 @@ void
 sg_audio_source_pslope(int src, sg_audio_param_t param,
                        unsigned time, float value, float slope)
 {
-    struct sg_audio_paramevt pe;
+    struct sg_audio_msgparam pe;
     pe.param = param;
     pe.type = SG_AUDIO_PSLOPE;
     pe.time = time;

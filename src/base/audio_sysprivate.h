@@ -74,10 +74,27 @@ struct sg_audio_msgplay {
     int flags;
 };
 
+/* Parameter automation message type */
+typedef enum {
+    SG_AUDIO_PSET,
+    SG_AUDIO_PLINEAR,
+    SG_AUDIO_PSLOPE
+} sg_audio_msgparamtype_t;
+
+/* Parameter automation message */
 struct sg_audio_msgparam {
     sg_audio_param_t param;
-    unsigned endtime;
-    float v1, v2;
+    sg_audio_msgparamtype_t type;
+    /* start time */
+    unsigned time;
+    /* ending value */
+    float val;
+    union {
+        /* For PLINEAR: delta time */
+        int ptime;
+        /* For PSLOPE: slope value, units per second */
+        float pslope;
+    } d;
 };
 
 /* ========== Audio system ========== */
