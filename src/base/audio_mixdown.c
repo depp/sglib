@@ -1,6 +1,5 @@
 #include "audio_file.h"
 #include "audio_mixdown.h"
-#include "audio_pcm.h"
 #include "audio_sysprivate.h"
 #include "error.h"
 #include "log.h"
@@ -693,13 +692,25 @@ sg_audio_mixdown_new(int rate, int bufsize, struct sg_error **err)
 
     sg_lock_acquire(&sp->slock);
 
+    if (rate != sp->samplerate) {
+        if (sp->mixmask) {
+            sg_logf(sp->log, LOG_ERROR,
+                    "tried to change sample rate %d -> %d",
+                    sp->samplerate, rate);
+            free(root);
+            sg_lock_release(&sp->slock);
+            return NULL;
+        }
+        sp->samplerate = rate;
+    }
+
     for (index = 0; index < SG_AUDIO_MAXMIX; ++index)
         if ((sp->mixmask & (1u << index)) == 0)
             break;
 
     if (index >= SG_AUDIO_MAXMIX) {
         sg_lock_release(&sp->slock);
-        free(mp);
+        free(root);
         /* FIXME: we need ENOSPC or some equivalent */
         sg_error_nomem(err);
         return NULL;
@@ -722,6 +733,8 @@ sg_audio_mixdown_free(struct sg_audio_mixdown *restrict mp)
 
     sg_lock_acquire(&sp->slock);
     sp->mixmask &= ~(1u << mp->index);
+    if (!sp->mixmask)
+        sp->samplerate = 0;
     sg_lock_release(&sp->slock);
 
     free(mp->mbuf);
@@ -776,9 +789,11 @@ sg_audio_mixdown_render(struct sg_audio_mixdown *restrict mp,
     struct sg_audio_mixchan *chans;
     struct sg_audio_file *restrict fp;
     unsigned i, pi, chan, param, nchan, bufsz, pbufsz, rate;
-    int r, pos, length;
+    int pos, end, length;
     float *restrict bufmix, *restrict bufsamp;
     float *bufparam, *restrict bp0, *restrict bp1;
+    float x;
+    const short *restrict sdat;
 
     bufsz = mp->abufsize;
     pbufsz = bufsz >> SG_AUDIO_PARAMBITS;
@@ -808,26 +823,55 @@ sg_audio_mixdown_render(struct sg_audio_mixdown *restrict mp,
 
         sg_audio_mixdown_cvolpan(bp0, bp1, pbufsz);
 
-        /* FIXME: we could actually use atomics here, maybe? */
-        /* FIXME: don't use locks... */
-        r = sg_lock_try(&fp->lock);
-        if (r) {
+        /* FIXME: FIXMEATOMIC: */
+        if (fp->flags & SG_AUDIOFILE_LOADED) {
             // printf("pos: %d\n", pos);
-            if (fp->type == SG_AUDIO_PCM) {
-                sg_audio_pcm_resample(&fp->data.pcm, bufsamp,
-                                      bufsz, pos, rate);
-                sg_lock_release(&fp->lock);
-                for (i = 0; i < bufsz; ++i) {
-                    pi = i >> SG_AUDIO_PARAMBITS;
-                    bufmix[i*2+0] += bufsamp[i*2+0] * bp0[pi];
-                    bufmix[i*2+1] += bufsamp[i*2+1] * bp1[pi];
+            sdat = fp->data;
+            length = fp->nframe;
+            end = pos + length;
+            if (end > bufsz)
+                end = bufsz;
+
+            /* Fill the sample buffer */
+
+            if (pos > 0) {
+                for (i = 0; i < pos; ++i) {
+                    bufsamp[i*2+0] = 0.0f;
+                    bufsamp[i*2+1] = 0.0f;
                 }
-                length = (int) fp->data.pcm.nframe *
-                    ((double) rate / fp->data.pcm.rate);
             } else {
-                sg_lock_release(&fp->lock);
-                length = rate;
+                i = 0;
             }
+
+            if (fp->flags & SG_AUDIOFILE_STEREO) {
+                for (; i < end; ++i) {
+                    /* FIXME: offset not included, this is major broke */
+                    bufsamp[i*2+0] =
+                        (1.0f/32768) * (float) sdat[(i-pos)*2+0];
+                    bufsamp[i*2+1] =
+                        (1.0f/32768) * (float) sdat[(i-pos)*2+1];
+                }
+            } else {
+                for (; i < end; ++i) {
+                    x = (1.0/32768) * (float) sdat[i-pos];
+                    bufsamp[i*2+0] = x;
+                    bufsamp[i*2+1] = x;
+                }
+            }
+
+            for (i = end; i < bufsz; ++i) {
+                bufsamp[i*2+0] = 0.0f;
+                bufsamp[i*2+1] = 0.0f;
+            }
+
+            /* Mix the sample buffer into the mix buffer */
+
+            for (i = 0; i < bufsz; ++i) {
+                pi = i >> SG_AUDIO_PARAMBITS;
+                bufmix[i*2+0] += bufsamp[i*2+0] * bp0[pi];
+                bufmix[i*2+1] += bufsamp[i*2+1] * bp1[pi];
+            }
+
             pos -= bufsz;
             chans[chan].pos = pos;
             if (pos < -length) {

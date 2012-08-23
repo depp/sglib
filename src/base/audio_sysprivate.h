@@ -143,6 +143,21 @@ struct sg_audio_system {
     struct sg_logger *log;
 
     /*
+      Sample rate - current or most recent sample rate.  Audio files
+      will be converted to this sample rate in memory.  Since the
+      audio files will not be stored in multiple sample rates, this
+      should not be changed while mixdowns are running.
+
+      This is safe to read without the lock.  It can only be changed
+      with the lock.
+
+      If this is zero, then there are no audio mixdowns active.  In
+      this case, audio samples should be kept at their current sample
+      rate.  Newly loaded audio samples should not be converted.
+    */
+    int samplerate;
+
+    /*
       System
 
       The system exposes its functionality through the "audio source"

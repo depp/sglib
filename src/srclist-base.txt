@@ -1,19 +1,18 @@
 base/audio_alsa.c LINUX LIBASOUND
-base/audio_copy.c
 base/audio_coreaudio.c MACOSX
 base/audio_file.c
 base/audio_file.h
+base/audio_fileprivate.h
 base/audio_mixdown.c
 base/audio_mixdown.h
-base/audio_pcm.c
-base/audio_pcm.h
+base/audio_raw.c
+base/audio_resample.c
 base/audio_source.c
 base/audio_source.h
 base/audio_sysprivate.h
 base/audio_system.c
 base/audio_system.h
 base/audio_wav.c
-base/audio_wav.h
 base/binary.h
 base/clock.c
 base/clock.h

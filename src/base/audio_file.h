@@ -1,6 +1,5 @@
 #ifndef BASE_AUDIO_FILE_H
 #define BASE_AUDIO_FILE_H
-#include "audio_pcm.h"
 #include "resource.h"
 #include "thread.h"
 #include <stddef.h>
@@ -15,22 +14,46 @@ struct sg_audio_pcm;
 #define SG_AUDIO_MINRATE 8000
 #define SG_AUDIO_MAXRATE 96000
 
-typedef enum {
-    /* File is not loaded yet */
-    SG_AUDIO_UNLOADED,
-    /* Raw PCM data (wav, aiff, etc.) */
-    SG_AUDIO_PCM
-} sg_audio_file_type_t;
+/* Maximum audio file length, in seconds.  This is 30 minutes, which
+   is actually kind of ridiculous.  */
+#define SG_AUDIO_MAXLENGTH (30*60)
 
+enum {
+    /* The file is loaded, and the sample rate is the same as the
+       audio system's current sample rate.  This flag will only be
+       cleared when the system sample rate changes, which only happens
+       on the main thread when no mixdowns exist.  So if this flag is
+       set, a mixdown can rely on it continuing to be set as long as
+       the mixdown exists.  */
+    SG_AUDIOFILE_LOADED = 1u << 0,
+
+    /* Frames are interleaved stereo, otherwise the frames are
+       mono.  */
+    SG_AUDIOFILE_STEREO = 1u << 1,
+
+    /* The sample rate is not the original sample rate of the file, it
+       has ben converted.  */
+    SG_AUDIOFILE_RESAMPLED = 1u << 2,
+};
+
+/* THIS DOESN'T WORK */
 struct sg_audio_file {
     struct sg_resource r;
     const char *path;
-    /* Everything below here has mutex.  */
-    struct sg_lock lock;
-    sg_audio_file_type_t type;
-    union {
-        struct sg_audio_pcm pcm;
-    } data;
+
+    /* FIXME: FIXMEATOMIC: make this field atomic */
+    /* Audio file flags -- this sholud be written with 'release'
+       semantics and loaded with 'acquire' semantics.  */
+    unsigned flags;
+
+    /* Number of frames in audio file */
+    int nframe;
+
+    /* Sample rate, in Hz */
+    int rate;
+
+    /* Sample data (16-bit samples, native endian) */
+    short *data;
 };
 
 /* Create an audio file resource from the specified path.  May return

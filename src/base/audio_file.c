@@ -1,5 +1,6 @@
 #include "audio_file.h"
-#include "audio_wav.h"
+#include "audio_fileprivate.h"
+#include "audio_sysprivate.h"
 #include "dict.h"
 #include "error.h"
 #include "file.h"
@@ -22,15 +23,7 @@ static void
 sg_audio_file_free(struct sg_resource *rs)
 {
     struct sg_audio_file *fp = (struct sg_audio_file *) rs;
-    sg_lock_destroy(&fp->lock);
-    switch (fp->type) {
-    case SG_AUDIO_UNLOADED:
-        break;
-
-    case SG_AUDIO_PCM:
-        sg_audio_pcm_destroy(&fp->data.pcm);
-        break;
-    }
+    free(fp->data);
     free(fp);
 }
 
@@ -39,27 +32,42 @@ sg_audio_file_load(struct sg_resource *rs, struct sg_error **err)
 {
     struct sg_audio_file *fp = (struct sg_audio_file *) rs;
     struct sg_buffer fbuf;
-    int r;
+    int r, rate;
 
-    r = sg_file_get(fp->path, strlen(fp->path), 0, "wav", &fbuf,
-                    AUDIO_MAXSIZE, err);
-    if (r)
-        return NULL;
+    /* FIXME: FIXMEATOMIC: */
 
-    sg_lock_acquire(&fp->lock);
+    assert((fp->flags & SG_AUDIOFILE_LOADED) == 0);
 
-    if (sg_audio_file_checkwav(fbuf.data, fbuf.length)) {
-        sg_audio_pcm_init(&fp->data.pcm);
-        fp->type = SG_AUDIO_PCM;
-        r = sg_audio_file_loadwav(
-            &fp->data.pcm, fbuf.data, fbuf.length, err);
-    } else {
-        sg_logf(sg_audio_file_logger(), LOG_ERROR,
-                "%s: unknown audio file format", fp->path);
-        sg_error_data(err, "audio");
+    if ((fp->flags & SG_AUDIOFILE_RESAMPLED) != 0) {
+        free(fp->data);
+        fp->flags = 0;
+        fp->nframe = 0;
+        fp->rate = 0;
+        fp->data = NULL;
     }
 
-    sg_lock_release(&fp->lock);
+    if (!fp->data) {
+        r = sg_file_get(fp->path, strlen(fp->path), 0, "wav", &fbuf,
+                        AUDIO_MAXSIZE, err);
+        if (r)
+            return NULL;
+
+        if (sg_audio_file_checkwav(fbuf.data, fbuf.length)) {
+            r = sg_audio_file_loadwav(fp, fbuf.data, fbuf.length, err);
+        } else {
+            sg_logf(sg_audio_file_logger(), LOG_ERROR,
+                    "%s: unknown audio file format", fp->path);
+            sg_error_data(err, "audio");
+            return NULL;
+        }
+    }
+
+    rate = sg_audio_system_global.samplerate;
+    if (rate && fp->rate != rate) {
+        r = sg_audio_file_resample(fp, rate, err);
+        if (r)
+            return NULL;
+    }
 
     return NULL;
 }
@@ -67,10 +75,23 @@ sg_audio_file_load(struct sg_resource *rs, struct sg_error **err)
 static void
 sg_audio_file_load_finished(struct sg_resource *rs, void *result)
 {
-    /* We don't do anything here, since we use a mutex to share
-       results with other threads.  */
-    (void) rs;
+    struct sg_audio_file *fp = (struct sg_audio_file *) rs;
+    int rate;
+
+    if (!fp->data)
+        return;
+
     (void) result;
+
+    rate = sg_audio_system_global.samplerate;
+    if (fp->rate == rate) {
+        /* FIXME: FIXMEATOMIC: */
+        fp->flags |= SG_AUDIOFILE_LOADED;
+    } else if (rate) {
+        fp->r.state = SG_RSRC_UNLOADED;
+    }
+    /* If rate == 0, we just leave the file at its existing sample
+       rate, but we don't mark the file as loaded */
 }
 
 static void
@@ -114,8 +135,10 @@ sg_audio_file_new(const char *path, struct sg_error **err)
         fp->r.action = 0;
         fp->r.state = SG_RSRC_INITIAL;
         fp->path = pp;
-        sg_lock_init(&fp->lock);
-        fp->type = SG_AUDIO_UNLOADED;
+        fp->flags = 0;
+        fp->nframe = 0;
+        fp->rate = 0;
+        fp->data = NULL;
         memcpy(pp, path, len + 1);
         e->key = pp;
         e->value = fp;

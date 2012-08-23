@@ -10,6 +10,9 @@
     automatically adjust audio timing to account for clock drift
     between the mixdown's nominal sample rate and the timestamps
     provided.
+
+    All mixdowns must have the same sample rate, and there can only be
+    two mixdowns.  In practice, this means that one mixdown plays audio
 */
 #include "defs.h"
 #ifdef __cplusplus

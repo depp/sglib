@@ -1,9 +1,8 @@
 #include "audio_file.h"
-#include "audio_wav.h"
+#include "audio_fileprivate.h"
 #include "binary.h"
 #include "error.h"
 #include "log.h"
-#include "sgendian.h"
 #include <stdlib.h>
 #include <string.h>
 
@@ -136,7 +135,7 @@ sg_audio_wav_logger(void)
 }
 
 int
-sg_audio_file_loadwav(struct sg_audio_pcm *pcm,
+sg_audio_file_loadwav(struct sg_audio_file *fp,
                       const void *data, size_t length,
                       struct sg_error **err)
 {
@@ -146,6 +145,7 @@ sg_audio_file_loadwav(struct sg_audio_pcm *pcm,
     uint16_t afmt, nchan, blkalign, sampbits;
     uint32_t rate, nframe;
     const unsigned char *p;
+    sg_audio_format_t format;
 
     r = sg_riff_parse(&riff, data, length, err);
     if (r)
@@ -172,8 +172,6 @@ sg_audio_file_loadwav(struct sg_audio_pcm *pcm,
         goto fmterr;
     }
     if (nchan != 1 && nchan != 2) {
-        sg_logf(sg_audio_wav_logger(), LOG_ERROR,
-                "WAVE has unsupported number of channels (%u)", nchan);
         goto fmterr;
     }
 
@@ -185,9 +183,28 @@ sg_audio_file_loadwav(struct sg_audio_pcm *pcm,
 
     switch (afmt) {
     case SG_WAVE_PCM:
-        sg_logs(sg_audio_wav_logger(), LOG_ERROR,
-                "PCM data unsupported, yet...");
-        goto fmterr;
+        switch (sampbits) {
+        case 8:
+            nframe = tag->length / nchan;
+            format = SG_AUDIO_U8;
+            break;
+
+        case 16:
+            nframe = tag->length / (2 * nchan);
+            format = SG_AUDIO_S16LE;
+            break;
+
+        case 24:
+            nframe = tag->length / (3 * nchan);
+            format = SG_AUDIO_S24LE;
+            break;
+
+        default:
+            sg_logf(sg_audio_wav_logger(), LOG_ERROR,
+                    "invalid WAVE bit depth: %d", sampbits);
+            goto fmterr;
+        }
+        break;
 
     case SG_WAVE_FLOAT:
         if (sampbits != 32) {
@@ -196,13 +213,7 @@ sg_audio_file_loadwav(struct sg_audio_pcm *pcm,
             goto fmterr;
         }
         nframe = tag->length / (4 * nchan);
-        pcm->nframe = nframe;
-        pcm->nchan = nchan;
-        pcm->rate = rate;
-        r = sg_audio_pcm_alloc(pcm);
-        if (r) goto memerr;
-        sg_audio_copy_float32(pcm->data, p, nframe * nchan,
-                              BYTE_ORDER != LITTLE_ENDIAN);
+        format = SG_AUDIO_F32LE;
         break;
 
     default:
@@ -212,14 +223,12 @@ sg_audio_file_loadwav(struct sg_audio_pcm *pcm,
     }
 
     sg_riff_destroy(&riff);
-    return 0;
+
+    return sg_audio_file_loadraw(fp, tag->data, nframe,
+                                 format, nchan, rate, err);
 
 fmterr:
     sg_error_data(err, "WAVE");
-    goto edone;
-
-memerr:
-    sg_error_nomem(err);
     goto edone;
 
 edone:
