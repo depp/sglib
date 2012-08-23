@@ -13,6 +13,9 @@
 static struct sg_audio_file *g_snd_clank;
 static struct sg_audio_file *g_snd_donk;
 static struct sg_audio_file *g_snd_tink;
+static struct sg_audio_file *g_snd_stereo;
+static struct sg_audio_file *g_snd_left;
+static struct sg_audio_file *g_snd_right;
 
 static unsigned g_cmd;
 
@@ -34,6 +37,9 @@ sg_game_init(void)
     g_snd_clank = xloadaudio("clank1");
     g_snd_donk = xloadaudio("donk1");
     g_snd_tink = xloadaudio("tink1");
+    g_snd_stereo = xloadaudio("stereo");
+    g_snd_left = xloadaudio("left");
+    g_snd_right = xloadaudio("right");
 }
 
 void
@@ -174,6 +180,33 @@ func2(unsigned msec)
     g_state = state;
 }
 
+static void
+func3(unsigned msec)
+{
+    static int g_chan = -1, g_state, g_mod;
+    int state = get_state(2);
+    struct sg_audio_file *fp;
+    float pan;
+
+    if (state && !g_state) {
+        if (g_chan < 0)
+            g_chan = sg_audio_source_open();
+        fp = g_snd_stereo;
+        switch (g_mod) {
+        case 0: fp = g_snd_stereo; pan =  0.00f; break;
+        case 1: fp = g_snd_left;   pan = -0.75f; break;
+        case 2: fp = g_snd_right;  pan = +0.75f; break;
+        }
+        g_mod = (g_mod + 1) % 3;
+        sg_audio_source_stop(g_chan, msec);
+        sg_audio_source_pset(g_chan, SG_AUDIO_PAN, msec, pan);
+        sg_audio_source_play(g_chan, msec, fp, 0);
+    }
+
+    draw_key(2, state);
+    g_state = state;
+}
+
 void
 sg_game_draw(int x, int y, int width, int height, unsigned msec)
 {
@@ -188,6 +221,7 @@ sg_game_draw(int x, int y, int width, int height, unsigned msec)
 
     func1(msec);
     func2(msec);
+    func3(msec);
 
     sg_audio_source_commit(msec, msec);
 }
