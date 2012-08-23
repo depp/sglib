@@ -55,9 +55,16 @@ struct sg_audio_param {
 /* ========== Messages ========== */
 
 enum {
+    /* Play a sound on the given source */
     SG_AUDIO_MSG_PLAY,
+    /* Stop the sound on a source */
     SG_AUDIO_MSG_STOP,
+    /* Reset a source to initial state, any sound playing will become
+       "detached" */
+    SG_AUDIO_MSG_RESET,
+    /* Stop sounds on the source from looping any more */
     SG_AUDIO_MSG_STOPLOOP,
+    /* Parameter automation */
     SG_AUDIO_MSG_PARAM
 };
 
@@ -103,33 +110,42 @@ struct sg_audio_msgparam {
 enum {
     /* "Open" means that there is a handle to this sound source
        somewhere in use.  This flag is set by sg_audio_source_open()
-       and reset by sg_audio_source_close().  Removing this flag will
-       decrement the reference count.
+       and reset by sg_audio_source_close().
 
        This flag is also used internally by mixdowns to indicate that
        a channel is in use.  */
-    SG_AUDIO_OPEN = 1 << 16
+    SG_AUDIO_OPEN = 1 << 16,
+
+    /* This source is either in use, or was in use recently.  This
+       flag is set when the source is open, and it is cleared when (1)
+       all messages referring to the source are known to be in the
+       past and (2) no sound is playing on the source.  */
+    SG_AUDIO_ACTIVE = 1 << 17
 };
 
 struct sg_audio_source {
-    /* Number of references to this sound source.  An open handle,
-       marked by the SG_AUDIO_OPEN flag, counts as one reference.
-       A sound currently playing also counts as a reference.  */
-    unsigned refcount;
-    /* If the refcount is positive, this holds the flags of current
-       sound playing, as well as private flags for the audio source.
-       If the refcount is zero, then this is the pointer to the next
-       source in the freelist, or -1 if this is the last source in the
-       freelist.  */
+    /* Flags are guaranteed to be zero for unused sources, otherwise
+       at least one of OPEN or ACTIVE flags are set.  */
     unsigned flags;
-    /* Current audio file playing, or NULL if no sound is playing */
-    struct sg_audio_file *file;
-    /* Start time of current sound playing */
-    unsigned start_time;
-    /* Length of current sound playing */
-    unsigned length;
-    /* The latest segments of parameter automation.  */
-    struct sg_audio_param param[SG_AUDIO_PARAMCOUNT];
+    union {
+        /* Data for sources which are OPEN, ACTIVE, or both.  */
+        struct {
+            /* Farthest future timestamp involving this source.  This
+               could be the timestamp of the last message, the last
+               commit time, or the last wall time.  */
+            unsigned msgtime;
+            /* Current audio file playing, or NULL if no sound is
+               playing */
+            struct sg_audio_file *file;
+            /* Start time of current sound playing */
+            unsigned start_time;
+            /* The latest segments of parameter automation.  */
+            struct sg_audio_param params[SG_AUDIO_PARAMCOUNT];
+        } a;
+        /* Next item in freelist, for sources which are neither open
+           nor active.  */
+        int next;
+    } d;
 };
 
 struct sg_audio_mixinfo {

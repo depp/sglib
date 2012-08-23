@@ -33,11 +33,11 @@ sg_audio_source_open(void)
 
     sg_lock_acquire(&sp->slock);
 
-    time = sg_audio_mintime(sp->wtime, sp->ctime) - 1;
+    time = sg_audio_mintime(sp->wtime, sp->ctime);
 
     src = sp->srcfree;
     if (src == -1) {
-        if (sp->srccount >= SG_AUDIO_MAXSOURCE) {
+        if (sp->srcalloc >= SG_AUDIO_MAXSOURCE) {
             sg_logs(sp->log, LOG_ERROR,
                     "cannot create audio source: too many audio sources");
             goto done;
@@ -53,71 +53,31 @@ sg_audio_source_open(void)
         sp->srcs = srcp;
         sp->srcalloc = nalloc;
         for (i = alloc; i < nalloc; ++i) {
-            srcp[i].refcount = 0;
-            srcp[i].flags = i + 1;
+            srcp[i].flags = 0;
+            srcp[i].d.next = i + 1;
         }
-        srcp[nalloc - 1].start_time = (unsigned) -1;
+        srcp[nalloc - 1].d.next = -1;
         src = alloc;
     }
 
     srcp = &sp->srcs[src];
-    sp->srcfree = srcp->flags;
+    sp->srcfree = srcp->d.next;
     sp->srccount += 1;
 
-    srcp->refcount = 1;
-    srcp->flags = SG_AUDIO_OPEN;
-    srcp->file = NULL;
-    srcp->start_time = 0;
-    srcp->length = 0;
+    srcp->flags = SG_AUDIO_OPEN | SG_AUDIO_ACTIVE;
+    srcp->d.a.msgtime = time;
+    srcp->d.a.file = NULL;
+    srcp->d.a.start_time = 0;
     for (i = 0; i < SG_AUDIO_PARAMCOUNT; ++i) {
-        srcp->param[i].time[0] = time;
-        srcp->param[i].time[1] = time;
-        srcp->param[i].val[0] = 0.0f;
-        srcp->param[i].val[1] = 0.0f;
+        srcp->d.a.params[i].time[0] = time;
+        srcp->d.a.params[i].time[1] = time;
+        srcp->d.a.params[i].val[0] = 0.0f;
+        srcp->d.a.params[i].val[1] = 0.0f;
     }
 
 done:
     sg_lock_release(&sp->slock);
     return src;
-}
-
-/* Destroy an audio source, adding it to the freelist.  This should
-   only be called once the refcount reaches zero.  */
-static void
-sg_audio_source_destroy(struct sg_audio_system *restrict sp, int src)
-{
-    struct sg_audio_source *srcp;
-    srcp = &sp->srcs[src];
-    assert(srcp->refcount == 0);
-    assert(srcp->file == NULL);
-    srcp->refcount = 0;
-    srcp->flags = sp->srcfree;
-    srcp->file = NULL;
-    sp->srcfree = src;
-    sp->srccount -= 1;
-}
-
-void
-sg_audio_source_close(int src)
-{
-    struct sg_audio_system *restrict sp = &sg_audio_system_global;
-    struct sg_audio_source *srcp;
-
-    sg_lock_acquire(&sp->slock);
-
-    if ((unsigned) src >= sp->srcalloc)
-        goto done;
-    srcp = &sp->srcs[src];
-    if (!(srcp->flags & SG_AUDIO_OPEN))
-        goto done;
-
-    srcp->flags &= ~SG_AUDIO_OPEN;
-    srcp->refcount -= 1;
-    if (!srcp->refcount)
-        sg_audio_source_destroy(sp, src);
-
-done:
-    sg_lock_release(&sp->slock);
 }
 
 static void
@@ -130,6 +90,11 @@ sg_audio_sysmsg(struct sg_audio_system *restrict sp,
     struct sg_audio_msghdr hdr;
     unsigned char *buf, *nbuf;
     const unsigned char *ip;
+    struct sg_audio_source *srcp;
+
+    srcp = &sp->srcs[src];
+    if ((int) (time - srcp->d.a.msgtime) > 0)
+        srcp->d.a.msgtime = time;
 
     if (len > SG_AUDIO_MAXMSGLEN)
         goto fail;
@@ -226,6 +191,28 @@ fail:
     abort();
 }
 
+void
+sg_audio_source_close(int src)
+{
+    struct sg_audio_system *restrict sp = &sg_audio_system_global;
+    struct sg_audio_source *srcp;
+
+    sg_lock_acquire(&sp->slock);
+
+    if ((unsigned) src >= sp->srcalloc)
+        goto done;
+    srcp = &sp->srcs[src];
+    if (!(srcp->flags & SG_AUDIO_OPEN))
+        goto done;
+
+    sg_audio_sysmsg(sp, SG_AUDIO_MSG_RESET, src, srcp->d.a.msgtime,
+                    NULL, 0);
+    srcp->flags &= ~SG_AUDIO_OPEN;
+
+done:
+    sg_lock_release(&sp->slock);
+}
+
 static unsigned
 sg_audio_source_cliptime(struct sg_audio_system *restrict sp,
                          unsigned time)
@@ -260,13 +247,10 @@ sg_audio_source_play(int src, unsigned time, struct sg_audio_file *file,
         goto done;
 
     sg_resource_incref(&file->r);
-    if (srcp->file)
-        sg_resource_decref(&srcp->file->r);
-    else
-        srcp->refcount += 1;
-    srcp->file = file;
-    srcp->start_time = time;
-    srcp->length = 1000; /* FIXME: get actual length */
+    if (srcp->d.a.file)
+        sg_resource_decref(&srcp->d.a.file->r);
+    srcp->d.a.file = file;
+    srcp->d.a.start_time = time;
 
     mdat.flags = flags;
     mdat.file = file;
@@ -294,11 +278,9 @@ sg_audio_source_stop(int src, unsigned time)
     if (!(srcp->flags & SG_AUDIO_OPEN))
         goto done;
 
-    if (srcp->file) {
-        sg_resource_decref(&srcp->file->r);
-        srcp->refcount -= 1;
-    }
-    srcp->file = NULL;
+    if (srcp->d.a.file)
+        sg_resource_decref(&srcp->d.a.file->r);
+    srcp->d.a.file = NULL;
     srcp->flags &= ~0xffffu;
     sg_audio_sysmsg(sp, SG_AUDIO_MSG_STOP, src, time, NULL, 0);
 
@@ -429,7 +411,7 @@ sg_audio_source_pmsg(int src, struct sg_audio_msgparam *restrict pe)
     if (!(srcp->flags & SG_AUDIO_OPEN))
         goto done;
 
-    curp = &srcp->param[pe->param];
+    curp = &srcp->d.a.params[pe->param];
     sg_audio_source_papply(curp, pe);
     sg_audio_sysmsg(
         sp, SG_AUDIO_MSG_PARAM, src,
@@ -647,34 +629,51 @@ sg_audio_source_bufprocess(struct sg_audio_system *restrict sp,
 static void
 sg_audio_source_sprocess(struct sg_audio_system *restrict sp)
 {
-    (void) sp;
-#if 0
-    struct sg_audio_source *srcs;
-    unsigned i, maxsrc, wtime, etime, param;
+    struct sg_audio_source *restrict srcs;
+    unsigned ctime, ltime, src;
+    int i, len;
 
-    wtime = sp->wtime;
-    maxsrc = sp->srcalloc;
     srcs = sp->srcs;
-    for (i = 0; i < maxsrc; ++i) {
-        if (!srcs[src].refcount)
+    ctime = sp->ctime;
+    ltime = sg_audio_maxtime(sp->wtime, sp->ctime);
+    for (src = 0; src < sp->srcalloc; ++src) {
+        if ((srcs[src].flags & (SG_AUDIO_OPEN | SG_AUDIO_ACTIVE)) == 0)
             continue;
-        if (srcs[src].file) {
-            etime = srcs[src].start_time + srcs[src].length;
-            if ((int) (wtime - etime) > 0) {
-                sg_resource_decref(&srcs[src].file->r);
-                srcs[src].file = NULL;
-                srcs[src].refcount -= 1;
-                if (!srcs[src].refcount) {
-                    sg_audio_source_destroy(sp, src);
-                    continue;
-                }
+
+        if (srcs[src].d.a.file) {
+            len = src[srcs].d.a.file->playtime;
+            if (!len)
+                len = 2000; /* guess at length */
+            if ((int) (ctime - srcs[src].d.a.start_time) > len) {
+                /* LOOP here */
+                sg_resource_decref(&srcs[src].d.a.file->r);
+                srcs[src].d.a.file = NULL;
+                srcs[src].d.a.start_time = 0;
             }
         }
 
-        for (param = 0
-        if ((int) (wtime
+        if ((srcs[src].flags & SG_AUDIO_OPEN) != 0 || srcs[src].d.a.file) {
+            if ((int) (ltime - srcs[src].d.a.msgtime) > 0)
+                srcs[src].d.a.msgtime = ltime;
+        } else {
+            if ((int) (ctime - srcs[src].d.a.msgtime) > 0) {
+                srcs[src].flags = 0;
+                srcs[src].d.next = sp->srcfree;
+                sp->srcfree = src;
+                sp->srccount -= 1;
+                continue;
+            }
+        }
+
+        for (i = 0; i < SG_AUDIO_PARAMCOUNT; ++i) {
+            if ((int) (ctime - srcs[src].d.a.params[i].time[1]) > 0) {
+                srcs[src].d.a.params[i].time[0] = ctime;
+                srcs[src].d.a.params[i].time[1] = ctime;
+                srcs[src].d.a.params[i].val[0] = 
+                    srcs[src].d.a.params[i].val[1];
+            }
+        }
     }
-#endif
 }
 
 void

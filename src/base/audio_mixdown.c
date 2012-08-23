@@ -482,6 +482,29 @@ sg_audio_mixdown_srcstop(struct sg_audio_mixdown *restrict mp,
 }
 
 static void
+sg_audio_mixdown_srcreset(struct sg_audio_mixdown *restrict mp,
+                          int src, int sample)
+{
+    int chan, i;
+    struct sg_audio_mixchan *chanp;
+
+    if ((unsigned) src >= mp->srccount)
+        return;
+    chan = mp->srcs[src].chan;
+    mp->srcs[src].chan = -1;
+    if (chan < 0)
+        return;
+    assert(chan < mp->chancount);
+    chanp = &mp->chans[chan];
+    chanp->src = -1;
+
+    for (i = 0; i < SG_AUDIO_PARAMCOUNT; ++i)
+        mp->srcs[src].params[i] = 0.0f;
+
+    (void) sample;
+}
+
+static void
 sg_audio_mixdown_srcstoploop(struct sg_audio_mixdown *restrict mp,
                              int src, int sample)
 {
@@ -550,6 +573,7 @@ SG_AUDIO_MIXDOWN_MSGLEN[SG_AUDIO_MSG_COUNT] = {
     ALIGN(sizeof(struct sg_audio_msgplay)),
     0,
     0,
+    0,
     ALIGN(sizeof(struct sg_audio_msgparam))
 };
 
@@ -589,6 +613,9 @@ sg_audio_mixdown_dispatch(struct sg_audio_mixdown *restrict mp)
                 break;
             case SG_AUDIO_MSG_STOP:
                 sg_audio_mixdown_srcstop(mp, mh->src, sample);
+                break;
+            case SG_AUDIO_MSG_RESET:
+                sg_audio_mixdown_srcreset(mp, mh->src, sample);
                 break;
             case SG_AUDIO_MSG_STOPLOOP:
                 sg_audio_mixdown_srcstoploop(mp, mh->src, sample);

@@ -4,6 +4,10 @@
 struct sg_error;
 struct sg_audio_file;
 
+/* Free all data in an audio file and reset all fields to zero.  */
+void
+sg_audio_file_clear(struct sg_audio_file *fp);
+
 /* Return 0 if the file is not a WAVE file.  Return 1 if the file is
    probably a wave file.  Just checks the first few bytes.  */
 int

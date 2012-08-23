@@ -38,13 +38,8 @@ sg_audio_file_load(struct sg_resource *rs, struct sg_error **err)
 
     assert((fp->flags & SG_AUDIOFILE_LOADED) == 0);
 
-    if ((fp->flags & SG_AUDIOFILE_RESAMPLED) != 0) {
-        free(fp->data);
-        fp->flags = 0;
-        fp->nframe = 0;
-        fp->rate = 0;
-        fp->data = NULL;
-    }
+    if ((fp->flags & SG_AUDIOFILE_RESAMPLED) != 0)
+        sg_audio_file_clear(fp);
 
     if (!fp->data) {
         r = sg_file_get(fp->path, strlen(fp->path), 0, "wav", &fbuf,
@@ -146,4 +141,15 @@ sg_audio_file_new(const char *path, struct sg_error **err)
     sg_resource_incref(&fp->r);
 
     return fp;
+}
+
+void
+sg_audio_file_clear(struct sg_audio_file *fp)
+{
+    free(fp->data);
+    fp->flags = 0;
+    fp->nframe = 0;
+    fp->playtime = 0;
+    fp->rate = 0;
+    fp->data = NULL;
 }

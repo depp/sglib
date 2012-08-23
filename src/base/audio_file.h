@@ -49,6 +49,9 @@ struct sg_audio_file {
     /* Number of frames in audio file */
     int nframe;
 
+    /* Length of file, in msec (ticks) */
+    int playtime;
+
     /* Sample rate, in Hz */
     int rate;
 

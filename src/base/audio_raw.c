@@ -5,6 +5,7 @@
 #include "log.h"
 #include "sgendian.h"
 #include <assert.h>
+#include <math.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -99,6 +100,8 @@ sg_audio_file_loadraw(struct sg_audio_file *fp,
     int i;
     short *ndata;
 
+    sg_audio_file_clear(fp);
+
     if (nchan < 1 || nchan > 2) {
         sg_logf(sg_audio_system_global.log, LOG_ERROR,
                 "audio file has unsupported number of channels (%d)",
@@ -117,6 +120,7 @@ sg_audio_file_loadraw(struct sg_audio_file *fp,
             ndata[i] = 0;
         fp->flags = nchan == 2 ? SG_AUDIOFILE_STEREO : 0;
         fp->nframe = count;
+        fp->playtime = 0;
         fp->rate = rate;
         fp->data = ndata;
         return 0;
@@ -162,6 +166,7 @@ sg_audio_file_loadraw(struct sg_audio_file *fp,
     /* FIXME: FIXMEATOMIC: */
     fp->flags = nchan == 2 ? SG_AUDIOFILE_STEREO : 0;
     fp->nframe = count;
+    fp->playtime = (int) ceil(count / (double) (rate * 0.001));
     fp->rate = rate;
     fp->data = ndata;
 
