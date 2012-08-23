@@ -393,7 +393,7 @@ sg_audio_mixdown_paramfill(struct sg_audio_mixdown *restrict mp,
     y1 = pp->val[1];
 
     if (pp->pos[1] > pp->pos[0]) {
-        dy = (y1 - y0) * (pp->pos[1] - pp->pos[0]);
+        dy = (y1 - y0) / (pp->pos[1] - pp->pos[0]);
         y = y0 + (pp->pos[0] - ca * SG_AUDIO_PARAMRATE) * dy;
         for (ci = ca; ci < cb; ++ci)
             pbuf[ci] = y + (ci - cb) * SG_AUDIO_PARAMRATE * dy;
@@ -794,8 +794,8 @@ sg_audio_mixdown_cvolpan(float *restrict bp0, float *restrict bp1,
         }
         if (pan > -1.0f) {
             if (pan < 1.0f) {
-                g0 = sqrtf(0.5f - 0.5f * pan);
-                g1 = sqrtf(0.5f + 0.5f * pan);
+                g0 = g * sqrtf(0.5f - 0.5f * pan);
+                g1 = g * sqrtf(0.5f + 0.5f * pan);
             } else {
                 g0 = 0.0f;
                 g1 = g;
