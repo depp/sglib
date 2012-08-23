@@ -20,6 +20,12 @@
 #define SG_AUDIO_PARAMBITS 5
 #define SG_AUDIO_PARAMRATE (1 << (SG_AUDIO_PARAMBITS))
 
+/* Time, in seconds, which it takes a stopped sound to fade out */
+#define SG_AUDIO_FADETIME 0.1f
+
+/* Rate at which audio file fade out, in dB/sec */
+#define SG_AUDIO_FADERATE (-SG_AUDIO_SILENT / SG_AUDIO_FADETIME)
+
 struct sg_audio_mixsrc {
     int chan;
     float params[SG_AUDIO_PARAMCOUNT];
@@ -465,8 +471,10 @@ static void
 sg_audio_mixdown_srcstop(struct sg_audio_mixdown *restrict mp,
                          int src, int sample)
 {
-    int chan;
+    int chan, fadesamp;
     struct sg_audio_mixchan *chanp;
+    struct sg_audio_mixparam *pp;
+    float vol, time;
 
     if ((unsigned) src >= mp->srccount)
         return;
@@ -478,7 +486,22 @@ sg_audio_mixdown_srcstop(struct sg_audio_mixdown *restrict mp,
     chanp = &mp->chans[chan];
     chanp->src = -1;
 
-    (void) sample;
+    sg_audio_mixdown_paramfill(mp, chan, SG_AUDIO_VOL, sample);
+    pp = &chanp->params[SG_AUDIO_VOL];
+    vol = pp->val[0];
+    time = (vol - SG_AUDIO_SILENT) / SG_AUDIO_FADERATE;
+    if (!(time >= 0.0f))
+        time = 0.0f;
+    else if (!(time <= SG_AUDIO_FADETIME))
+        time = SG_AUDIO_FADETIME;
+    fadesamp = (int) (time * mp->samplerate);
+    pp->pos[1] = pp->pos[0] + fadesamp;
+    pp->val[1] = SG_AUDIO_SILENT;
+
+    if (0) {
+        printf("FADE (%d, %f) -> (%d, %f)\n",
+               pp->pos[0], pp->val[0], pp->pos[1], pp->val[1]);
+    }
 }
 
 static void
