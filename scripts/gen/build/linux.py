@@ -112,10 +112,11 @@ def build_linux(graph, proj, env, settings):
         print >>sys.stderr, 'warning: unknown machine %s' % machine
 
     libs = {
-        'LIBJPEG':  lambda: Environment(LIBS='-ljpeg'),
-        'GTK':      lambda: pkgconfig('gtk+-2.0 gtkglext-1.0'),
-        'LIBPNG':   lambda: pkgconfig('libpng'),
-        'PANGO':    lambda: pkgconfig('pangocairo'),
+        'LIBJPEG':    lambda: Environment(LIBS='-ljpeg'),
+        'GTK':        lambda: pkgconfig('gtk+-2.0 gtkglext-1.0'),
+        'LIBPNG':     lambda: pkgconfig('libpng'),
+        'PANGO':      lambda: pkgconfig('pangocairo'),
+        'LIBASOUND':  lambda: pkgconfig('alsa'),
     }
 
     def lookup_env(atom):

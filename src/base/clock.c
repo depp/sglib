@@ -1,16 +1,22 @@
 #include "clock.h"
+#include "clock_impl.h"
 #include <stdio.h>
 
 #if defined(_MSC_VER)
 #define snprintf _snprintf
 #endif
 
-#if defined(__APPLE__)
-#include <mach/mach_time.h>
-#include <time.h>
+#if defined(SG_CLOCK_APPLE)
 
-static uint64_t sg_clock_zero;
-static struct mach_timebase_info sg_clock_info;
+uint64_t sg_clock_zero;
+struct mach_timebase_info sg_clock_info;
+
+unsigned
+sg_clock_convert(uint64_t mach_time)
+{
+    return (mach_time - sg_clock_zero) * sg_clock_info.numer /
+        ((uint64_t) sg_clock_info.denom * 1000000);
+}
 
 void
 sg_clock_init(void)
@@ -22,15 +28,18 @@ sg_clock_init(void)
 unsigned
 sg_clock_get(void)
 {
-    uint64_t tv = mach_absolute_time();
-    return (tv - sg_clock_zero) * sg_clock_info.numer
-        / ((uint64_t) sg_clock_info.denom * 1000000);
+    return sg_clock_convert(mach_absolute_time());
 }
 
-#elif defined(_WIN32)
-#include <windows.h>
+#elif defined(SG_CLOCK_WINDOWS)
 
-static DWORD sg_clock_zero;
+DWORD sg_clock_zero;
+
+unsigned
+sg_clock_convert(DWORD win_time)
+{
+    return win_time - sg_clock_zero;
+}
 
 void
 sg_clock_init(void)
@@ -45,13 +54,16 @@ sg_clock_get(void)
     return tv - sg_clock_zero;
 }
 
-#else
+#elif defined(SG_CLOCK_POSIX_MONOTONIC)
 
-#include <time.h>
-#include <unistd.h>
-#if _POSIX_TIMERS && defined(_POSIX_MONOTONIC_CLOCK)
+struct timespec sg_clock_zero;
 
-static struct timespec sg_clock_zero;
+unsigned
+sg_clock_convert(const struct timespec *ts)
+{
+    return (ts->tv_sec - sg_clock_zero.tv_sec) * 1000
+        + (ts->tv_nsec - sg_clock_zero.tv_nsec) / 1000000;
+}
 
 void
 sg_clock_init(void)
@@ -64,14 +76,19 @@ sg_clock_get(void)
 {
     struct timespec tv;
     clock_gettime(CLOCK_MONOTONIC, &tv);
-    return (tv.tv_sec - sg_clock_zero.tv_sec) * 1000
-        + (tv.tv_nsec - sg_clock_zero.tv_nsec) / 1000000;
+    return sg_clock_convert(&tv);
 }
 
-#else
-#include <sys/time.h>
+#elif defined(SG_CLOCK_POSIX_SIMPLE)
 
-static struct timeval sg_clock_zero;
+struct timeval sg_clock_zero;
+
+unsigned
+sg_clock_convert(const struct timeval *tv)
+{
+    return (tv.tv_sec - sg_clock_zero.tv_sec) * 1000
+        + (tv.tv_usec - sg_clock_zero.tv_usec) / 1000;
+}
 
 void
 sg_clock_init(void)
@@ -84,12 +101,11 @@ sg_clock_get(void)
 {
     struct timeval tv;
     gettimeofday(&tv, NULL);
-    return (tv.tv_sec - sg_clock_zero.tv_sec) * 1000
-        + (tv.tv_usec - sg_clock_zero.tv_usec) / 1000;
+    return sg_clock_convert(&tv);
 }
 
-#endif
-
+#else
+#error "No clock implementation!"
 #endif
 
 static int

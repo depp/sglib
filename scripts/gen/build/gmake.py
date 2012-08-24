@@ -109,7 +109,7 @@ def add_targets(graph, proj, env, settings):
         graph.add(target.DepTarget('config', cdep))
         graph.add(target.DepTarget('default', ['config']))
 
-LIBS = ['LIBJPEG', 'GTK', 'LIBPNG', 'PANGO']
+LIBS = ['LIBJPEG', 'GTK', 'LIBPNG', 'PANGO', 'LIBASOUND']
 FLAGS = ['CC', 'CXX',
          'CPPFLAGS', 'CFLAGS', 'CXXFLAGS', 'CWARN', 'CXXWARN',
          'LDFLAGS', 'LIBS']

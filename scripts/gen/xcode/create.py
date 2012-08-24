@@ -317,7 +317,8 @@ def write_project(proj, pf, uf):
         for source, source_env in targenv:
             t.add_source(p.get_source(source))
         fworks = ['Foundation', 'AppKit', 'CoreServices',
-                  'CoreVideo', 'Carbon', 'OpenGL']
+                  'CoreVideo', 'Carbon', 'OpenGL',
+                  'CoreAudio', 'AudioUnit']
         for fwork in fworks:
             x = p.get_framework(fwork)
             t.add_source(x)

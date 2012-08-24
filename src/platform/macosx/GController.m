@@ -1,5 +1,6 @@
 #import "GController.h"
 #import "GDisplay.h"
+#import "base/audio_system.h"
 #import "base/entry.h"
 #import "base/cvar.h"
 #import "base/error.h"
@@ -87,6 +88,7 @@ sg_version_platform(struct sg_logger *sp)
         sg_cvar_addarg(NULL, [key UTF8String], [value UTF8String]);
     }
     sg_sys_init();
+    sg_audio_sys_pstart();
     sg_sys_getinfo(&gameinfo);
     GDisplay *d = [[[GDisplay alloc] init] autorelease];
     [d setDefaultSize:NSMakeSize(gameinfo.default_width, gameinfo.default_height)];

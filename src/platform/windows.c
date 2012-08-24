@@ -1,3 +1,4 @@
+#include "base/audio_system.h"
 #include "base/cvar.h"
 #include "base/entry.h"
 #include "base/event.h"
@@ -54,7 +55,8 @@ sg_platform_failv(const char *fmt, va_list ap)
 static struct sg_game_info g_info;
 static HDC hDC;
 static HGLRC hRC;
-static HWND hWnd;
+/* FIXME: move this to a header file */
+HWND sg_window;
 static HINSTANCE hInstance;
 static int inactive;
 
@@ -96,13 +98,13 @@ static void killGLWindow()
     }
     hRC = NULL;
 
-    if (hDC && !ReleaseDC(hWnd, hDC))
+    if (hDC && !ReleaseDC(sg_window, hDC))
         serrorBox("Release device context failed.");
     hDC = NULL;
 
-    if (hWnd && !DestroyWindow(hWnd))
+    if (sg_window && !DestroyWindow(sg_window))
         serrorBox("Could not release window.");
-    hWnd = NULL;
+    sg_window = NULL;
 
     if (!UnregisterClassW(L"OpenGL", hInstance))
         serrorBox("Could not unregister class");
@@ -164,17 +166,18 @@ BOOL createWindow(int nCmdShow)
     dwStyle |= WS_CLIPSIBLINGS | WS_CLIPCHILDREN;
 
     AdjustWindowRectEx(&windowRect, dwStyle, FALSE, dwExStyle);
-    hWnd = CreateWindowExW(dwExStyle, L"OpenGL", L"Game", dwStyle, 0, 0,
-                           windowRect.right - windowRect.left,
-                           windowRect.bottom - windowRect.top,
-                           NULL, NULL, hInstance, NULL);
-    if (!hWnd) {
+    sg_window = CreateWindowExW(
+        dwExStyle, L"OpenGL", L"Game", dwStyle, 0, 0,
+        windowRect.right - windowRect.left,
+        windowRect.bottom - windowRect.top,
+        NULL, NULL, hInstance, NULL);
+    if (!sg_window) {
         killGLWindow();
         errorBox("Window creation error.");
         return FALSE;
     }
 
-    hDC = GetDC(hWnd);
+    hDC = GetDC(sg_window);
     if (!hDC) {
         killGLWindow();
         errorBox("Can't create OpenGL device context.");
@@ -207,9 +210,9 @@ BOOL createWindow(int nCmdShow)
         return FALSE;
     }
 
-    ShowWindow(hWnd, nCmdShow);
-    SetForegroundWindow(hWnd);
-    SetFocus(hWnd);
+    ShowWindow(sg_window, nCmdShow);
+    SetForegroundWindow(sg_window);
+    SetFocus(sg_window);
     handleResize(g_info.default_width, g_info.default_height);
 
     return TRUE;
@@ -435,6 +438,7 @@ init(int nCmdShow)
 
     if (!createWindow(nCmdShow))
         exit(0);
+    sg_audio_sys_pstart();
     glBlendColor = (void (APIENTRY *)(GLclampf, GLclampf, GLclampf, GLclampf))
         wglGetProcAddress("glBlendColor");
     if (0 && !glBlendColor) {
