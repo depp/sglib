@@ -224,7 +224,7 @@ sg_audio_file_loadwav(struct sg_audio_file *fp,
 
     sg_riff_destroy(&riff);
 
-    return sg_audio_file_loadraw(fp, tag->data, nframe,
+    return sg_audio_file_loadraw(fp, p, nframe,
                                  format, nchan, rate, err);
 
 fmterr:
