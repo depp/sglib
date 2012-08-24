@@ -13,33 +13,19 @@
 /* Maximum number of channels */
 #define SG_AUDIO_MAXCHAN SG_AUDIO_MAXSOURCE
 
-#if defined(SG_AUDIO_SYSTEM)
-# define SG_INL SG_EXTERN_INLINE
-#else
-# define SG_INL SG_INLINE
-#endif
-
-SG_INL unsigned
-sg_audio_mintime(unsigned x, unsigned y);
-
-SG_INL unsigned
-sg_audio_maxtime(unsigned x, unsigned y);
-
 /* Earliest of the two times */
-SG_INL unsigned
+SG_INLINE unsigned
 sg_audio_mintime(unsigned x, unsigned y)
 {
     return ((int) (x - y) < 0) ? x : y;
 }
 
 /* Latest of the two times */
-SG_INL unsigned
+SG_INLINE unsigned
 sg_audio_maxtime(unsigned x, unsigned y)
 {
     return ((int) (x - y) < 0) ? y : x;
 }
-
-#undef SG_INL
 
 /* ========== Parameter automation ========== */
 
