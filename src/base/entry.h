@@ -64,7 +64,7 @@ sg_game_destroy(void);
 
 /* Initialize all library subsystems and the game.  This should be
    called after the command line arguments are parsed and passed to
-   sg_cvar_addarg.  */
+   sg_cvar_addarg.  Does not initialize audio output.  */
 void
 sg_sys_init(void);
 

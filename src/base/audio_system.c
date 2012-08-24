@@ -1,5 +1,3 @@
-#define SG_AUDIO_SYSTEM 1
-
 #include "audio_system.h"
 #include "audio_sysprivate.h"
 #include "log.h"
@@ -14,6 +12,4 @@ sg_audio_sys_init(void)
     sg_lock_init(&sp->slock);
     sg_rwlock_init(&sp->qlock);
     sp->srcfree = -1;
-
-    sg_audio_sys_pstart();
 }

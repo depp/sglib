@@ -3,6 +3,7 @@
 #define HAVE_DPUSH 1
 #endif
 
+#include "base/audio_system.h"
 #include "base/clock.h"
 #include "base/cvar.h"
 #include "base/entry.h"
@@ -352,6 +353,7 @@ init(int argc, char *argv[])
     }
 
     sg_sys_init();
+    sg_audio_sys_pstart();
     sg_sys_getinfo(&gameinfo);
     if (gameinfo.min_width < 128)
         gameinfo.min_width = 128;
