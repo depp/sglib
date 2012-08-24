@@ -42,7 +42,7 @@ char *
 sg_strbuf_detach(struct sg_strbuf *b);
 
 /* Get the amount of unused space remaining in the buffer.  */
-static inline size_t
+SG_INLINE size_t
 sg_strbuf_avail(struct sg_strbuf *b)
 {
     return b->e - b->p;
@@ -57,7 +57,7 @@ void
 sg_strbuf_compact(struct sg_strbuf *b);
 
 /* Set the string to the empty string, but don't free memory.  */
-static inline void
+SG_INLINE void
 sg_strbuf_clear(struct sg_strbuf *b)
 {
     b->p = b->s;
@@ -69,7 +69,7 @@ int
 sg_strbuf_cmp(struct sg_strbuf *x, struct sg_strbuf *y);
 
 /* Get the length of the string in the buffer.  */
-static inline size_t
+SG_INLINE size_t
 sg_strbuf_len(struct sg_strbuf *b)
 {
     return b->p - b->s;
@@ -77,7 +77,7 @@ sg_strbuf_len(struct sg_strbuf *b)
 
 /* Set the length of the string in the buffer.  This must not be
    longer than the current length.  */
-static inline void
+SG_INLINE void
 sg_strbuf_setlen(struct sg_strbuf *b, size_t len)
 {
     size_t l = b->p - b->s;
@@ -89,7 +89,7 @@ sg_strbuf_setlen(struct sg_strbuf *b, size_t len)
 /* Set the length of the string in the buffer.  This will expand the
    string as necessary, and assumes that you have already reserved the
    space and written the data.  */
-static inline void
+SG_INLINE void
 sg_strbuf_forcelen(struct sg_strbuf *b, size_t len)
 {
     size_t l = b->e - b->s;
@@ -105,7 +105,7 @@ void
 sg_strbuf_write(struct sg_strbuf *b, const char *data, size_t len);
 
 /* Add a character to the buffer.  */
-static inline void
+SG_INLINE void
 sg_strbuf_putc(struct sg_strbuf *b, int c)
 {
     if (b->p == b->e)
@@ -115,7 +115,7 @@ sg_strbuf_putc(struct sg_strbuf *b, int c)
 }
 
 /* Add a string to the buffer.  */
-static inline void
+SG_INLINE void
 sg_strbuf_puts(struct sg_strbuf *b, const char *str)
 {
     sg_strbuf_write(b, str, strlen(str));
@@ -145,7 +145,7 @@ sg_strbuf_vprintf(struct sg_strbuf *b, const char *fmt, va_list ap);
 void
 sg_strbuf_joinmem(struct sg_strbuf *buf, const char *path, size_t len);
 
-static inline void
+SG_INLINE void
 sg_strbuf_joinstr(struct sg_strbuf *buf, const char *path)
 {
     sg_strbuf_joinmem(buf, path, strlen(path));
