@@ -194,21 +194,33 @@ sg_error_win32(struct sg_error **err, unsigned long code)
     }
 }
 
+/*
+    Yes, this is a pain.
+    http://stackoverflow.com/questions/4597932/how-can-i-is-there-a-way-to-convert-an-hresult-into-a-system-specific-error-me
+    http://stackoverflow.com/questions/455434/how-should-i-use-formatmessage-properly-in-c
+*/
 void
 sg_error_hresult(struct sg_error **err, long code)
 {
     IErrorInfo *iei;
     HRESULT hr;
     BSTR bstr;
+    WORD facility;
+
+    facility = HRESULT_FACILITY(code);
     hr = GetErrorInfo(0, &iei);
     if (SUCCEEDED(hr) && iei) {
         IErrorInfo_GetDescription(iei, &bstr);
         sg_error_setw(err, &SG_ERROR_WINDOWS, code, bstr + 1, *bstr);
         SysFreeString(bstr);
         IUnknown_Release(iei);
-    } else {
-        sg_error_sets(err, &SG_ERROR_WINDOWS, code, "<unknown HRESULT>");
+        return;
     }
+    if (facility == FACILITY_ITF) {
+        sg_error_sets(err, &SG_ERROR_WINDOWS, code, "unknown HRESULT (FACILITY_ITF)");
+        return;
+    }
+    sg_error_win32(err, code);
 }
 
 #else
