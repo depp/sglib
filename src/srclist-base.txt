@@ -1,5 +1,6 @@
 base/audio_alsa.c LINUX LIBASOUND
 base/audio_coreaudio.c MACOSX
+base/audio_directsound8.c WINDOWS
 base/audio_file.c
 base/audio_file.h
 base/audio_fileprivate.h
