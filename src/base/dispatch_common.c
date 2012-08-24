@@ -5,10 +5,10 @@
 #include <string.h>
 
 void
-sg_dispatch_queue_push(struct sg_dispatch_queue *restrict queue,
+sg_dispatch_queue_push(struct sg_dispatch_queue *SG_RESTRICT queue,
                       int priority, void *cxt, void (*func)(void *))
 {
-    struct sg_dispatch_task *restrict tasks;
+    struct sg_dispatch_task *SG_RESTRICT tasks;
     int cprio;
     unsigned uprio, ctr, m, n, nn, depth, ndepth;
 
@@ -53,10 +53,10 @@ nomem:
 }
 
 void
-sg_dispatch_queue_pop(struct sg_dispatch_queue *restrict queue,
-                      struct sg_dispatch_task *restrict task)
+sg_dispatch_queue_pop(struct sg_dispatch_queue *SG_RESTRICT queue,
+                      struct sg_dispatch_task *SG_RESTRICT task)
 {
-    struct sg_dispatch_task *restrict tasks;
+    struct sg_dispatch_task *SG_RESTRICT tasks;
     unsigned ntasks, n, m, p, p1, p2, nn, pp;
 
     ntasks = queue->count;

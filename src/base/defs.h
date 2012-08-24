@@ -4,21 +4,21 @@
 #define BASE_DEFS_H
 
 /*
-  restrict: same semantics as C99 restrict, a macro if necessary
+  SG_RESTRICT: same semantics as C99 restrict, or expands to nothing
   SG_INLINE: approx same semantics as C99 "inline"
   SG_EXTERN_INLINE: approx same semantics as C99 "extern inline"
 */
 
 #define SG_NORETURN
-#define restrict
+#define SG_RESTRICT
 
 /* ========== Compilers ========== */
 
 /* Microsoft MSC */
 #ifdef _MSC_VER
 # define __attribute__(x)
-# undef restrict
-# define restrict __restrict
+# undef SG_RESTRICT
+# define SG_RESTRICT __restrict
 # undef SG_NORETURN
 # define SG_NORETURN __declspec(noreturn)
 # define SG_INLINE __inline
@@ -27,8 +27,8 @@
 
 /* GNU GCC, Clang */
 #if defined(__GNUC__)
-# undef restrict
-# define restrict __restrict__
+# undef SG_RESTRICT
+# define SG_RESTRICT __restrict__
 # undef SG_NORETURN
 # define SG_NORETURN __attribute__((noreturn))
 # if defined(__GNUC_STDC_INLINE__)
@@ -47,7 +47,8 @@
 # if __STDC_VERSION__ >= 199901L
 #  undef SG_INLINE
 #  undef SG_EXTERN_INLINE
-#  undef restrict
+#  undef SG_RESTRICT
+#  define SG_RESTRICT restrict
 #  define SG_INLINE inline
 #  define SG_EXTERN_INLINE extern inline
 #  if __STDC_VERSION__ >= 201112L
