@@ -90,7 +90,6 @@ base/type_impl.h
 base/type_pango.c PANGO LINUX
 base/type_uniscribe.c WINDOWS
 #base/type_win.c
-base/util.c
 base/util.h
 base/version.c
 base/version.h
