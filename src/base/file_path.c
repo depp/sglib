@@ -1,5 +1,6 @@
-#ifdef HAVE_CONFIG_H
-#include "config.h"
+#include "defs.h"
+#if defined(_WIN32)
+#include <Windows.h>
 #endif
 
 #define SG_PATH_INITSZ 1
@@ -255,7 +256,7 @@ void
 sg_path_init(void)
 {
     const char *paths, *p, *start, *end;
-    pchar buf[PATH_BUFSZ], *str = NULL;
+    pchar buf[PATH_BUFSZ], *str = NULL, *q;
     int r, i, writable;
     size_t elen = 0, dlen, slen;
 
@@ -306,10 +307,10 @@ sg_path_init(void)
             if (!elen) {
                 r = sg_path_getexepath(buf, PATH_BUFSZ);
                 if (!r) goto fail;
-                p = pathrchr(buf, SG_PATH_DIRSEP);
-                if (!p) goto fail;
-                p++;
-                elen = p - buf;
+                q = pathrchr(buf, SG_PATH_DIRSEP);
+                if (!q) goto fail;
+                q++;
+                elen = q - buf;
             }
 
             dlen = strlen(sg_path_defaults[i].dirname);

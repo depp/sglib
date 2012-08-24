@@ -136,137 +136,24 @@ sg_file_tryopen(struct sg_file **f, const wchar_t *path, int flags,
 }
 
 int
-sg_path_getdir(pchar **abspath, size_t *abslen,
-               const char *relpath, size_t rellen,
-               int flags)
+sg_path_getexepath(pchar *path, size_t len)
 {
-    /* Relative, absolute, executable, and working directory path.  */
-    wchar_t *rpath = NULL, *apath = NULL, *epath = NULL, *wpath = NULL;
-    int rlen, alen, elen, wlen;
-    int r, ret;
     DWORD dr;
-    BOOL br;
-
-    if (rellen > INT_MAX)
+    dr = GetModuleFileNameW(NULL, path, len);
+    if (!dr || dr >= len)
         return 0;
+    path[dr] = '\0';
+    return 1;
+}
 
-    /* FIXME: log errors / warnings */
-    if (!rellen)
+int
+sg_path_checkdir(const pchar *path)
+{
+    DWORD dr;
+    dr = GetFileAttributesW(path);
+    if (dr == INVALID_FILE_ATTRIBUTES)
         return 0;
-    if (memchr(relpath, '\0', rellen))
+    if (!(dr & FILE_ATTRIBUTE_DIRECTORY))
         return 0;
-
-    /* Convert relative path to Unicode.  */
-    r = MultiByteToWideChar(CP_UTF8, 0, relpath, (int) rellen, NULL, 0);
-    if (!r)
-        goto error;
-    rlen = r;
-    rpath = malloc(sizeof(wchar_t) * (rlen + 2));
-    if (!rpath)
-        goto nomem;
-    r = MultiByteToWideChar(CP_UTF8, 0, relpath, (int) rellen, rpath, rlen);
-    if (!r)
-        goto error;
-
-    /* Append backslash (if not present) and NUL.  */
-    if (rpath[rlen-1] != L'\\')
-        rpath[rlen++] = L'\\';
-    rpath[rlen] = L'\0';
-
-    if (flags & SG_PATH_EXEDIR) {
-        /* If we want something relative to the executable directory,
-           we change directory there and back afterwards.  */
-
-        /* Get executable directory path */
-        elen = MAX_PATH;
-        while (1) {
-            epath = malloc(sizeof(wchar_t) * elen);
-            if (!epath)
-                goto nomem;
-            dr = GetModuleFileNameW(NULL, epath, elen);
-            if (!dr)
-                goto error;
-            if (dr < (DWORD) elen) {
-                elen = dr;
-                break;
-            }
-            elen *= 2;
-            free(epath);
-        }
-        elen = dr;
-        while (elen > 0 && epath[elen - 1] != L'\\')
-            elen--;
-        epath[elen] = L'\0';
-
-        /* Save current path */
-        dr = GetCurrentDirectoryW(0, NULL);
-        if (!dr)
-            goto error;
-        wpath = malloc(sizeof(wchar_t) * dr);
-        if (!wpath)
-            goto nomem;
-        dr = GetCurrentDirectoryW(dr, wpath);
-        if (!dr)
-            goto error;
-        wlen = dr;
-
-        /* Change path */
-        br = SetCurrentDirectoryW(epath);
-        if (!br)
-            goto error;
-    }
-
-    dr = GetFullPathNameW(rpath, 0, NULL, NULL);
-    if (!dr)
-        goto error;
-    apath = malloc(sizeof(wchar_t) * dr);
-    dr = GetFullPathNameW(rpath, dr, apath, NULL);
-    if (!dr)
-        goto error;
-    alen = dr;
-
-    if (!(flags & SG_PATH_NODISCARD)) {
-        dr = GetFileAttributesW(apath);
-        if (dr == INVALID_FILE_ATTRIBUTES) {
-            dr = GetLastError();
-            if (dr == ERROR_FILE_NOT_FOUND || dr == ERROR_PATH_NOT_FOUND)
-                ret = 0;
-            else
-                goto errorcode;
-        } else if (!(dr & FILE_ATTRIBUTE_DIRECTORY)) {
-            ret = 0;
-        } else {
-            ret = 1;
-        }
-    } else {
-        ret = 1;
-    }
-
-    if (ret > 0) {
-        fwprintf(stderr, L"path: %s\n", apath);
-        *abspath = apath;
-        *abslen = alen;
-        apath = NULL;
-    }
-
-done:
-    if (wpath)
-        SetCurrentDirectoryW(wpath);
-    free(rpath);
-    free(apath);
-    free(epath);
-    free(wpath);
-    return ret;
-
-error:
-    dr = GetLastError();
-    goto errorcode;
-
-errorcode:
-    abort();
-    goto done;
-    
-nomem:
-    abort();
-    goto done;
+    return 1;
 }
