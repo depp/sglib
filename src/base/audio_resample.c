@@ -5,8 +5,8 @@
 #include <stdio.h>
 
 static void
-sg_audio_file_resample_1(short *restrict dest, int dlen, int drate,
-                         const short *restrict src, int slen, int srate)
+sg_audio_file_resample_1(short *SG_RESTRICT dest, int dlen, int drate,
+                         const short *SG_RESTRICT src, int slen, int srate)
 {
     double rr;
     int i, pos, x;
@@ -23,8 +23,8 @@ sg_audio_file_resample_1(short *restrict dest, int dlen, int drate,
 }
 
 static void
-sg_audio_file_resample_2(short *restrict dest, int dlen, int drate,
-                         const short *restrict src, int slen, int srate)
+sg_audio_file_resample_2(short *SG_RESTRICT dest, int dlen, int drate,
+                         const short *SG_RESTRICT src, int slen, int srate)
 {
     double rr;
     int i, pos, x0, x1;

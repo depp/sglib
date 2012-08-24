@@ -26,7 +26,7 @@ sg_audio_clip(float x, float minv, float maxv)
 int
 sg_audio_source_open(void)
 {
-    struct sg_audio_system *restrict sp = &sg_audio_system_global;
+    struct sg_audio_system *SG_RESTRICT sp = &sg_audio_system_global;
     struct sg_audio_source *srcp;
     unsigned alloc, nalloc, i, time;
     int src;
@@ -81,9 +81,9 @@ done:
 }
 
 static void
-sg_audio_sysmsg(struct sg_audio_system *restrict sp,
+sg_audio_sysmsg(struct sg_audio_system *SG_RESTRICT sp,
                 int type, int src, int time,
-                const void *restrict data, size_t len)
+                const void *SG_RESTRICT data, size_t len)
 {
     unsigned wpos, rpos, sz, nsz, amt, i, a;
     size_t alen1, alen2, alen;
@@ -194,7 +194,7 @@ fail:
 void
 sg_audio_source_close(int src)
 {
-    struct sg_audio_system *restrict sp = &sg_audio_system_global;
+    struct sg_audio_system *SG_RESTRICT sp = &sg_audio_system_global;
     struct sg_audio_source *srcp;
 
     sg_lock_acquire(&sp->slock);
@@ -214,7 +214,7 @@ done:
 }
 
 static unsigned
-sg_audio_source_cliptime(struct sg_audio_system *restrict sp,
+sg_audio_source_cliptime(struct sg_audio_system *SG_RESTRICT sp,
                          unsigned time)
 {
     unsigned ref = sp->wtime;
@@ -232,7 +232,7 @@ void
 sg_audio_source_play(int src, unsigned time, struct sg_audio_file *file,
                      int flags)
 {
-    struct sg_audio_system *restrict sp = &sg_audio_system_global;
+    struct sg_audio_system *SG_RESTRICT sp = &sg_audio_system_global;
     struct sg_audio_source *srcp;
     struct sg_audio_msgplay mdat;
 
@@ -265,7 +265,7 @@ done:
 void
 sg_audio_source_stop(int src, unsigned time)
 {
-    struct sg_audio_system *restrict sp = &sg_audio_system_global;
+    struct sg_audio_system *SG_RESTRICT sp = &sg_audio_system_global;
     struct sg_audio_source *srcp;
 
     sg_lock_acquire(&sp->slock);
@@ -291,7 +291,7 @@ done:
 void
 sg_audio_source_stoploop(int src, unsigned time)
 {
-    struct sg_audio_system *restrict sp = &sg_audio_system_global;
+    struct sg_audio_system *SG_RESTRICT sp = &sg_audio_system_global;
     struct sg_audio_source *srcp;
 
     sg_lock_acquire(&sp->slock);
@@ -318,8 +318,8 @@ done:
   segment, producing the next segment of parameter automation.
 */
 static void
-sg_audio_source_papply(struct sg_audio_param *restrict pp,
-                       const struct sg_audio_msgparam *restrict pe)
+sg_audio_source_papply(struct sg_audio_param *SG_RESTRICT pp,
+                       const struct sg_audio_msgparam *SG_RESTRICT pe)
 {
     float minv, maxv, v1, v2, dt;
     int dt1, dt2, dti;
@@ -392,9 +392,9 @@ error:
 }
 
 static void
-sg_audio_source_pmsg(int src, struct sg_audio_msgparam *restrict pe)
+sg_audio_source_pmsg(int src, struct sg_audio_msgparam *SG_RESTRICT pe)
 {
-    struct sg_audio_system *restrict sp = &sg_audio_system_global;
+    struct sg_audio_system *SG_RESTRICT sp = &sg_audio_system_global;
     struct sg_audio_source *srcp;
     struct sg_audio_param *curp;
 
@@ -482,7 +482,7 @@ struct sg_audio_systemcbuf {
   The buffer pointer is stored in the "bp" object.
 */
 static void
-sg_audio_source_bufcommit(struct sg_audio_system *restrict sp,
+sg_audio_source_bufcommit(struct sg_audio_system *SG_RESTRICT sp,
                           struct sg_audio_systemcbuf *bp,
                           unsigned wtime, unsigned ctime)
 {
@@ -532,7 +532,7 @@ sg_audio_source_bufcommit(struct sg_audio_system *restrict sp,
   not enough bytes to read.
 */
 static const void *
-sg_audio_source_bufread(struct sg_audio_systemcbuf *restrict bp,
+sg_audio_source_bufread(struct sg_audio_systemcbuf *SG_RESTRICT bp,
                         size_t sz)
 {
     size_t alen;
@@ -566,7 +566,7 @@ sg_audio_source_bufread(struct sg_audio_systemcbuf *restrict bp,
   zero if not enough bytes to read.
 */
 static int
-sg_audio_source_bufskip(struct sg_audio_systemcbuf *restrict bp,
+sg_audio_source_bufskip(struct sg_audio_systemcbuf *SG_RESTRICT bp,
                         size_t sz)
 {
     size_t alen;
@@ -584,11 +584,11 @@ sg_audio_source_bufskip(struct sg_audio_systemcbuf *restrict bp,
   mixdowns.
 */
 static void
-sg_audio_source_bufprocess(struct sg_audio_system *restrict sp,
-                           struct sg_audio_systemcbuf *restrict bp)
+sg_audio_source_bufprocess(struct sg_audio_system *SG_RESTRICT sp,
+                           struct sg_audio_systemcbuf *SG_RESTRICT bp)
 {
-    const struct sg_audio_msghdr *restrict mhdr;
-    const struct sg_audio_msgplay *restrict mplay;
+    const struct sg_audio_msghdr *SG_RESTRICT mhdr;
+    const struct sg_audio_msgplay *SG_RESTRICT mplay;
     unsigned pos;
     int r;
 
@@ -629,9 +629,9 @@ sg_audio_source_bufprocess(struct sg_audio_system *restrict sp,
   Process each source to bring it to the current wall time.
 */
 static void
-sg_audio_source_sprocess(struct sg_audio_system *restrict sp)
+sg_audio_source_sprocess(struct sg_audio_system *SG_RESTRICT sp)
 {
-    struct sg_audio_source *restrict srcs;
+    struct sg_audio_source *SG_RESTRICT srcs;
     unsigned ctime, ltime, src;
     int i, len;
 
@@ -681,7 +681,7 @@ sg_audio_source_sprocess(struct sg_audio_system *restrict sp)
 void
 sg_audio_source_commit(unsigned wtime, unsigned ctime)
 {
-    struct sg_audio_system *restrict sp = &sg_audio_system_global;
+    struct sg_audio_system *SG_RESTRICT sp = &sg_audio_system_global;
     struct sg_audio_systemcbuf buf;
 
     sg_lock_acquire(&sp->slock);

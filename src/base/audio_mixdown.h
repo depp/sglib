@@ -28,14 +28,14 @@ sg_audio_mixdown_new(int rate, int bufsize, struct sg_error **err);
 
 /* Free an audio mixdown.  */
 void
-sg_audio_mixdown_free(struct sg_audio_mixdown *restrict mp);
+sg_audio_mixdown_free(struct sg_audio_mixdown *SG_RESTRICT mp);
 
 /* Read frames of interleaved stereo from an audio mixdown.  The
    timestamp corresponds to the beginning of the buffer.  Returns
    0 on success, or nonzero if the mixdown was terminated for any
    reason.  */
 int
-sg_audio_mixdown_read(struct sg_audio_mixdown *restrict mp,
+sg_audio_mixdown_read(struct sg_audio_mixdown *SG_RESTRICT mp,
                       unsigned time, float *buf);
 
 #ifdef __cplusplus

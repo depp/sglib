@@ -147,7 +147,7 @@ struct sg_audio_mixdown {
   Convert a timestamp to a sample position.
 */
 static int
-sg_audio_mixdown_t2s(struct sg_audio_mixdown *restrict mp,
+sg_audio_mixdown_t2s(struct sg_audio_mixdown *SG_RESTRICT mp,
                      unsigned time)
 {
     int dt, s0, s1;
@@ -173,7 +173,7 @@ sg_audio_mixdown_t2s(struct sg_audio_mixdown *restrict mp,
   milliseconds) to buffer positions.
 */
 static void
-sg_audio_mixdown_updatetime(struct sg_audio_mixdown *restrict mp,
+sg_audio_mixdown_updatetime(struct sg_audio_mixdown *SG_RESTRICT mp,
                             unsigned time)
 {
     unsigned curtime;
@@ -289,9 +289,9 @@ sg_audio_mixdown_updatetime(struct sg_audio_mixdown *restrict mp,
   the local queue.  This will NOT update the read position.
 */
 static void
-sg_audio_mixdown_getmsg(struct sg_audio_mixdown *restrict mp)
+sg_audio_mixdown_getmsg(struct sg_audio_mixdown *SG_RESTRICT mp)
 {
-    struct sg_audio_system *restrict sp = &sg_audio_system_global;
+    struct sg_audio_system *SG_RESTRICT sp = &sg_audio_system_global;
     unsigned char *sbuf, *mbuf;
     unsigned start, end, len, nalloc, sz;
 
@@ -335,9 +335,9 @@ fail:
 
 /* Update the mixdown read position.  */
 static void
-sg_audio_mixdown_updatepos(struct sg_audio_mixdown *restrict mp)
+sg_audio_mixdown_updatepos(struct sg_audio_mixdown *SG_RESTRICT mp)
 {
-    struct sg_audio_system *restrict sp = &sg_audio_system_global;
+    struct sg_audio_system *SG_RESTRICT sp = &sg_audio_system_global;
 
     if (!mp->advance)
         return;
@@ -362,11 +362,11 @@ sg_audio_mixdown_updatepos(struct sg_audio_mixdown *restrict mp)
   parameter data.
 */
 static void
-sg_audio_mixdown_paramfill(struct sg_audio_mixdown *restrict mp,
+sg_audio_mixdown_paramfill(struct sg_audio_mixdown *SG_RESTRICT mp,
                            int chan, int param, int sample)
 {
-    float *restrict pbuf;
-    struct sg_audio_mixparam *restrict pp;
+    float *SG_RESTRICT pbuf;
+    struct sg_audio_mixparam *SG_RESTRICT pp;
     int bufsz, pbufsz, bufnum, ca, cb, cc, ci;
     float y0, y1, dy, y;
 
@@ -428,13 +428,13 @@ sg_audio_mixdown_paramfill(struct sg_audio_mixdown *restrict mp,
    ======================================== */
 
 static void
-sg_audio_mixdown_srcstop(struct sg_audio_mixdown *restrict mp,
+sg_audio_mixdown_srcstop(struct sg_audio_mixdown *SG_RESTRICT mp,
                          int src, int sample);
 
 static void
-sg_audio_mixdown_srcplay(struct sg_audio_mixdown *restrict mp,
+sg_audio_mixdown_srcplay(struct sg_audio_mixdown *SG_RESTRICT mp,
                          int src, int sample,
-                         const struct sg_audio_msgplay *restrict mplay)
+                         const struct sg_audio_msgplay *SG_RESTRICT mplay)
 {
     int chan, param;
     struct sg_audio_mixchan *chanp;
@@ -468,7 +468,7 @@ sg_audio_mixdown_srcplay(struct sg_audio_mixdown *restrict mp,
 }
 
 static void
-sg_audio_mixdown_srcstop(struct sg_audio_mixdown *restrict mp,
+sg_audio_mixdown_srcstop(struct sg_audio_mixdown *SG_RESTRICT mp,
                          int src, int sample)
 {
     int chan, fadesamp;
@@ -505,7 +505,7 @@ sg_audio_mixdown_srcstop(struct sg_audio_mixdown *restrict mp,
 }
 
 static void
-sg_audio_mixdown_srcreset(struct sg_audio_mixdown *restrict mp,
+sg_audio_mixdown_srcreset(struct sg_audio_mixdown *SG_RESTRICT mp,
                           int src, int sample)
 {
     int chan, i;
@@ -528,7 +528,7 @@ sg_audio_mixdown_srcreset(struct sg_audio_mixdown *restrict mp,
 }
 
 static void
-sg_audio_mixdown_srcstoploop(struct sg_audio_mixdown *restrict mp,
+sg_audio_mixdown_srcstoploop(struct sg_audio_mixdown *SG_RESTRICT mp,
                              int src, int sample)
 {
     (void) mp;
@@ -537,9 +537,9 @@ sg_audio_mixdown_srcstoploop(struct sg_audio_mixdown *restrict mp,
 }
 
 static void
-sg_audio_mixdown_srcparam(struct sg_audio_mixdown *restrict mp,
+sg_audio_mixdown_srcparam(struct sg_audio_mixdown *SG_RESTRICT mp,
                           int src, int sample,
-                          const struct sg_audio_msgparam *restrict pe)
+                          const struct sg_audio_msgparam *SG_RESTRICT pe)
 {
     int chan, dt;
     double dtf, rate;
@@ -606,13 +606,13 @@ SG_AUDIO_MIXDOWN_MSGLEN[SG_AUDIO_MSG_COUNT] = {
   later timestamps are kept in the queue.
 */
 static void
-sg_audio_mixdown_dispatch(struct sg_audio_mixdown *restrict mp)
+sg_audio_mixdown_dispatch(struct sg_audio_mixdown *SG_RESTRICT mp)
 {
     unsigned char *mbuf;
     unsigned pos, end, type, wpos;
     unsigned hsz = ALIGN(sizeof(struct sg_audio_msghdr)), msz;
     int sample;
-    const struct sg_audio_msghdr *restrict mh;
+    const struct sg_audio_msghdr *SG_RESTRICT mh;
     const void *mdat;
 
     mbuf = mp->mbuf;
@@ -660,10 +660,10 @@ sg_audio_mixdown_dispatch(struct sg_audio_mixdown *restrict mp)
 struct sg_audio_mixdown *
 sg_audio_mixdown_new(int rate, int bufsize, struct sg_error **err)
 {
-    struct sg_audio_system *restrict sp = &sg_audio_system_global;
-    struct sg_audio_mixdown *restrict mp;
-    struct sg_audio_mixsrc *restrict srcs;
-    struct sg_audio_mixchan *restrict chans;
+    struct sg_audio_system *SG_RESTRICT sp = &sg_audio_system_global;
+    struct sg_audio_mixdown *SG_RESTRICT mp;
+    struct sg_audio_mixsrc *SG_RESTRICT srcs;
+    struct sg_audio_mixchan *SG_RESTRICT chans;
     unsigned i, j, nsrc, nchan, index;
     size_t bufscount, bufslen, srcoffset, chanoffset, size;
     unsigned char *root;
@@ -777,9 +777,9 @@ sg_audio_mixdown_new(int rate, int bufsize, struct sg_error **err)
 }
 
 void
-sg_audio_mixdown_free(struct sg_audio_mixdown *restrict mp)
+sg_audio_mixdown_free(struct sg_audio_mixdown *SG_RESTRICT mp)
 {
-    struct sg_audio_system *restrict sp = &sg_audio_system_global;
+    struct sg_audio_system *SG_RESTRICT sp = &sg_audio_system_global;
 
     sg_lock_acquire(&sp->slock);
     sp->mixmask &= ~(1u << mp->index);
@@ -796,7 +796,7 @@ sg_audio_mixdown_free(struct sg_audio_mixdown *restrict mp)
    ======================================== */
 
 static void
-sg_audio_mixdown_cvolpan(float *restrict bp0, float *restrict bp1,
+sg_audio_mixdown_cvolpan(float *SG_RESTRICT bp0, float *SG_RESTRICT bp1,
                          int bufsz)
 {
     float vol, pan, g, g0, g1;
@@ -833,17 +833,17 @@ sg_audio_mixdown_cvolpan(float *restrict bp0, float *restrict bp1,
 }
 
 static void
-sg_audio_mixdown_render(struct sg_audio_mixdown *restrict mp,
-                        float *restrict bufout)
+sg_audio_mixdown_render(struct sg_audio_mixdown *SG_RESTRICT mp,
+                        float *SG_RESTRICT bufout)
 {
     struct sg_audio_mixchan *chans;
-    struct sg_audio_file *restrict fp;
+    struct sg_audio_file *SG_RESTRICT fp;
     unsigned i, pi, chan, param, nchan, bufsz, pbufsz, rate;
     int pos, end, length;
-    float *restrict bufmix, *restrict bufsamp;
-    float *bufparam, *restrict bp0, *restrict bp1;
+    float *SG_RESTRICT bufmix, *SG_RESTRICT bufsamp;
+    float *bufparam, *SG_RESTRICT bp0, *SG_RESTRICT bp1;
     float x;
-    const short *restrict sdat;
+    const short *SG_RESTRICT sdat;
 
     bufsz = mp->abufsize;
     pbufsz = bufsz >> SG_AUDIO_PARAMBITS;
@@ -945,7 +945,7 @@ sg_audio_mixdown_render(struct sg_audio_mixdown *restrict mp,
    ======================================== */
 
 int
-sg_audio_mixdown_read(struct sg_audio_mixdown *restrict mp,
+sg_audio_mixdown_read(struct sg_audio_mixdown *SG_RESTRICT mp,
                       unsigned time, float *buf)
 {
     sg_audio_mixdown_getmsg(mp);

@@ -10,10 +10,10 @@
 #include <string.h>
 
 static void
-sg_audio_copy_u8(short *restrict dest, const void *restrict src,
+sg_audio_copy_u8(short *SG_RESTRICT dest, const void *SG_RESTRICT src,
                  size_t count)
 {
-    const unsigned char *restrict sp;
+    const unsigned char *SG_RESTRICT sp;
     size_t i;
 
     sp = src;
@@ -22,10 +22,10 @@ sg_audio_copy_u8(short *restrict dest, const void *restrict src,
 }
 
 static void
-sg_audio_copy_s16(short *restrict dest, const void *restrict src,
+sg_audio_copy_s16(short *SG_RESTRICT dest, const void *SG_RESTRICT src,
                   size_t count, int littleendian)
 {
-    const unsigned char *restrict sp;
+    const unsigned char *SG_RESTRICT sp;
     size_t i;
 
     if (littleendian == (BYTE_ORDER == LITTLE_ENDIAN)) {
@@ -43,10 +43,10 @@ sg_audio_copy_s16(short *restrict dest, const void *restrict src,
 }
 
 static void
-sg_audio_copy_s24(short *restrict dest, const void *restrict src,
+sg_audio_copy_s24(short *SG_RESTRICT dest, const void *SG_RESTRICT src,
                   size_t count, int littleendian)
 {
-    const unsigned char *restrict sp;
+    const unsigned char *SG_RESTRICT sp;
     size_t i;
 
     sp = src;
@@ -60,10 +60,10 @@ sg_audio_copy_s24(short *restrict dest, const void *restrict src,
 }
 
 static void
-sg_audio_copy_f32(short *restrict dest, const void *restrict src,
+sg_audio_copy_f32(short *SG_RESTRICT dest, const void *SG_RESTRICT src,
                   size_t count, int littleendian)
 {
-    const unsigned char *restrict sp;
+    const unsigned char *SG_RESTRICT sp;
     size_t i;
     union {
         float f;
