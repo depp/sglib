@@ -55,6 +55,16 @@ public:
         return &m_obj;
     }
 
+    const T &operator*() const
+    {
+        return m_obj;
+    }
+
+    T &operator*()
+    {
+        return m_obj;
+    }
+
     operator bool() const
     {
         return (bool) m_obj;
