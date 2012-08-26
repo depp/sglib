@@ -20,6 +20,8 @@ void BitmapFont::print(int x, int y, const char *text)
     float x0, y0, x1, y1, u0, v0, u1, v1;
     glEnable(GL_TEXTURE_2D);
     m_tex->bind();
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
     glBegin(GL_QUADS);
     for (const char *p = text; ; ++p) {
