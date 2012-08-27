@@ -5,6 +5,7 @@
 #include "log.h"
 #include <AudioUnit/AudioUnit.h>
 #include <CoreAudio/CoreAudio.h>
+#include <CoreServices/CoreServices.h>
 
 static struct sg_audio_mixdown *sg_audio_ca_mixdown;
 static struct sg_logger *sg_audio_ca_logger;
