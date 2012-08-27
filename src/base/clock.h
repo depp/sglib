@@ -17,8 +17,8 @@ unsigned
 sg_clock_get(void);
 
 /* Get the current UTC date and time as an ISO-8601 string.  The
-   number of characters written is returned.  The string will not be
-   nul-terminated.  */
+   number of characters written is returned, not counting the nul
+   terminator.  */
 int
 sg_clock_getdate(char *date);
 
