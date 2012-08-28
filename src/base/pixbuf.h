@@ -5,6 +5,7 @@
 extern "C" {
 #endif
 struct sg_error;
+struct sg_file;
 
 typedef enum {
     /* 8-bit formats.  Y means grayscale.  All formats with alpha are
@@ -68,6 +69,11 @@ sg_pixbuf_loadimage(struct sg_pixbuf *pbuf, const char *path,
 int
 sg_pixbuf_loadpng(struct sg_pixbuf *pbuf, const void *data, size_t len,
                   struct sg_error **err);
+
+/* Write a PNG image to the given file.  */
+int
+sg_pixbuf_writepng(struct sg_pixbuf *pbuf, struct sg_file *fp,
+                   struct sg_error **err);
 
 /* Load a JPEG image from the given buffer.  */
 int
