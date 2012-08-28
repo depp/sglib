@@ -75,8 +75,10 @@ sg_file_open(const char *path, size_t pathlen, int flags,
     pchar *pbuf = NULL, *p;
     const char *extp, *extq;
 
-    if (flags & SG_WRONLY)
+    if (flags & SG_WRONLY) {
         flags |= SG_WRITABLE;
+        extensions = NULL;
+    }
 
     nlen = sg_path_norm(nbuf, path, pathlen, e);
     if (nlen < 0)
@@ -198,10 +200,12 @@ sg_path_add(struct sg_paths *p, pchar *path, int writable)
     unsigned nalloc, pos;
     int r;
 
-    r = sg_path_checkdir(path);
-    if (!r) {
-        free(path);
-        return;
+    if (!writable) {
+        r = sg_path_checkdir(path);
+        if (!r) {
+            free(path);
+            return;
+        }
     }
 
 #if defined(_WIN32)

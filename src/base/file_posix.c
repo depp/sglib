@@ -108,40 +108,106 @@ sg_file_u_seek(struct sg_file *f, int64_t off, int whence)
     return -1;
 }
 
+/* Make the parent directory for a file, recursively.  */
+static int
+sg_file_mkpardir(const char *path, struct sg_error **err)
+{
+    char *buf, *p;
+    size_t len;
+    int r, ecode, ret = 0;
+
+    p = strrchr(path, '/');
+    if (!p || p == path)
+        return 0;
+    len = p - path;
+    buf = malloc(len + 1);
+    if (!buf) {
+        sg_error_nomem(err);
+        return -1;
+    }
+    memcpy(buf, path, len);
+    buf[len] = '\0';
+    while (1) {
+        r = mkdir(buf, 0777);
+        if (!r) {
+            /* printf("mkdir %s\n", buf); */
+            break;
+        }
+        ecode = errno;
+        if (ecode != ENOENT) {
+            sg_error_errno(err, ecode);
+            ret = -1;
+            goto done;
+        }
+        p = strrchr(buf, '/');
+        if (!p || p == buf)
+            goto done;
+        *p = '\0';
+    }
+    while (1) {
+        *p = '/';
+        p += strlen(p);
+        if (p == buf + len)
+            goto done;
+        r = mkdir(buf, 0777);
+        if (r) {
+            ecode = errno;
+            sg_error_errno(err, ecode);
+            ret = -1;
+            goto done;
+        }
+        /* printf("mkdir %s\n", buf); */
+    }
+done:
+    free(buf);
+    return ret;
+}
+
 int
 sg_file_tryopen(struct sg_file **f, const char *path, int flags,
                 struct sg_error **e)
 {
     int fdes, ecode;
     struct sg_file_u *u;
-    if (flags & SG_WRONLY)
-        fdes = open(path, O_WRONLY, 0666);
-    else
+    if (flags & SG_WRONLY) {
+        fdes = open(path, O_WRONLY | O_CREAT | O_TRUNC, 0666);
+        if (fdes < 0) {
+            ecode = errno;
+            if (ecode != ENOENT) {
+                sg_error_errno(e, ecode);
+                return -1;
+            }
+            if (sg_file_mkpardir(path, e))
+                return -1;
+            fdes = open(path, O_WRONLY | O_CREAT | O_TRUNC, 0666);
+        }
+    } else {
         fdes = open(path, O_RDONLY);
-    if (fdes >= 0) {
-        u = malloc(sizeof(*u));
-        if (!u) {
-            close(fdes);
-            sg_error_nomem(e);
+    }
+    if (fdes < 0) {
+        ecode = errno;
+        if (ecode != ENOENT) {
+            sg_error_errno(e, ecode);
             return -1;
         }
-        u->h.refcount = 1;
-        u->h.read = sg_file_u_read;
-        u->h.write = sg_file_u_write;
-        u->h.close = sg_file_u_close;
-        u->h.free = sg_file_u_free;
-        u->h.length = sg_file_u_length;
-        u->h.seek = sg_file_u_seek;
-        u->fdes = fdes;
-        *f = &u->h;
-        return 1;
-    } else {
-        ecode = errno;
-        if (ecode == ENOENT)
-            return 0;
-        sg_error_errno(e, ecode);
+        return 0;
+    }
+    u = malloc(sizeof(*u));
+    if (!u) {
+        close(fdes);
+        sg_error_nomem(e);
         return -1;
     }
+    u->h.refcount = 1;
+    u->h.read = sg_file_u_read;
+    u->h.write = sg_file_u_write;
+    u->h.close = sg_file_u_close;
+    u->h.free = sg_file_u_free;
+    u->h.length = sg_file_u_length;
+    u->h.seek = sg_file_u_seek;
+    u->fdes = fdes;
+    *f = &u->h;
+    return 1;
 }
 
 int
