@@ -30,11 +30,11 @@ test_callback(void)
     int i;
     for (i = 0; i < 128; ++i)
         sg_dispatch_sync_queue(
-            SG_PRE_RENDER + (i & 1), (i >> 1) ^ 0x33,
+            SG_PRE_RENDER + (i & 1), (i >> 1) ^ 0x33, NULL,
             (void *) (long) i, callback);
     for (i = 0; i < 16; ++i)
         sg_dispatch_sync_queue(
-            SG_PRE_RENDER, 32,
+            SG_PRE_RENDER, 32, NULL,
             (void *) (long) ((32 ^ 0x33) << 1), callback);
 }
 #else

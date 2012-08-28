@@ -55,9 +55,16 @@ typedef enum {
 void
 sg_dispatch_sync_init(void);
 
-/* Add a callback to be executed on the main (rendering) thread.  */
+/* Add a callback to be executed on the main (rendering) thread.
+
+   If excl is not NULL, then the callback will only be added if *excl
+   is 0.  The valiue of *excl will be set to 1, and then set back to 0
+   before the callback executes.  Changes to *excl will be made with
+   the queue lock, so this can be used to ensure that a callback only
+   gets added once per frame, even when it is being added from
+   different threads.  */
 void
-sg_dispatch_sync_queue(sg_dispatch_time_t time, int delay,
+sg_dispatch_sync_queue(sg_dispatch_time_t time, int delay, int *excl,
                        void *cxt, void (*func)(void *));
 
 /* Run all callbacks currently scheduled on the main thread.  */

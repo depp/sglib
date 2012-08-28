@@ -12,6 +12,7 @@ struct sg_dispatch_sqentry {
     struct sg_dispatch_callback cb;
     sg_dispatch_time_t time;
     int delay;
+    int *excl;
 };
 
 struct sg_dispatch_sync {
@@ -34,7 +35,7 @@ sg_dispatch_sync_init(void)
 }
 
 void
-sg_dispatch_sync_queue(sg_dispatch_time_t time, int delay,
+sg_dispatch_sync_queue(sg_dispatch_time_t time, int delay, int *excl,
                        void *cxt, void (*func)(void *))
 {
     struct sg_dispatch_sync *m = &sg_dispatch_sync;
@@ -42,6 +43,10 @@ sg_dispatch_sync_queue(sg_dispatch_time_t time, int delay,
     struct sg_dispatch_sqentry *queue;
 
     sg_lock_acquire(&m->lock);
+    if (excl && *excl) {
+        sg_lock_release(&m->lock);
+        return;
+    }
     queue = m->queue;
     n = m->count;
     if (n >= m->alloc) {
@@ -56,7 +61,10 @@ sg_dispatch_sync_queue(sg_dispatch_time_t time, int delay,
     queue[n].cb.func = func;
     queue[n].time = time;
     queue[n].delay = delay;
+    queue[n].excl = excl;
     m->count = n + 1;
+    if (excl)
+        *excl = 1;
     sg_lock_release(&m->lock);
 
     return;
@@ -93,6 +101,8 @@ sg_dispatch_sync_run(sg_dispatch_time_t time)
                     m->tmp = cb;
                 }
                 cb[cbct++] = cq[i].cb;
+                if (cq[i].excl)
+                    *cq[i].excl = 0;
                 continue;
             } else {
                 cq[i].delay -= 1;
