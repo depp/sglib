@@ -13,6 +13,34 @@ static unsigned sg_status;
 static int sg_vid_width, sg_vid_height;
 static struct sg_logger *sg_log_video;
 
+#if 0
+#include <stdio.h>
+static void
+callback(void *cxt)
+{
+    int i = (int) (long) cxt;
+    printf("callback: %s %d\n",
+           (i & 1) ? "post" : "pre ",
+           (i >> 1) ^ 0x33);
+}
+
+static void
+test_callback(void)
+{
+    int i;
+    for (i = 0; i < 128; ++i)
+        sg_dispatch_sync_queue(
+            SG_PRE_RENDER + (i & 1), (i >> 1) ^ 0x33,
+            (void *) (long) i, callback);
+    for (i = 0; i < 16; ++i)
+        sg_dispatch_sync_queue(
+            SG_PRE_RENDER, 32,
+            (void *) (long) ((32 ^ 0x33) << 1), callback);
+}
+#else
+#define test_callback()
+#endif
+
 void
 sg_sys_init(void)
 {
@@ -30,6 +58,8 @@ sg_sys_init(void)
     sg_audio_sys_init();
     sg_game_init();
     sg_log_video = sg_logger_get("video");
+
+    test_callback();
 }
 
 void
@@ -79,10 +109,11 @@ void
 sg_sys_draw(void)
 {
     unsigned msec;
-    sg_dispatch_sync_run();
+    sg_dispatch_sync_run(SG_PRE_RENDER);
     sg_resource_updateall();
     msec = sg_clock_get();
     sg_game_draw(0, 0, sg_vid_width, sg_vid_height, msec);
+    sg_dispatch_sync_run(SG_POST_RENDER);
 }
 
 void

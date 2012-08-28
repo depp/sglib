@@ -43,17 +43,26 @@ sg_dispatch_async_queue(sg_dispatch_type_t type, int priority,
 void
 sg_dispatch_async_settype(sg_dispatch_type_t type);
 
+typedef enum {
+    /* Callbacks before rendering the frame.  */
+    SG_PRE_RENDER,
+
+    /* Callbacks after rendering the frame.  */
+    SG_POST_RENDER
+} sg_dispatch_time_t;
+
 /* Initialize synchronous queue.  */
 void
 sg_dispatch_sync_init(void);
 
 /* Add a callback to be executed on the main (rendering) thread.  */
 void
-sg_dispatch_sync_queue(void *cxt, void (*func)(void *));
+sg_dispatch_sync_queue(sg_dispatch_time_t time, int delay,
+                       void *cxt, void (*func)(void *));
 
 /* Run all callbacks currently scheduled on the main thread.  */
 void
-sg_dispatch_sync_run(void);
+sg_dispatch_sync_run(sg_dispatch_time_t time);
 
 #ifdef __cplusplus
 }
