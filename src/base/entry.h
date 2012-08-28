@@ -11,6 +11,9 @@ union sg_event;
 struct sg_error;
 struct sg_logger;
 
+/* Do NOT change these variables.  */
+extern int sg_vid_width, sg_vid_height;
+
 #define SG_GAME_ASPECT_SCALE 0x10000
 
 struct sg_game_info {

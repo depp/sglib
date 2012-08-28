@@ -10,7 +10,7 @@
 #include "version.h"
 
 static unsigned sg_status;
-static int sg_vid_width, sg_vid_height;
+int sg_vid_width, sg_vid_height;
 static struct sg_logger *sg_log_video;
 
 #if 0
