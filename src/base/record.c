@@ -74,8 +74,8 @@ sg_record_callback(void *cxt)
     static int state, counter;
     static GLuint buffer;
     static struct sg_sshot *shot;
-    unsigned width, height;
-    void *ptr;
+    unsigned width, height, y, rb;
+    void *mptr, *iptr;
 
     (void) cxt;
 
@@ -114,25 +114,30 @@ sg_record_callback(void *cxt)
         width = shot->width;
         height = shot->height;
 
-        shot->ptr = malloc(width * height * 4);
-        if (!shot->ptr) {
-            free(shot);
+        iptr = malloc(width * height * 4);
+        if (!iptr)
             goto done;
-        }
 
         glBindBuffer(GL_PIXEL_PACK_BUFFER, buffer);
-        ptr = glMapBuffer(GL_PIXEL_PACK_BUFFER, GL_READ_ONLY);
+        mptr = glMapBuffer(GL_PIXEL_PACK_BUFFER, GL_READ_ONLY);
 
-        if (ptr)
-            memcpy(shot->ptr, ptr, width * height * 4);
+        if (mptr) {
+            rb = width * 4;
+            for (y = 0; y < height; ++y) {
+                memcpy((unsigned char *) iptr + (height - 1 - y) * rb,
+                       (unsigned char *) mptr + y * rb, rb);
+            }
+        }
 
         glUnmapBuffer(GL_PIXEL_PACK_BUFFER);
         glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
 
-        if (ptr) {
+        if (mptr) {
+            shot->ptr = iptr;
             sg_dispatch_async_queue(
                 SG_DISPATCH_IO, 0,
                 shot, sg_record_writepng);
+            iptr = NULL;
             shot = NULL;
         }
 
@@ -140,11 +145,8 @@ sg_record_callback(void *cxt)
         glDeleteBuffers(1, &buffer);
         buffer = 0;
         state = 0;
-        if (shot) {
-            free(shot->ptr);
-            free(shot);
-            shot = NULL;
-        }
+        free(shot);
+        shot = NULL;
     }
 }
 
