@@ -1,7 +1,9 @@
 #include "error.h"
+#include "file.h"
 #include "log.h"
 #include "pixbuf.h"
 #include "version.h"
+#include <assert.h>
 #include <png.h>
 #include <stdlib.h>
 
@@ -143,6 +145,102 @@ done:
         free(tmp);
     png_destroy_read_struct((png_structp *) &pngp,
                             (png_infop *) &infop, NULL);
+    return ret;
+}
+
+static void
+sg_png_write(png_structp pngp, png_bytep data, png_size_t length)
+{
+    struct sg_error **err;
+    struct sg_file *fp = png_get_io_ptr(pngp);
+    int r;
+    png_size_t pos = 0;
+
+again:
+    r = fp->write(fp, data, length);
+    if (r > 0) {
+        pos += r;
+        if (pos < length)
+            goto again;
+    } else {
+        err = png_get_error_ptr(pngp);
+        sg_error_move(err, &fp->err);
+        longjmp(png_jmpbuf(pngp), 1);
+    }
+}
+
+static void
+sg_png_flush(png_structp pngp)
+{
+    (void) pngp;
+}
+
+int
+sg_pixbuf_writepng(struct sg_pixbuf *pbuf, struct sg_file *fp,
+                   struct sg_error **err)
+{
+    volatile png_structp pngp = NULL;
+    volatile png_infop infop = NULL;
+    int ret, ctype, i;
+    png_bytep *rowp;
+    void *volatile tmp = NULL;
+
+    pngp = png_create_write_struct(
+        PNG_LIBPNG_VER_STRING,
+        err, sg_png_error, sg_png_warning);
+    if (!pngp) {
+        ret = -1;
+        goto done;
+    }
+
+    infop = png_create_info_struct(pngp);
+    if (!infop) {
+        ret = -1;
+        goto done;
+    }
+
+    if (setjmp(png_jmpbuf(pngp))) {
+        ret = -1;
+        goto done;
+    }
+
+    png_set_write_fn(pngp, fp, sg_png_write, sg_png_flush);
+
+    switch (pbuf->format) {
+    case SG_Y:    ctype = PNG_COLOR_TYPE_GRAY; break;
+    case SG_YA:   ctype = PNG_COLOR_TYPE_GRAY_ALPHA; break;
+    case SG_RGB:  ctype = PNG_COLOR_TYPE_RGB; break;
+    case SG_RGBA: ctype = PNG_COLOR_TYPE_RGB_ALPHA; break;
+    default: assert(0);
+    }
+
+    png_set_IHDR(
+        pngp, infop,
+        pbuf->iwidth, pbuf->iheight, 8, ctype,
+        PNG_INTERLACE_NONE,
+        PNG_COMPRESSION_TYPE_DEFAULT,
+        PNG_FILTER_TYPE_DEFAULT);
+
+    png_write_info(pngp, infop);
+    rowp = malloc(sizeof(*rowp) * pbuf->iheight);
+    if (!rowp) {
+        sg_error_nomem(err);
+        ret = -1;
+        goto done;
+    }
+    tmp = rowp;
+    for (i = 0; i < pbuf->iheight; ++i)
+        rowp[i] = (unsigned char *) pbuf->data + i * pbuf->rowbytes;
+    png_write_image(pngp, rowp);
+    png_write_end(pngp, NULL);
+
+    ret = 0;
+    goto done;
+
+done:
+    free(rowp);
+    png_destroy_write_struct(
+        (png_structp *) &pngp, (png_infop *) &infop);
     return ret;
 }
 
