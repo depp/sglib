@@ -31,7 +31,7 @@ sg_record_writepng(void *cxt)
     sprintf(name, "shot_%02d.png", sp->counter);
 
     pbuf.data = sp->ptr;
-    pbuf.format = SG_RGBA;
+    pbuf.format = SG_RGBX;
     pbuf.iwidth = sp->width;
     pbuf.iheight = sp->height;
     pbuf.pwidth = sp->width;

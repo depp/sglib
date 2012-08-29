@@ -210,6 +210,7 @@ sg_pixbuf_writepng(struct sg_pixbuf *pbuf, struct sg_file *fp,
     case SG_Y:    ctype = PNG_COLOR_TYPE_GRAY; break;
     case SG_YA:   ctype = PNG_COLOR_TYPE_GRAY_ALPHA; break;
     case SG_RGB:  ctype = PNG_COLOR_TYPE_RGB; break;
+    case SG_RGBX: ctype = PNG_COLOR_TYPE_RGB; break;
     case SG_RGBA: ctype = PNG_COLOR_TYPE_RGB_ALPHA; break;
     default: assert(0);
     }
@@ -222,6 +223,10 @@ sg_pixbuf_writepng(struct sg_pixbuf *pbuf, struct sg_file *fp,
         PNG_FILTER_TYPE_DEFAULT);
 
     png_write_info(pngp, infop);
+
+    if (pbuf->format == SG_RGBX)
+        png_set_filler(pngp, 0, PNG_FILLER_AFTER);
+
     rowp = malloc(sizeof(*rowp) * pbuf->iheight);
     if (!rowp) {
         sg_error_nomem(err);

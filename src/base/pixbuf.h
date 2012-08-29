@@ -14,6 +14,7 @@ typedef enum {
     SG_Y,
     SG_YA,
     SG_RGB,
+    SG_RGBX,
     SG_RGBA
 } sg_pixbuf_format_t;
 

@@ -40,8 +40,7 @@ imageToPixbuf(struct sg_pixbuf *pbuf, CGImageRef img, struct sg_error **err)
         alpha = 1;
         break;
     }
-    // pfmt = alpha ? SG_RGBA : SG_RGB;
-    pfmt = SG_RGBA; // FIXME
+    pfmt = alpha ? SG_RGBA : SG_RGBX;
 
     r = sg_pixbuf_set(pbuf, pfmt, w, h, err);
     if (r)
@@ -132,8 +131,9 @@ sg_pixbuf_writepng(struct sg_pixbuf *pbuf, struct sg_file *fp,
     switch (pbuf->format) {
         case SG_Y:    nchan = 1; ifo = kCGImageAlphaNone; break;
         case SG_YA:   nchan = 2; ifo = kCGImageAlphaLast; break;
-        case SG_RGB:  nchan = 3; ifo = kCGImageAlphaNone; break;
+        /* SG_RGB not supported */
         case SG_RGBA: nchan = 4; ifo = kCGImageAlphaNoneSkipLast; break;
+        case SG_RGBA: nchan = 4; ifo = kCGImageAlphaPremultipliedLast; break;
         default: assert(0);
     }
 
