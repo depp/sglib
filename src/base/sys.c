@@ -4,8 +4,10 @@
 #include "entry.h"
 #include "event.h"
 #include "file.h"
+#include "keycode/keycode.h"
 #include "log.h"
 #include "rand.h"
+#include "record.h"
 #include "resource.h"
 #include "version.h"
 
@@ -99,6 +101,17 @@ sg_sys_event(union sg_event *evt)
                 status = "hidden";
             }
             sg_logf(sg_log_video, LOG_INFO, "Status: %s", status);
+        }
+        break;
+
+    case SG_EVENT_KDOWN:
+        switch (evt->key.key) {
+        default:
+            break;
+
+        case KEY_F12:
+            sg_record_screenshot();
+            break;
         }
         break;
     }

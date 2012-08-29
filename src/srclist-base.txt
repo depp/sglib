@@ -73,6 +73,8 @@ base/pixbuf_premultiply_alpha.c
 base/pixbuf_wincodec.cpp WINDOWS
 base/rand.c
 base/rand.h
+base/record.c
+base/record.h
 base/resource.c
 base/resource.h
 base/sgendian.h
