@@ -137,8 +137,15 @@ struct sg_audio_source {
 struct sg_audio_mixinfo {
     /* Read position of this mixdown */
     unsigned pos;
-    /* Last timestamp of this mixdown */
-    unsigned time;
+
+    /* Whether this mixdown is waiting for an update.  */
+    int is_waiting;
+
+    /* Time which this mixdown is waiting for.  */
+    unsigned wait_time;
+
+    /* Event to signal the mixdown to wake up.  */
+    struct sg_evt evt;
 };
 
 struct sg_audio_system {

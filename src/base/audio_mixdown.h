@@ -26,6 +26,10 @@ struct sg_audio_mixdown;
 struct sg_audio_mixdown *
 sg_audio_mixdown_new(int rate, int bufsize, struct sg_error **err);
 
+struct sg_audio_mixdown *
+sg_audio_mixdown_newoffline(unsigned mintime, int bufsize,
+                            struct sg_error **err);
+
 /* Free an audio mixdown.  */
 void
 sg_audio_mixdown_free(struct sg_audio_mixdown *SG_RESTRICT mp);
@@ -37,6 +41,19 @@ sg_audio_mixdown_free(struct sg_audio_mixdown *SG_RESTRICT mp);
 int
 sg_audio_mixdown_read(struct sg_audio_mixdown *SG_RESTRICT mp,
                       unsigned time, float *buf);
+
+/* Get the mixdown's calculated timestamp for the beginning of the
+   next buffer.  */
+unsigned
+sg_audio_mixdown_timestamp(struct sg_audio_mixdown *SG_RESTRICT mp);
+
+/* Get the nominal sample rate of the mixdown.  */
+int
+sg_audio_mixdown_samplerate(struct sg_audio_mixdown *SG_RESTRICT mp);
+
+/* Get the buffer size of the mixdown.  */
+int
+sg_audio_mixdown_abufsize(struct sg_audio_mixdown *SG_RESTRICT mp);
 
 #ifdef __cplusplus
 }
