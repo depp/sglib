@@ -137,38 +137,38 @@ sg_record_yuv_from_rgb(void *dest, const void *src,
                 yy = 2*y;
 
                 a = sse_mul1s(in[(yy+0) * (8*nx) + 8*x + 0], coeff, zero);
-                b = sse_mul1s(in[(yy+0) * (8*nx) + 8*x + 1], coeff, zero);
-                c = sse_mix1(a, b);
-                a = sse_mul1s(in[(yy+1) * (8*nx) + 8*x + 0], coeff, zero);
+                b = sse_mul1s(in[(yy+1) * (8*nx) + 8*x + 0], coeff, zero);
+                c = __builtin_ia32_paddw128(a, b);
+                a = sse_mul1s(in[(yy+0) * (8*nx) + 8*x + 1], coeff, zero);
                 b = sse_mul1s(in[(yy+1) * (8*nx) + 8*x + 1], coeff, zero);
-                d = sse_mix1(a, b);
-                c = __builtin_ia32_paddw128(c, d);
+                d = __builtin_ia32_paddw128(a, b);
+                c = sse_mix1(c, d);
 
                 a = sse_mul1s(in[(yy+0) * (8*nx) + 8*x + 2], coeff, zero);
-                b = sse_mul1s(in[(yy+0) * (8*nx) + 8*x + 3], coeff, zero);
-                d = sse_mix1(a, b);
-                a = sse_mul1s(in[(yy+1) * (8*nx) + 8*x + 2], coeff, zero);
+                b = sse_mul1s(in[(yy+1) * (8*nx) + 8*x + 2], coeff, zero);
+                d = __builtin_ia32_paddw128(a, b);
+                a = sse_mul1s(in[(yy+0) * (8*nx) + 8*x + 3], coeff, zero);
                 b = sse_mul1s(in[(yy+1) * (8*nx) + 8*x + 3], coeff, zero);
-                e = sse_mix1(a, b);
-                d = __builtin_ia32_paddw128(d, e);
+                e = __builtin_ia32_paddw128(a, b);
+                d = sse_mix1(d, e);
 
                 c = sse_mix2(c, d);
 
                 a = sse_mul1s(in[(yy+0) * (8*nx) + 8*x + 4], coeff, zero);
-                b = sse_mul1s(in[(yy+0) * (8*nx) + 8*x + 5], coeff, zero);
-                d = sse_mix1(a, b);
-                a = sse_mul1s(in[(yy+1) * (8*nx) + 8*x + 4], coeff, zero);
+                b = sse_mul1s(in[(yy+1) * (8*nx) + 8*x + 4], coeff, zero);
+                d = __builtin_ia32_paddw128(a, b);
+                a = sse_mul1s(in[(yy+0) * (8*nx) + 8*x + 5], coeff, zero);
                 b = sse_mul1s(in[(yy+1) * (8*nx) + 8*x + 5], coeff, zero);
-                e = sse_mix1(a, b);
-                d = __builtin_ia32_paddw128(d, e);
+                e = __builtin_ia32_paddw128(a, b);
+                d = sse_mix1(d, e);
 
                 a = sse_mul1s(in[(yy+0) * (8*nx) + 8*x + 6], coeff, zero);
-                b = sse_mul1s(in[(yy+0) * (8*nx) + 8*x + 7], coeff, zero);
-                e = sse_mix1(a, b);
-                a = sse_mul1s(in[(yy+1) * (8*nx) + 8*x + 6], coeff, zero);
+                b = sse_mul1s(in[(yy+1) * (8*nx) + 8*x + 6], coeff, zero);
+                e = __builtin_ia32_paddw128(a, b);
+                a = sse_mul1s(in[(yy+0) * (8*nx) + 8*x + 7], coeff, zero);
                 b = sse_mul1s(in[(yy+1) * (8*nx) + 8*x + 7], coeff, zero);
-                f = sse_mix1(a, b);
-                e = __builtin_ia32_paddw128(e, f);
+                f = __builtin_ia32_paddw128(a, b);
+                e = sse_mix1(e, f);
 
                 d = sse_mix2(d, e);
 
