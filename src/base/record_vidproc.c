@@ -515,6 +515,8 @@ sg_record_writevideo(const void *ptr, int width, int height)
             free(buf);
             goto done;
         }
+        r = pthread_cond_wait(&vp->cond, &vp->mutex);
+        if (r) FAILP;
     }
 done:
     r = pthread_mutex_unlock(&vp->mutex);
