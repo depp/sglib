@@ -1,157 +1,162 @@
-#include "clock.h"
 #include "dispatch.h"
-#include "error.h"
-#include "file.h"
-#include "log.h"
-#include "opengl.h"
-#include "pixbuf.h"
-#include "record.h"
+#include "defs.h"
 #include "entry.h"
-#include <stdio.h>
+#include "opengl.h"
+#include "record.h"
 #include <stdlib.h>
-#include <string.h>
 
-struct sg_sshot {
-    unsigned width, height;
-    int counter;
-    void *ptr;
-    char stamp[SG_DATE_LEN];
+enum {
+    SG_REC_SHOT = 1,
+    SG_REC_VID = 2
 };
 
+struct sg_rec_buf {
+    GLuint buf;
+    int width, height;
+    int reqflags;
+};
+
+struct sg_rec_state {
+    /* Used for scheduling sg_record_callback */
+    int excl;
+    /* which: the index of the buffer which receives the next
+       screenshot.  The other buffer has the previous screenshot.  */
+    int which;
+    /* If 0, any width or height is fine.  If nonzero, then use these
+       dimensions to OVERRIDE the dimensions of the main display, for
+       the purposes of recording video.  You can't change video
+       dimensions in the middle of recording.  */
+    int width, height;
+    struct sg_rec_buf buf[2];
+};
+
+static struct sg_rec_state sg_rec_state;
+
 static void
-sg_record_writepng(void *cxt)
+sg_record_schedule(void);
+
+/* Record pixels into the given buffer.  */
+static void
+sg_record_readpix(struct sg_rec_buf *SG_RESTRICT buf)
 {
-    struct sg_sshot *sp = cxt;
-    char name[32];
-    struct sg_file *fp;
-    struct sg_error *err = NULL;
-    struct sg_pixbuf pbuf;
-    int r;
+    int width, height;
 
-    sprintf(name, "shot_%02d.png", sp->counter);
-
-    pbuf.data = sp->ptr;
-    pbuf.format = SG_RGBX;
-    pbuf.iwidth = sp->width;
-    pbuf.iheight = sp->height;
-    pbuf.pwidth = sp->width;
-    pbuf.pheight = sp->height;
-    pbuf.rowbytes = sp->width * 4;
-
-    fp = sg_file_open(name, strlen(name),
-                      SG_WRONLY, NULL, &err);
-    if (!fp) goto cleanup;
-
-    r = sg_pixbuf_writepng(&pbuf, fp, &err);
-    if (r) goto cleanup;
-
-cleanup:
-    if (err) {
-        sg_logerrs(sg_logger_get(NULL), LOG_ERROR, err,
-                   "could not save screenshot");
-        sg_error_clear(&err);
+    if (!buf->buf) {
+        glGenBuffers(1, &buf->buf);
+        if (!buf->buf)
+            goto err;
     }
-    if (fp)
-        fp->close(fp);
-    free(sp);
-    free(sp->ptr);
+
+    if (sg_rec_state.width) {
+        width = sg_rec_state.width;
+        height = sg_rec_state.height;
+    } else {
+        width = sg_sst.width;
+        height = sg_sst.height;
+    }
+
+    if (width > 0x8000 || height > 0x8000)
+        goto err;
+
+    glBindBuffer(GL_PIXEL_PACK_BUFFER, buf->buf);
+    glBufferData(GL_PIXEL_PACK_BUFFER, width * height * 4,
+                 NULL, GL_STREAM_READ);
+    glReadBuffer(GL_FRONT);
+    glReadPixels(0, 0, width, height,
+                 GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+    glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
+
+    sg_record_schedule();
+
+    buf->width = width;
+    buf->height = height;
+
+    return;
+
+err:
+    abort();
 }
 
+/* Process pixels in the given buffer.  */
 static void
-sg_record_callback(void *cxt);
+sg_record_procpix(struct sg_rec_buf *SG_RESTRICT buf)
+{
+    void *mptr;
+
+    if (!buf->buf)
+        goto err;
+
+    glBindBuffer(GL_PIXEL_PACK_BUFFER, buf->buf);
+    mptr = glMapBuffer(GL_PIXEL_PACK_BUFFER, GL_READ_ONLY);
+
+    if (!mptr)
+        goto err;
+
+    if (buf->reqflags & SG_REC_SHOT)
+        sg_record_writeshot(mptr, buf->width, buf->height);
+
+    if (buf->reqflags & SG_REC_VID)
+        sg_record_writevideo(mptr, buf->width, buf->height);
+
+    glUnmapBuffer(GL_PIXEL_PACK_BUFFER);
+    glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
+
+    if (!sg_rec_state.width) {
+        glDeleteBuffers(1, &buf->buf);
+        buf->buf = 0;
+    }
+    buf->width = 0;
+    buf->height = 0;
+    buf->reqflags = 0;
+
+    return;
+
+err:
+    abort();
+}
+
+/* End of frame callback for processing screenshots and video.  */
+static void
+sg_record_callback(void *cxt)
+{
+    int which = sg_rec_state.which;
+
+    (void) cxt;
+
+    if (sg_rec_state.buf[which].reqflags) {
+        sg_record_readpix(&sg_rec_state.buf[which]);
+        sg_rec_state.which = !which;
+    }
+
+    if (sg_rec_state.buf[!which].reqflags) {
+        sg_record_procpix(&sg_rec_state.buf[!which]);
+    }
+}
 
 static void
 sg_record_schedule(void)
 {
-    static int excl;
-    sg_dispatch_sync_queue(SG_POST_RENDER, 0, &excl,
+    sg_dispatch_sync_queue(SG_POST_RENDER, 0, &sg_rec_state.excl,
                            NULL, sg_record_callback);
-}
-
-static void
-sg_record_callback(void *cxt)
-{
-    static int state, counter;
-    static GLuint buffer;
-    static struct sg_sshot *shot;
-    unsigned width, height, y, rb;
-    void *mptr, *iptr;
-
-    (void) cxt;
-
-    if (!state) {
-        if (!buffer)
-            glGenBuffers(1, &buffer);
-        if (!buffer)
-            return;
-
-        width = sg_vid_width;
-        height = sg_vid_height;
-        if (width > 0x8000 || height > 0x8000)
-            return;
-
-        shot = malloc(sizeof(*shot));
-        if (!shot)
-            return;
-
-        shot->width = width;
-        shot->height = height;
-        shot->counter = counter++;
-        shot->ptr = NULL;
-        sg_clock_getdate(shot->stamp);
-
-        glBindBuffer(GL_PIXEL_PACK_BUFFER, buffer);
-        glBufferData(GL_PIXEL_PACK_BUFFER, width * height * 4,
-                     NULL, GL_STREAM_READ);
-        glReadBuffer(GL_FRONT);
-        glReadPixels(0, 0, width, height,
-                     GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-        glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
-
-        state = 1;
-        sg_record_schedule();
-    } else {
-        width = shot->width;
-        height = shot->height;
-
-        iptr = malloc(width * height * 4);
-        if (!iptr)
-            goto done;
-
-        glBindBuffer(GL_PIXEL_PACK_BUFFER, buffer);
-        mptr = glMapBuffer(GL_PIXEL_PACK_BUFFER, GL_READ_ONLY);
-
-        if (mptr) {
-            rb = width * 4;
-            for (y = 0; y < height; ++y) {
-                memcpy((unsigned char *) iptr + (height - 1 - y) * rb,
-                       (unsigned char *) mptr + y * rb, rb);
-            }
-        }
-
-        glUnmapBuffer(GL_PIXEL_PACK_BUFFER);
-        glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
-
-        if (mptr) {
-            shot->ptr = iptr;
-            sg_dispatch_async_queue(
-                SG_DISPATCH_IO, 0,
-                shot, sg_record_writepng);
-            iptr = NULL;
-            shot = NULL;
-        }
-
-    done:
-        glDeleteBuffers(1, &buffer);
-        buffer = 0;
-        state = 0;
-        free(shot);
-        shot = NULL;
-    }
 }
 
 void
 sg_record_screenshot(void)
 {
+    sg_rec_state.buf[sg_rec_state.which].reqflags |= SG_REC_SHOT;
     sg_record_schedule();
+}
+
+void
+sg_record_vidframe(void)
+{
+    sg_rec_state.buf[sg_rec_state.which].reqflags |= SG_REC_VID;
+    sg_record_schedule();
+}
+
+void
+sg_record_fixsize(int width, int height)
+{
+    sg_rec_state.width = width;
+    sg_rec_state.height = height;
 }

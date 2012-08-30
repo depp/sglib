@@ -11,8 +11,7 @@
 #include "resource.h"
 #include "version.h"
 
-static unsigned sg_status;
-int sg_vid_width, sg_vid_height;
+struct sg_sys_state sg_sst;
 static struct sg_logger *sg_log_video;
 
 #if 0
@@ -85,15 +84,15 @@ sg_sys_event(union sg_event *evt)
         break;
 
     case SG_EVENT_RESIZE:
-        sg_vid_width = evt->resize.width;
-        sg_vid_height = evt->resize.height;
+        sg_sst.width = evt->resize.width;
+        sg_sst.height = evt->resize.height;
         break;
 
     case SG_EVENT_STATUS:
-        sg_status = evt->status.status;
+        sg_sst.status = evt->status.status;
         if (LOG_INFO >= sg_log_video->level) {
-            if (sg_status & SG_STATUS_VISIBLE) {
-                if (sg_status & SG_STATUS_FULLSCREEN)
+            if (sg_sst.status & SG_STATUS_VISIBLE) {
+                if (sg_sst.status & SG_STATUS_FULLSCREEN)
                     status = "fullscreen";
                 else
                     status = "windowed";
@@ -109,6 +108,14 @@ sg_sys_event(union sg_event *evt)
         default:
             break;
 
+        case KEY_F10:
+            if (sg_sst.rec_numer) {
+                sg_record_vidstop();
+            } else {
+                sg_record_vidstart();
+            }
+            break;
+
         case KEY_F12:
             sg_record_screenshot();
             break;
@@ -121,11 +128,30 @@ sg_sys_event(union sg_event *evt)
 void
 sg_sys_draw(void)
 {
-    unsigned msec;
+    unsigned msec, n;
+
     sg_dispatch_sync_run(SG_PRE_RENDER);
     sg_resource_updateall();
-    msec = sg_clock_get();
-    sg_game_draw(0, 0, sg_vid_width, sg_vid_height, msec);
+
+    msec = sg_clock_get() - sg_sst.tick_offset;
+    if (sg_sst.rec_numer && (int) (msec - sg_sst.rec_next) >= 0) {
+        if ((int) (msec - sg_sst.rec_next) >= 500) {
+            sg_logf(sg_log_video, LOG_WARN, "lag over 500ms, adjusting");
+            sg_sst.tick_offset += msec - sg_sst.rec_next;
+        }
+        msec = sg_sst.rec_next;
+        n = ++sg_sst.rec_ct;
+        if (n == sg_sst.rec_numer) {
+            n = sg_sst.rec_ct = 0;
+            sg_sst.rec_ref += sg_sst.rec_denom;
+        }
+        sg_sst.rec_next = sg_sst.rec_ref +
+            (2 * n + 1) * sg_sst.rec_denom / (2 * sg_sst.rec_numer);
+        sg_record_vidframe();
+    }
+    sg_sst.tick = msec;
+
+    sg_game_draw(0, 0, sg_sst.width, sg_sst.height, msec);
     sg_dispatch_sync_run(SG_POST_RENDER);
 }
 

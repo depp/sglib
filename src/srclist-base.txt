@@ -75,6 +75,9 @@ base/rand.c
 base/rand.h
 base/record.c
 base/record.h
+base/record_shot.c
+base/record_vidproc.c
+base/record_yuv.c
 base/resource.c
 base/resource.h
 base/sgendian.h

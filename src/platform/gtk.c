@@ -26,6 +26,7 @@
 #pragma GCC diagnostic pop
 #endif
 
+#include <signal.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
@@ -432,6 +433,7 @@ init(int argc, char *argv[])
 int
 main(int argc, char *argv[])
 {
+    signal(SIGPIPE, SIG_IGN);
     init(argc, argv);
     gtk_main();
     return 0;
