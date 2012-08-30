@@ -201,6 +201,12 @@ sg_record_child(int vid_pipe, int width, int height)
     sg_cmd_push1(&cmd, "./capture.m2v");
     sg_cmd_push1(&cmd, NULL);
 
+    if (vid_pipe < 4 && vid_pipe != 3) {
+        fd = dup(vid_pipe);
+        if (fd < 0) child_abort();
+        vid_pipe = fd;
+    }
+
     /* stdin < /dev/null */
     fd = open("/dev/null", O_RDONLY);
     if (fd < 0) child_abort();
