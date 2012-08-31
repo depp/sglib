@@ -828,6 +828,8 @@ sg_audio_mixdown_new1(sg_audio_mixdowntype_t type,
         return NULL;
     }
 
+    sp->mixmask |= 1u << index;
+
     sp->mix[index].pos = sp->bufrpos;
     sp->mix[index].is_waiting = 0;
     sp->mix[index].wait_time = 0;
