@@ -58,12 +58,15 @@ cleanup:
 }
 
 void
-sg_record_writeshot(const void *ptr, int width, int height)
+sg_record_writeshot(unsigned timestamp,
+                    const void *ptr, int width, int height)
 {
     struct sg_sshot *shot;
     unsigned rb;
     void *iptr;
     int y;
+
+    (void) timestamp;
 
     shot = malloc(sizeof(*shot));
     if (!shot)

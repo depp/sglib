@@ -13,6 +13,7 @@ enum {
 struct sg_rec_buf {
     GLuint buf;
     int width, height;
+    unsigned timestamp;
     int reqflags;
 };
 
@@ -70,6 +71,7 @@ sg_record_readpix(struct sg_rec_buf *SG_RESTRICT buf)
 
     buf->width = width;
     buf->height = height;
+    buf->timestamp = sg_sst.tick;
 
     return;
 
@@ -93,10 +95,10 @@ sg_record_procpix(struct sg_rec_buf *SG_RESTRICT buf)
         goto err;
 
     if (buf->reqflags & SG_REC_SHOT)
-        sg_record_writeshot(mptr, buf->width, buf->height);
+        sg_record_writeshot(buf->timestamp, mptr, buf->width, buf->height);
 
     if (buf->reqflags & SG_REC_VID)
-        sg_record_writevideo(mptr, buf->width, buf->height);
+        sg_record_writevideo(buf->timestamp, mptr, buf->width, buf->height);
 
     glUnmapBuffer(GL_PIXEL_PACK_BUFFER);
     glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);

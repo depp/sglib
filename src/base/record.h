@@ -30,12 +30,14 @@ sg_record_fixsize(int width, int height);
 /* Callback for writing a screenshot, once the pixels are in
    memory.  The pixel format is always RGBA.  */
 void
-sg_record_writeshot(const void *ptr, int width, int height);
+sg_record_writeshot(unsigned timestamp,
+                    const void *ptr, int width, int height);
 
 /* Callback for writing a frame of video, once the pixels are in
    memory.  The pixel format is always RGBA.  */
 void
-sg_record_writevideo(const void *ptr, int width, int height);
+sg_record_writevideo(unsigned timestamp,
+                     const void *ptr, int width, int height);
 
 void
 sg_record_yuv_from_rgb(void *dest, const void *src,
