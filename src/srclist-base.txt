@@ -6,6 +6,8 @@ base/audio_file.h
 base/audio_fileprivate.h
 base/audio_mixdown.c
 base/audio_mixdown.h
+base/audio_ofile.c
+base/audio_ofile.h
 base/audio_raw.c
 base/audio_resample.c
 base/audio_source.c
