@@ -4,6 +4,8 @@ import gen.atom as atom
 from gen.env import Environment
 import gen.shell as shell
 from gen.path import Path
+from gen.error import *
+import subprocess
 
 class ExtractDebug(target.Commands):
     """Extract debug symbols from an executable."""
@@ -67,15 +69,22 @@ class Strip(target.Commands):
 
 ########################################################################
 
-def customconfig(cmd):
+def customconfig(cmd, name):
     """Get the environment for a package from a config program."""
-    cflags = shell.getoutput(cmd + ['--cflags'])
-    libs = shell.getoutput(cmd + ['--libs'])
+    try:
+        cflags = shell.getoutput(cmd + ['--cflags'])
+        libs = shell.getoutput(cmd + ['--libs'])
+    except subprocess.CalledProcessError, e:
+        if e.returncode > 0:
+            raise MissingPackage(name)
+        raise BuildError('command failed: %s' % ' '.join(cmd))
     return Environment(CFLAGS=cflags, LIBS=libs)
 
-def pkgconfig(pkg):
+def pkgconfig(pkg, name=None):
     """Get the environment for a package from pkg-config."""
-    return customconfig(['pkg-config', pkg])
+    if name is None:
+        name = pkg
+    return customconfig(['pkg-config', pkg], name)
 
 def add_sources(graph, proj, env, settings):
     pass
@@ -113,7 +122,7 @@ def build_linux(graph, proj, env, settings):
 
     libs = {
         'LIBJPEG':    lambda: Environment(LIBS='-ljpeg'),
-        'GTK':        lambda: pkgconfig('gtk+-2.0 gtkglext-1.0'),
+        'GTK':        lambda: pkgconfig('gtk+-2.0 gtkglext-1.0', 'gtkglext'),
         'LIBPNG':     lambda: pkgconfig('libpng'),
         'PANGO':      lambda: pkgconfig('pangocairo'),
         'LIBASOUND':  lambda: pkgconfig('alsa'),

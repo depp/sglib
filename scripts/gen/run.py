@@ -3,6 +3,7 @@ import gen.build.target as target
 import gen.smartdict as smartdict
 from gen.env import Environment, BuildSettings
 from gen.path import Path
+from gen.error import BuildError
 import gen.git as git
 import optparse
 import sys
@@ -12,6 +13,17 @@ MODULES = ['version', 'linux', 'osx', 'msvc', 'gmake']
 MODULES.append('archive')
 
 def run(proj):
+    try:
+        _run(proj)
+    except BuildError, e:
+        sys.stderr.write('error: %s\n' % str(e))
+        a = e.advice()
+        if a is not None:
+            sys.stderr.write('\nRecommendations:\n')
+            sys.stderr.write(a)
+        sys.exit(1)
+
+def _run(proj):
     """Build the given project using the command line options.
 
     The arguments are parsed for options, environment variables, and
