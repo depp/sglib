@@ -81,12 +81,6 @@ CHECK_FRONTEND([gtk], [Gtk+-2.0 / GtkGLExt], [
   PKG_CHECK_MODULES([GTK], [gtk+-2.0 gtkglext-1.0], [HAVE_GTK=yes], [:])
 ])
 
-dnl From the changelog: "SDL 1.2.10 is a major release, featuring a
-dnl revamp of the build system and many API improvements and bug fixes."
-CHECK_FRONTEND([sdl], [LibSDL (experimental)], [
-  AM_PATH_SDL([1.2.10], [HAVE_SDL=yes])
-])
-
 dnl Check that we have a front-end enabled
 if test -z "$have_frontend" ; then
   AC_MSG_ERROR([no frontends found, try installing development packages])
