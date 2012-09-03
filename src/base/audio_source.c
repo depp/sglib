@@ -589,11 +589,9 @@ sg_audio_source_bufprocess(struct sg_audio_system *SG_RESTRICT sp,
 {
     const struct sg_audio_msghdr *SG_RESTRICT mhdr;
     const struct sg_audio_msgplay *SG_RESTRICT mplay;
-    unsigned pos;
     int r;
 
     while (1) {
-        pos = bp->pos;
         mhdr = sg_audio_source_bufread(bp, sizeof(*mhdr));
         if (!mhdr)
             break;

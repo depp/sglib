@@ -838,7 +838,7 @@ sg_audio_mixdown_render(struct sg_audio_mixdown *SG_RESTRICT mp,
 {
     struct sg_audio_mixchan *chans;
     struct sg_audio_file *SG_RESTRICT fp;
-    unsigned i, pi, chan, param, nchan, bufsz, pbufsz, rate;
+    unsigned i, pi, chan, param, nchan, bufsz, pbufsz;
     int pos, end, length;
     float *SG_RESTRICT bufmix, *SG_RESTRICT bufsamp;
     float *bufparam, *SG_RESTRICT bp0, *SG_RESTRICT bp1;
@@ -849,7 +849,6 @@ sg_audio_mixdown_render(struct sg_audio_mixdown *SG_RESTRICT mp,
     pbufsz = bufsz >> SG_AUDIO_PARAMBITS;
     nchan = mp->chancount;
     chans = mp->chans;
-    rate = mp->samplerate;
     bufmix = mp->buf_mix;
     bufsamp = mp->buf_samp;
     bufparam = mp->buf_param;

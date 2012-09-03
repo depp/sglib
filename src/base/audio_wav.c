@@ -142,7 +142,7 @@ sg_audio_file_loadwav(struct sg_audio_file *fp,
     struct sg_riff riff;
     struct sg_riff_tag *tag;
     int r;
-    uint16_t afmt, nchan, blkalign, sampbits;
+    uint16_t afmt, nchan, sampbits;
     uint32_t rate, nframe;
     const unsigned char *p;
     sg_audio_format_t format;
@@ -164,7 +164,7 @@ sg_audio_file_loadwav(struct sg_audio_file *fp,
     afmt = read_lu16(p + 0);
     nchan = read_lu16(p + 2);
     rate = read_lu32(p + 4);
-    blkalign = read_lu16(p + 12);
+    /* blkalign = read_lu16(p + 12); */
     sampbits = read_lu16(p + 14);
     if (rate < SG_AUDIO_MINRATE || rate > SG_AUDIO_MAXRATE) {
         sg_logf(sg_audio_wav_logger(), LOG_ERROR,
