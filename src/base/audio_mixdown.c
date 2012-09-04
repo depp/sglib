@@ -449,7 +449,7 @@ sg_audio_mixdown_srcplay(struct sg_audio_mixdown *SG_RESTRICT mp,
                 "sound dropped");
         return;
     }
-    assert(chan < mp->chancount);
+    assert((unsigned) chan < mp->chancount);
     mp->srcs[src].chan = chan;
     chanp = &mp->chans[chan];
     mp->chanfree = chanp->src;
@@ -482,7 +482,7 @@ sg_audio_mixdown_srcstop(struct sg_audio_mixdown *SG_RESTRICT mp,
     mp->srcs[src].chan = -1;
     if (chan < 0)
         return; /* Already stopped */
-    assert(chan < mp->chancount);
+    assert((unsigned) chan < mp->chancount);
     chanp = &mp->chans[chan];
     chanp->src = -1;
 
@@ -517,7 +517,7 @@ sg_audio_mixdown_srcreset(struct sg_audio_mixdown *SG_RESTRICT mp,
     mp->srcs[src].chan = -1;
     if (chan < 0)
         return;
-    assert(chan < mp->chancount);
+    assert((unsigned) chan < mp->chancount);
     chanp = &mp->chans[chan];
     chanp->src = -1;
 
@@ -552,7 +552,7 @@ sg_audio_mixdown_srcparam(struct sg_audio_mixdown *SG_RESTRICT mp,
     chan = mp->srcs[src].chan;
     if (chan < 0)
         return;
-    assert(chan < mp->chancount);
+    assert((unsigned) chan < mp->chancount);
     chanp = &mp->chans[chan];
 
     rate = 0.001 * mp->samplerate;
@@ -878,13 +878,13 @@ sg_audio_mixdown_render(struct sg_audio_mixdown *SG_RESTRICT mp,
             sdat = fp->data;
             length = fp->nframe;
             end = pos + length;
-            if (end > bufsz)
+            if ((unsigned) end > bufsz)
                 end = bufsz;
 
             /* Fill the sample buffer */
 
             if (pos > 0) {
-                for (i = 0; i < pos; ++i) {
+                for (i = 0; (int) i < pos; ++i) {
                     bufsamp[i*2+0] = 0.0f;
                     bufsamp[i*2+1] = 0.0f;
                 }
@@ -893,7 +893,7 @@ sg_audio_mixdown_render(struct sg_audio_mixdown *SG_RESTRICT mp,
             }
 
             if (fp->flags & SG_AUDIOFILE_STEREO) {
-                for (; i < end; ++i) {
+                for (; (int) i < end; ++i) {
                     /* FIXME: offset not included, this is major broke */
                     bufsamp[i*2+0] =
                         (1.0f/32768) * (float) sdat[(i-pos)*2+0];
@@ -901,7 +901,7 @@ sg_audio_mixdown_render(struct sg_audio_mixdown *SG_RESTRICT mp,
                         (1.0f/32768) * (float) sdat[(i-pos)*2+1];
                 }
             } else {
-                for (; i < end; ++i) {
+                for (; (int) i < end; ++i) {
                     x = (1.0/32768) * (float) sdat[i-pos];
                     bufsamp[i*2+0] = x;
                     bufsamp[i*2+1] = x;
