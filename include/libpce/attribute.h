@@ -67,6 +67,8 @@
 #  define PCE_ATTR_WARN_UNUSED_RESULT __attribute__((__warn_unused_result__))
 # endif
 
+# define PCE_INLINE static __inline__
+
 #elif defined(__GNUC__)
 
 # if __GNUC__ >= 3
@@ -99,6 +101,8 @@
 #  define PCE_ATTR_ARTIFICIAL __attribute__((__artificial__))
 # endif
 
+# define PCE_INLINE static __inline__
+
 #elif defined(_MSC_VER)
 
 # define PCE_ATTR_DEPRECATED __declspec(deprecated)
@@ -106,6 +110,8 @@
 # define PCE_ATTR_NOINLINE __declspec(noinline)
 # define PCE_ATTR_NORETURN __declspec(noreturn)
 # define PCE_ATTR_NOTHROW __declspec(nothrow)
+
+# define PCE_INLINE static __inline
 
 #endif
 
