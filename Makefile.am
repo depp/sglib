@@ -8,13 +8,13 @@ AM_CPPFLAGS = -I@srcdir@/include
 lib_LTLIBRARIES = libpce.la
 
 pkginclude_HEADERS = \
-    include/libpce/arch.h \
-    include/libpce/attribute.h \
-    include/libpce/byteorder.h \
-    include/libpce/byteswap.h \
-    include/libpce/cpu.h \
-    include/libpce/strbuf.h
+	include/libpce/arch.h \
+	include/libpce/attribute.h \
+	include/libpce/byteorder.h \
+	include/libpce/cpu.h \
+	include/libpce/strbuf.h \
+	include/libpce/util.h
 
 libpce_la_SOURCES = \
-    lib/cpu.c \
-    lib/strbuf.c
+	lib/cpu.c \
+	lib/strbuf.c
