@@ -70,7 +70,7 @@ pce_strbuf_destroy(struct pce_strbuf *b);
  * length must be at least one byte longer than the string, for the
  * NUL byte.
  */
-PCE_ATTR_NONNULL((1, 2)) PCE_INLINE
+PCE_ATTR_NONNULL((1, 2))
 void
 pce_strbuf_attach(struct pce_strbuf *b, char *str, size_t len);
 
@@ -110,7 +110,7 @@ pce_strbuf_compact(struct pce_strbuf *b);
 /**
  * Set the string to the empty string, but don't free memory.
  */
-PCE_ATTR_NONNULL((1))
+PCE_ATTR_NONNULL((1)) PCE_INLINE
 void
 pce_strbuf_clear(struct pce_strbuf *b)
 {

@@ -4,6 +4,7 @@ ACLOCAL_AMFLAGS = -I m4
 SUBDIRS = . tests
 
 AM_CPPFLAGS = -I@srcdir@/include
+AM_CFLAGS = @CWARN@
 
 lib_LTLIBRARIES = libpce.la
 

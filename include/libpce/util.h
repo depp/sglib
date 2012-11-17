@@ -139,7 +139,7 @@ PCE_ATTR_ARTIFICIAL PCE_ATTR_CONST PCE_INLINE
 unsigned long long
 pce_swap64(unsigned long long x)
 {
-    return pce_swap64_builtin(x);
+    return PCE_SWAP64(x);
 }
 #elif defined(__GNUC__) && defined(__x86_64__)
 PCE_ATTR_ARTIFICIAL PCE_ATTR_CONST PCE_INLINE
