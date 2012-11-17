@@ -20,4 +20,5 @@ pkginclude_HEADERS = \
 libpce_la_SOURCES = \
 	lib/cpu.c \
 	lib/hash.c \
+	lib/hashtable.c \
 	lib/strbuf.c
