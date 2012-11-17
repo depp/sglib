@@ -12,9 +12,11 @@ pkginclude_HEADERS = \
 	include/libpce/attribute.h \
 	include/libpce/byteorder.h \
 	include/libpce/cpu.h \
+	include/libpce/hash.h \
 	include/libpce/strbuf.h \
 	include/libpce/util.h
 
 libpce_la_SOURCES = \
 	lib/cpu.c \
+	lib/hash.c \
 	lib/strbuf.c
