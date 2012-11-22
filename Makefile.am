@@ -10,6 +10,7 @@ lib_LTLIBRARIES = libpce.la
 
 pkginclude_HEADERS = \
 	include/libpce/arch.h \
+	include/libpce/atomic.h \
 	include/libpce/attribute.h \
 	include/libpce/byteorder.h \
 	include/libpce/cpu.h \
