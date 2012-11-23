@@ -5,6 +5,6 @@ LDADD = ../libpce.la
 
 AM_CPPFLAGS = -I@srcdir@/../include
 
-check_PROGRAMS = test_strbuf
+check_PROGRAMS = test_strbuf test_hashtable
 
 TESTS = test_strbuf
