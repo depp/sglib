@@ -111,19 +111,23 @@ class Project(object):
         self._sgpath = Path(sgpath.replace(os.path.sep, '/'))
         self._modules = {}
 
-        sgincpath = Path(self._sgpath, 'src')
+        sgincpath = [
+            Path(self._sgpath, 'include'),
+            Path(self._sgpath, 'keycode/include'),
+            Path(self._sgpath, 'libpce/include'),
+        ]
         self._sources.read_list(
-            'SGLib', os.path.join(sgpath, 'src/srclist-base.txt'),
-            ('SGLIB',))
+            'SGLib', os.path.join(sgpath, 'srclist-sg.txt'),
+            ('SG',))
         self._sources.read_list(
-            'SGLib', os.path.join(sgpath, 'src/srclist-client.txt'),
-            ('SGLIBXX',))
+            'SGLib', os.path.join(sgpath, 'srclist-sgpp.txt'),
+            ('SGPP',))
         self.add_module(
-            Module('SGLIB', 'SGLib C client code',
+            Module('SG', 'SGLib C client code',
                    ipath=sgincpath, reqs='LIBGLEW'))
         self.add_module(
-            Module('SGLIBXX', 'SGLib C++ client code',
-                   ipath=sgincpath, reqs='SGLIB'))
+            Module('SGPP', 'SGLib C++ client code',
+                   ipath=sgincpath, reqs='SG'))
 
         p = self._find_library('glew')
         self.add_module(

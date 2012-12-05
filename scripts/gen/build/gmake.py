@@ -15,7 +15,7 @@ def get_example_source(proj):
         if group.simple_name == 'sglib':
             srcs = []
             for source in group.sources():
-                if source.atoms == ('SGLIB',):
+                if source.atoms == ('SG',):
                     srcs.append(source.relpath.posix)
             srcs.sort()
             if not srcs:
