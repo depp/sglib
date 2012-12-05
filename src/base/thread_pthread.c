@@ -173,3 +173,80 @@ sg_rwlock_rdrelease(struct sg_rwlock *p)
 {
     sg_rwlock_wrrelease(p);
 }
+
+/* ======================================== */
+
+void
+sg_evt_init(struct sg_evt *p)
+{
+    pthread_mutexattr_t mattr;
+    int r;
+    r = pthread_mutexattr_init(&mattr);
+    if (r) goto err;
+    r = pthread_mutexattr_settype(&mattr, PTHREAD_MUTEX_NORMAL);
+    if (r) goto err;
+    r = pthread_mutex_init(&p->m, &mattr);
+    if (r) goto err;
+    r = pthread_mutexattr_destroy(&mattr);
+    if (r) goto err;
+    r = pthread_cond_init(&p->c, NULL);
+    if (r) goto err;
+    p->is_signaled = 0;
+    return;
+
+err:
+    abort();
+
+}
+
+void
+sg_evt_destroy(struct sg_evt *p)
+{
+    int r;
+    r = pthread_mutex_destroy(&p->m);
+    if (r) goto err;
+    r = pthread_cond_destroy(&p->c);
+    if (r) goto err;
+    return;
+
+err:
+    abort();
+}
+
+void
+sg_evt_signal(struct sg_evt *p)
+{
+    int r;
+    r = pthread_mutex_lock(&p->m);
+    if (r) goto err;
+    if (!p->is_signaled) {
+        p->is_signaled = 1;
+        r = pthread_cond_signal(&p->c);
+        if (r) goto err;
+    }
+    r = pthread_mutex_unlock(&p->m);
+    if (r) goto err;
+    return;
+
+err:
+    abort();
+}
+
+void
+sg_evt_wait(struct sg_evt *p)
+{
+    int r;
+    r = pthread_mutex_lock(&p->m);
+    if (r) goto err;
+    while (!p->is_signaled) {
+        r = pthread_cond_wait(&p->c, &p->m);
+        if (r) goto err;
+    }
+    p->is_signaled = 0;
+    r = pthread_mutex_unlock(&p->m);
+    if (r) goto err;
+    return;
+
+err:
+    abort();
+}

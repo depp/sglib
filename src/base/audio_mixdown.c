@@ -59,11 +59,22 @@ struct sg_audio_mixchan {
 #define SG_AUDIO_MIXDT (1 << (SG_AUDIO_MIXDTBITS))
 #define NTIMESAMP 3
 
+/* Mixdown timing algorithm */
+typedef enum {
+    /* Automatially minimize latency */
+    SG_AUDIO_LIVE,
+    /* Block until sounds are ready */
+    SG_AUDIO_OFFLINE
+} sg_audio_mixdowntype_t;
+
 struct sg_audio_mixdown {
     /* Pointer to free in order to free the mixdown */
     void *root;
 
     /* ========== General info ========== */
+
+    /* Audio mixdown type: LIVE or OFFLINE */
+    sg_audio_mixdowntype_t type;
 
     /* Nominal audio sample rate, in Hz */
     int samplerate;
@@ -105,18 +116,27 @@ struct sg_audio_mixdown {
        timestamp[0] */
     unsigned timeref;
 
-    /* Map from timestamps to sample positions: the sample position,
-       relative to the beginning of the current buffer, of the given
-       times.  The sample in 'timestamp[0]' corresponds to the
-       timestamp in 'timeref', and each next entry in the array
-       corresponds to SG_AUDIO_MIXDT ticks earlier.  */
+    /*
+      For LIVE audio:
+
+      Map from timestamps to sample positions: the sample position,
+      relative to the beginning of the current buffer, of the given
+      times.  The sample in 'timestamp[0]' corresponds to the
+      timestamp in 'timeref', and each next entry in the array
+      corresponds to SG_AUDIO_MIXDT ticks earlier.
+
+      For OFFLINE audio:
+
+      The sample position in timestamp[0] corresponds to the timestamp
+      in timeref, but the remaining entries are not used.
+    */
     int timesamp[NTIMESAMP];
 
-    /* Accumulators for solving for timestamps */
+    /* For LIVE audio: Accumulators for solving for timestamps */
     double tm_x, tm_y, tm_xx, tm_xy;
     int tm_n;
 
-    /* Filtered (average) dt per sample */
+    /* For LIVE audio: Filtered (average) dt per sample */
     double ta_avgdt, ta_avgdt0;
     unsigned ta_tprev, ta_tc, ta_tn;
 
@@ -150,7 +170,15 @@ static int
 sg_audio_mixdown_t2s(struct sg_audio_mixdown *SG_RESTRICT mp,
                      unsigned time)
 {
-    int dt, s0, s1;
+    int dt, s0, s1, frac, sec;
+
+    if (mp->type == SG_AUDIO_OFFLINE) {
+        dt = time - mp->timeref;
+        sec = dt / 1000;
+        frac = dt % 1000;
+        return mp->timesamp[0] + sec * mp->samplerate +
+            (frac * mp->samplerate) / 1000;
+    }
 
     dt = time - mp->timeref + SG_AUDIO_MIXDT * 2;
     if (dt < SG_AUDIO_MIXDT) {
@@ -182,6 +210,15 @@ sg_audio_mixdown_updatetime(struct sg_audio_mixdown *SG_RESTRICT mp,
 
     curtime = mp->ctime;
     (void) time;
+
+    if (mp->type == SG_AUDIO_OFFLINE) {
+        mp->timesamp[0] -= mp->abufsize;
+        if (mp->timesamp[0] < -mp->samplerate / 2) {
+            mp->timesamp[0] += mp->samplerate;
+            mp->timeref += 1000;
+        }
+        return;
+    }
 
     if (mp->tm_n <= 0) {
         if (mp->tm_n < 0) {
@@ -293,9 +330,26 @@ sg_audio_mixdown_getmsg(struct sg_audio_mixdown *SG_RESTRICT mp)
 {
     struct sg_audio_system *SG_RESTRICT sp = &sg_audio_system_global;
     unsigned char *sbuf, *mbuf;
-    unsigned start, end, len, nalloc, sz;
+    unsigned start, end, len, nalloc, sz, etime, wait_time;
 
     sg_rwlock_rdacquire(&sp->qlock);
+
+    if (mp->type == SG_AUDIO_OFFLINE) {
+        if ((int) (sp->wtime - sp->ctime) > 0)
+            etime = sp->ctime;
+        else
+            etime = sp->wtime;
+        wait_time = mp->timeref +
+            (1000 * (2 * mp->abufsize - mp->timesamp[0])) / mp->samplerate;
+        if ((int) (etime - wait_time) <= 0) {
+            sp->mix[mp->index].is_waiting = 1;
+            sp->mix[mp->index].wait_time = wait_time;
+            sg_rwlock_rdrelease(&sp->qlock);
+            sg_evt_wait(&sp->mix[mp->index].evt);
+            sg_rwlock_rdacquire(&sp->qlock);
+            sp->mix[mp->index].is_waiting = 0;
+        }
+    }
 
     sz = sp->bufsize;
     sbuf = sp->buf;
@@ -657,8 +711,9 @@ sg_audio_mixdown_dispatch(struct sg_audio_mixdown *SG_RESTRICT mp)
    Constructors / destructors
    ======================================== */
 
-struct sg_audio_mixdown *
-sg_audio_mixdown_new(int rate, int bufsize, struct sg_error **err)
+static struct sg_audio_mixdown *
+sg_audio_mixdown_new1(sg_audio_mixdowntype_t type,
+                      int rate, int bufsize, struct sg_error **err)
 {
     struct sg_audio_system *SG_RESTRICT sp = &sg_audio_system_global;
     struct sg_audio_mixdown *SG_RESTRICT mp;
@@ -675,7 +730,7 @@ sg_audio_mixdown_new(int rate, int bufsize, struct sg_error **err)
         return NULL;
     }
 
-    if (rate < 11025 || rate > 192000) {
+    if (type == SG_AUDIO_LIVE && (rate < 11025 || rate > 192000)) {
         /* FIXME: proper error */
         sg_error_nomem(err);
         return NULL;
@@ -716,6 +771,7 @@ sg_audio_mixdown_new(int rate, int bufsize, struct sg_error **err)
 
     mp->root = root;
 
+    mp->type = type;
     mp->samplerate = rate;
     mp->abufsize = bufsize;
     mp->mixahead = bufsize / 2; /* FIXME: make this configurable */
@@ -728,6 +784,7 @@ sg_audio_mixdown_new(int rate, int bufsize, struct sg_error **err)
 
     mp->wtime = 0;
     mp->ctime = 0;
+    mp->timeref = 0;
     mp->tm_n = -1;
 
     mp->srcs = srcs;
@@ -742,7 +799,12 @@ sg_audio_mixdown_new(int rate, int bufsize, struct sg_error **err)
 
     sg_lock_acquire(&sp->slock);
 
-    if (rate != sp->samplerate) {
+    if (type == SG_AUDIO_OFFLINE) {
+        rate = sp->samplerate;
+        if (!rate)
+            rate = 48000;
+        mp->samplerate = rate;
+    } else if (rate != sp->samplerate) {
         if (sp->mixmask) {
             sg_logf(sp->log, LOG_ERROR,
                     "tried to change sample rate %d -> %d",
@@ -766,13 +828,46 @@ sg_audio_mixdown_new(int rate, int bufsize, struct sg_error **err)
         return NULL;
     }
 
+    sp->mixmask |= 1u << index;
+
     sp->mix[index].pos = sp->bufrpos;
+    sp->mix[index].is_waiting = 0;
+    sp->mix[index].wait_time = 0;
+    if (type == SG_AUDIO_OFFLINE)
+        sg_evt_init(&sp->mix[index].evt);
     mp->index = index;
     mp->wtime = sp->wtime;
     mp->ctime = sp->ctime;
 
     sg_lock_release(&sp->slock);
 
+    return mp;
+}
+
+struct sg_audio_mixdown *
+sg_audio_mixdown_new(int rate, int bufsize, struct sg_error **err)
+{
+    return sg_audio_mixdown_new1(SG_AUDIO_LIVE, rate, bufsize, err);
+}
+
+struct sg_audio_mixdown *
+sg_audio_mixdown_newoffline(unsigned mintime, int bufsize,
+                            struct sg_error **err)
+{
+    struct sg_audio_mixdown *mp;
+    unsigned ltime;
+    mp = sg_audio_mixdown_new1(SG_AUDIO_OFFLINE, -1, bufsize, err);
+    if (mp) {
+        if ((int) (mp->wtime - mp->ctime) > 0)
+            ltime = mp->wtime;
+        else
+            ltime = mp->ctime;
+        if ((int) (mintime - ltime) > 0)
+            mp->timeref = mintime;
+        else
+            mp->timeref = ltime;
+        mp->timesamp[0] = bufsize;
+    }
     return mp;
 }
 
@@ -785,6 +880,10 @@ sg_audio_mixdown_free(struct sg_audio_mixdown *SG_RESTRICT mp)
     sp->mixmask &= ~(1u << mp->index);
     if (!sp->mixmask)
         sp->samplerate = 0;
+    if (mp->type == SG_AUDIO_OFFLINE) {
+        sg_evt_destroy(&sp->mix[mp->index].evt);
+    }
+    memset(&sp->mix[mp->index], 0, sizeof(*sp->mix));
     sg_lock_release(&sp->slock);
 
     free(mp->mbuf);
@@ -961,4 +1060,23 @@ sg_audio_mixdown_read(struct sg_audio_mixdown *SG_RESTRICT mp,
     // printf("%6u %6u %6d\n", time, mp->wtime, (int) (time - mp->wtime));
 
     return 0;
+}
+
+unsigned
+sg_audio_mixdown_timestamp(struct sg_audio_mixdown *SG_RESTRICT mp)
+{
+    return mp->timeref +
+        (1000 * (mp->abufsize - mp->timesamp[0])) / mp->samplerate;
+}
+
+int
+sg_audio_mixdown_samplerate(struct sg_audio_mixdown *SG_RESTRICT mp)
+{
+    return mp->samplerate;
+}
+
+int
+sg_audio_mixdown_abufsize(struct sg_audio_mixdown *SG_RESTRICT mp)
+{
+    return mp->abufsize;
 }

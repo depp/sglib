@@ -486,15 +486,17 @@ sg_audio_source_bufcommit(struct sg_audio_system *SG_RESTRICT sp,
                           struct sg_audio_systemcbuf *bp,
                           unsigned wtime, unsigned ctime)
 {
-    unsigned i, rpos, nrpos, sz;
+    unsigned i, rpos, nrpos, sz, etime;
     int d, mind;
 
     if ((int) (wtime - ctime) > 0) {
         if ((int) (wtime - sp->ftime) > 0)
             sp->ftime = wtime;
+        etime = ctime;
     } else {
         if ((int) (ctime - sp->ftime) > 0)
             sp->ftime = ctime;
+        etime = wtime;
     }
 
     sg_rwlock_wracquire(&sp->qlock);
@@ -515,6 +517,9 @@ sg_audio_source_bufcommit(struct sg_audio_system *SG_RESTRICT sp,
         d = (sp->mix[i].pos - rpos) & (sz - 1);
         if (d < mind)
             mind = d;
+        if (sp->mix[i].is_waiting &&
+            (int)(etime - sp->mix[i].wait_time) > 0)
+            sg_evt_signal(&sp->mix[i].evt);
     }
     nrpos = (rpos + mind) & (sz - 1);
     sp->bufrpos = nrpos;

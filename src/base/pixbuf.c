@@ -75,6 +75,7 @@ sg_pixbuf_set(struct sg_pixbuf *pbuf, sg_pixbuf_format_t format,
         psz = 3;
         break;
 
+    case SG_RGBX:
     case SG_RGBA:
         psz = 4;
         break;

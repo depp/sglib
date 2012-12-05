@@ -1,5 +1,7 @@
+#include "file.h"
 #include "pixbuf.h"
 #include <ApplicationServices/ApplicationServices.h>
+#include <assert.h>
 
 static void releaseData(void *info, const void *data, size_t size)
 {
@@ -38,8 +40,7 @@ imageToPixbuf(struct sg_pixbuf *pbuf, CGImageRef img, struct sg_error **err)
         alpha = 1;
         break;
     }
-    // pfmt = alpha ? SG_RGBA : SG_RGB;
-    pfmt = SG_RGBA; // FIXME
+    pfmt = alpha ? SG_RGBA : SG_RGBX;
 
     r = sg_pixbuf_set(pbuf, pfmt, w, h, err);
     if (r)
@@ -94,4 +95,72 @@ sg_pixbuf_loadjpeg(struct sg_pixbuf *pbuf, const void *data, size_t length,
     CGDataProviderRelease(dp);
     assert(img);
     return imageToPixbuf(pbuf, img, err);
+}
+
+static size_t
+sgFilePutBytes(void *info, const void *buffer, size_t count)
+{
+    struct sg_file *fp = info;
+    int r = fp->write(fp, buffer, count);
+    return r < 0 ? 0 : (size_t) r;
+}
+
+static void
+sgFileRelease(void *info)
+{
+    (void) info;
+}
+
+static CGDataConsumerRef
+getDataConsumer(struct sg_file *fp)
+{
+    CGDataConsumerCallbacks cb;
+    cb.putBytes = sgFilePutBytes;
+    cb.releaseConsumer = sgFileRelease;
+    CGDataConsumerRef dc = CGDataConsumerCreate(fp, &cb);
+    assert(dc != NULL);
+    return dc;
+}
+
+int
+sg_pixbuf_writepng(struct sg_pixbuf *pbuf, struct sg_file *fp,
+                   struct sg_error **err)
+{
+    int nchan;
+    CGBitmapInfo ifo;
+    switch (pbuf->format) {
+        case SG_Y:    nchan = 1; ifo = kCGImageAlphaNone; break;
+        case SG_YA:   nchan = 2; ifo = kCGImageAlphaLast; break;
+        /* SG_RGB not supported */
+        case SG_RGBA: nchan = 4; ifo = kCGImageAlphaNoneSkipLast; break;
+        case SG_RGBA: nchan = 4; ifo = kCGImageAlphaPremultipliedLast; break;
+        default: assert(0);
+    }
+
+    CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
+    assert(colorSpace != NULL);
+
+    CGDataProviderRef dp = getDataProvider(pbuf->data, (size_t) pbuf->rowbytes * pbuf->iheight);
+    assert(dp != NULL);
+
+    CGImageRef img = CGImageCreate(pbuf->iwidth, pbuf->iheight, 8, nchan * 8, pbuf->rowbytes, colorSpace, ifo, dp, NULL, false, kCGRenderingIntentDefault);
+    assert(img != NULL);
+
+    CGDataConsumerRef dc = getDataConsumer(fp);
+
+    CGImageDestinationRef dest = CGImageDestinationCreateWithDataConsumer(dc, kUTTypePNG, 1, NULL);
+    assert(dest != NULL);
+
+    CGImageDestinationAddImage(dest, img, NULL);
+    bool br = CGImageDestinationFinalize(dest);
+    assert(br);
+
+    CFRelease(dest);
+    CFRelease(dc);
+    CFRelease(img);
+    CFRelease(dp);
+    CFRelease(colorSpace);
+    
+    return 0;
+    (void) err;
 }

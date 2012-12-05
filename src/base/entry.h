@@ -11,9 +11,6 @@ union sg_event;
 struct sg_error;
 struct sg_logger;
 
-/* Do NOT change these variables.  */
-extern int sg_vid_width, sg_vid_height;
-
 #define SG_GAME_ASPECT_SCALE 0x10000
 
 struct sg_game_info {
@@ -64,6 +61,21 @@ sg_game_destroy(void);
 
    These provide a thin layer around the game export functions, or
    provide a thin layer around platform functionality.  */
+
+struct sg_sys_state {
+    int width, height;
+    unsigned status;
+    unsigned tick;
+    unsigned tick_offset;
+
+    unsigned rec_ref;
+    unsigned rec_numer;
+    unsigned rec_denom;
+    unsigned rec_next;
+    unsigned rec_ct;
+};
+
+extern struct sg_sys_state sg_sst;
 
 /* Initialize all library subsystems and the game.  This should be
    called after the command line arguments are parsed and passed to

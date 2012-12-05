@@ -1,35 +1,7 @@
 #ifndef BASE_OPENGL_H
 #define BASE_OPENGL_H
 
-#if defined(__APPLE__)
-
-/* Mac OS X */
-#include <OpenGL/gl.h>
-#include <OpenGL/glu.h>
-
-#elif defined(_WIN32)
-
-#include <WTypes.h>
-#include <wingdi.h>
-#include <GL/gl.h>
-#include <GL/glu.h>
-
-#define GL_CONSTANT_COLOR 0x8001
-#ifdef __cplusplus
-extern "C" {
-#endif
-extern void (APIENTRY *glBlendColor)(GLclampf, GLclampf, GLclampf, GLclampf);
-#ifdef __cplusplus
-}
-#endif
-
-#else
-
-/* GNU/Linux */
-#include <GL/gl.h>
-#include <GL/glu.h>
-
-#endif
+#include <GL/glew.h>
 
 #ifdef __cplusplus
 extern "C" {

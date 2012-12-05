@@ -21,6 +21,16 @@ struct sg_rwlock {
     pthread_rwlock_t l;
 };
 
+/* A simple event object.  It has two states: signaled and not
+   signaled.  SIGNAL causes it to become signaled.  WAIT waits for it
+   to become signaled, and atomically resets it on wake.  At most one
+   thread will be awoken per SIGNAL.  */
+struct sg_evt {
+    pthread_mutex_t m;
+    pthread_cond_t c;
+    int is_signaled;
+};
+
 #elif defined(_WIN32)
 
 struct sg_lock {
@@ -97,6 +107,20 @@ sg_rwlock_rdrelease(struct sg_rwlock *p);
 #define sg_rwlock_rdrelease sg_lock_release
 
 #endif
+
+/* ========== Events ========== */
+
+void
+sg_evt_init(struct sg_evt *p);
+
+void
+sg_evt_destroy(struct sg_evt *p);
+
+void
+sg_evt_signal(struct sg_evt *p);
+
+void
+sg_evt_wait(struct sg_evt *p);
 
 #ifdef __cplusplus
 }
