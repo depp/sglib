@@ -134,7 +134,7 @@ sg_audio_ofile_write(struct sg_audio_ofile *afp,
     struct sg_file *fp = afp->fp;
     const unsigned char *buf;
     unsigned short *tmp;
-    unsigned nlen, len, pos;
+    size_t nlen, len, pos;
     int i, r;
 
     if (BYTE_ORDER == BIG_ENDIAN) {

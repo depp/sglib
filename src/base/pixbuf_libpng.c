@@ -243,7 +243,7 @@ sg_pixbuf_writepng(struct sg_pixbuf *pbuf, struct sg_file *fp,
     goto done;
 
 done:
-    free(rowp);
+    free(tmp);
     png_destroy_write_struct(
         (png_structp *) &pngp, (png_infop *) &infop);
     return ret;

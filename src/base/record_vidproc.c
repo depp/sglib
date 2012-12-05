@@ -288,6 +288,8 @@ sg_record_vidthread(void *cxt)
     size_t sz, pos;
     void *retv;
 
+    (void) line;
+
     vp = cxt;
     fd = vp->vid_pipe;
     sz = vp->vid_bufsz;
@@ -372,17 +374,18 @@ sg_record_audiothread(void *cxt)
 {
     struct sg_rec_vid *vp;
     struct sg_audio_mixdown *mix;
-    struct sg_audio_ofile *afp;
+    struct sg_audio_ofile *afp = NULL;
     struct sg_error *err = NULL;
-    int bufsz, r, i, rate, stop, line;
+    int bufsz, r, i, stop, line;
     float *fbuf;
     short *sbuf;
     unsigned atime, ftime, vtime;
 
+    (void) line;
+
     vp = cxt;
     mix = vp->aud_mix;
     bufsz = sg_audio_mixdown_abufsize(mix);
-    rate = sg_audio_mixdown_samplerate(mix);
 
     fbuf = malloc(sizeof(*fbuf) * bufsz * 2);
     if (!fbuf)
@@ -568,6 +571,7 @@ sg_record_vidfree(void *cxt)
     int r, i, line;
 
     (void) cxt;
+    (void) line;
 
     r = pthread_mutex_destroy(&vp->mutex);
     if (r) FAILP;
@@ -650,6 +654,8 @@ sg_record_vidstop(void)
     struct sg_rec_vid *vp = sg_rec_vid;
     int r, line;
 
+    (void) line;
+
     if (!vp)
         return;
 
@@ -678,6 +684,8 @@ sg_record_writevideo(unsigned timestamp,
     struct sg_rec_vid *vp = sg_rec_vid;
     int r, nf, line;
     void *buf;
+
+    (void) line;
 
     if (!vp)
         return;
