@@ -1,4 +1,5 @@
 {
   "width": 78,
-  "tabsize": 4
+  "tabsize": 4,
+  "guard_prefix": ""
 }
