@@ -1,3 +1,4 @@
+/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
 #include <libpce/hashtable.h>
 #include <assert.h>
 #include <stdio.h>

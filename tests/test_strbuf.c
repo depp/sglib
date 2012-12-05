@@ -1,3 +1,4 @@
+/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
 #include "libpce/strbuf.h"
 
 int main(int argc, char *argv[])
