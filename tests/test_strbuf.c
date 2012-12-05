@@ -11,6 +11,8 @@ int main(int argc, char *argv[])
     pce_strbuf_init(&bb, 100);
     pce_strbuf_init(&bc, 0);
 
+    pce_strbuf_clear(&ba);
+
     p = bb.s;
     for (i = 0; i < 100; i++) {
         pce_strbuf_putc(&ba, i + 101);

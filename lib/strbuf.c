@@ -5,12 +5,16 @@
 
 /* FIXME: abort() should be something else.  */
 
-static const char pce_strbuf_static[1] = { 0 };
+/*
+  This can't be const because it's written to by strbuf_clear(), to
+  make strbuf_clear() simpler.
+*/
+static char pce_strbuf_static[1] = { 0 };
 
 static void
 pce_strbuf_zero(struct pce_strbuf *b)
 {
-    b->s = b->p = b->e = (char *) pce_strbuf_static;
+    b->s = b->p = b->e = pce_strbuf_static;
 }
 
 void
