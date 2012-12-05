@@ -112,7 +112,7 @@ def idents():
     # are actually used
     names = [x for x in HID_NAMES if x[0] in USED]
     names.sort()
-    out = 'keycode.h'
+    out = '../include/keycode/keycode.h'
     tmp = out + '.tmp'
     f = open(tmp, 'w')
     try:
@@ -136,7 +136,7 @@ def mkid2(n):
     return n.replace(' ', '')
 
 KEYID_HEADER = '''\
-#include "keyid.h"
+#include "keycode/keyid.h"
 #include <string.h>
 '''
 
@@ -183,7 +183,7 @@ def names():
         data.write(n)
         data.write('\0')
     data = data.getvalue()
-    out = 'keyid.c'
+    out = '../src/keyid.c'
     tmp = out + '.tmp'
     f = open(tmp, 'w')
     try:
@@ -205,8 +205,8 @@ def names():
             pass
         raise
 
-gencodemap('mac.txt', 'mac2.txt', 'keytable_mac.c', 128, 'MAC')
-gencodemap('win.txt', 'win2.txt', 'keytable_win.c', 256, 'WIN')
-gencodemap('xkb.txt', 'evdev.txt', 'keytable_evdev.c', 256, 'EVDEV')
+gencodemap('mac.txt', 'mac2.txt', '../src/keytable_mac.c', 128, 'MAC')
+gencodemap('win.txt', 'win2.txt', '../src/keytable_win.c', 256, 'WIN')
+gencodemap('xkb.txt', 'evdev.txt', '../src/keytable_evdev.c', 256, 'EVDEV')
 idents()
 names()
