@@ -1,6 +1,7 @@
-#include "pixbuf.h"
-#include "type_impl.h"
-#include "version.h"
+/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
+#include "impl.h"
+#include "sg/pixbuf.h"
+#include "sg/version.h"
 #include <math.h>
 #include <pango/pango.h>
 #include <pango/pangocairo.h>

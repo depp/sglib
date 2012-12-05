@@ -1,5 +1,6 @@
-#ifndef BASE_ERROR_H
-#define BASE_ERROR_H
+/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
+#ifndef SG_ERROR_H
+#define SG_ERROR_H
 #include <stdarg.h>
 #ifdef __cplusplus
 extern "C" {

@@ -1,5 +1,6 @@
-#ifndef CLIENT_UI_SCREEN_HPP
-#define CLIENT_UI_SCREEN_HPP
+/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
+#ifndef SGPP_UI_SCREEN_HPP
+#define SGPP_UI_SCREEN_HPP
 class Viewport;
 namespace UI {
 struct Event;

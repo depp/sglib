@@ -1,6 +1,7 @@
-#ifndef BASE_TEXTURE_H
-#define BASE_TEXTURE_H
-#include "resource.h"
+/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
+#ifndef SG_TEXTURE_H
+#define SG_TEXTURE_H
+#include "sg/resource.h"
 #ifdef __cplusplus
 extern "C" {
 #endif

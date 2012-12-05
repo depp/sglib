@@ -1,3 +1,4 @@
+/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
 #import <Cocoa/Cocoa.h>
 
 @protocol GEventCapture

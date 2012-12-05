@@ -1,3 +1,4 @@
+/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
 #import "base/opengl.h"
 #import <Carbon/Carbon.h>
 #import "GDisplay.h"
@@ -33,13 +34,13 @@ static bool isWindowedMode(GDisplayMode mode)
 
 /* Event handling */
 
-void GDisplayKeyEvent(GDisplay *w, NSEvent *e, sg_event_type_t t)
+void GDisplayKeyEvent(GDisplay *w, NSEvent *e, pce_event_type_t t)
 {
     int ncode = MAC_NATIVE_TO_HID[[e keyCode] & 0x7F];
-    struct sg_event_key evt;
+    struct pce_event_key evt;
     evt.type = t;
     evt.key = ncode;
-    [w handleUIEvent:(union sg_event *) &evt];
+    [w handleUIEvent:(union pce_event *) &evt];
 }
 
 /* Rendering callback */
@@ -60,7 +61,7 @@ static CVReturn cvCallback(CVDisplayLinkRef displayLink, const CVTimeStamp *now,
 
 /* Private methods */
 
-static void handleMouse(GDisplay *d, NSEvent *e, sg_event_type_t t, int button)
+static void handleMouse(GDisplay *d, NSEvent *e, pce_event_type_t t, int button)
 {
     // FIXME need to translate if there are multiple screens
     if ([e window]) {
@@ -68,12 +69,12 @@ static void handleMouse(GDisplay *d, NSEvent *e, sg_event_type_t t, int button)
         return;
     }
     NSPoint pt = [e locationInWindow];
-    struct sg_event_mouse evt;
+    struct pce_event_mouse evt;
     evt.type = t;
     evt.button = button;
     evt.x = pt.x;
     evt.y = pt.y;
-    [d handleUIEvent:(union sg_event *) &evt];
+    [d handleUIEvent:(union pce_event *) &evt];
 }
 
 @implementation GDisplay (Private)
@@ -217,7 +218,7 @@ static void handleMouse(GDisplay *d, NSEvent *e, sg_event_type_t t, int button)
 
 - (void)stateChanged {
     unsigned status;
-    struct sg_event_status evt;
+    struct pce_event_status evt;
     if ([NSApp isHidden]) {
         status = 0;
     } else if (mode_ == GDisplayWindow) {
@@ -230,7 +231,7 @@ static void handleMouse(GDisplay *d, NSEvent *e, sg_event_type_t t, int button)
     }
     evt.type = SG_EVENT_STATUS;
     evt.status = status;
-    sg_sys_event((union sg_event *) &evt);
+    sg_sys_event((union pce_event *) &evt);
 }
 
 @end
@@ -390,7 +391,7 @@ error:
         [self showWindow:sender];
 }
 
-- (void)handleUIEvent:(union sg_event *)event {
+- (void)handleUIEvent:(union pce_event *)event {
     [self lock];
     sg_sys_event(event);
     [self unlock];
@@ -407,11 +408,11 @@ error:
     if (frameChanged_) {
         [context_ update];
         glViewport(0, 0, width_, height_);
-        struct sg_event_resize evt;
+        struct pce_event_resize evt;
         evt.type = SG_EVENT_RESIZE;
         evt.width = width_;
         evt.height = height_;
-        sg_sys_event((union sg_event *) &evt);
+        sg_sys_event((union pce_event *) &evt);
     }
     sg_sys_draw();
     [context_ flushBuffer];

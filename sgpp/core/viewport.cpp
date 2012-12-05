@@ -1,5 +1,6 @@
-#include "viewport.hpp"
-#include "base/opengl.h"
+/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
+#include "sg/opengl.h"
+#include "sgpp/viewport.hpp"
 
 Viewport::Viewport(int x, int y, int width, int height)
     : m_x(x), m_y(y), m_width(width), m_height(height),

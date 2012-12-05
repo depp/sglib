@@ -1,8 +1,9 @@
-#include "audio_file.h"
-#include "audio_fileprivate.h"
-#include "binary.h"
-#include "error.h"
-#include "log.h"
+/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
+#include "fileprivate.h"
+#include "libpce/binary.h"
+#include "sg/audio_file.h"
+#include "sg/error.h"
+#include "sg/log.h"
 #include <stdlib.h>
 #include <string.h>
 
@@ -40,7 +41,7 @@ sg_riff_parse(struct sg_riff *riff, const void *data, size_t length,
         goto fmterr;
     if (memcmp(p, "RIFF", 4))
         goto fmterr;
-    rlength = read_lu32(p + 4);
+    rlength = pce_read_lu32(p + 4);
     if (rlength > length - 8 || rlength < 4)
         goto fmterr;
     memcpy(riff->tag, p + 8, 4);
@@ -56,7 +57,7 @@ sg_riff_parse(struct sg_riff *riff, const void *data, size_t length,
         if (pos > rlength - 8)
             goto fmterr;
         memcpy(&t.tag, p + pos, 4);
-        t.length = read_lu32(p + pos + 4);
+        t.length = pce_read_lu32(p + pos + 4);
         pos += 8;
         if (t.length > rlength - pos)
             goto fmterr;
@@ -161,11 +162,11 @@ sg_audio_file_loadwav(struct sg_audio_file *fp,
     if (tag->length < 16)
         goto fmterr;
     p = tag->data;
-    afmt = read_lu16(p + 0);
-    nchan = read_lu16(p + 2);
-    rate = read_lu32(p + 4);
-    /* blkalign = read_lu16(p + 12); */
-    sampbits = read_lu16(p + 14);
+    afmt = pce_read_lu16(p + 0);
+    nchan = pce_read_lu16(p + 2);
+    rate = pce_read_lu32(p + 4);
+    /* blkalign = pce_read_lu16(p + 12); */
+    sampbits = pce_read_lu16(p + 14);
     if (rate < SG_AUDIO_MINRATE || rate > SG_AUDIO_MAXRATE) {
         sg_logf(sg_audio_wav_logger(), LOG_ERROR,
                 "WAVE sample rate too extreme (%u Hz)", rate);

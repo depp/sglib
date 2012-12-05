@@ -1,5 +1,6 @@
-#ifndef CLIENT_SCENE_GROUP_HPP
-#define CLIENT_SCENE_GROUP_HPP
+/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
+#ifndef SGPP_SCENE_GROUP_HPP
+#define SGPP_SCENE_GROUP_HPP
 #include "object.hpp"
 namespace Scene {
 

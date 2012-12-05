@@ -1,3 +1,4 @@
+/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
 // The GDisplay object is the center of the Mac UI code: it manages a window from the viewpoint of the common code.  It sends Cocoa events to the common code, and changes the window configuration in response to calls from the common code.
 // The display will also manage the OpenGL context and rendering thread / rendering timer.
 // Each display has a lock for accessing the OpenGL context and window object.  There is no need to obtain a lock, all calls are safe to call from the main thread and -update is safe to call from any thread.
@@ -50,11 +51,11 @@ typedef enum {
 - (IBAction)showFullScreen:(id)sender;
 - (IBAction)toggleGFullScreen:(id)sender;
 
-- (void)handleUIEvent:(union sg_event *)event;
+- (void)handleUIEvent:(union pce_event *)event;
 
 // Safe to call from any thread (all other methods must be called from main thread)
 - (void)update;
 
 @end
 
-void GDisplayKeyEvent(GDisplay *w, NSEvent *e, sg_event_type_t t);
+void GDisplayKeyEvent(GDisplay *w, NSEvent *e, pce_event_type_t t);

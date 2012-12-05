@@ -1,7 +1,8 @@
-#include "opengl.h"
-#include "pixbuf.h"
-#include "type.h"
-#include "type_impl.h"
+/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
+#include "impl.h"
+#include "sg/opengl.h"
+#include "sg/pixbuf.h"
+#include "sg/type.h"
 #include <stdlib.h>
 #include <string.h>
 

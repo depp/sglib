@@ -1,3 +1,4 @@
+/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
 /* Work dispatching system.  A callback may be issued to an
    asynchronous queue or the synchronous queue.  Callbacks in the
    synchronous queue are executed between frames in the same thread as
@@ -6,8 +7,8 @@
    thread as the synchronous tasks.
 
 If a task requires any nontrivial amount of CPU expenditure or disk IO, it should go in an asynchronous queue.  It */
-#ifndef BASE_DISPATCH_H
-#define BASE_DISPATCH_H
+#ifndef SG_DISPATCH_H
+#define SG_DISPATCH_H
 #ifdef __cplusplus
 extern "C" {
 #endif

@@ -1,8 +1,9 @@
-#include "dispatch.h"
-#include "defs.h"
-#include "entry.h"
-#include "opengl.h"
-#include "record.h"
+/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
+#include "sg/dispatch.h"
+#include "sg/defs.h"
+#include "sg/entry.h"
+#include "sg/opengl.h"
+#include "sg/record.h"
 #include <stdlib.h>
 
 enum {

@@ -1,5 +1,6 @@
-#include "widget.hpp"
-#include "event.hpp"
+/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
+#include "sgpp/ui/event.hpp"
+#include "sgpp/ui/widget.hpp"
 
 UI::Widget::Widget()
 {

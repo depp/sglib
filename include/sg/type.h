@@ -1,5 +1,6 @@
-#ifndef BASE_TYPE_H
-#define BASE_TYPE_H
+/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
+#ifndef SG_TYPE_H
+#define SG_TYPE_H
 #ifdef __cplusplus
 extern "C" {
 #endif

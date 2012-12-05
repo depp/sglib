@@ -1,9 +1,10 @@
+/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
 /* Maximum size of an image file in bytes.  */
 #define IMAGE_MAXSIZE (16 * 1024 * 1024)
 
-#include "error.h"
-#include "file.h"
-#include "pixbuf.h"
+#include "sg/error.h"
+#include "sg/file.h"
+#include "sg/pixbuf.h"
 #include <string.h>
 
 static const unsigned char SG_PIXBUF_PNGHEAD[8] = {

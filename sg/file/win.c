@@ -1,3 +1,4 @@
+/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
 /* Windows file / path code.  */
 #include "error.h"
 #include "file_impl.h"

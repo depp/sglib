@@ -1,8 +1,9 @@
-#include "error.h"
-#include "file.h"
-#include "log.h"
-#include "pixbuf.h"
-#include "version.h"
+/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
+#include "sg/error.h"
+#include "sg/file.h"
+#include "sg/log.h"
+#include "sg/pixbuf.h"
+#include "sg/version.h"
 #include <assert.h>
 #include <png.h>
 #include <stdlib.h>

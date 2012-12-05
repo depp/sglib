@@ -1,6 +1,7 @@
-#include "button.hpp"
-#include "event.hpp"
-#include "base/opengl.h"
+/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
+#include "sg/opengl.h"
+#include "sgpp/ui/button.hpp"
+#include "sgpp/ui/event.hpp"
 
 UI::Button::Button()
     : /* title_(), */ state_(false), hover_(false), button_(-1)

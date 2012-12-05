@@ -1,5 +1,6 @@
-#include "file.h"
-#include "error.h"
+/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
+#include "sg/file.h"
+#include "sg/error.h"
 #include <string.h>
 
 static void

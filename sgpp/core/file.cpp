@@ -1,5 +1,6 @@
-#include "file.hpp"
-#include "error.hpp"
+/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
+#include "sgpp/file.hpp"
+#include "sgpp/error.hpp"
 #include <stdio.h>
 #include <string.h>
 

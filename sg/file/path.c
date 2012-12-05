@@ -1,15 +1,16 @@
-#include "defs.h"
+/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
+#include "sg/defs.h"
 #if defined(_WIN32)
 #include <Windows.h>
 #endif
 
 #define SG_PATH_INITSZ 1
 
-#include "cvar.h"
-#include "error.h"
-#include "file.h"
-#include "file_impl.h"
-#include "log.h"
+#include "impl.h"
+#include "sg/cvar.h"
+#include "sg/error.h"
+#include "sg/file.h"
+#include "sg/log.h"
 #include <stdlib.h>
 #include <string.h>
 

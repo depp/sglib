@@ -1,5 +1,6 @@
-#include "texture.hpp"
-#include "sys/error.hpp"
+/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
+#include "sgpp/error.hpp"
+#include "sgpp/texture.hpp"
 
 Texture::Ref Texture::file(const char *path)
 {

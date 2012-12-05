@@ -1,8 +1,9 @@
-#include "audio_file.h"
-#include "audio_fileprivate.h"
-#include "error.h"
-#include <stdlib.h>
+/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
+#include "fileprivate.h"
+#include "sg/audio_file.h"
+#include "sg/error.h"
 #include <stdio.h>
+#include <stdlib.h>
 
 static void
 sg_audio_file_resample_1(short *SG_RESTRICT dest, int dlen, int drate,

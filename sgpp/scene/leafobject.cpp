@@ -1,4 +1,5 @@
-#include "leafobject.hpp"
+/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
+#include "sgpp/scene/leafobject.hpp"
 
 Scene::LeafObject::~LeafObject()
 { }

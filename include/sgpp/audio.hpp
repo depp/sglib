@@ -1,8 +1,9 @@
-#ifndef CLIENT_AUDIO_HPP
-#define CLIENT_AUDIO_HPP
-#include "base/audio_file.h"
-#include "base/audio_source.h"
-#include "sys/sharedref.hpp"
+/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
+#ifndef SGPP_AUDIO_HPP
+#define SGPP_AUDIO_HPP
+#include "sg/audio_file.h"
+#include "sg/audio_source.h"
+#include "sgpp/sharedref.hpp"
 
 class AudioFile {
     template<class T> friend class SharedRef;

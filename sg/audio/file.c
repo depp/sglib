@@ -1,12 +1,13 @@
-#include "audio_file.h"
-#include "audio_fileprivate.h"
-#include "audio_sysprivate.h"
-#include "dict.h"
-#include "error.h"
-#include "file.h"
-#include "log.h"
-#include "strbuf.h"
-#include "thread.h"
+/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
+#include "fileprivate.h"
+#include "libpce/hashtable.h"
+#include "libpce/strbuf.h"
+#include "libpce/thread.h"
+#include "sg/audio_file.h"
+#include "sg/error.h"
+#include "sg/file.h"
+#include "sg/log.h"
+#include "sysprivate.h"
 #include <stdlib.h>
 #include <string.h>
 
@@ -90,10 +91,10 @@ sg_audio_file_load_finished(struct sg_resource *rs, void *result)
 }
 
 static void
-sg_audio_file_get_name(struct sg_resource *rs, struct sg_strbuf *buf)
+sg_audio_file_get_name(struct sg_resource *rs, struct pce_strbuf *buf)
 {
     struct sg_audio_file *fp = (struct sg_audio_file *) rs;
-    sg_strbuf_printf(buf, "audio:%s", fp->path);
+    pce_strbuf_printf(buf, "audio:%s", fp->path);
 }
 
 static const struct sg_resource_type sg_audio_file_type = {
@@ -104,23 +105,23 @@ static const struct sg_resource_type sg_audio_file_type = {
     SG_DISPATCH_IO
 };
 
-static struct dict sg_audio_files;
+static struct pce_hashtable sg_audio_files;
 
 struct sg_audio_file *
 sg_audio_file_new(const char *path, struct sg_error **err)
 {
-    struct dict_entry *e;
+    struct pce_hashtable_entry *e;
     struct sg_audio_file *fp;
     size_t len;
     char *pp;
 
-    e = dict_insert(&sg_audio_files, (char *) path);
+    e = pce_hashtable_insert(&sg_audio_files, (char *) path);
     fp = e->value;
     if (!fp) {
         len = strlen(path);
         fp = malloc(sizeof(*fp) + len + 1);
         if (!fp) {
-            dict_erase(&sg_audio_files, e);
+            pce_hashtable_erase(&sg_audio_files, e);
             sg_error_nomem(err);
             return NULL;
         }

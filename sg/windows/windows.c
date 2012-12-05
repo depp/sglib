@@ -1,3 +1,4 @@
+/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
 #include "base/audio_system.h"
 #include "base/cvar.h"
 #include "base/entry.h"
@@ -76,7 +77,7 @@ static int sg_height;
 
 static void handleResize(int width, int height)
 {
-    struct sg_event_resize e;
+    struct pce_event_resize e;
     if (!height)
         height = 1;
     if (!width)
@@ -85,7 +86,7 @@ static void handleResize(int width, int height)
     e.width = width;
     e.height = height;
     sg_height = height;
-    sg_sys_event((union sg_event *) &e);
+    sg_sys_event((union pce_event *) &e);
 }
 
 static void killGLWindow()
@@ -218,9 +219,9 @@ BOOL createWindow(int nCmdShow)
     return TRUE;
 }
 
-static void handleKey(int code, sg_event_type_t t)
+static void handleKey(int code, pce_event_type_t t)
 {
-    struct sg_event_key e;
+    struct pce_event_key e;
     int hcode;
     if (code < 0 || code > 255)
         return;
@@ -229,17 +230,17 @@ static void handleKey(int code, sg_event_type_t t)
         return;
     e.type = t;
     e.key = hcode;
-    sg_sys_event((union sg_event *) &e);
+    sg_sys_event((union pce_event *) &e);
 }
 
-static void handleMouse(int param, sg_event_type_t t, int button)
+static void handleMouse(int param, pce_event_type_t t, int button)
 {
-    struct sg_event_mouse e;
+    struct pce_event_mouse e;
     e.type = t;
     e.x = LOWORD(param);
     e.y = sg_height - 1 - HIWORD(param);
     e.button = button;
-    sg_sys_event((union sg_event *) &e);
+    sg_sys_event((union pce_event *) &e);
 }
 
 static LRESULT CALLBACK wndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)

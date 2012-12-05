@@ -1,5 +1,6 @@
-#ifndef CLIENT_UI_ACTION_HPP
-#define CLIENT_UI_ACTION_HPP
+/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
+#ifndef SGPP_UI_ACTION_HPP
+#define SGPP_UI_ACTION_HPP
 #include "screen.hpp"
 namespace UI {
 class Screen;

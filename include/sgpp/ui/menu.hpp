@@ -1,5 +1,6 @@
-#ifndef CLIENT_UI_MENU_HPP
-#define CLIENT_UI_MENU_HPP
+/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
+#ifndef SGPP_UI_MENU_HPP
+#define SGPP_UI_MENU_HPP
 #include "screen.hpp"
 #include "button.hpp"
 #include "mousemanager.hpp"

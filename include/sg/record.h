@@ -1,5 +1,9 @@
-#ifndef BASE_RECORD_H
-#define BASE_RECORD_H
+/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
+#ifndef SG_RECORD_H
+#define SG_RECORD_H
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Take a screenshot.  */
 void
@@ -43,4 +47,7 @@ void
 sg_record_yuv_from_rgb(void *dest, const void *src,
                        int width, int height);
 
+#ifdef __cplusplus
+}
+#endif
 #endif

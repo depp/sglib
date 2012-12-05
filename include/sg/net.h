@@ -1,5 +1,6 @@
-#ifndef BASE_NET_H
-#define BASE_NET_H
+/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
+#ifndef SG_NET_H
+#define SG_NET_H
 #if defined(_WIN32)
 #include "defs.h"
 #define INCL_WINSOCK_API_TYPEDEFS 1

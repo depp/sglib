@@ -1,9 +1,10 @@
-#include "audio_file.h"
-#include "audio_fileprivate.h"
-#include "audio_sysprivate.h"
-#include "error.h"
-#include "log.h"
-#include "sgendian.h"
+/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
+#include "fileprivate.h"
+#include "libpce/byteorder.h"
+#include "sg/audio_file.h"
+#include "sg/error.h"
+#include "sg/log.h"
+#include "sysprivate.h"
 #include <assert.h>
 #include <math.h>
 #include <stdlib.h>
@@ -28,7 +29,7 @@ sg_audio_copy_s16(short *SG_RESTRICT dest, const void *SG_RESTRICT src,
     const unsigned char *SG_RESTRICT sp;
     size_t i;
 
-    if (littleendian == (BYTE_ORDER == LITTLE_ENDIAN)) {
+    if (littleendian == (PCE_BYTE_ORDER == PCE_LITTLE_ENDIAN)) {
         memcpy(dest, src, count * sizeof(short));
         return;
     }

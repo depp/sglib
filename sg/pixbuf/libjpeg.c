@@ -1,9 +1,10 @@
+/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
 /* <stdio.h> is necessary for <jpeglib.h> */
 
-#include "error.h"
-#include "log.h"
-#include "pixbuf.h"
-#include "version.h"
+#include "sg/error.h"
+#include "sg/log.h"
+#include "sg/pixbuf.h"
+#include "sg/version.h"
 #include <stdio.h>
 #include <jpeglib.h>
 

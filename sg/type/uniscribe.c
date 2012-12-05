@@ -1,25 +1,15 @@
+/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
 #include "defs.h"
 
 #include "pixbuf.h"
 #include "type_impl.h"
+#include "libpce/util.h"
 #include <Windows.h>
 #include <usp10.h>
 #include <math.h>
 #include <limits.h>
 
 #pragma comment(lib, "Usp10.lib")
-
-static int
-round_up_pow2(unsigned x)
-{
-    x -= 1;
-    x |= x >> 1;
-    x |= x >> 2;
-    x |= x >> 4;
-    x |= x >> 8;
-    x |= x >> 16;
-    return x + 1;
-}
 
 static int sg_uniscribe_initted;
 static SCRIPT_DIGITSUBSTITUTE sg_uniscribe_psds;
@@ -321,7 +311,7 @@ alloc_items:
                 logattr = NULL;
             }
             if (!logattr) {
-                alogattr = round_up_pow2(clen);
+                alogattr = pce_round_up_pow2(clen);
                 logattr = malloc(sizeof(*logattr) * alogattr);
                 if (!logattr) goto error;
             }

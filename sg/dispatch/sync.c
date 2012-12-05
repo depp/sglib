@@ -1,5 +1,6 @@
-#include "dispatch.h"
-#include "thread.h"
+/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
+#include "libpce/thread.h"
+#include "sg/dispatch.h"
 #include <stdlib.h>
 #include <string.h>
 
@@ -16,7 +17,7 @@ struct sg_dispatch_sqentry {
 };
 
 struct sg_dispatch_sync {
-    struct sg_lock lock;
+    struct pce_lock lock;
 
     unsigned alloc;
     unsigned count;
@@ -31,7 +32,7 @@ static struct sg_dispatch_sync sg_dispatch_sync;
 void
 sg_dispatch_sync_init(void)
 {
-    sg_lock_init(&sg_dispatch_sync.lock);
+    pce_lock_init(&sg_dispatch_sync.lock);
 }
 
 void
@@ -42,9 +43,9 @@ sg_dispatch_sync_queue(sg_dispatch_time_t time, int delay, int *excl,
     unsigned nalloc, n;
     struct sg_dispatch_sqentry *queue;
 
-    sg_lock_acquire(&m->lock);
+    pce_lock_acquire(&m->lock);
     if (excl && *excl) {
-        sg_lock_release(&m->lock);
+        pce_lock_release(&m->lock);
         return;
     }
     queue = m->queue;
@@ -65,7 +66,7 @@ sg_dispatch_sync_queue(sg_dispatch_time_t time, int delay, int *excl,
     m->count = n + 1;
     if (excl)
         *excl = 1;
-    sg_lock_release(&m->lock);
+    pce_lock_release(&m->lock);
 
     return;
 
@@ -83,7 +84,7 @@ sg_dispatch_sync_run(sg_dispatch_time_t time)
     struct sg_dispatch_callback *cb;
     unsigned i, j, qct, cbct, cballoc;
 
-    sg_lock_acquire(&m->lock);
+    pce_lock_acquire(&m->lock);
     cq = m->queue;
     qct = m->count;
     cbct = 0;
@@ -111,7 +112,7 @@ sg_dispatch_sync_run(sg_dispatch_time_t time)
         cq[j++] = cq[i];
     }
     m->count = j;
-    sg_lock_release(&m->lock);
+    pce_lock_release(&m->lock);
 
     for (i = 0; i < cbct; ++i)
         cb[i].func(cb[i].cxt);

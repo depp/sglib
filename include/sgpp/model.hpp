@@ -1,3 +1,6 @@
+/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
+#ifndef SGPP_MODEL_HPP
+#define SGPP_MODEL_HPP
 #if 0
 
 #ifndef CLIENT_MODEL_HPP
@@ -35,4 +38,5 @@ public:
 
 #endif
 
+#endif
 #endif

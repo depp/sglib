@@ -1,6 +1,7 @@
-#ifndef SYS_FILE_HPP
-#define SYS_FILE_HPP
-#include "base/file.h"
+/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
+#ifndef SGPP_FILE_HPP
+#define SGPP_FILE_HPP
+#include "sg/file.h"
 #include <cstring>
 
 class FBuffer;

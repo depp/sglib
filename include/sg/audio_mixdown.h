@@ -1,5 +1,6 @@
-#ifndef BASE_AUDIO_MIXDOWN_H
-#define BASE_AUDIO_MIXDOWN_H
+/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
+#ifndef SG_AUDIO_MIXDOWN_H
+#define SG_AUDIO_MIXDOWN_H
 /*
     An audio mixdown provides a mixdown of all audio sources.
     Mixdowns can be used safely from any thread.  However, the same
@@ -14,7 +15,7 @@
     All mixdowns must have the same sample rate, and there can only be
     two mixdowns.  In practice, this means that one mixdown plays audio
 */
-#include "defs.h"
+#include "sg/defs.h"
 #ifdef __cplusplus
 extern "C" {
 #endif

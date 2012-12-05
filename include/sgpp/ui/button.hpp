@@ -1,8 +1,9 @@
-#ifndef CLIENT_UI_BUTTON_HPP
-#define CLIENT_UI_BUTTON_HPP
-#include "widget.hpp"
-#include "action.hpp"
-#include "client/type.hpp"
+/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
+#ifndef SGPP_UI_BUTTON_HPP
+#define SGPP_UI_BUTTON_HPP
+#include "sgpp/type.hpp"
+#include "sgpp/ui/action.hpp"
+#include "sgpp/ui/widget.hpp"
 #include <string>
 namespace UI {
 

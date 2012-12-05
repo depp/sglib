@@ -1,12 +1,13 @@
+/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
 /* POSIX file / path code.  Used on Linux, BSD, Mac OS X.  */
 
 /* This gives us 64-bit file offsets on 32-bit Linux */
 #define _FILE_OFFSET_BITS 64
 
-#include "error.h"
-#include "file.h"
-#include "file_impl.h"
-#include "log.h"
+#include "impl.h"
+#include "sg/error.h"
+#include "sg/file.h"
+#include "sg/log.h"
 #include <errno.h>
 #include <fcntl.h>
 #include <limits.h>

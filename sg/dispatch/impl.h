@@ -1,9 +1,7 @@
-#ifndef BASE_DISPATCH_IMPL_H
-#define BASE_DISPATCH_IMPL_H
-#include "defs.h"
-#ifdef __cplusplus
-extern "C" {
-#endif
+/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
+#ifndef SG_DISPATCH_IMPL_H
+#define SG_DISPATCH_IMPL_H
+#include "sg/defs.h"
 
 /* This should be treated as an opaque structure by everything but
    dispatch_common.c.  */
@@ -53,7 +51,4 @@ sg_dispatch_queue_pop(struct sg_dispatch_queue *SG_RESTRICT queue,
 void
 sg_dispatch_task_exec(struct sg_dispatch_task *task);
 
-#ifdef __cplusplus
-}
-#endif
 #endif

@@ -1,6 +1,7 @@
-#include "configfile.h"
-#include "file.h"
-#include "log.h"
+/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
+#include "sg/configfile.h"
+#include "sg/file.h"
+#include "sg/log.h"
 #include <stddef.h>
 #include <errno.h>
 #include <stdlib.h>

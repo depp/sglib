@@ -1,8 +1,6 @@
-#ifndef BASE_TYPE_IMPL_H
-#define BASE_TYPE_IMPL_H
-#ifdef __cplusplus
-extern "C" {
-#endif
+/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
+#ifndef SG_TYPE_IMPL_H
+#define SG_TYPE_IMPL_H
 struct sg_pixbuf;
 
 /* The data structures use OpenGL-style coordinates (origin at bottom
@@ -86,7 +84,4 @@ void
 sg_layout_impl_render(struct sg_layout_impl *li, struct sg_pixbuf *pbuf,
                       int xoff, int yoff);
 
-#ifdef __cplusplus
-}
-#endif
 #endif

@@ -1,5 +1,6 @@
-#ifndef CLIENT_UI_KEYMANAGER_HPP
-#define CLIENT_UI_KEYMANAGER_HPP
+/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
+#ifndef SGPP_UI_KEYMANAGER_HPP
+#define SGPP_UI_KEYMANAGER_HPP
 namespace UI {
 struct KeyEvent;
 

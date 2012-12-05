@@ -1,8 +1,11 @@
+/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
+#ifndef SG_MODEL_H
+#define SG_MODEL_H
 #if 0
 
 #ifndef BASE_MODEL_H
 #define BASE_MODEL_H
-#include "resource.h"
+#include "sg/resource.h"
 #include <stddef.h>
 #ifdef __cplusplus
 extern "C" {
@@ -58,4 +61,5 @@ sg_model_draw(struct sg_model *mp);
 #endif
 #endif
 
+#endif
 #endif

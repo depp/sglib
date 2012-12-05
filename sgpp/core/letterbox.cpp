@@ -1,5 +1,6 @@
-#include "letterbox.hpp"
-#include "opengl.hpp"
+/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
+#include "sgpp/letterbox.hpp"
+#include "sg/opengl.h"
 
 void Letterbox::setOSize(int w, int h)
 {

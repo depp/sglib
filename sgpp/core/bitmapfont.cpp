@@ -1,4 +1,5 @@
-#include "bitmapfont.hpp"
+/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
+#include "sgpp/bitmapfont.hpp"
 
 BitmapFont::BitmapFont(const char *path)
 {

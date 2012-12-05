@@ -1,5 +1,6 @@
-#include "audio.hpp"
-#include "sys/error.hpp"
+/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
+#include "sgpp/audio.hpp"
+#include "sgpp/error.hpp"
 
 AudioFile::Ref AudioFile::file(const char *path)
 {

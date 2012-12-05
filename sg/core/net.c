@@ -1,7 +1,7 @@
-#include "defs.h"
-
-#include "error.h"
-#include "net.h"
+/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
+#include "sg/defs.h"
+#include "sg/error.h"
+#include "sg/net.h"
 
 #include <assert.h>
 #include <errno.h>

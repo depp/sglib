@@ -1,10 +1,11 @@
-#include "client/viewport.hpp"
-#include "event.hpp"
-#include "base/entry.h"
-#include "base/event.h"
-#include "base/opengl.h"
-#include "screen.hpp"
-#include "sys/error.hpp"
+/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
+#include "sg/entry.h"
+#include "sg/event.h"
+#include "sg/opengl.h"
+#include "sgpp/error.hpp"
+#include "sgpp/ui/event.hpp"
+#include "sgpp/ui/screen.hpp"
+#include "sgpp/viewport.hpp"
 #include <assert.h>
 #include <stdio.h>
 using namespace UI;
@@ -58,21 +59,21 @@ void sg_game_getinfo(struct sg_game_info *info)
     (void) info;
 }
 
-static void mouse_event(union sg_event *evt, EventType t)
+static void mouse_event(union pce_event *evt, EventType t)
 {
-    struct sg_event_mouse &me = evt->mouse;
+    struct pce_event_mouse &me = evt->mouse;
     MouseEvent ue(t, me.button, me.x, me.y);
     current_screen->handleEvent(ue);
 }
 
-static void key_event(union sg_event *evt, EventType t)
+static void key_event(union pce_event *evt, EventType t)
 {
-    struct sg_event_key &ke = evt->key;
+    struct pce_event_key &ke = evt->key;
     KeyEvent ue(t, ke.key);
     current_screen->handleEvent(ue);
 }
 
-void sg_game_event(union sg_event *evt)
+void sg_game_event(union pce_event *evt)
 {
     if (!current_screen) {
         handle_nullscreen();

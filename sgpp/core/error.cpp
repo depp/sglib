@@ -1,4 +1,5 @@
-#include "error.hpp"
+/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
+#include "sgpp/error.hpp"
 #include <cstdlib>
 #include <assert.h>
 

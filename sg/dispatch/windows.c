@@ -1,3 +1,4 @@
+/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
 #include "dispatch.h"
 #include "dispatch_impl.h"
 #include <Windows.h>

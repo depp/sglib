@@ -1,5 +1,6 @@
-#ifndef VERSION_H
-#define VERSION_H
+/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
+#ifndef SG_VERSION_H
+#define SG_VERSION_H
 #ifdef __cplusplus
 extern "C" {
 #endif

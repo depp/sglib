@@ -1,3 +1,4 @@
+/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
 #ifndef SG_AUDIO_OFILE_H
 #define SG_AUDIO_OFILE_H
 #ifdef __cplusplus

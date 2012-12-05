@@ -1,7 +1,8 @@
-#ifndef BASE_RESOURCE_H
-#define BASE_RESOURCE_H
-#include "defs.h"
-#include "dispatch.h"
+/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
+#ifndef SG_RESOURCE_H
+#define SG_RESOURCE_H
+#include "sg/defs.h"
+#include "sg/dispatch.h"
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -18,7 +19,7 @@ extern "C" {
    Warning: This API is tricky.  Do not use this API without reading
    the documentation for it in full.  */
 struct sg_error;
-struct sg_strbuf;
+struct pce_strbuf;
 struct sg_resource;
 
 /* Error domain for when loading a resource was canceled.  */
@@ -49,7 +50,7 @@ struct sg_resource_type {
     /* Write the name of this particular resource into the string
        buffer.  This should be prefixed with the type name followed by
        a colon.  */
-    void (*get_name)(struct sg_resource *rs, struct sg_strbuf *buf);
+    void (*get_name)(struct sg_resource *rs, struct pce_strbuf *buf);
 
     /* The dispatch type for loading the resource.  Use
        SG_DISPATCH_NORMAL for procedurally generated resources and

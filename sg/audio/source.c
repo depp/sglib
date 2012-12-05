@@ -1,8 +1,9 @@
-#include "audio_file.h"
-#include "audio_source.h"
-#include "audio_sysprivate.h"
-#include "log.h"
-#include "util.h"
+/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
+#include "libpce/util.h"
+#include "sg/audio_file.h"
+#include "sg/audio_source.h"
+#include "sg/log.h"
+#include "sysprivate.h"
 #include <assert.h>
 #include <math.h>
 #include <stdlib.h>
@@ -31,7 +32,7 @@ sg_audio_source_open(void)
     unsigned alloc, nalloc, i, time;
     int src;
 
-    sg_lock_acquire(&sp->slock);
+    pce_lock_acquire(&sp->slock);
 
     time = sg_audio_mintime(sp->wtime, sp->ctime);
 
@@ -76,7 +77,7 @@ sg_audio_source_open(void)
     }
 
 done:
-    sg_lock_release(&sp->slock);
+    pce_lock_release(&sp->slock);
     return src;
 }
 
@@ -99,8 +100,8 @@ sg_audio_sysmsg(struct sg_audio_system *SG_RESTRICT sp,
     if (len > SG_AUDIO_MAXMSGLEN)
         goto fail;
 
-    alen1 = sg_align(sizeof(hdr));
-    alen2 = sg_align(len);
+    alen1 = pce_align(sizeof(hdr));
+    alen2 = pce_align(len);
 
     wpos = sp->bufwpos;
     rpos = sp->bufrpos;
@@ -108,7 +109,7 @@ sg_audio_sysmsg(struct sg_audio_system *SG_RESTRICT sp,
     amt = (wpos - rpos) & (sz - 1);
     buf = sp->buf;
     if (sz - amt < alen1 + alen2) {
-        nsz = sg_round_up_pow2(amt + alen1 + alen2);
+        nsz = pce_round_up_pow2(amt + alen1 + alen2);
         if (!nsz)
             goto toobig;
         if (nsz < SG_AUDIO_MINBUF)
@@ -128,7 +129,7 @@ sg_audio_sysmsg(struct sg_audio_system *SG_RESTRICT sp,
         /* We only have to acquire the lock if we need to resize the
            buffer, and we can wait until after we copy the data into
            the new buffer.  */
-        sg_rwlock_wracquire(&sp->qlock);
+        pce_rwlock_wracquire(&sp->qlock);
         sp->buf = nbuf;
         sp->bufsize = nsz;
         sp->bufwpos = (wpos - rpos) & (sz - 1);
@@ -137,7 +138,7 @@ sg_audio_sysmsg(struct sg_audio_system *SG_RESTRICT sp,
         for (i = 0; i < SG_AUDIO_MAXMIX; ++i)
             if (sp->mix[i].pos != (unsigned) -1)
                 sp->mix[i].pos = (sp->mix[i].pos - rpos) & (sz - 1);
-        sg_rwlock_wrrelease(&sp->qlock);
+        pce_rwlock_wrrelease(&sp->qlock);
 
         free(buf);
         buf = nbuf;
@@ -197,7 +198,7 @@ sg_audio_source_close(int src)
     struct sg_audio_system *SG_RESTRICT sp = &sg_audio_system_global;
     struct sg_audio_source *srcp;
 
-    sg_lock_acquire(&sp->slock);
+    pce_lock_acquire(&sp->slock);
 
     if ((unsigned) src >= sp->srcalloc)
         goto done;
@@ -210,7 +211,7 @@ sg_audio_source_close(int src)
     srcp->flags &= ~SG_AUDIO_OPEN;
 
 done:
-    sg_lock_release(&sp->slock);
+    pce_lock_release(&sp->slock);
 }
 
 static unsigned
@@ -236,7 +237,7 @@ sg_audio_source_play(int src, unsigned time, struct sg_audio_file *file,
     struct sg_audio_source *srcp;
     struct sg_audio_msgplay mdat;
 
-    sg_lock_acquire(&sp->slock);
+    pce_lock_acquire(&sp->slock);
 
     time = sg_audio_source_cliptime(sp, time);
 
@@ -259,7 +260,7 @@ sg_audio_source_play(int src, unsigned time, struct sg_audio_file *file,
     sg_resource_incref(&file->r);
 
 done:
-    sg_lock_release(&sp->slock);
+    pce_lock_release(&sp->slock);
 }
 
 void
@@ -268,7 +269,7 @@ sg_audio_source_stop(int src, unsigned time)
     struct sg_audio_system *SG_RESTRICT sp = &sg_audio_system_global;
     struct sg_audio_source *srcp;
 
-    sg_lock_acquire(&sp->slock);
+    pce_lock_acquire(&sp->slock);
 
     time = sg_audio_source_cliptime(sp, time);
 
@@ -285,7 +286,7 @@ sg_audio_source_stop(int src, unsigned time)
     sg_audio_sysmsg(sp, SG_AUDIO_MSG_STOP, src, time, NULL, 0);
 
 done:
-    sg_lock_release(&sp->slock);
+    pce_lock_release(&sp->slock);
 }
 
 void
@@ -294,7 +295,7 @@ sg_audio_source_stoploop(int src, unsigned time)
     struct sg_audio_system *SG_RESTRICT sp = &sg_audio_system_global;
     struct sg_audio_source *srcp;
 
-    sg_lock_acquire(&sp->slock);
+    pce_lock_acquire(&sp->slock);
 
     time = sg_audio_source_cliptime(sp, time);
 
@@ -310,7 +311,7 @@ sg_audio_source_stoploop(int src, unsigned time)
     }
 
 done:
-    sg_lock_release(&sp->slock);
+    pce_lock_release(&sp->slock);
 }
 
 /*
@@ -401,7 +402,7 @@ sg_audio_source_pmsg(int src, struct sg_audio_msgparam *SG_RESTRICT pe)
     if ((unsigned) pe->param >= SG_AUDIO_PARAMCOUNT)
         return;
 
-    sg_lock_acquire(&sp->slock);
+    pce_lock_acquire(&sp->slock);
 
     pe->time = sg_audio_source_cliptime(sp, pe->time);
 
@@ -418,7 +419,7 @@ sg_audio_source_pmsg(int src, struct sg_audio_msgparam *SG_RESTRICT pe)
         pe->time, pe, sizeof(*pe));
 
 done:
-    sg_lock_release(&sp->slock);
+    pce_lock_release(&sp->slock);
 }
 
 void
@@ -499,7 +500,7 @@ sg_audio_source_bufcommit(struct sg_audio_system *SG_RESTRICT sp,
         etime = wtime;
     }
 
-    sg_rwlock_wracquire(&sp->qlock);
+    pce_rwlock_wracquire(&sp->qlock);
 
     sp->wtime = wtime;
     sp->ctime = ctime;
@@ -519,12 +520,12 @@ sg_audio_source_bufcommit(struct sg_audio_system *SG_RESTRICT sp,
             mind = d;
         if (sp->mix[i].is_waiting &&
             (int)(etime - sp->mix[i].wait_time) > 0)
-            sg_evt_signal(&sp->mix[i].evt);
+            pce_evt_signal(&sp->mix[i].evt);
     }
     nrpos = (rpos + mind) & (sz - 1);
     sp->bufrpos = nrpos;
 
-    sg_rwlock_wrrelease(&sp->qlock);
+    pce_rwlock_wrrelease(&sp->qlock);
 
     bp->buf = sp->buf;
     bp->size = sp->bufsize;
@@ -545,7 +546,7 @@ sg_audio_source_bufread(struct sg_audio_systemcbuf *SG_RESTRICT bp,
     const void *p;
     unsigned char *tmp;
 
-    alen = sg_align(sz);
+    alen = pce_align(sz);
     assert(sz <= SG_AUDIO_MAXMSGLEN);
     assert(alen <= SG_AUDIO_MAXMSGLEN);
 
@@ -576,7 +577,7 @@ sg_audio_source_bufskip(struct sg_audio_systemcbuf *SG_RESTRICT bp,
 {
     size_t alen;
     unsigned avail;
-    alen = sg_align(sz);
+    alen = pce_align(sz);
     avail = (bp->end - bp->pos) & (bp->size - 1);
     if (alen > avail)
         return 0;
@@ -687,9 +688,9 @@ sg_audio_source_commit(unsigned wtime, unsigned ctime)
     struct sg_audio_system *SG_RESTRICT sp = &sg_audio_system_global;
     struct sg_audio_systemcbuf buf;
 
-    sg_lock_acquire(&sp->slock);
+    pce_lock_acquire(&sp->slock);
     sg_audio_source_bufcommit(sp, &buf, wtime, ctime);
     sg_audio_source_bufprocess(sp, &buf);
     sg_audio_source_sprocess(sp);
-    sg_lock_release(&sp->slock);
+    pce_lock_release(&sp->slock);
 }

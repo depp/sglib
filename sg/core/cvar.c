@@ -1,5 +1,6 @@
-#include "cvar.h"
-#include "configfile.h"
+/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
+#include "sg/cvar.h"
+#include "sg/configfile.h"
 
 #include <float.h>
 #include <limits.h>

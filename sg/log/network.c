@@ -1,8 +1,9 @@
-#include "cvar.h"
-#include "error.h"
-#include "log.h"
-#include "log_impl.h"
-#include "net.h"
+/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
+#include "impl.h"
+#include "sg/cvar.h"
+#include "sg/error.h"
+#include "sg/log.h"
+#include "sg/net.h"
 
 #include <errno.h>
 #include <stdlib.h>

@@ -1,5 +1,6 @@
-#ifndef CLIENT_LETTERBOX_HPP
-#define CLIENT_LETTERBOX_HPP
+/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
+#ifndef SGPP_LETTERBOX_HPP
+#define SGPP_LETTERBOX_HPP
 
 class Letterbox {
     int m_ow, m_oh;

@@ -1,7 +1,8 @@
-#ifndef CLIENT_SCENE_OBJECT_HPP
-#define CLIENT_SCENE_OBJECT_HPP
+/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
+#ifndef SGPP_SCENE_OBJECT_HPP
+#define SGPP_SCENE_OBJECT_HPP
 #include <vector>
-#include "client/ui/geometry.hpp"
+#include "sgpp/ui/geometry.hpp"
 namespace Scene {
 class LeafObject;
 

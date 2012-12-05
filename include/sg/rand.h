@@ -1,5 +1,6 @@
-#ifndef BASE_RAND_H
-#define BASE_RAND_H
+/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
+#ifndef SG_RAND_H
+#define SG_RAND_H
 #ifdef __cplusplus
 extern "C" {
 #endif

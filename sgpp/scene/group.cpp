@@ -1,4 +1,5 @@
-#include "group.hpp"
+/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
+#include "sgpp/scene/group.hpp"
 
 Scene::Group::~Group()
 { }

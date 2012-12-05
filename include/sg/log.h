@@ -1,3 +1,4 @@
+/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
 /* The logging API is modeled after the popular log4j, except it is
    simplified and modified to work with the existing configuration
    system.
@@ -12,8 +13,8 @@
    When a log message is sent to a logger, the message is only
    emmitted if the level of the message is equal to or greater than
    the level of the logger.  */
-#ifndef BASE_LOG_H
-#define BASE_LOG_H
+#ifndef SG_LOG_H
+#define SG_LOG_H
 #include <stdarg.h>
 #ifdef __cplusplus
 extern "C" {

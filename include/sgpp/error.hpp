@@ -1,6 +1,7 @@
-#ifndef SYS_ERROR_HPP
-#define SYS_ERROR_HPP
-#include "base/error.h"
+/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
+#ifndef SGPP_ERROR_HPP
+#define SGPP_ERROR_HPP
+#include "sg/error.h"
 #include <stdexcept>
 
 class error : public std::exception {

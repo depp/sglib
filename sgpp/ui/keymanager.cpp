@@ -1,5 +1,6 @@
-#include "keymanager.hpp"
-#include "event.hpp"
+/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
+#include "sgpp/ui/keymanager.hpp"
+#include "sgpp/ui/event.hpp"
 #include <cstring>
 
 UI::KeyManager::KeyManager(const unsigned char *map)

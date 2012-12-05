@@ -1,5 +1,6 @@
-#ifndef BASE_CLOCK_H
-#define BASE_CLOCK_H
+/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
+#ifndef SG_CLOCK_H
+#define SG_CLOCK_H
 #ifdef __cplusplus
 extern "C" {
 #endif

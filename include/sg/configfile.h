@@ -1,6 +1,7 @@
-#ifndef BASE_CONFIGFILE_H
-#define BASE_CONFIGFILE_H
-#include "dict.h"
+/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
+#ifndef SG_CONFIGFILE_H
+#define SG_CONFIGFILE_H
+#include "libpce/hashtable.h"
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -15,7 +16,7 @@ extern "C" {
    name of each section is also allocated with malloc and is shared
    with the section structure.  */
 struct configfile {
-    struct dict sect;
+    struct pce_hashtable sect;
 };
 
 /* Entries in a config file section have each key and value set to
@@ -23,7 +24,7 @@ struct configfile {
    by the section.  */
 struct configfile_section {
     char *name;
-    struct dict var;
+    struct pce_hashtable var;
 };
 
 /* Initialize an empty config file.  */
@@ -73,7 +74,7 @@ configfile_insert_var(struct configfile_section *s,
 /* Erase the given variable from the config file section.  */
 void
 configfile_erase_var(struct configfile_section *s,
-                     struct dict_entry *e);
+                     struct pce_hashtable_entry *e);
 
 /* ===== I/O functions ===== */
 

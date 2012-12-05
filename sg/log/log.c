@@ -1,9 +1,10 @@
-#include "clock.h"
-#include "cvar.h"
-#include "error.h"
-#include "log.h"
-#include "log_impl.h"
-#include "thread.h"
+/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
+#include "impl.h"
+#include "libpce/thread.h"
+#include "sg/clock.h"
+#include "sg/cvar.h"
+#include "sg/error.h"
+#include "sg/log.h"
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -23,7 +24,7 @@ struct sg_logger_obj {
 
 static struct sg_logger_obj sg_logger_root;
 static struct sg_log_listener *sg_listeners[4];
-static struct sg_lock sg_logger_lock;
+static struct pce_lock sg_logger_lock;
 
 void
 sg_log_listen(struct sg_log_listener *listener)
@@ -71,7 +72,7 @@ void
 sg_log_init(void)
 {
     sg_log_level_t level = sg_logger_conflevel(NULL, 0);
-    sg_lock_init(&sg_logger_lock);
+    pce_lock_init(&sg_logger_lock);
     sg_logger_root.head.level = level == LOG_INHERIT ? LOG_WARN : level;
     sg_logger_root.level = level;
     sg_log_console_init();
@@ -179,7 +180,7 @@ sg_dologmem(struct sg_logger *logger, sg_log_level_t level,
     m.msglen = len;
     m.levelval = level;
 
-    sg_lock_acquire(&sg_logger_lock);
+    pce_lock_acquire(&sg_logger_lock);
     for (i = 0; i < MAX_LISTENERS; ++i) {
         p = sg_listeners[i];
         if (p) {
@@ -188,7 +189,7 @@ sg_dologmem(struct sg_logger *logger, sg_log_level_t level,
             sg_listeners[i] = p;
         }
     }
-    sg_lock_release(&sg_logger_lock);
+    pce_lock_release(&sg_logger_lock);
 }
 
 /* Be careful because the MSC version of the sprintf family behaves

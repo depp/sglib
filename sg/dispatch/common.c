@@ -1,5 +1,6 @@
-#include "dispatch.h"
-#include "dispatch_impl.h"
+/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
+#include "impl.h"
+#include "sg/dispatch.h"
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>

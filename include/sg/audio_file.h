@@ -1,7 +1,8 @@
-#ifndef BASE_AUDIO_FILE_H
-#define BASE_AUDIO_FILE_H
-#include "resource.h"
-#include "thread.h"
+/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
+#ifndef SG_AUDIO_FILE_H
+#define SG_AUDIO_FILE_H
+#include "libpce/thread.h"
+#include "sg/resource.h"
 #include <stddef.h>
 #ifdef __cplusplus
 extern "C" {

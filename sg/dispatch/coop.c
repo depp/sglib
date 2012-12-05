@@ -1,6 +1,7 @@
+/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
 /* Cooperative threading implementation of dispatch interface.  */
-#include "dispatch.h"
-#include "dispatch_impl.h"
+#include "impl.h"
+#include "sg/dispatch.h"
 #include <stdlib.h>
 
 struct sg_dispatch_coop {
@@ -13,7 +14,7 @@ static struct sg_dispatch_coop *sg_dispatch_coop;
 static void
 sg_dispatch_coop_exec(void *ptr)
 {
-    struct sg_dispatch_coop *p = ptr;
+    struct sg_dispatch_coop *p;
 }
 
 static void

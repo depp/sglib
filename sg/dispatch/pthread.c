@@ -1,3 +1,4 @@
+/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
 /* POSIX threads implementation of dispatch interface.  This allocates
    a number of threads to the CPU-bound tasks and a number of threads
    to disk-bound tasks.  Threads are created as necessary and expire
@@ -7,8 +8,8 @@
 #define _XOPEN_SOURCE 600
 #endif
 
-#include "dispatch.h"
-#include "dispatch_impl.h"
+#include "impl.h"
+#include "sg/dispatch.h"
 #include <errno.h>
 #include <pthread.h>
 #include <stdlib.h>

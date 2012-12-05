@@ -1,13 +1,14 @@
+/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
 #define _XOPEN_SOURCE 600
 
-#include "audio_mixdown.h"
-#include "audio_system.h"
-#include "clock.h"
-#include "clock_impl.h"
-#include "cvar.h"
-#include "error.h"
-#include "log.h"
-#include "sgendian.h"
+#include "../core/clock_impl.h"
+#include "libpce/byteorder.h"
+#include "sg/audio_mixdown.h"
+#include "sg/audio_system.h"
+#include "sg/clock.h"
+#include "sg/cvar.h"
+#include "sg/error.h"
+#include "sg/log.h"
 #include <alloca.h>
 #include <alsa/asoundlib.h>
 #include <assert.h>
@@ -214,7 +215,7 @@ sg_audio_sys_pstart(void)
 
     r = snd_pcm_hw_params_set_format(
         alsa->pcm, hwparms,
-        ((BYTE_ORDER == LITTLE_ENDIAN) ?
+        ((PCE_BYTE_ORDER == PCE_LITTLE_ENDIAN) ?
          SND_PCM_FORMAT_FLOAT_LE : SND_PCM_FORMAT_FLOAT_BE));
     if (r < 0) {
         why = "could not set sample format";

@@ -1,6 +1,7 @@
-#include "mousemanager.hpp"
-#include "event.hpp"
-#include "widget.hpp"
+/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
+#include "sgpp/ui/mousemanager.hpp"
+#include "sgpp/ui/event.hpp"
+#include "sgpp/ui/widget.hpp"
 
 void UI::MouseManager::handleMouseEvent(MouseEvent const &evt)
 {

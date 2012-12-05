@@ -1,5 +1,6 @@
-#ifndef SYS_BUFFER_HPP
-#define SYS_BUFFER_HPP
+/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
+#ifndef SGPP_BUFFER_HPP
+#define SGPP_BUFFER_HPP
 #include <stdlib.h>
 #include <memory>
 

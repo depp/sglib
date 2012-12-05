@@ -1,7 +1,8 @@
-#ifndef CLIENT_UI_WIDGET_HPP
-#define CLIENT_UI_WIDGET_HPP
-#include "geometry.hpp"
-#include "client/scene/leafobject.hpp"
+/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
+#ifndef SGPP_UI_WIDGET_HPP
+#define SGPP_UI_WIDGET_HPP
+#include "sgpp/scene/leafobject.hpp"
+#include "sgpp/ui/geometry.hpp"
 namespace UI {
 struct MouseEvent;
 struct KeyEvent;

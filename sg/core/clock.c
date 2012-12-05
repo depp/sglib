@@ -1,5 +1,6 @@
-#include "clock.h"
+/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
 #include "clock_impl.h"
+#include "sg/clock.h"
 #include <stdio.h>
 
 #if defined(_MSC_VER)

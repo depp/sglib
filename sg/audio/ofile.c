@@ -1,8 +1,9 @@
-#include "audio_ofile.h"
-#include "binary.h"
-#include "error.h"
-#include "file.h"
-#include "util.h"
+/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
+#include "libpce/binary.h"
+#include "libpce/util.h"
+#include "sg/audio_ofile.h"
+#include "sg/error.h"
+#include "sg/file.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -79,20 +80,20 @@ sg_audio_ofile_close(struct sg_audio_ofile *afp,
 
     sz = afp->len;
     memcpy(header, "RIFF", 4);
-    write_lu32(header + 4, sz * 4 + 36);
+    pce_write_lu32(header + 4, sz * 4 + 36);
     memcpy(header + 8, "WAVE", 4);
 
     memcpy(header + 12, "fmt ", 4);
-    write_lu32(header + 16, 16);
-    write_lu16(header + 20, 1);
-    write_lu16(header + 22, 2);
-    write_lu32(header + 24, afp->samplerate);
-    write_lu32(header + 28, afp->samplerate * 4);
-    write_lu16(header + 32, 4);
-    write_lu16(header + 34, 16);
+    pce_write_lu32(header + 16, 16);
+    pce_write_lu16(header + 20, 1);
+    pce_write_lu16(header + 22, 2);
+    pce_write_lu32(header + 24, afp->samplerate);
+    pce_write_lu32(header + 28, afp->samplerate * 4);
+    pce_write_lu16(header + 32, 4);
+    pce_write_lu16(header + 34, 16);
 
     memcpy(header + 36, "data", 4);
-    write_lu32(header + 40, sz * 4);
+    pce_write_lu32(header + 40, sz * 4);
 
     pos = 0;
     while (pos < WAV_HEADER_SIZE) {
@@ -141,7 +142,7 @@ sg_audio_ofile_write(struct sg_audio_ofile *afp,
         if (afp->tmplen < nframe) {
             free(afp->tmp);
             afp->tmp = NULL;
-            nlen = sg_round_up_pow2(nframe);
+            nlen = pce_round_up_pow2(nframe);
             if (nlen > (size_t) -1 / 4)
                 goto nomem;
             tmp = malloc(nlen * 4);

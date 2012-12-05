@@ -1,9 +1,10 @@
+/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
 /* File / path convenience functions for reading files */
 
 #define SG_FILE_INITBUF 4096
 
-#include "error.h"
-#include "file.h"
+#include "sg/error.h"
+#include "sg/file.h"
 #include <stdlib.h>
 
 int

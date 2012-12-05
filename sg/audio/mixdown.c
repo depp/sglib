@@ -1,9 +1,10 @@
-#include "audio_file.h"
-#include "audio_mixdown.h"
-#include "audio_sysprivate.h"
-#include "error.h"
-#include "log.h"
-#include "util.h"
+/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
+#include "libpce/util.h"
+#include "sg/audio_file.h"
+#include "sg/audio_mixdown.h"
+#include "sg/error.h"
+#include "sg/log.h"
+#include "sysprivate.h"
 #include <assert.h>
 #include <math.h>
 #include <stdlib.h>
@@ -332,7 +333,7 @@ sg_audio_mixdown_getmsg(struct sg_audio_mixdown *SG_RESTRICT mp)
     unsigned char *sbuf, *mbuf;
     unsigned start, end, len, nalloc, sz, etime, wait_time;
 
-    sg_rwlock_rdacquire(&sp->qlock);
+    pce_rwlock_rdacquire(&sp->qlock);
 
     if (mp->type == SG_AUDIO_OFFLINE) {
         if ((int) (sp->wtime - sp->ctime) > 0)
@@ -344,9 +345,9 @@ sg_audio_mixdown_getmsg(struct sg_audio_mixdown *SG_RESTRICT mp)
         if ((int) (etime - wait_time) <= 0) {
             sp->mix[mp->index].is_waiting = 1;
             sp->mix[mp->index].wait_time = wait_time;
-            sg_rwlock_rdrelease(&sp->qlock);
-            sg_evt_wait(&sp->mix[mp->index].evt);
-            sg_rwlock_rdacquire(&sp->qlock);
+            pce_rwlock_rdrelease(&sp->qlock);
+            pce_evt_wait(&sp->mix[mp->index].evt);
+            pce_rwlock_rdacquire(&sp->qlock);
             sp->mix[mp->index].is_waiting = 0;
         }
     }
@@ -359,7 +360,7 @@ sg_audio_mixdown_getmsg(struct sg_audio_mixdown *SG_RESTRICT mp)
     if (len > mp->mbufalloc - mp->mbufsize) {
         if (len > SG_AUDIO_MIXMAXBUF - mp->mbufsize)
             goto fail;
-        nalloc = sg_round_up_pow2(len + mp->mbufsize);
+        nalloc = pce_round_up_pow2(len + mp->mbufsize);
         mbuf = realloc(mp->mbuf, nalloc);
         if (!mbuf)
             goto fail;
@@ -378,7 +379,7 @@ sg_audio_mixdown_getmsg(struct sg_audio_mixdown *SG_RESTRICT mp)
     mp->wtime = sp->wtime;
     mp->ctime = sp->ctime;
 
-    sg_rwlock_rdrelease(&sp->qlock);
+    pce_rwlock_rdrelease(&sp->qlock);
     return;
 
 fail:
@@ -396,10 +397,10 @@ sg_audio_mixdown_updatepos(struct sg_audio_mixdown *SG_RESTRICT mp)
     if (!mp->advance)
         return;
 
-    sg_rwlock_rdacquire(&sp->qlock);
+    pce_rwlock_rdacquire(&sp->qlock);
     sp->mix[mp->index].pos =
         (sp->mix[mp->index].pos + mp->advance) & (sp->bufsize - 1);
-    sg_rwlock_rdrelease(&sp->qlock);
+    pce_rwlock_rdrelease(&sp->qlock);
 }
 
 /* ========================================
@@ -742,10 +743,10 @@ sg_audio_mixdown_new1(sg_audio_mixdowntype_t type,
 
     bufscount = 4 * bufsize + 
         nchan * SG_AUDIO_PARAMCOUNT * (bufsize >> SG_AUDIO_PARAMBITS);
-    bufslen = sg_align(sizeof(float) * bufscount);
-    srcoffset = bufslen + sg_align(sizeof(*mp));
-    chanoffset = srcoffset + sg_align(sizeof(*mp->srcs) * nsrc);
-    size = chanoffset + sg_align(sizeof(*mp->chans) * nchan);
+    bufslen = pce_align(sizeof(float) * bufscount);
+    srcoffset = bufslen + pce_align(sizeof(*mp));
+    chanoffset = srcoffset + pce_align(sizeof(*mp->srcs) * nsrc);
+    size = chanoffset + pce_align(sizeof(*mp->chans) * nchan);
 
     root = malloc(size);
     if (!root) {
@@ -797,7 +798,7 @@ sg_audio_mixdown_new1(sg_audio_mixdowntype_t type,
     mp->buf_samp = bufs + 2 * bufsize;
     mp->buf_param = bufs + 4 * bufsize;
 
-    sg_lock_acquire(&sp->slock);
+    pce_lock_acquire(&sp->slock);
 
     if (type == SG_AUDIO_OFFLINE) {
         rate = sp->samplerate;
@@ -810,7 +811,7 @@ sg_audio_mixdown_new1(sg_audio_mixdowntype_t type,
                     "tried to change sample rate %d -> %d",
                     sp->samplerate, rate);
             free(root);
-            sg_lock_release(&sp->slock);
+            pce_lock_release(&sp->slock);
             return NULL;
         }
         sp->samplerate = rate;
@@ -821,7 +822,7 @@ sg_audio_mixdown_new1(sg_audio_mixdowntype_t type,
             break;
 
     if (index >= SG_AUDIO_MAXMIX) {
-        sg_lock_release(&sp->slock);
+        pce_lock_release(&sp->slock);
         free(root);
         /* FIXME: we need ENOSPC or some equivalent */
         sg_error_nomem(err);
@@ -834,12 +835,12 @@ sg_audio_mixdown_new1(sg_audio_mixdowntype_t type,
     sp->mix[index].is_waiting = 0;
     sp->mix[index].wait_time = 0;
     if (type == SG_AUDIO_OFFLINE)
-        sg_evt_init(&sp->mix[index].evt);
+        pce_evt_init(&sp->mix[index].evt);
     mp->index = index;
     mp->wtime = sp->wtime;
     mp->ctime = sp->ctime;
 
-    sg_lock_release(&sp->slock);
+    pce_lock_release(&sp->slock);
 
     return mp;
 }
@@ -876,15 +877,15 @@ sg_audio_mixdown_free(struct sg_audio_mixdown *SG_RESTRICT mp)
 {
     struct sg_audio_system *SG_RESTRICT sp = &sg_audio_system_global;
 
-    sg_lock_acquire(&sp->slock);
+    pce_lock_acquire(&sp->slock);
     sp->mixmask &= ~(1u << mp->index);
     if (!sp->mixmask)
         sp->samplerate = 0;
     if (mp->type == SG_AUDIO_OFFLINE) {
-        sg_evt_destroy(&sp->mix[mp->index].evt);
+        pce_evt_destroy(&sp->mix[mp->index].evt);
     }
     memset(&sp->mix[mp->index], 0, sizeof(*sp->mix));
-    sg_lock_release(&sp->slock);
+    pce_lock_release(&sp->slock);
 
     free(mp->mbuf);
     free(mp->root);

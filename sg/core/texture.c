@@ -1,9 +1,10 @@
-#include "dict.h"
-#include "error.h"
-#include "texture.h"
-#include "opengl.h"
-#include "pixbuf.h"
-#include "strbuf.h"
+/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
+#include "libpce/hashtable.h"
+#include "libpce/strbuf.h"
+#include "sg/error.h"
+#include "sg/opengl.h"
+#include "sg/pixbuf.h"
+#include "sg/texture.h"
 #include <stdlib.h>
 #include <string.h>
 
@@ -101,10 +102,10 @@ sg_texture_image_load_finished(struct sg_resource *rs, void *result)
 }
 
 static void
-sg_texture_image_get_name(struct sg_resource *rs, struct sg_strbuf *buf)
+sg_texture_image_get_name(struct sg_resource *rs, struct pce_strbuf *buf)
 {
     struct sg_texture_image *img = (struct sg_texture_image *) rs;
-    sg_strbuf_printf(buf, "image:%s", img->path);
+    pce_strbuf_printf(buf, "image:%s", img->path);
 }
 
 static const struct sg_resource_type sg_texture_image_type = {
@@ -115,23 +116,23 @@ static const struct sg_resource_type sg_texture_image_type = {
     SG_DISPATCH_IO
 };
 
-static struct dict sg_texture_images;
+static struct pce_hashtable sg_texture_images;
 
 struct sg_texture_image *
 sg_texture_image_new(const char *path, struct sg_error **err)
 {
-    struct dict_entry *e;
+    struct pce_hashtable_entry *e;
     struct sg_texture_image *img;
     size_t len;
     char *pp;
 
-    e = dict_insert(&sg_texture_images, (char *) path);
+    e = pce_hashtable_insert(&sg_texture_images, (char *) path);
     img = e->value;
     if (!img) {
         len = strlen(path);
         img = malloc(sizeof(*img) + len + 1);
         if (!img) {
-            dict_erase(&sg_texture_images, e);
+            pce_hashtable_erase(&sg_texture_images, e);
             sg_error_nomem(err);
             return NULL;
         }

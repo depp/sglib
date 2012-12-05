@@ -1,5 +1,6 @@
-#ifndef BASE_FILE_H
-#define BASE_FILE_H
+/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
+#ifndef SG_FILE_H
+#define SG_FILE_H
 #include <stddef.h>
 #include <stdint.h>
 #ifdef __cplusplus

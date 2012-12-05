@@ -1,3 +1,4 @@
+/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
 #if defined(__OBJC__)
 #include <Cocoa/Cocoa.h>
 #endif

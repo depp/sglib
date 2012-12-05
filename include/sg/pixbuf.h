@@ -1,5 +1,6 @@
-#ifndef BASE_PIXBUF_H
-#define BASE_PIXBUF_H
+/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
+#ifndef SG_PIXBUF_H
+#define SG_PIXBUF_H
 #include <stddef.h>
 #ifdef __cplusplus
 extern "C" {

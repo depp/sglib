@@ -1,8 +1,9 @@
-#ifndef CLIENT_TEXTURE_HPP
-#define CLIENT_TEXTURE_HPP
-#include "base/texture.h"
-#include "base/opengl.h"
-#include "sys/sharedref.hpp"
+/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
+#ifndef SGPP_TEXTURE_HPP
+#define SGPP_TEXTURE_HPP
+#include "sg/texture.h"
+#include "sg/opengl.h"
+#include "sgpp/sharedref.hpp"
 
 class Texture {
     template<class T> friend class SharedRef;

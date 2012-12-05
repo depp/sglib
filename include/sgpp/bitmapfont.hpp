@@ -1,5 +1,6 @@
-#ifndef CLIENT_BITMAPFONT_HPP
-#define CLIENT_BITMAPFONT_HPP
+/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
+#ifndef SGPP_BITMAPFONT_HPP
+#define SGPP_BITMAPFONT_HPP
 #include "texture.hpp"
 
 class BitmapFont {

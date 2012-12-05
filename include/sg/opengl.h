@@ -1,5 +1,6 @@
-#ifndef BASE_OPENGL_H
-#define BASE_OPENGL_H
+/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
+#ifndef SG_OPENGL_H
+#define SG_OPENGL_H
 
 #include <GL/glew.h>
 

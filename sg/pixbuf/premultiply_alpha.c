@@ -1,4 +1,5 @@
-#include "pixbuf.h"
+/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
+#include "sg/pixbuf.h"
 
 static void
 sg_pixbuf_premultiply_ya(unsigned char *ptr, size_t npix)

@@ -1,5 +1,6 @@
-#include "defs.h"
-#include "record.h"
+/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
+#include "sg/defs.h"
+#include "sg/record.h"
 #include <emmintrin.h>
 #include <string.h>
 

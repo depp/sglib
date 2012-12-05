@@ -1,8 +1,9 @@
-#ifndef BASE_AUDIO_SYSPRIVATE_H
-#define BASE_AUDIO_SYSPRIVATE_H
-#include "defs.h"
-#include "thread.h"
-#include "audio_source.h"
+/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
+#ifndef SG_AUDIO_SYSPRIVATE_H
+#define SG_AUDIO_SYSPRIVATE_H
+#include "libpce/thread.h"
+#include "sg/audio_source.h"
+#include "sg/defs.h"
 
 /* Maximum number of mixdowns */
 #define SG_AUDIO_MAXMIX 2
@@ -145,7 +146,7 @@ struct sg_audio_mixinfo {
     unsigned wait_time;
 
     /* Event to signal the mixdown to wake up.  */
-    struct sg_evt evt;
+    struct pce_evt evt;
 };
 
 struct sg_audio_system {
@@ -179,7 +180,7 @@ struct sg_audio_system {
     */
 
     /* Lock for interacting with the system.  */
-    struct sg_lock slock;
+    struct pce_lock slock;
 
     /* Array of audio sources.  */
     struct sg_audio_source *srcs;
@@ -220,7 +221,7 @@ struct sg_audio_system {
     */
 
     /* RW lock for interacting with the queue  */
-    struct sg_rwlock qlock;
+    struct pce_rwlock qlock;
 
     /* Last wall time of commit */
     unsigned wtime;

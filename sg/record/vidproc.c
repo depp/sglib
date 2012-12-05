@@ -1,15 +1,16 @@
+/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
 #define _XOPEN_SOURCE 700
 /* To get dirfd with outdated libc feature tests */
 #define _BSD_SOURCE 1
 
-#include "defs.h"
-#include "audio_ofile.h"
-#include "audio_mixdown.h"
-#include "dispatch.h"
-#include "entry.h"
-#include "error.h"
-#include "log.h"
-#include "record.h"
+#include "sg/defs.h"
+#include "sg/audio_ofile.h"
+#include "sg/audio_mixdown.h"
+#include "sg/dispatch.h"
+#include "sg/entry.h"
+#include "sg/error.h"
+#include "sg/log.h"
+#include "sg/record.h"
 
 #include <assert.h>
 #include <stdarg.h>

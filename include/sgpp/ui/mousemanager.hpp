@@ -1,5 +1,6 @@
-#ifndef CLIENT_UI_MOUSEMANAGER_HPP
-#define CLIENT_UI_MOUSEMANAGER_HPP
+/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
+#ifndef SGPP_UI_MOUSEMANAGER_HPP
+#define SGPP_UI_MOUSEMANAGER_HPP
 namespace UI {
 struct MouseEvent;
 class Widget;

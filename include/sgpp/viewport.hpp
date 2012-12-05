@@ -1,5 +1,6 @@
-#ifndef CLIENT_VIEWPORT_HPP
-#define CLIENT_VIEWPORT_HPP
+/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
+#ifndef SGPP_VIEWPORT_HPP
+#define SGPP_VIEWPORT_HPP
 
 /* An object for managing the OpenGL viewport.  The constructor and
    destructor both call glViewport, so the viewport changes when it

@@ -1,5 +1,6 @@
-#ifndef CLIENT_UI_EVENT_HPP
-#define CLIENT_UI_EVENT_HPP
+/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
+#ifndef SGPP_UI_EVENT_HPP
+#define SGPP_UI_EVENT_HPP
 namespace UI {
 
 enum EventType {

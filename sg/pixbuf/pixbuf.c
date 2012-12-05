@@ -1,5 +1,7 @@
-#include "error.h"
-#include "pixbuf.h"
+/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
+#include "libpce/util.h"
+#include "sg/error.h"
+#include "sg/pixbuf.h"
 #include <stdlib.h>
 #include <limits.h>
 
@@ -33,19 +35,6 @@ sg_pixbuf_destroy(struct sg_pixbuf *pbuf)
     sg_pixbuf_init(pbuf);
 }
 
-static unsigned
-round_up_pow2(unsigned x)
-{
-    x -= 1;
-    x |= x >> 16;
-    x |= x >> 8;
-    x |= x >> 4;
-    x |= x >> 2;
-    x |= x >> 1;
-    x += 1;
-    return x;
-}
-
 int
 sg_pixbuf_set(struct sg_pixbuf *pbuf, sg_pixbuf_format_t format,
               int width, int height, struct sg_error **err)
@@ -56,8 +45,8 @@ sg_pixbuf_set(struct sg_pixbuf *pbuf, sg_pixbuf_format_t format,
     if (width > MAX_DIM || height > MAX_DIM ||
         width < 0 || height < 0)
         goto toolarge;
-    w = round_up_pow2(width);
-    h = round_up_pow2(height);
+    w = pce_round_up_pow2_32(width);
+    h = pce_round_up_pow2_32(height);
     if (w > INT_MAX / h)
         goto toolarge;
 

@@ -1,6 +1,7 @@
-#ifndef CLIENT_TYPE_HPP
-#define CLIENT_TYPE_HPP
-#include "base/type.h"
+/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
+#ifndef SGPP_TYPE_HPP
+#define SGPP_TYPE_HPP
+#include "sg/type.h"
 #include <stddef.h>
 
 class TextLayout {

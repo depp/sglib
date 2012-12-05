@@ -1,7 +1,8 @@
+/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
 /* Various definitions needed for compatibility with various compilers
    and platforms.  */
-#ifndef BASE_DEFS_H
-#define BASE_DEFS_H
+#ifndef SG_DEFS_H
+#define SG_DEFS_H
 
 /*
   SG_RESTRICT: same semantics as C99 "restrict," or expands to nothing

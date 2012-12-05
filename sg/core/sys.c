@@ -1,15 +1,16 @@
-#include "audio_system.h"
-#include "clock.h"
-#include "dispatch.h"
-#include "entry.h"
-#include "event.h"
-#include "file.h"
+/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
 #include "keycode/keycode.h"
-#include "log.h"
-#include "rand.h"
-#include "record.h"
-#include "resource.h"
-#include "version.h"
+#include "sg/audio_system.h"
+#include "sg/clock.h"
+#include "sg/dispatch.h"
+#include "sg/entry.h"
+#include "sg/event.h"
+#include "sg/file.h"
+#include "sg/log.h"
+#include "sg/rand.h"
+#include "sg/record.h"
+#include "sg/resource.h"
+#include "sg/version.h"
 
 struct sg_sys_state sg_sst;
 static struct sg_logger *sg_log_video;
@@ -76,7 +77,7 @@ sg_sys_getinfo(struct sg_game_info *info)
 }
 
 void
-sg_sys_event(union sg_event *evt)
+sg_sys_event(union pce_event *evt)
 {
     const char *status;
     switch (evt->type) {

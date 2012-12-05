@@ -1,5 +1,6 @@
-#ifndef BASE_AUDIO_FILEPRIVATE_H
-#define BASE_AUDIO_FILEPRIVATE_H
+/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
+#ifndef SG_AUDIO_FILEPRIVATE_H
+#define SG_AUDIO_FILEPRIVATE_H
 #include <stddef.h>
 struct sg_error;
 struct sg_audio_file;

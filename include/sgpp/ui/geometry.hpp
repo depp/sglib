@@ -1,5 +1,6 @@
-#ifndef CLIENT_UI_GEOMETRY_HPP
-#define CLIENT_UI_GEOMETRY_HPP
+/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
+#ifndef SGPP_UI_GEOMETRY_HPP
+#define SGPP_UI_GEOMETRY_HPP
 namespace UI {
 
 struct Point {

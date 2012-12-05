@@ -1,6 +1,7 @@
-#ifndef CLIENT_RAND_HPP
-#define CLIENT_RAND_HPP
-#include "base/rand.h"
+/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
+#ifndef SGPP_RAND_HPP
+#define SGPP_RAND_HPP
+#include "sg/rand.h"
 
 class Rand {
     sg_rand_state m_state;

@@ -1,3 +1,4 @@
+/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
 #include "file.h"
 #include "pixbuf.h"
 #include <ApplicationServices/ApplicationServices.h>

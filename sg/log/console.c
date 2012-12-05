@@ -1,4 +1,5 @@
-#include "log_impl.h"
+/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
+#include "impl.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

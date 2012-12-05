@@ -1,3 +1,4 @@
+/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
 /*
   A quick tour of the resource manager:
 
@@ -13,11 +14,11 @@
   When a resource is freed, it may release other resources, so the
   queue is cleared repeatedly until it stays empty.
 */
-#include "error.h"
-#include "log.h"
-#include "resource.h"
-#include "strbuf.h"
-#include "thread.h"
+#include "libpce/strbuf.h"
+#include "libpce/thread.h"
+#include "sg/error.h"
+#include "sg/log.h"
+#include "sg/resource.h"
 #include <stdlib.h>
 
 const struct sg_error_domain SG_RESOURCE_CANCEL = { "resource_cancel" };
@@ -52,7 +53,7 @@ struct sg_resource_item {
 };
 
 struct sg_resource_set {
-    struct sg_lock lock;
+    struct pce_lock lock;
     struct sg_resource_item *items;
     unsigned icount;
     unsigned ialloc;
@@ -68,7 +69,7 @@ sg_resource_queue(struct sg_resource_item *it)
     struct sg_resource *rs = it->rsrc;
     unsigned nc, na;
 
-    sg_lock_acquire(&sg_resource_set.lock);
+    pce_lock_acquire(&sg_resource_set.lock);
     ip = sg_resource_set.items;
     if (rs->action) {
         ie = ip + sg_resource_set.icount;
@@ -98,7 +99,7 @@ sg_resource_queue(struct sg_resource_item *it)
         memcpy(&ip[nc], it, sizeof(*it));
         sg_resource_set.icount = nc + 1;
     }
-    sg_lock_release(&sg_resource_set.lock);
+    pce_lock_release(&sg_resource_set.lock);
 }
 
 static void
@@ -132,15 +133,15 @@ sg_resource_load(void *ptr)
 }
 
 static void
-sg_resource_getname(struct sg_resource *rs, struct sg_strbuf *buf,
+sg_resource_getname(struct sg_resource *rs, struct pce_strbuf *buf,
                     size_t *namelen)
 {
     if (*namelen) {
-        sg_strbuf_setlen(buf, *namelen);
+        pce_strbuf_setlen(buf, *namelen);
     } else {
-        sg_strbuf_clear(buf);
+        pce_strbuf_clear(buf);
         rs->type->get_name(rs, buf);
-        *namelen = sg_strbuf_len(buf);
+        *namelen = pce_strbuf_len(buf);
     }
 }
 
@@ -148,7 +149,7 @@ void
 sg_resource_init(void)
 {
     sg_resource_set.logger = sg_logger_get("rsrc");
-    sg_lock_init(&sg_resource_set.lock);
+    pce_lock_init(&sg_resource_set.lock);
 }
 
 void
@@ -162,7 +163,7 @@ sg_resource_updateall(void)
 {
     struct sg_resource_item *ia, *ip, *ie;
     struct sg_resource *rs;
-    struct sg_strbuf buf;
+    struct pce_strbuf buf;
     const struct sg_resource_type *rt;
     size_t namelen;
     struct sg_logger *logger = sg_resource_set.logger;
@@ -171,12 +172,12 @@ sg_resource_updateall(void)
     sg_log_level_t level;
     void *result;
 
-    sg_strbuf_init(&buf, 0);
+    pce_strbuf_init(&buf, 0);
     while (1) {
-        sg_lock_acquire(&sg_resource_set.lock);
+        pce_lock_acquire(&sg_resource_set.lock);
         ia = sg_resource_set.items;
         if (!ia) {
-            sg_lock_release(&sg_resource_set.lock);
+            pce_lock_release(&sg_resource_set.lock);
             break;
         }
         ie = ia + sg_resource_set.icount;
@@ -187,7 +188,7 @@ sg_resource_updateall(void)
             ip->rsrc->action = 0;
             ip->rsrc->refcount += 1;
         }
-        sg_lock_release(&sg_resource_set.lock);
+        pce_lock_release(&sg_resource_set.lock);
 
         for (ip = ia; ip != ie; ++ip) {
             rs = ip->rsrc;
@@ -212,15 +213,15 @@ sg_resource_updateall(void)
                 err = ip->err;
                 if (LOG_ERROR > logger->level) {
                     sg_resource_getname(rs, &buf, &namelen);
-                    sg_strbuf_puts(&buf, ": failed to load: ");
-                    sg_strbuf_puts(&buf, err->msg);
-                    sg_strbuf_puts(&buf, " (");
-                    sg_strbuf_puts(&buf, err->domain->name);
+                    pce_strbuf_puts(&buf, ": failed to load: ");
+                    pce_strbuf_puts(&buf, err->msg);
+                    pce_strbuf_puts(&buf, " (");
+                    pce_strbuf_puts(&buf, err->domain->name);
                     if (err->code) {
-                        sg_strbuf_putc(&buf, ' ');
-                        sg_strbuf_printf(&buf, "%ld", err->code);
+                        pce_strbuf_putc(&buf, ' ');
+                        pce_strbuf_printf(&buf, "%ld", err->code);
                     }
-                    sg_strbuf_putc(&buf, ')');
+                    pce_strbuf_putc(&buf, ')');
                     sg_logs(logger, LOG_ERROR, buf.s);
                 }
                 sg_error_clear(&ip->err);
@@ -240,8 +241,8 @@ sg_resource_updateall(void)
 
             if (action && LOG_INFO > logger->level) {
                 sg_resource_getname(rs, &buf, &namelen);
-                sg_strbuf_puts(&buf, ": ");
-                sg_strbuf_puts(&buf, action);
+                pce_strbuf_puts(&buf, ": ");
+                pce_strbuf_puts(&buf, action);
                 sg_logs(logger, LOG_INFO, buf.s);
             }
 
@@ -274,8 +275,8 @@ sg_resource_updateall(void)
                 if (action) {
                     if (level > logger->level) {
                         sg_resource_getname(rs, &buf, &namelen);
-                        sg_strbuf_puts(&buf, ": ");
-                        sg_strbuf_puts(&buf, action);
+                        pce_strbuf_puts(&buf, ": ");
+                        pce_strbuf_puts(&buf, action);
                         sg_logs(logger, level, buf.s);
                     }
                     rs->type->free(rs);
@@ -285,7 +286,7 @@ sg_resource_updateall(void)
 
         free(ia);
     }
-    sg_strbuf_destroy(&buf);
+    pce_strbuf_destroy(&buf);
 }
 
 void

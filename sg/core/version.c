@@ -1,10 +1,11 @@
+/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
 
-#include "entry.h"
-#include "log.h"
-#include "version.h"
+#include "sg/entry.h"
+#include "sg/log.h"
+#include "sg/version.h"
 
 #include <string.h>
 

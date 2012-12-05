@@ -1,5 +1,6 @@
-#ifndef CLIENT_COLOR_HPP
-#define CLIENT_COLOR_HPP
+/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
+#ifndef SGPP_COLOR_HPP
+#define SGPP_COLOR_HPP
 
 struct Color {
     Color()

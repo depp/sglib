@@ -1,3 +1,4 @@
+/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
 #import "GController.h"
 #import "GDisplay.h"
 #import "base/audio_system.h"

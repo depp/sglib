@@ -1,3 +1,4 @@
+/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
 #include "audio_mixdown.h"
 #include "audio_system.h"
 #include "audio_sysprivate.h"

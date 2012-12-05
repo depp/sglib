@@ -1,9 +1,10 @@
+/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
 
-#include "error.h"
-#include "log.h"
+#include "sg/error.h"
+#include "sg/log.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

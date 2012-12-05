@@ -1,5 +1,6 @@
-#ifndef SYS_SHAREDREF_HPP
-#define SYS_SHAREDREF_HPP
+/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
+#ifndef SGPP_SHAREDREF_HPP
+#define SGPP_SHAREDREF_HPP
 
 template<typename T>
 class SharedRef {

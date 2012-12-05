@@ -1,10 +1,8 @@
-#ifndef BASE_LOG_IMPL_H
-#define BASE_LOG_IMPL_H
-#include "log.h"
+/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
+#ifndef SG_LOG_IMPL_H
+#define SG_LOG_IMPL_H
+#include "sg/log.h"
 #include <stddef.h>
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 struct sg_log_msg {
     const char *date;
@@ -32,7 +30,4 @@ sg_log_console_init(void);
 void
 sg_log_network_init(void);
 
-#ifdef __cplusplus
-}
-#endif
 #endif

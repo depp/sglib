@@ -1,4 +1,5 @@
-#include "rand.h"
+/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
+#include "sg/rand.h"
 #include <stdint.h>
 #include <stdlib.h>
 #include <time.h>

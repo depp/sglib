@@ -1,10 +1,11 @@
-#include "clock.h"
-#include "dispatch.h"
-#include "error.h"
-#include "file.h"
-#include "log.h"
-#include "pixbuf.h"
-#include "record.h"
+/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
+#include "sg/clock.h"
+#include "sg/dispatch.h"
+#include "sg/error.h"
+#include "sg/file.h"
+#include "sg/log.h"
+#include "sg/pixbuf.h"
+#include "sg/record.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>

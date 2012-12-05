@@ -74,7 +74,7 @@ sg/core/sys.c
 sg/core/texture.c
 sg/core/version.c
 sg/dispatch/common.c
-sg/dispatch/coop.c
+# sg/dispatch/coop.c
 sg/dispatch/impl.h
 sg/dispatch/pthread.c LINUX MACOSX
 sg/dispatch/sync.c
