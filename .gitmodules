@@ -1,3 +1,6 @@
 [submodule "keycode"]
 	path = keycode
 	url = ../keycode
+[submodule "libpce"]
+	path = libpce
+	url = ../libpce
