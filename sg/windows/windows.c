@@ -243,7 +243,8 @@ static void handleMouse(int param, pce_event_type_t t, int button)
     sg_sys_event((union pce_event *) &e);
 }
 
-static LRESULT CALLBACK wndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+static LRESULT CALLBACK wndProc(
+    HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     switch (uMsg) {
     case WM_ACTIVATE:
@@ -365,7 +366,8 @@ cmdline_next(struct cmdline *c)
     wlen = wcslen(warg);
     if (wlen > INT_MAX)
         return NULL;
-    r = WideCharToMultiByte(CP_UTF8, 0, warg, (int) wlen, NULL, 0, NULL, NULL);
+    r = WideCharToMultiByte(
+        CP_UTF8, 0, warg, (int) wlen, NULL, 0, NULL, NULL);
     if (!r)
         abort();
     len = r;
@@ -379,7 +381,8 @@ cmdline_next(struct cmdline *c)
         if (!c->arg)
             abort();
     }
-    r = WideCharToMultiByte(CP_UTF8, 0, warg, (int) wlen, c->arg, len, NULL, NULL);
+    r = WideCharToMultiByte(
+        CP_UTF8, 0, warg, (int) wlen, c->arg, len, NULL, NULL);
     if (!r)
         abort();
     c->arg[len] = '\0';

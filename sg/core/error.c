@@ -188,7 +188,8 @@ sg_error_win32(struct sg_error **err, unsigned long code)
         (LPWSTR) &wtext,
         0, NULL);
     if (!len) {
-        sg_error_sets(err, &SG_ERROR_WINDOWS, code, "<error in error handler>");
+        sg_error_sets(err, &SG_ERROR_WINDOWS, code,
+                      "<error in error handler>");
     } else {
         sg_error_setw(err, &SG_ERROR_WINDOWS, code, wtext, len);
         LocalFree(wtext);
@@ -218,7 +219,8 @@ sg_error_hresult(struct sg_error **err, long code)
         return;
     }
     if (facility == FACILITY_ITF) {
-        sg_error_sets(err, &SG_ERROR_WINDOWS, code, "unknown HRESULT (FACILITY_ITF)");
+        sg_error_sets(err, &SG_ERROR_WINDOWS, code,
+                      "unknown HRESULT (FACILITY_ITF)");
         return;
     }
     sg_error_win32(err, code);

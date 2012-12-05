@@ -134,7 +134,8 @@ sg_version_os(struct sg_logger *lp)
     v.dwOSVersionInfoSize = sizeof(v);
     br = GetVersionExW(&v);
     if (!br) return;
-    sg_logf(lp, LOG_INFO, "Windows: %d.%d", v.dwMajorVersion, v.dwMinorVersion);
+    sg_logf(lp, LOG_INFO, "Windows: %d.%d",
+            v.dwMajorVersion, v.dwMinorVersion);
 }
 
 #else

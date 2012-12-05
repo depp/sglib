@@ -53,8 +53,10 @@ imageToPixbuf(struct sg_pixbuf *pbuf, CGImageRef img, struct sg_error **err)
         goto error;
     CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
     assert(colorSpace);
-    CGBitmapInfo info = (alpha ? kCGImageAlphaPremultipliedLast : kCGImageAlphaNoneSkipLast);
-    CGContextRef cxt = CGBitmapContextCreate(pbuf->data, pw, ph, 8, pbuf->rowbytes, colorSpace, info);
+    CGBitmapInfo info = alpha
+        ? kCGImageAlphaPremultipliedLast : kCGImageAlphaNoneSkipLast);
+    CGContextRef cxt = CGBitmapContextCreate(
+        pbuf->data, pw, ph, 8, pbuf->rowbytes, colorSpace, info);
     assert(cxt);
     CGColorSpaceRelease(colorSpace);
 
@@ -80,7 +82,8 @@ sg_pixbuf_loadpng(struct sg_pixbuf *pbuf, const void *data, size_t length,
 {
     CGDataProviderRef dp = getDataProvider(data, length);
     assert(dp);
-    CGImageRef img = CGImageCreateWithPNGDataProvider(dp, NULL, false, kCGRenderingIntentDefault);
+    CGImageRef img = CGImageCreateWithPNGDataProvider(
+        dp, NULL, false, kCGRenderingIntentDefault);
     CGDataProviderRelease(dp);
     assert(img);
     return imageToPixbuf(pbuf, img, err);
@@ -92,7 +95,8 @@ sg_pixbuf_loadjpeg(struct sg_pixbuf *pbuf, const void *data, size_t length,
 {
     CGDataProviderRef dp = getDataProvider(data, length);
     assert(dp);
-    CGImageRef img = CGImageCreateWithJPEGDataProvider(dp, NULL, false, kCGRenderingIntentDefault);
+    CGImageRef img = CGImageCreateWithJPEGDataProvider(
+        dp, NULL, false, kCGRenderingIntentDefault);
     CGDataProviderRelease(dp);
     assert(img);
     return imageToPixbuf(pbuf, img, err);
@@ -141,15 +145,20 @@ sg_pixbuf_writepng(struct sg_pixbuf *pbuf, struct sg_file *fp,
     CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
     assert(colorSpace != NULL);
 
-    CGDataProviderRef dp = getDataProvider(pbuf->data, (size_t) pbuf->rowbytes * pbuf->iheight);
+    CGDataProviderRef dp = getDataProvider(
+        pbuf->data, (size_t) pbuf->rowbytes * pbuf->iheight);
     assert(dp != NULL);
 
-    CGImageRef img = CGImageCreate(pbuf->iwidth, pbuf->iheight, 8, nchan * 8, pbuf->rowbytes, colorSpace, ifo, dp, NULL, false, kCGRenderingIntentDefault);
+    CGImageRef img = CGImageCreate(
+        pbuf->iwidth, pbuf->iheight,
+        8, nchan * 8, pbuf->rowbytes,
+        colorSpace, ifo, dp, NULL, false, kCGRenderingIntentDefault);
     assert(img != NULL);
 
     CGDataConsumerRef dc = getDataConsumer(fp);
 
-    CGImageDestinationRef dest = CGImageDestinationCreateWithDataConsumer(dc, kUTTypePNG, 1, NULL);
+    CGImageDestinationRef dest = CGImageDestinationCreateWithDataConsumer(
+        dc, kUTTypePNG, 1, NULL);
     assert(dest != NULL);
 
     CGImageDestinationAddImage(dest, img, NULL);

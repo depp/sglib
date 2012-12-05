@@ -23,8 +23,9 @@ static int
 sg_file_w_read(struct sg_file *f, void *buf, size_t amt)
 {
     struct sg_file_w *w = (struct sg_file_w *) f;
-    DWORD ramt;
-    if (ReadFile(w->hdl, buf, amt > INT_MAX ? INT_MAX : (DWORD) amt, &ramt, NULL)) {
+    DWORD ramt, damt;
+    damt = amt > INT_MAX ? (DWORD) INT_MAX : (DWORD) amt;
+    if (ReadFile(w->hdl, buf, damt, &ramt, NULL)) {
         return ramt;
     } else {
         sg_error_win32(&w->h.err, GetLastError());
@@ -36,8 +37,9 @@ static int
 sg_file_w_write(struct sg_file *f, const void *buf, size_t amt)
 {
     struct sg_file_w *w = (struct sg_file_w *) f;
-    DWORD ramt;
-    if (WriteFile(w->hdl, buf, amt > INT_MAX ? INT_MAX : (DWORD) amt, &ramt, NULL)) {
+    DWORD ramt, damt;
+    damt = amt > INT_MAX ? (DWORD) INT_MAX : (DWORD) amt;
+    if (WriteFile(w->hdl, buf, damt, &ramt, NULL)) {
         return ramt;
     } else {
         sg_error_win32(&w->h.err, GetLastError());
@@ -109,7 +111,14 @@ sg_file_tryopen(struct sg_file **f, const wchar_t *path, int flags,
     struct sg_file_w *w;
     HANDLE h;
     DWORD ecode;
-    h = CreateFileW(path, FILE_READ_DATA, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    h = CreateFileW(
+        path,
+        FILE_READ_DATA,
+        FILE_SHARE_READ,
+        NULL,
+        OPEN_EXISTING,
+        FILE_ATTRIBUTE_NORMAL,
+        NULL);
     if (h != INVALID_HANDLE_VALUE) {
         w = malloc(sizeof(*w));
         if (!w) {

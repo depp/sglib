@@ -152,10 +152,13 @@ sg_audio_sys_pstart(void)
         goto error;
     }
 
-    sg_logf(sg_audio_ca_logger, LOG_INFO, "audio buffer size: %u", bufsize);
-    sg_logf(sg_audio_ca_logger, LOG_INFO, "audio sample rate: %g", sampleRate);
+    sg_logf(sg_audio_ca_logger, LOG_INFO,
+            "audio buffer size: %u", bufsize);
+    sg_logf(sg_audio_ca_logger, LOG_INFO,
+            "audio sample rate: %g", sampleRate);
 
-    sg_audio_ca_mixdown = sg_audio_mixdown_new((int) floor(sampleRate + 0.5), bufsize, &err);
+    sg_audio_ca_mixdown = sg_audio_mixdown_new(
+        (int) floor(sampleRate + 0.5), bufsize, &err);
     if (!sg_audio_ca_mixdown) {
         why = "could not create audio system";
         goto error2;

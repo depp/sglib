@@ -81,7 +81,8 @@ static void
 sg_layout_uniscribe_init(void)
 {
     HRESULT hr;
-    hr = ScriptRecordDigitSubstitution(LOCALE_USER_DEFAULT, &sg_uniscribe_psds);
+    hr = ScriptRecordDigitSubstitution(
+        LOCALE_USER_DEFAULT, &sg_uniscribe_psds);
     if (FAILED(hr))
         abort();
 }
@@ -133,7 +134,8 @@ sg_layout_impl_new(struct sg_layout *lp)
     if (!r) goto error;
     wtextlen = r;
     wtext = malloc(sizeof(wchar_t) * wtextlen);
-    r = MultiByteToWideChar(CP_UTF8, 0, lp->text, lp->textlen, wtext, wtextlen);
+    r = MultiByteToWideChar(
+        CP_UTF8, 0, lp->text, lp->textlen, wtext, wtextlen);
     if (!r) goto error;
 
     /***** Break text into items *****/
@@ -143,7 +145,8 @@ alloc_items:
     sitems = malloc(sizeof(*sitems) * (asitems + 1));
     if (!sitems)
         abort();
-    hr = ScriptItemize(wtext, wtextlen, asitems, NULL, NULL, sitems, &nsitems);
+    hr = ScriptItemize(wtext, wtextlen, asitems,
+                       NULL, NULL, sitems, &nsitems);
     if (FAILED(hr)) {
         if (hr == E_OUTOFMEMORY && asitems < wtextlen) {
             free(sitems);
@@ -171,7 +174,8 @@ alloc_items:
     sg_layout_setfont(dc, lp);
 
     /***** Place each item *****/
-    /* Creates new item array, and all the glyph arrays (glyphs, offsets, advances) */
+    /* Creates new item array, and all the glyph arrays (glyphs,
+       offsets, advances) */
     aitems = nsitems;
     items = malloc(sizeof(*items) * aitems);
     if (!items) goto error;
@@ -243,11 +247,13 @@ alloc_items:
                     if (!newglyphs) goto error;
                     glyphs = newglyphs;
 
-                    newgadvances = realloc(gadvances, sizeof(*gadvances) * nalloc);
+                    newgadvances = realloc(
+                        gadvances, sizeof(*gadvances) * nalloc);
                     if (!newgadvances) goto error;
                     gadvances = newgadvances;
 
-                    newgoffsets = realloc(goffsets, sizeof(*goffsets) * nalloc);
+                    newgoffsets = realloc(
+                        goffsets, sizeof(*goffsets) * nalloc);
                     if (!newgoffsets) goto error;
                     goffsets = newgoffsets;
 

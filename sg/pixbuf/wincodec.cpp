@@ -25,7 +25,11 @@ sg_pixbuf_loadwincodec(struct sg_pixbuf *pbuf, const void *data, size_t len,
     sg_pixbuf_format_t pfmt;
     int r;
 
-    hr = CoCreateInstance(CLSID_WICImagingFactory, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&fac));
+    hr = CoCreateInstance(
+        CLSID_WICImagingFactory,
+        NULL,
+        CLSCTX_INPROC_SERVER,
+        IID_PPV_ARGS(&fac));
     if (hr != S_OK)
         goto failed;
     hr = fac->CreateStream(&stream);
@@ -34,7 +38,11 @@ sg_pixbuf_loadwincodec(struct sg_pixbuf *pbuf, const void *data, size_t len,
     hr = stream->InitializeFromMemory((BYTE *) data, (DWORD) len);
     if (hr != S_OK)
         goto failed;
-    hr = fac->CreateDecoderFromStream(stream, NULL, WICDecodeMetadataCacheOnDemand, &decoder);
+    hr = fac->CreateDecoderFromStream(
+        stream,
+        NULL,
+        WICDecodeMetadataCacheOnDemand,
+        &decoder);
     if (hr != S_OK)
         goto failed;
     hr = decoder->GetFrame(0, &frame);
@@ -84,7 +92,13 @@ sg_pixbuf_loadwincodec(struct sg_pixbuf *pbuf, const void *data, size_t len,
     hr = fac->CreateFormatConverter(&converter);
     if (hr != S_OK)
         goto failed;
-    hr = converter->Initialize(frame, targetFormat, WICBitmapDitherTypeNone, NULL, 0, WICBitmapPaletteTypeCustom);
+    hr = converter->Initialize(
+        frame,
+        targetFormat,
+        WICBitmapDitherTypeNone,
+        NULL,
+        0,
+        WICBitmapPaletteTypeCustom);
     if (hr != S_OK)
         goto failed;
     hr = converter->GetSize(&iwidth, &iheight);
@@ -97,7 +111,11 @@ sg_pixbuf_loadwincodec(struct sg_pixbuf *pbuf, const void *data, size_t len,
     r = sg_pixbuf_alloc(pbuf, err);
     if (r)
         goto done;
-    converter->CopyPixels(NULL, pbuf->rowbytes, pbuf->rowbytes * pbuf->pheight, (BYTE *) pbuf->data);
+    converter->CopyPixels(
+        NULL,
+        pbuf->rowbytes,
+        pbuf->rowbytes * pbuf->pheight,
+        (BYTE *) pbuf->data);
     r = 0;
 
 done:

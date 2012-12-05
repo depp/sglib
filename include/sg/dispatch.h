@@ -6,7 +6,8 @@
    arbitrary times, possibly in other threads but possibly in the same
    thread as the synchronous tasks.
 
-If a task requires any nontrivial amount of CPU expenditure or disk IO, it should go in an asynchronous queue.  It */
+   If a task requires any nontrivial amount of CPU expenditure or disk
+   IO, it should go in an asynchronous queue.  */
 #ifndef SG_DISPATCH_H
 #define SG_DISPATCH_H
 #ifdef __cplusplus
