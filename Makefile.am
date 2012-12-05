@@ -12,6 +12,7 @@ pkginclude_HEADERS = \
 	include/libpce/arch.h \
 	include/libpce/atomic.h \
 	include/libpce/attribute.h \
+	include/libpce/binary.h \
 	include/libpce/byteorder.h \
 	include/libpce/cpu.h \
 	include/libpce/hash.h \
