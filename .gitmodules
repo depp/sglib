@@ -1,3 +1,6 @@
-[submodule "src/base/keycode"]
-	path = src/base/keycode
-	url = ../keycode/
+[submodule "keycode"]
+	path = keycode
+	url = ../keycode
+[submodule "libpce"]
+	path = libpce
+	url = ../libpce

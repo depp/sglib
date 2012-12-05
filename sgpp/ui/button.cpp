@@ -1,0 +1,120 @@
+/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
+#include "sg/opengl.h"
+#include "sgpp/ui/button.hpp"
+#include "sgpp/ui/event.hpp"
+
+UI::Button::Button()
+    : /* title_(), */ state_(false), hover_(false), button_(-1)
+{
+    // title_ = RasterText::create();
+    bounds_.width = 150;
+    bounds_.height = 30;
+}
+
+UI::Button::~Button()
+{ }
+
+void UI::Button::setLoc(int x, int y)
+{
+    bounds_.x = x;
+    bounds_.y = y;
+}
+
+void UI::Button::setText(std::string const &text)
+{
+    (void) &text;
+    title_.setText(text.data(), text.size());
+}
+
+void UI::Button::draw()
+{
+    glPushAttrib(GL_COLOR_BUFFER_BIT | GL_CURRENT_BIT);
+
+    float x1 = (float) bounds_.x, x2 = (float) bounds_.x + bounds_.width;
+    float y1 = (float) bounds_.y, y2 = (float) bounds_.y + bounds_.height;
+
+    if (!state_)
+        glColor3ub(32, 0, 0);
+    else
+        glColor3ub(255, 128, 0);
+    glBegin(GL_TRIANGLE_STRIP);
+    glVertex2f(x1, y1);
+    glVertex2f(x1, y2);
+    glVertex2f(x2, y1);
+    glVertex2f(x2, y2);
+    glEnd();
+
+    if (!state_)
+        glColor3ub(255, 64, 64);
+    else
+        glColor3ub(64, 0, 0);
+    glBegin(GL_LINE_LOOP);
+    glVertex2f(x1-0.5f, y1-0.5f);
+    glVertex2f(x1-0.5f, y2+0.5f);
+    glVertex2f(x2+0.5f, y2+0.5f);
+    glVertex2f(x2+0.5f, y1-0.5f);
+    glEnd();
+
+    if (hover_ || button_ == ButtonLeft) {
+        glColor3ub(255, 255, 255);
+        glBegin(GL_LINE_LOOP);
+        glVertex2f(x1 - 2.5f, y1 - 2.5f);
+        glVertex2f(x1 - 2.5f, y2 + 2.5f);
+        glVertex2f(x2 + 2.5f, y2 + 2.5f);
+        glVertex2f(x2 + 2.5f, y1 - 2.5f);
+        glEnd();
+    }
+
+    if (!state_)
+        glColor3ub(255, 64, 64);
+    else
+        glColor3ub(64, 0, 0);
+    glPushMatrix();
+    glTranslatef(x1 + 5.0f, y1 + 10.0f, 0.0f);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    title_.draw();
+    glPopMatrix();
+
+    glPopAttrib();
+}
+
+void UI::Button::mouseEntered(UI::MouseEvent const &)
+{
+    if (button_ == ButtonLeft)
+        state_ = true;
+    hover_ = true;
+}
+
+void UI::Button::mouseExited(UI::MouseEvent const &)
+{
+    if (button_ == ButtonLeft)
+        state_ = false;
+    hover_ = false;
+}
+
+void UI::Button::mouseDown(UI::MouseEvent const &evt)
+{
+    if (button_ < 0) {
+        button_ = evt.button;
+        if (button_ == ButtonLeft)
+            state_ = bounds().contains(evt.x, evt.y);
+    }
+}
+
+void UI::Button::mouseUp(UI::MouseEvent const &evt)
+{
+    bool doAction;
+    if (button_ == evt.button) {
+        doAction = state_ && button_ == ButtonLeft;
+        button_ = -1;
+        state_ = false;
+        if (doAction)
+            action_();
+    }
+}
+
+void UI::Button::setAction(UI::Action const &action)
+{
+    action_ = action;
+}
