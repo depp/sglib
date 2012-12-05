@@ -16,10 +16,15 @@ pkginclude_HEADERS = \
 	include/libpce/cpu.h \
 	include/libpce/hash.h \
 	include/libpce/strbuf.h \
+	include/libpce/thread.h \
 	include/libpce/util.h
 
 libpce_la_SOURCES = \
 	lib/cpu.c \
 	lib/hash.c \
 	lib/hashtable.c \
-	lib/strbuf.c
+	lib/strbuf.c \
+	lib/thread_pthread.c
+
+EXTRA_DIST = \
+	lib/thread_windows.c
