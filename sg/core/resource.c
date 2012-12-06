@@ -318,8 +318,7 @@ sg_resource_update(struct sg_resource *rs)
         case SG_RSRC_INITIAL:
         case SG_RSRC_UNLOADED:
             rs->state = SG_RSRC_LOADING;
-            sg_dispatch_async_queue(rs->type->dispatch_type, 0,
-                                    rs, sg_resource_load);
+            sg_dispatch_queue(0, rs, sg_resource_load);
             break;
 
         case SG_RSRC_FAILED:

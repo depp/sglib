@@ -52,7 +52,7 @@ sg_sys_init(void)
     if (LOG_INFO >= log->level)
         sg_version_print();
     sg_path_init();
-    sg_dispatch_async_init();
+    sg_dispatch_init();
     sg_dispatch_sync_init();
     sg_clock_init();
     sg_rand_seed(&sg_rand_global, 1);

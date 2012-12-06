@@ -87,7 +87,5 @@ sg_record_writeshot(unsigned timestamp,
     shot->counter = ++sg_sshot_counter;
     shot->ptr = iptr;
     sg_clock_getdate(shot->stamp);
-    sg_dispatch_async_queue(
-        SG_DISPATCH_IO, 0,
-        shot, sg_record_shot_writepng);
+    sg_dispatch_queue(0, shot, sg_record_shot_writepng);
 }

@@ -51,14 +51,6 @@ struct sg_resource_type {
        buffer.  This should be prefixed with the type name followed by
        a colon.  */
     void (*get_name)(struct sg_resource *rs, struct pce_strbuf *buf);
-
-    /* The dispatch type for loading the resource.  Use
-       SG_DISPATCH_NORMAL for procedurally generated resources and
-       other resources where loading is CPU or memory bound.  Use
-       SG_DISPATCH_IO for resources which must be loaded from disk,
-       even if loading the resource requires significant CPU or memory
-       bandwidth for decoding.  */
-    sg_dispatch_type_t dispatch_type;
 };
 
 /* Resource states.  User code is free to change the states to and

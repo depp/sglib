@@ -14,17 +14,6 @@
 extern "C" {
 #endif
 
-/* The task type.  Selecting the correct type allows the dispatcher to
-   optimize usage of available computational power and IO
-   bandwidth.  */
-typedef enum {
-    /* A task limited by CPU or memory.  */
-    SG_DISPATCH_NORMAL,
-
-    /* A task limited by disk IO.  */
-    SG_DISPATCH_IO
-} sg_dispatch_type_t;
-
 /* Priority limits.  Tasks with higher priority (larger numbers)
    execute before tasks with lower priority (lower numbers).  */
 enum {
@@ -34,16 +23,11 @@ enum {
 
 /* Initialize asynchronous task dispatching system.  */
 void
-sg_dispatch_async_init(void);
+sg_dispatch_init(void);
 
 /* Add a task to the queue to be completed asynchronously.  */
 void
-sg_dispatch_async_queue(sg_dispatch_type_t type, int priority,
-                        void *cxt, void (*func)(void *));
-
-/* Change the task type of the currently executing task.  */
-void
-sg_dispatch_async_settype(sg_dispatch_type_t type);
+sg_dispatch_queue(int priority, void *cxt, void (*func)(void *));
 
 typedef enum {
     /* Callbacks before rendering the frame.  */

@@ -112,8 +112,7 @@ static const struct sg_resource_type sg_texture_image_type = {
     sg_texture_image_free,
     sg_texture_image_load,
     sg_texture_image_load_finished,
-    sg_texture_image_get_name,
-    SG_DISPATCH_IO
+    sg_texture_image_get_name
 };
 
 static struct pce_hashtable sg_texture_images;

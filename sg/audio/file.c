@@ -101,8 +101,7 @@ static const struct sg_resource_type sg_audio_file_type = {
     sg_audio_file_free,
     sg_audio_file_load,
     sg_audio_file_load_finished,
-    sg_audio_file_get_name,
-    SG_DISPATCH_IO
+    sg_audio_file_get_name
 };
 
 static struct pce_hashtable sg_audio_files;
