@@ -3,7 +3,7 @@
 #define PCE_ATOMIC_H
 #include <libpce/arch.h>
 #include <libpce/attribute.h>
-#ifdef __cpluspluls
+#ifdef __cplusplus
 extern "C" {
 #endif
 
