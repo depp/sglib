@@ -34,6 +34,8 @@ extern "C" {
 
   Plus barrier versions of atomic_fetch_add -- acquire and release
   barriers are available, as well as an acquire + release barrier.
+  Barrier versions of set and get are also available, but only
+  set_release and get_acquire.
 */
 
 typedef struct pce_atomic_s pce_atomic_t;
@@ -59,10 +61,24 @@ pce_atomic_set(pce_atomic_t *p, int x)
 }
 
 PCE_INLINE
+void
+pce_atomic_set_release(pce_atomic_t *p, int x)
+{
+    __c11_atomic_store_n(&p->v, x, __ATOMIC_RELEASE);
+}
+
+PCE_INLINE
 int
 pce_atomic_get(pce_atomic_t *p)
 {
     return __c11_atomic_load_n(&p->v, __ATOMIC_RELAXED);
+}
+
+PCE_INLINE
+int
+pce_atomic_get_acquire(pce_atomic_t *p)
+{
+    return __c11_atomic_load_n(&p->v, __ATOMIC_ACQUIRE);
 }
 
 PCE_INLINE
@@ -131,10 +147,24 @@ pce_atomic_set(pce_atomic_t *p, int x)
 }
 
 PCE_INLINE
+void
+pce_atomic_set_release(pce_atomic_t *p, int x)
+{
+    __atomic_store_n(&p->v, x, __ATOMIC_RELEASE);
+}
+
+PCE_INLINE
 int
 pce_atomic_get(pce_atomic_t *p)
 {
     return __atomic_load_n(&p->v, __ATOMIC_RELAXED);
+}
+
+PCE_INLINE
+int
+pce_atomic_get_acquire(pce_atomic_t *p)
+{
+    return __atomic_load_n(&p->v, __ATOMIC_ACQUIRE);
 }
 
 PCE_INLINE
@@ -199,12 +229,16 @@ pce_atomic_set(pce_atomic_t *p, int x)
     p->v = x;
 }
 
+#define pce_atomic_set_release pce_atomic_set
+
 PCE_INLINE
 int
 pce_atomic_get(pce_atomic_t *p)
 {
     return p->v;
 }
+
+#define pce_atomic_get_acquire pce_get_set
 
 PCE_INLINE
 void
@@ -266,9 +300,26 @@ pce_atomic_set(pce_atomic_t *p, int x)
 
 PCE_INLINE
 int
+pce_atomic_set_release(pce_atomic_t *p, int x)
+{
+    pce_atomic_lwsync();
+    p->v = x;
+}
+
+PCE_INLINE
+int
 pce_atomic_get(pce_atomic_t *p)
 {
     return p->v;
+}
+
+PCE_INLINE
+int
+pce_atomic_get_acquire(pce_atomic_t *p)
+{
+    int r = p->v;
+    pce_atomic_lwsync();
+    return r;
 }
 
 PCE_INLINE
@@ -365,10 +416,27 @@ pce_atomic_set(pce_atomic_t *p, int x)
 }
 
 PCE_INLINE
+void
+pce_atomic_set_release(pce_atomic_t *p, int x)
+{
+    __sync_synchronize();
+    p->v = x;
+}
+
+PCE_INLINE
 int
 pce_atomic_get(pce_atomic_t *p)
 {
     return p->v;
+}
+
+PCE_INLINE
+int
+pce_atomic_get_acquire(pce_atomic_t *p)
+{
+    int r = p->v;
+    __sync_synchronize();
+    return r;
 }
 
 PCE_INLINE
@@ -413,10 +481,27 @@ pce_atomic_set(pce_atomic_t *p, int x)
 }
 
 PCE_INLINE
+void
+pce_atomic_set_release(pce_atomic_t *p, int x)
+{
+    _WriteBarrier();
+    p->v = x;
+}
+
+PCE_INLINE
 int
 pce_atomic_get(pce_atomic_t *p)
 {
     return p->v;
+}
+
+PCE_INLINE
+int
+pce_atomic_get_acquire(pce_atomic_t *p)
+{
+    int r = (int) p->v;
+    _ReadBarrier();
+    return r;
 }
 
 PCE_INLINE
