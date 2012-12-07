@@ -11,6 +11,7 @@
 #include "sg/rand.h"
 #include "sg/record.h"
 #include "sg/resource.h"
+#include "sg/texture.h"
 #include "sg/version.h"
 
 struct sg_sys_state sg_sst;
@@ -59,6 +60,7 @@ sg_sys_init(void)
     sg_clock_init();
     sg_rand_seed(&sg_rand_global, 1);
     sg_resource_init();
+    sg_texture_init();
     sg_audio_sys_init();
     sg_game_init();
     sg_log_video = sg_logger_get("video");

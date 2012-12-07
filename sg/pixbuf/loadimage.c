@@ -7,6 +7,8 @@
 #include "sg/pixbuf.h"
 #include <string.h>
 
+const char SG_PIXBUF_IMAGE_EXTENSIONS[] = "png:jpg";
+
 static const unsigned char SG_PIXBUF_PNGHEAD[8] = {
     137, 80, 78, 71, 13, 10, 26, 10
 };
@@ -14,34 +16,13 @@ static const unsigned char SG_PIXBUF_PNGHEAD[8] = {
 static const unsigned char SG_PIXBUF_JPEGHEAD[2] = { 255, 216 };
 
 int
-sg_pixbuf_loadimage(struct sg_pixbuf *pbuf, const char *path,
+sg_pixbuf_loadimage(struct sg_pixbuf *pbuf, const void *data, size_t len,
                     struct sg_error **err)
 {
-    struct sg_buffer *fbuf;
-    size_t len;
-    int r;
-    const unsigned char *p;
-
-    fbuf = sg_file_get(path, strlen(path), 0, "png:jpg",
-                       IMAGE_MAXSIZE, err);
-    if (!fbuf)
-        return -1;
-
-    p = fbuf->data;
-    len = fbuf->length;
-    if (len >= 8 && !memcmp(p, SG_PIXBUF_PNGHEAD, 8)) {
-        r = sg_pixbuf_loadpng(pbuf, p, len, err);
-        goto done;
-    }
-    if (len >= 2 && !memcmp(p, SG_PIXBUF_JPEGHEAD, 2)) {
-        r = sg_pixbuf_loadjpeg(pbuf, p, len, err);
-        goto done;
-    }
-    r = -1;
+    if (len >= 8 && !memcmp(data, SG_PIXBUF_PNGHEAD, 8))
+        return sg_pixbuf_loadpng(pbuf, data, len, err);
+    if (len >= 2 && !memcmp(data, SG_PIXBUF_JPEGHEAD, 2))
+        return sg_pixbuf_loadjpeg(pbuf, data, len, err);
     sg_error_data(err, "image");
-    goto done;
-
-done:
-    sg_buffer_decref(fbuf);
-    return r;
+    return -1;
 }
