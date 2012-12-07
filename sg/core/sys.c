@@ -1,6 +1,7 @@
 /* Copyright 2012 Dietrich Epp <depp@zdome.net> */
 #include "keycode/keycode.h"
 #include "sg/audio_system.h"
+#include "sg/aio.h"
 #include "sg/clock.h"
 #include "sg/dispatch.h"
 #include "sg/entry.h"
@@ -53,6 +54,7 @@ sg_sys_init(void)
         sg_version_print();
     sg_path_init();
     sg_dispatch_init();
+    sg_aio_init();
     sg_dispatch_sync_init();
     sg_clock_init();
     sg_rand_seed(&sg_rand_global, 1);

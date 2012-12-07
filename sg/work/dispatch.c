@@ -139,11 +139,10 @@ sg_dispatch_dequeue(struct sg_workqueue *wq, void *taskptr)
 }
 
 static void
-sg_dispatch_exec(struct sg_workqueue *wq, void *taskptr)
+sg_dispatch_exec(void *taskptr)
 {
     struct sg_dispatch_task *task = taskptr;
     task->func(task->cxt);
-    (void) wq;
 }
 
 void

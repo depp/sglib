@@ -40,11 +40,6 @@ void
 sg_aio_init(void);
 
 /**
- * @brief Error that indicates that the AIO operation was canceled.
- */
-extern const struct sg_error_domain SG_AIO_CANCEL;
-
-/**
  * @brief Callback for completed AIO requests.
  *
  * @param cxt User-supplied callback parameter
@@ -103,7 +98,7 @@ sg_aio_request(const char *path, size_t pathlen, int flags,
  * a state where cancellation is impossible.
  *
  * If the request is cancelled, then the callback will eventually be
- * called with a @c NULL buffer and an error in the ::SG_AIO_CANCEL
+ * called with a @c NULL buffer and an error in the ::SG_ERROR_CANCEL
  * domain.
  *
  * @param ioreq The IO request.

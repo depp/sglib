@@ -63,6 +63,9 @@ extern const struct sg_error_domain SG_ERROR_NOMEM;
 /* A domain for errors in data file formats.  */
 extern const struct sg_error_domain SG_ERROR_DATA;
 
+/* A domain for canceled operations.  */
+extern const struct sg_error_domain SG_ERROR_CANCEL;
+
 /* Produce a "file not found" error for the given path.  */
 void
 sg_error_notfound(struct sg_error **err, const char *path);

@@ -109,7 +109,7 @@ sg_workqueue_run(void *ptr)
         if (q->dequeue(q, task)) {
             r = pthread_mutex_unlock(&q->impl.mutex);
             if (r) goto err;
-            q->exec(q, task);
+            q->exec(task);
             r = pthread_mutex_lock(&q->impl.mutex);
             if (r) goto err;
         } else {

@@ -1,6 +1,7 @@
 /* Copyright 2012 Dietrich Epp <depp@zdome.net> */
 #include "sg/aio.h"
 #include "sg/error.h"
+#include "sg/file.h"
 #include "work.h"
 #include <stdlib.h>
 #include <string.h>
@@ -44,13 +45,29 @@ sg_aio_dequeue(struct sg_workqueue *wq, void *taskptr)
 }
 
 static void
-sg_aio_exec(struct sg_workqueue *wq, void *taskptr)
+sg_aio_exec(void *taskptr)
 {
     struct sg_aio_request *req = *(struct sg_aio_request **) taskptr;
+    struct sg_error *err = NULL;
+    struct sg_buffer *buf = NULL;
 
-    (void) wq;
-    (void) req;
-    /* FIXME do something */
+    if (req->cancel) {
+        sg_error_sets(&err, &SG_ERROR_CANCEL, 0, NULL);
+    } else {
+        buf = sg_file_get(
+            req->path, req->pathlen,
+            req->flags,
+            req->extensions,
+            req->maxsize,
+            &err);
+    }
+
+    req->callback(req->cxt, buf, err);
+    if (err)
+        sg_error_clear(&err);
+    if (buf)
+        sg_buffer_decref(buf);
+    free(req);
 }
 
 void
@@ -71,12 +88,10 @@ sg_aio_request(const char *path, size_t pathlen, int flags,
                void *cxt, sg_aio_callback_t callback,
                struct sg_error **err)
 {
-    struct sg_aio_queue *q;
+    struct sg_aio_queue *q = &sg_aio_queue;
     struct sg_aio_request *ioreq;
     size_t extlen;
     char *rpath, *rext;
-
-    q = &sg_aio_queue;
 
     extlen = strlen(extensions);
     ioreq = malloc(sizeof(*ioreq) + pathlen + extlen + 2);
@@ -114,4 +129,36 @@ sg_aio_request(const char *path, size_t pathlen, int flags,
     sg_workqueue_unlock(&q->wq);
 
     return ioreq;
+}
+
+void
+sg_aio_cancel(struct sg_aio_request *ioreq)
+{
+    struct sg_aio_queue *q = &sg_aio_queue;
+    sg_workqueue_lock(&q->wq);
+    if (!ioreq->cancel) {
+        ioreq->cancel = 1;
+
+        /* Canceled requests are moved to the front of the queue in
+           order to free up resources more quickly.  This is not
+           actually necessary.  */
+
+        if (ioreq->prev)
+            ioreq->prev->next = ioreq->next;
+        else
+            q->first = ioreq->next;
+        if (ioreq->prev)
+            ioreq->next->prev = ioreq->prev;
+        else
+            q->last = ioreq->prev;
+
+        ioreq->prev = NULL;
+        ioreq->next = q->first;
+        if (q->first)
+            q->first->prev = ioreq;
+        else
+            q->last = ioreq;
+        q->first = ioreq;
+    }
+    sg_workqueue_unlock(&q->wq);
 }

@@ -57,13 +57,13 @@ struct sg_workqueue {
       only ever be called with the lock.  It should return 1 if a task
       was dequeued and 0 if the queue is empty.
     */
-    int (* dequeue)(struct sg_workqueue *wq, void *taskptr);
+    int (*dequeue)(struct sg_workqueue *wq, void *taskptr);
 
     /*
       Function for executing an item in the queue.  This will be
       called without the lock.
     */
-    void (* exec)(struct sg_workqueue *wq, void *taskptr);
+    void (*exec)(void *taskptr);
 };
 
 /*

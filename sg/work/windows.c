@@ -51,7 +51,7 @@ sg_workqueue_run(void *ptr)
     while (1) {
         if (q->dequeue(q, task)) {
             LeaveCriticalSection(&q->impl.cs);
-            q->exec(q, task);
+            q->exec(task);
             EnterCriticalSection(&q->impl.cs);
         } else {
             if (timedout)

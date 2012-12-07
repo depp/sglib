@@ -108,6 +108,7 @@ const struct sg_error_domain SG_ERROR_INVALPATH = { "invalpath" };
 const struct sg_error_domain SG_ERROR_NOTFOUND = { "notfound" };
 const struct sg_error_domain SG_ERROR_NOMEM = { "nomem" };
 const struct sg_error_domain SG_ERROR_DATA = { "data" };
+const struct sg_error_domain SG_ERROR_CANCEL = { "cancel" };
 
 void
 sg_error_notfound(struct sg_error **err, const char *path)
