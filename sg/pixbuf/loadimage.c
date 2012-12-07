@@ -17,18 +17,18 @@ int
 sg_pixbuf_loadimage(struct sg_pixbuf *pbuf, const char *path,
                     struct sg_error **err)
 {
-    struct sg_buffer fbuf;
+    struct sg_buffer *fbuf;
     size_t len;
     int r;
     const unsigned char *p;
 
-    r = sg_file_get(path, strlen(path), 0, "png:jpg", &fbuf,
-                    IMAGE_MAXSIZE, err);
-    if (r)
+    fbuf = sg_file_get(path, strlen(path), 0, "png:jpg",
+                       IMAGE_MAXSIZE, err);
+    if (!fbuf)
         return -1;
 
-    p = fbuf.data;
-    len = fbuf.length;
+    p = fbuf->data;
+    len = fbuf->length;
     if (len >= 8 && !memcmp(p, SG_PIXBUF_PNGHEAD, 8)) {
         r = sg_pixbuf_loadpng(pbuf, p, len, err);
         goto done;
@@ -42,6 +42,6 @@ sg_pixbuf_loadimage(struct sg_pixbuf *pbuf, const char *path,
     goto done;
 
 done:
-    sg_buffer_destroy(&fbuf);
+    sg_buffer_decref(fbuf);
     return r;
 }

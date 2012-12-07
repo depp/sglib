@@ -17,10 +17,11 @@
 #include <unistd.h>
 
 void
-sg_buffer_destroy(struct sg_buffer *fbuf)
+sg_buffer_free_(struct sg_buffer *fbuf)
 {
     if (fbuf->data)
         free(fbuf->data);
+    free(fbuf);
 }
 
 struct sg_file_u {

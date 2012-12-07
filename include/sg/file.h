@@ -1,6 +1,8 @@
 /* Copyright 2012 Dietrich Epp <depp@zdome.net> */
 #ifndef SG_FILE_H
 #define SG_FILE_H
+#include "libpce/atomic.h"
+#include "libpce/attribute.h"
 #include <stddef.h>
 #include <stdint.h>
 #ifdef __cplusplus
@@ -10,6 +12,18 @@ extern "C" {
    like reading an entire file into memory or writing a file
    atomically.  */
 struct sg_error;
+
+/**
+ * @file sg/file.h
+ *
+ * @brief Low-level file interface.
+ *
+ * This interface abstracts away differences in how files are opened
+ * across platforms, sanitizes file paths, and manages file search
+ * paths.  All files opened through this interface must exist below
+ * the root of one of the search paths, file paths are sanitized to
+ * ensure this.
+ */
 
 enum {
     /* Access modes (sg_file_open only) */
@@ -46,16 +60,55 @@ int
 sg_path_norm(char *buf, const char *path, size_t pathlen,
              struct sg_error **err);
 
-/* A buffer of data read from a file.  Can be copied or moved.  Do not
-   free manually.  */
+/**
+ * @brief A buffer of data read from a file.
+ *
+ * The buffer is reference counted.
+ */
 struct sg_buffer {
-    /* The requested data.  */
+    /**
+     * @private @brief Reference count.
+     */
+    pce_atomic_t refcount;
+
+    /**
+     * @brief Pointer to buffer data.  This buffer also contains one
+     * zero byte after the end of the buffer data.
+     */
     void *data;
+
+    /**
+     * @brief Length of buffer data, not counting the extra zero at
+     * the end.
+     */
     size_t length;
 };
 
+/**
+ * @private @brief Free a buffer of data.
+ */
 void
-sg_buffer_destroy(struct sg_buffer *fbuf);
+sg_buffer_free_(struct sg_buffer *fbuf);
+
+/**
+ * @brief Increment a buffer's reference count.
+ */
+PCE_INLINE void
+sg_buffer_incref(struct sg_buffer *fbuf)
+{
+    pce_atomic_inc(&fbuf->refcount);
+}
+
+/**
+ * @brief Decrement a buffer's reference count.
+ */
+PCE_INLINE void
+sg_buffer_decref(struct sg_buffer *fbuf)
+{
+    int c = pce_atomic_fetch_add(&fbuf->refcount, -1);
+    if (c == 1)
+        sg_buffer_free_(fbuf);
+}
 
 /* An abstract file open for reading.  Do not copy this structure.
    The methods 'read' and 'close' must be set.  The 'length' and
@@ -115,21 +168,48 @@ struct sg_file *
 sg_file_open(const char *path, size_t pathlen, int flags,
              const char *extensions, struct sg_error **e);
 
-/* Read the contents of a file, starting with the current position.
-   Return 0 for success, -1 for failure, or 1 if the amount of data
-   read would exceed maxsize (which sets the error).  The buffer will
-   contain an extra zero byte past the end.  */
-int
-sg_file_readall(struct sg_file *f, struct sg_buffer *fbuf, size_t maxsize);
+/**
+ * @brief Get the contents of a file starting from the current
+ * position.
+ *
+ * @param f The file.
+ *
+ * @param maxsize Maximum file size.  If the file is larger than this,
+ * the operation will fail with the ::SG_ERROR_DATA domain.
+ *
+ * @return On success, a reference to a buffer containing the
+ * requested data.  On failure, `NULL`, and an error will be set on
+ * the file handle.
+ */
+struct sg_buffer *
+sg_file_readall(struct sg_file *f, size_t maxsize);
 
-/* Get the data from the file at the given path and return 0, return
-   -1 for failure, or return 1 if the amount of data read would exceed
-   maxsize (which sets the error).  The buffer will contain an extra
-   zero byte past the end.  */
-int
+/**
+ * @brief Get the contents of a file given its path.
+ *
+ * @param path File path, relative to the game root directory.  Does
+ * not need to be NUL-terminated, sanitized, or normalized.
+ *
+ * @param pathlen Length of the file path.
+ *
+ * @param flags File mode flags.  ::SG_RDONLY is assumed.
+ *
+ * @param extensions A NUL-terminated list of extensions to try,
+ * separated by `':'`.  The extensions should not start with `'.'`.
+ * For example, `"png:jpg"`.
+ *
+ * @param maxsize Maximum file size.  If the file is larger than this,
+ * the operation will fail with the ::SG_ERROR_DATA domain.
+ *
+ * @param e On failure, the error.
+ *
+ * @return On success, a reference to a buffer containing the
+ * requested data.  On failure, `NULL`.
+ */
+struct sg_buffer *
 sg_file_get(const char *path, size_t pathlen, int flags,
             const char *extensions,
-            struct sg_buffer *fbuf, size_t maxsize, struct sg_error **e);
+            size_t maxsize, struct sg_error **e);
 
 #ifdef __cplusplus
 }

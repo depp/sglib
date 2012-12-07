@@ -36,26 +36,19 @@ configfile_read(struct configfile *f, const char *path)
     const unsigned char *restrict ptr, *end;
     const unsigned char *sptr = NULL, *nptr = NULL, *vptr = NULL;
     unsigned slen = 0, nlen = 0, vlen = 0, len;
-    struct sg_buffer fbuf;
+    struct sg_buffer *fbuf;
     int r = 0, lineno, warning = 0, quoted, c;
     const char *msg;
     char *buf = NULL, *bptr, *sstr, *nstr, *vstr;
     size_t bufsize = 0;
 
-    r = sg_file_get(path, strlen(path), 0, NULL,
-                    &fbuf, MAX_CONFIGFILE, NULL);
-    if (r) {
-        if (r > 0) {
-            logger = sg_logger_get("config");
-            sg_logf(logger, LOG_ERROR,
-                    "%s: config file too large, ignoring", path);
-            return 0;
-        }
+    fbuf = sg_file_get(path, strlen(path), 0, NULL,
+                       MAX_CONFIGFILE, NULL);
+    if (!fbuf)
         return -1;
-    }
 
-    ptr = fbuf.data;
-    end = ptr + fbuf.length;
+    ptr = fbuf->data;
+    end = ptr + fbuf->length;
     lineno = 1;
 
 initial:
@@ -270,6 +263,7 @@ error:
     goto skipline;
 
 done:
+    sg_buffer_decref(fbuf);
     free(buf);
     return r;
 }

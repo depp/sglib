@@ -32,7 +32,7 @@ static void *
 sg_audio_file_load(struct sg_resource *rs, struct sg_error **err)
 {
     struct sg_audio_file *fp = (struct sg_audio_file *) rs;
-    struct sg_buffer fbuf;
+    struct sg_buffer *fbuf;
     int r, rate;
 
     /* FIXME: FIXMEATOMIC: */
@@ -43,14 +43,16 @@ sg_audio_file_load(struct sg_resource *rs, struct sg_error **err)
         sg_audio_file_clear(fp);
 
     if (!fp->data) {
-        r = sg_file_get(fp->path, strlen(fp->path), 0, "wav", &fbuf,
-                        AUDIO_MAXSIZE, err);
-        if (r)
+        fbuf = sg_file_get(fp->path, strlen(fp->path), 0, "wav",
+                           AUDIO_MAXSIZE, err);
+        if (!fbuf)
             return NULL;
 
-        if (sg_audio_file_checkwav(fbuf.data, fbuf.length)) {
-            r = sg_audio_file_loadwav(fp, fbuf.data, fbuf.length, err);
+        if (sg_audio_file_checkwav(fbuf->data, fbuf->length)) {
+            r = sg_audio_file_loadwav(fp, fbuf->data, fbuf->length, err);
+            sg_buffer_decref(fbuf);
         } else {
+            sg_buffer_decref(fbuf);
             sg_logf(sg_audio_file_logger(), LOG_ERROR,
                     "%s: unknown audio file format", fp->path);
             sg_error_data(err, "audio");
