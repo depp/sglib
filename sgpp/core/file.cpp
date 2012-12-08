@@ -5,14 +5,14 @@
 #include <string.h>
 
 FBuffer::FBuffer(const char *path, int flags, size_t maxsize)
+    : m_buf(0)
 {
-    int r;
-    sg_buffer b;
-    sg_error *e = NULL;
-    r = sg_file_get(path, strlen(path), flags, NULL, &b, maxsize, &e);
-    if (r)
+    sg_buffer *b;
+    struct sg_error *e = NULL;
+    b = sg_file_get(path, strlen(path), flags, NULL, maxsize, &e);
+    if (!b)
         throw error(&e);
-    std::memcpy(&m_buf, &b, sizeof(sg_buffer));
+    m_buf = b;
 }
 
 File::File(const char *path, int flags)
@@ -59,12 +59,11 @@ size_t File::write(const void *buf, size_t amt)
 
 FBuffer File::readall(size_t maxsize)
 {
-    sg_buffer b;
-    int r;
-    r = sg_file_readall(m_ptr, &b, maxsize);
-    if (r)
+    sg_buffer *b;
+    b = sg_file_readall(m_ptr, maxsize);
+    if (!b)
         throw error(&m_ptr->err);
-    return FBuffer(&b);
+    return FBuffer(b);
 }
 
 void File::close()

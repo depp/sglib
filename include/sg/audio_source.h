@@ -4,7 +4,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-struct sg_audio_file;
+struct sg_audio_sample;
 
 /*
   Farthest time in the future permitted for any audio system event,
@@ -40,7 +40,7 @@ struct sg_audio_file;
 /* Note: these flags don't do anything yet... */
 enum {
     /* Always play this sound, even if it has to be delayed in order
-       for the file to load.  */
+       for the sample to load.  */
     SG_AUDIO_NODROP = 1 << 0,
     /* Exclude this sound from latency adjustments.  This can be used
        for UI sounds.  */
@@ -75,10 +75,10 @@ sg_audio_source_open(void);
 void
 sg_audio_source_close(int src);
 
-/* Play the given audio file.  */
+/* Play the given audio sample.  */
 void
-sg_audio_source_play(int src, unsigned time, struct sg_audio_file *file,
-                     int flags);
+sg_audio_source_play(int src, unsigned time,
+                     struct sg_audio_sample *sample, int flags);
 
 /* Stop playing the audio source.  */
 void

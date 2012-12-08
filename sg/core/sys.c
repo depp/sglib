@@ -1,6 +1,8 @@
 /* Copyright 2012 Dietrich Epp <depp@zdome.net> */
 #include "keycode/keycode.h"
+#include "sg/audio_sample.h"
 #include "sg/audio_system.h"
+#include "sg/aio.h"
 #include "sg/clock.h"
 #include "sg/dispatch.h"
 #include "sg/entry.h"
@@ -9,7 +11,7 @@
 #include "sg/log.h"
 #include "sg/rand.h"
 #include "sg/record.h"
-#include "sg/resource.h"
+#include "sg/texture.h"
 #include "sg/version.h"
 
 struct sg_sys_state sg_sst;
@@ -52,11 +54,13 @@ sg_sys_init(void)
     if (LOG_INFO >= log->level)
         sg_version_print();
     sg_path_init();
-    sg_dispatch_async_init();
+    sg_dispatch_init();
+    sg_aio_init();
     sg_dispatch_sync_init();
     sg_clock_init();
     sg_rand_seed(&sg_rand_global, 1);
-    sg_resource_init();
+    sg_texture_init();
+    sg_audio_sample_init();
     sg_audio_sys_init();
     sg_game_init();
     sg_log_video = sg_logger_get("video");
@@ -132,7 +136,6 @@ sg_sys_draw(void)
     unsigned msec, n;
 
     sg_dispatch_sync_run(SG_PRE_RENDER);
-    sg_resource_updateall();
 
     msec = sg_clock_get() - sg_sst.tick_offset;
     if (sg_sst.rec_numer && (int) (msec - sg_sst.rec_next) >= 0) {

@@ -50,3 +50,6 @@
 
 # Build directory, if used
 /build*
+
+# Doxygen
+/html

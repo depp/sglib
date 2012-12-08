@@ -8,6 +8,14 @@ extern "C" {
 struct sg_error;
 struct sg_file;
 
+/* Arbitrary limit on image file size.  TODO: Make this
+   configurable.  */
+#define SG_PIXBUF_MAXFILESZ ((size_t) 1024 * 1024 * 8)
+
+/* A list of supported image extensions, without the leading `'.'`,
+   and separated by `':'`.  */
+extern const char SG_PIXBUF_IMAGE_EXTENSIONS[];
+
 typedef enum {
     /* 8-bit formats.  Y means grayscale.  All formats with alpha are
        assumed to use premultiplied alpha unless otherwise
@@ -58,13 +66,10 @@ sg_pixbuf_alloc(struct sg_pixbuf *pbuf, struct sg_error **err);
 int
 sg_pixbuf_calloc(struct sg_pixbuf *pbuf, struct sg_error **err);
 
-/* Load an image with the given path.  This will attempt to load
-   ".png" and then ".jpg".  If the path already has an extension of
-   ".png" or ".jpg", that extension will be tried before the others.
-   If a file is found with one of the extensions, the remaining
-   extensions will not be attempted.  */
+/* Load an image from the given buffer.  The image format will be
+   automatically detected.  */
 int
-sg_pixbuf_loadimage(struct sg_pixbuf *pbuf, const char *path,
+sg_pixbuf_loadimage(struct sg_pixbuf *pbuf, const void *data, size_t len,
                     struct sg_error **err);
 
 /* Load a PNG image from the given buffer.  */

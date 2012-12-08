@@ -7,9 +7,10 @@
 #include "sg/file.h"
 #include <stdlib.h>
 
-int
-sg_file_readall(struct sg_file *f, struct sg_buffer *fbuf, size_t maxsize)
+struct sg_buffer *
+sg_file_readall(struct sg_file *f, size_t maxsize)
 {
+    struct sg_buffer *fbuf;
     unsigned char *buf = NULL, *nbuf;
     size_t len, nlen, pos;
     int64_t flen;
@@ -20,7 +21,7 @@ sg_file_readall(struct sg_file *f, struct sg_buffer *fbuf, size_t maxsize)
     if (f->length) {
         flen = f->length(f);
         if (flen < 0)
-            return -1;
+            return NULL;
         if ((uint64_t) flen > maxsize)
             goto toobig;
         len = (size_t) flen + 1;
@@ -57,9 +58,13 @@ sg_file_readall(struct sg_file *f, struct sg_buffer *fbuf, size_t maxsize)
     buf[pos] = '\0';
     if (pos + 1 < len)
         buf = realloc(buf, pos + 1);
+    fbuf = malloc(sizeof(*fbuf));
+    if (!fbuf)
+        goto nomem;
+    pce_atomic_set(&fbuf->refcount, 1);
     fbuf->data = buf;
     fbuf->length = pos;
-    return 0;
+    return fbuf;
 
 nomem:
     sg_error_nomem(&f->err);
@@ -67,27 +72,27 @@ nomem:
 
 err:
     free(buf);
-    return -1;
+    return NULL;
 
 toobig:
     free(buf);
     sg_error_sets(&f->err, &SG_ERROR_DATA, 0, "file too large");
-    return 1;
+    return NULL;
 }
 
-int
+struct sg_buffer *
 sg_file_get(const char *path, size_t pathlen, int flags,
             const char *extensions,
-            struct sg_buffer *fbuf, size_t maxsize, struct sg_error **e)
+            size_t maxsize, struct sg_error **e)
 {
     struct sg_file *f;
-    int r;
+    struct sg_buffer *fbuf;
     f = sg_file_open(path, pathlen, flags, extensions, e);
     if (!f)
-        return -1;
-    r = sg_file_readall(f, fbuf, maxsize);
-    if (r)
+        return NULL;
+    fbuf = sg_file_readall(f, maxsize);
+    if (!fbuf)
         sg_error_move(e, &f->err);
     f->free(f);
-    return r;
+    return fbuf;
 }

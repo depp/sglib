@@ -64,7 +64,7 @@ struct sg_audio_msghdr {
 };
 
 struct sg_audio_msgplay {
-    struct sg_audio_file *file;
+    struct sg_audio_sample *sample;
     int flags;
 };
 
@@ -123,7 +123,7 @@ struct sg_audio_source {
             unsigned msgtime;
             /* Current audio file playing, or NULL if no sound is
                playing */
-            struct sg_audio_file *file;
+            struct sg_audio_sample *sample;
             /* Start time of current sound playing */
             unsigned start_time;
             /* The latest segments of parameter automation.  */

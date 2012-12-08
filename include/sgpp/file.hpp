@@ -6,94 +6,67 @@
 
 class FBuffer;
 
-class FBufferRef {
-    FBuffer *m_ptr;
-
-public:
-    explicit FBufferRef(FBuffer *b) throw()
-        : m_ptr(b)
-    { }
-
-    FBuffer &ref() throw()
-    {
-        return *m_ptr;
-    }
-};
-
-// Memory buffer for the contents of a file.  When copied, the buffer
-// being copied will be set to NULL.
+// Memory buffer for the contents of a file.
 class FBuffer {
-    sg_buffer m_buf;
+    sg_buffer *m_buf;
 
 public:
     FBuffer() throw()
     {
-        m_buf.data = 0;
-        m_buf.length = 0;
+        m_buf = 0;
     }
 
-    FBuffer(FBuffer &b) throw()
+    FBuffer(const FBuffer &b) throw()
+        : m_buf(b.m_buf)
     {
-        std::memcpy(&m_buf, &b.m_buf, sizeof(sg_buffer));
-        b.m_buf.data = 0;
-        b.m_buf.length = 0;
+        if (m_buf)
+            sg_buffer_incref(m_buf);
     }
 
-    FBuffer(FBufferRef r) throw()
-    {
-        std::memcpy(&m_buf, &r.ref().m_buf, sizeof(sg_buffer));
-        r.ref().m_buf.data = 0;
-        r.ref().m_buf.length = 0;
-    }
-
+    /* Assumes ownership of the reference.  */
     explicit FBuffer(sg_buffer *b)
-    {
-        std::memcpy(&m_buf, b, sizeof(sg_buffer));
-    }
+        : m_buf(b)
+    { }
 
     FBuffer(const char *path, int flags, size_t maxsize);
 
+    ~FBuffer()
+    {
+        if (m_buf)
+            sg_buffer_decref(m_buf);
+    }
+
     FBuffer &operator=(FBuffer &b) throw()
     {
-        if (this != &b) {
-            clear();
-            std::memcpy(&m_buf, &b.m_buf, sizeof(sg_buffer));
-            b.m_buf.data = 0;
-            b.m_buf.length = 0;
+        if (m_buf != b.m_buf) {
+            sg_buffer_decref(m_buf);
+            sg_buffer_incref(b.m_buf);
+            m_buf = b.m_buf;
         }
         return *this;
     }
 
-    FBuffer &operator=(FBufferRef r) throw()
-    {
-        return *this = r.ref();
-    }
-
     void clear() throw()
     {
-        sg_buffer_destroy(&m_buf);
-        m_buf.data = 0;
-        m_buf.length = 0;
+        if (m_buf) {
+            sg_buffer_decref(m_buf);
+            m_buf = 0;
+        }
     }
 
     const void *get() const throw()
     {
-        return m_buf.data;
+        return m_buf ? m_buf->data : 0;
     }
 
     const unsigned char *getUC() const throw()
     {
-        return reinterpret_cast<unsigned char *> (m_buf.data);
+        return reinterpret_cast<const unsigned char *> (get());
     }
 
     size_t size() const throw()
     {
-        return m_buf.length;
-    }
-
-    operator FBufferRef() throw()
-    {
-        return FBufferRef(this);
+        return m_buf ? m_buf->length : 0;
     }
 };
 

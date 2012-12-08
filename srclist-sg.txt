@@ -1,6 +1,7 @@
-include/sg/audio_file.h
 include/sg/audio_mixdown.h
 include/sg/audio_ofile.h
+include/sg/audio_pcm.h
+include/sg/audio_sample.h
 include/sg/audio_source.h
 include/sg/audio_system.h
 include/sg/clock.h
@@ -19,7 +20,6 @@ include/sg/opengl.h
 include/sg/pixbuf.h
 include/sg/rand.h
 include/sg/record.h
-include/sg/resource.h
 include/sg/texture.h
 include/sg/type.h
 include/sg/version.h
@@ -47,14 +47,15 @@ libpce/lib/strbuf.c
 libpce/lib/thread_pthread.c LINUX MACOSX
 libpce/lib/thread_windows.c WINDOWS
 sg/audio/alsa.c LINUX LIBASOUND
+sg/audio/convert.c
 sg/audio/coreaudio.c MACOSX
 sg/audio/directsound8.c WINDOWS
-sg/audio/file.c
-sg/audio/fileprivate.h
+sg/audio/load.c
 sg/audio/mixdown.c
 sg/audio/ofile.c
-sg/audio/raw.c
+sg/audio/pcm.c
 sg/audio/resample.c
+sg/audio/sample.c
 sg/audio/source.c
 sg/audio/sysprivate.h
 sg/audio/system.c
@@ -69,16 +70,10 @@ sg/core/model.c
 sg/core/net.c
 sg/core/opengl.c
 sg/core/rand.c
-sg/core/resource.c
 sg/core/sys.c
 sg/core/texture.c
 sg/core/version.c
-sg/dispatch/common.c
-# sg/dispatch/coop.c
-sg/dispatch/impl.h
-sg/dispatch/pthread.c LINUX MACOSX
 sg/dispatch/sync.c
-sg/dispatch/windows.c WINDOWS
 sg/file/impl.h
 sg/file/norm.c
 sg/file/path.c
@@ -121,3 +116,8 @@ sg/type/type.c
 sg/type/uniscribe.c WINDOWS
 # sg/type/win.c
 sg/windows/windows.c WINDOWS
+sg/work/aio.c
+sg/work/dispatch.c
+sg/work/pthread.c MACOSX LINUX
+sg/work/windows.c WINDOWS
+sg/work/work.h

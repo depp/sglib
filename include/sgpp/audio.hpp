@@ -1,7 +1,7 @@
 /* Copyright 2012 Dietrich Epp <depp@zdome.net> */
 #ifndef SGPP_AUDIO_HPP
 #define SGPP_AUDIO_HPP
-#include "sg/audio_file.h"
+#include "sg/audio_sample.h"
 #include "sg/audio_source.h"
 #include "sgpp/sharedref.hpp"
 
@@ -10,13 +10,13 @@ class AudioFile {
     friend class AudioSource;
 
 protected:
-    sg_audio_file *m_ptr;
+    sg_audio_sample *m_ptr;
 
     AudioFile() : m_ptr(0) { }
-    AudioFile(sg_audio_file *ptr) : m_ptr(ptr) { }
+    AudioFile(sg_audio_sample *ptr) : m_ptr(ptr) { }
 
-    void incref() { if (m_ptr) sg_resource_incref(&m_ptr->r); }
-    void decref() { if (m_ptr) sg_resource_decref(&m_ptr->r); }
+    void incref() { if (m_ptr) sg_audio_sample_incref(m_ptr); }
+    void decref() { if (m_ptr) sg_audio_sample_decref(m_ptr); }
     operator bool() const { return m_ptr != 0; }
 
 public:

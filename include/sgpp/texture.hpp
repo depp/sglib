@@ -9,13 +9,13 @@ class Texture {
     template<class T> friend class SharedRef;
 
 protected:
-    sg_texture_image *m_ptr;
+    sg_texture *m_ptr;
 
     Texture() : m_ptr(0) { }
-    Texture(sg_texture_image *ptr) : m_ptr(ptr) { }
+    Texture(sg_texture *ptr) : m_ptr(ptr) { }
 
-    void incref() { if (m_ptr) sg_resource_incref(&m_ptr->r); }
-    void decref() { if (m_ptr) sg_resource_decref(&m_ptr->r); }
+    void incref() { if (m_ptr) sg_texture_incref(m_ptr); }
+    void decref() { if (m_ptr) sg_texture_decref(m_ptr); }
     operator bool() const { return m_ptr != 0; }
 
 public:
