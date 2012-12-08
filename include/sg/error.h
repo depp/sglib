@@ -51,6 +51,9 @@ sg_error_clear(struct sg_error **err);
 
 /* ===== Error Domains ===== */
 
+/* A domain for "invalid argument" */
+extern const struct sg_error_domain SG_ERROR_INVALID;
+
 /* A domain for "invalid pathname".  */
 extern const struct sg_error_domain SG_ERROR_INVALPATH;
 
@@ -65,6 +68,10 @@ extern const struct sg_error_domain SG_ERROR_DATA;
 
 /* A domain for canceled operations.  */
 extern const struct sg_error_domain SG_ERROR_CANCEL;
+
+/* Produce an "invalid argument" error.  */
+void
+sg_error_invalid(struct sg_error **err);
 
 /* Produce a "file not found" error for the given path.  */
 void
