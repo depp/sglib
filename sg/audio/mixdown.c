@@ -1,7 +1,7 @@
 /* Copyright 2012 Dietrich Epp <depp@zdome.net> */
 #include "libpce/util.h"
-#include "sg/audio_file.h"
 #include "sg/audio_mixdown.h"
+#include "sg/audio_sample.h"
 #include "sg/error.h"
 #include "sg/log.h"
 #include "sysprivate.h"
@@ -24,7 +24,7 @@
 /* Time, in seconds, which it takes a stopped sound to fade out */
 #define SG_AUDIO_FADETIME 0.1f
 
-/* Rate at which audio file fade out, in dB/sec */
+/* Rate at which audio sample fade out, in dB/sec */
 #define SG_AUDIO_FADERATE (-SG_AUDIO_SILENT / SG_AUDIO_FADETIME)
 
 struct sg_audio_mixsrc {
@@ -46,9 +46,9 @@ struct sg_audio_mixparam {
 struct sg_audio_mixchan {
     unsigned flags;
     int src;
-    struct sg_audio_file *file;
+    struct sg_audio_sample *sample;
 
-    /* The sample position of the file.  This is measured using the
+    /* The sample position in the sample.  This is measured using the
        mixdown's sample rate, and is relative to the start of the
        current buffer.  */
     int pos;
@@ -512,7 +512,7 @@ sg_audio_mixdown_srcplay(struct sg_audio_mixdown *SG_RESTRICT mp,
     chanp->flags = (mplay->flags & 0xffff) | SG_AUDIO_OPEN;
     chanp->src = src;
     /* FIXME: retain, once thread safe to do so */
-    chanp->file = mplay->file;
+    chanp->sample = mplay->sample;
     chanp->pos = sample;
 
     for (param = 0; param < SG_AUDIO_PARAMCOUNT; ++param) {
@@ -937,7 +937,7 @@ sg_audio_mixdown_render(struct sg_audio_mixdown *SG_RESTRICT mp,
                         float *SG_RESTRICT bufout)
 {
     struct sg_audio_mixchan *chans;
-    struct sg_audio_file *SG_RESTRICT fp;
+    struct sg_audio_sample *sp;
     unsigned i, pi, chan, param, nchan, bufsz, pbufsz;
     int pos, end, length;
     float *SG_RESTRICT bufmix, *SG_RESTRICT bufsamp;
@@ -956,7 +956,7 @@ sg_audio_mixdown_render(struct sg_audio_mixdown *SG_RESTRICT mp,
     memset(bufmix, 0, sizeof(float) * 2 * bufsz);
 
     for (chan = 0; chan < nchan; ++chan) {
-        fp = chans[chan].file;
+        sp = chans[chan].sample;
         if (!chans[chan].flags)
             continue;
         pos = chans[chan].pos;
@@ -972,11 +972,10 @@ sg_audio_mixdown_render(struct sg_audio_mixdown *SG_RESTRICT mp,
 
         sg_audio_mixdown_cvolpan(bp0, bp1, pbufsz);
 
-        /* FIXME: FIXMEATOMIC: */
-        if (fp->flags & SG_AUDIOFILE_LOADED) {
+        if (sg_audio_sample_is_loaded(sp)) {
             // printf("pos: %d\n", pos);
-            sdat = fp->data;
-            length = fp->nframe;
+            sdat = sp->data;
+            length = sp->nframe;
             end = pos + length;
             if ((unsigned) end > bufsz)
                 end = bufsz;
@@ -992,7 +991,7 @@ sg_audio_mixdown_render(struct sg_audio_mixdown *SG_RESTRICT mp,
                 i = 0;
             }
 
-            if (fp->flags & SG_AUDIOFILE_STEREO) {
+            if (sp->flags & SG_AUDIO_SAMPLE_STEREO) {
                 for (; (int) i < end; ++i) {
                     /* FIXME: offset not included, this is major broke */
                     bufsamp[i*2+0] =
@@ -1027,7 +1026,7 @@ sg_audio_mixdown_render(struct sg_audio_mixdown *SG_RESTRICT mp,
                 if (chans[chan].src >= 0)
                     mp->srcs[chans[chan].src].chan = -1;
                 chans[chan].flags = 0;
-                chans[chan].file = 0;
+                chans[chan].sample = NULL;
                 chans[chan].src = mp->chanfree;
                 mp->chanfree = chan;
             }

@@ -1,6 +1,6 @@
 /* Copyright 2012 Dietrich Epp <depp@zdome.net> */
 #include "libpce/util.h"
-#include "sg/audio_file.h"
+#include "sg/audio_sample.h"
 #include "sg/audio_source.h"
 #include "sg/log.h"
 #include "sysprivate.h"
@@ -67,7 +67,7 @@ sg_audio_source_open(void)
 
     srcp->flags = SG_AUDIO_OPEN | SG_AUDIO_ACTIVE;
     srcp->d.a.msgtime = time;
-    srcp->d.a.file = NULL;
+    srcp->d.a.sample = NULL;
     srcp->d.a.start_time = 0;
     for (i = 0; i < SG_AUDIO_PARAMCOUNT; ++i) {
         srcp->d.a.params[i].time[0] = time;
@@ -230,8 +230,8 @@ sg_audio_source_cliptime(struct sg_audio_system *SG_RESTRICT sp,
 }
 
 void
-sg_audio_source_play(int src, unsigned time, struct sg_audio_file *file,
-                     int flags)
+sg_audio_source_play(int src, unsigned time,
+                     struct sg_audio_sample *sample, int flags)
 {
     struct sg_audio_system *SG_RESTRICT sp = &sg_audio_system_global;
     struct sg_audio_source *srcp;
@@ -247,17 +247,17 @@ sg_audio_source_play(int src, unsigned time, struct sg_audio_file *file,
     if (!(srcp->flags & SG_AUDIO_OPEN))
         goto done;
 
-    sg_resource_incref(&file->r);
-    if (srcp->d.a.file)
-        sg_resource_decref(&srcp->d.a.file->r);
-    srcp->d.a.file = file;
+    sg_audio_sample_incref(sample);
+    if (srcp->d.a.sample)
+        sg_audio_sample_decref(srcp->d.a.sample);
+    srcp->d.a.sample = sample;
     srcp->d.a.start_time = time;
 
     mdat.flags = flags;
-    mdat.file = file;
+    mdat.sample = sample;
 
     sg_audio_sysmsg(sp, SG_AUDIO_MSG_PLAY, src, time, &mdat, sizeof(mdat));
-    sg_resource_incref(&file->r);
+    sg_audio_sample_incref(sample);
 
 done:
     pce_lock_release(&sp->slock);
@@ -279,9 +279,9 @@ sg_audio_source_stop(int src, unsigned time)
     if (!(srcp->flags & SG_AUDIO_OPEN))
         goto done;
 
-    if (srcp->d.a.file)
-        sg_resource_decref(&srcp->d.a.file->r);
-    srcp->d.a.file = NULL;
+    if (srcp->d.a.sample)
+        sg_audio_sample_decref(srcp->d.a.sample);
+    srcp->d.a.sample = NULL;
     srcp->flags &= ~0xffffu;
     sg_audio_sysmsg(sp, SG_AUDIO_MSG_STOP, src, time, NULL, 0);
 
@@ -606,7 +606,7 @@ sg_audio_source_bufprocess(struct sg_audio_system *SG_RESTRICT sp,
         case SG_AUDIO_MSG_PLAY:
             mplay = sg_audio_source_bufread(bp, sizeof(*mplay));
             assert(mplay != NULL);
-            sg_resource_decref(&mplay->file->r);
+            sg_audio_sample_decref(mplay->sample);
             break;
 
         case SG_AUDIO_MSG_STOP:
@@ -635,6 +635,7 @@ sg_audio_source_bufprocess(struct sg_audio_system *SG_RESTRICT sp,
 static void
 sg_audio_source_sprocess(struct sg_audio_system *SG_RESTRICT sp)
 {
+    struct sg_audio_sample *samp;
     struct sg_audio_source *SG_RESTRICT srcs;
     unsigned ctime, ltime, src;
     int i, len;
@@ -646,19 +647,23 @@ sg_audio_source_sprocess(struct sg_audio_system *SG_RESTRICT sp)
         if ((srcs[src].flags & (SG_AUDIO_OPEN | SG_AUDIO_ACTIVE)) == 0)
             continue;
 
-        if (srcs[src].d.a.file) {
-            len = src[srcs].d.a.file->playtime;
-            if (!len)
+        samp = srcs[src].d.a.sample;
+        if (samp) {
+            if (sg_audio_sample_is_loaded(samp))
+                len = samp->playtime;
+            else
                 len = 2000; /* guess at length */
             if ((int) (ctime - srcs[src].d.a.start_time) > len) {
                 /* LOOP here */
-                sg_resource_decref(&srcs[src].d.a.file->r);
-                srcs[src].d.a.file = NULL;
+                sg_audio_sample_decref(srcs[src].d.a.sample);
+                srcs[src].d.a.sample = NULL;
                 srcs[src].d.a.start_time = 0;
             }
         }
 
-        if ((srcs[src].flags & SG_AUDIO_OPEN) != 0 || srcs[src].d.a.file) {
+        if ((srcs[src].flags & SG_AUDIO_OPEN) != 0 ||
+            srcs[src].d.a.sample)
+        {
             if ((int) (ltime - srcs[src].d.a.msgtime) > 0)
                 srcs[src].d.a.msgtime = ltime;
         } else {

@@ -1,8 +1,9 @@
 /* Copyright 2012 Dietrich Epp <depp@zdome.net> */
-#include "fileprivate.h"
-#include "sg/audio_file.h"
+#include "sg/audio_pcm.h"
+#include "sg/defs.h"
 #include "sg/error.h"
-#include <stdio.h>
+#include <limits.h>
+#include <math.h>
 #include <stdlib.h>
 
 static void
@@ -46,37 +47,72 @@ sg_audio_file_resample_2(short *SG_RESTRICT dest, int dlen, int drate,
 }
 
 int
-sg_audio_file_resample(struct sg_audio_file *fp, int rate,
-                       struct sg_error **err)
+sg_audio_pcm_resample(struct sg_audio_pcm *buf, int rate,
+                      struct sg_error **err)
 {
-    unsigned nlen, chan;
-    short *ndata;
-    int orate;
+    void (*func)(short *, int, int, const short *, int, int);
+    size_t nlensz;
+    int nlen, nchan;
+    double fnlen;
+    short *dest;
 
-    orate = fp->rate;
-    chan = (fp->flags & SG_AUDIOFILE_STEREO) ? 2 : 1;
-    nlen = (int) (fp->nframe * ((double) rate / orate));
-    if (nlen < 1)
-        nlen = 1;
-
-    ndata = malloc(sizeof(short) * chan * nlen);
-    if (!ndata) {
-        sg_error_nomem(err);
-        return -1;
+    if (buf->nframe <= 0) {
+        buf->rate = rate;
+        return 0;
     }
 
-    if (chan == 1)
-        sg_audio_file_resample_1(ndata, nlen, rate,
-                                 fp->data, fp->nframe, fp->rate);
-    else
-        sg_audio_file_resample_2(ndata, nlen, rate,
-                                 fp->data, fp->nframe, fp->rate);
+    nchan = buf->nchan;
+    if (buf->format != SG_AUDIO_S16NE ||
+        buf->rate <= 0)
+        goto invalid;
 
-    free(fp->data);
-    /* FIXME: FIXMEATOMIC */
-    fp->flags |= SG_AUDIOFILE_RESAMPLED;
-    fp->nframe = nlen;
-    fp->rate = rate;
-    fp->data = ndata;
+    switch (nchan) {
+    case 1:
+        func = sg_audio_file_resample_1;
+        break;
+
+    case 2:
+        func = sg_audio_file_resample_2;
+        break;
+
+    default:
+        goto invalid;
+    }
+
+    fnlen = floor((double) rate / buf->rate + 0.5);
+    if (fnlen > INT_MAX)
+        goto nomem;
+    nlen = (int) fnlen;
+    if (nlen <= 0) {
+        free(buf->alloc);
+        buf->alloc = NULL;
+        buf->data = NULL;
+        buf->rate = rate;
+        buf->nframe = 0;
+        return 0;
+    }
+    nlensz = nlen;
+    if (nlensz > (size_t) -1 / nchan)
+        goto nomem;
+
+    dest = malloc(sizeof(short) * nchan * nlen);
+    if (!dest)
+        goto nomem;
+
+    func(dest, nlen, rate, buf->data, buf->nframe, buf->rate);
+
+    free(buf->alloc);
+    buf->alloc = dest;
+    buf->data = dest;
+    buf->rate = rate;
+    buf->nframe = nlen;
     return 0;
+
+nomem:
+    sg_error_nomem(err);
+    return -1;
+
+invalid:
+    sg_error_invalid(err);
+    return -1;
 }

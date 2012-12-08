@@ -1,6 +1,7 @@
-include/sg/audio_file.h
 include/sg/audio_mixdown.h
 include/sg/audio_ofile.h
+include/sg/audio_pcm.h
+include/sg/audio_sample.h
 include/sg/audio_source.h
 include/sg/audio_system.h
 include/sg/clock.h
@@ -47,14 +48,15 @@ libpce/lib/strbuf.c
 libpce/lib/thread_pthread.c LINUX MACOSX
 libpce/lib/thread_windows.c WINDOWS
 sg/audio/alsa.c LINUX LIBASOUND
+sg/audio/convert.c
 sg/audio/coreaudio.c MACOSX
 sg/audio/directsound8.c WINDOWS
-sg/audio/file.c
-sg/audio/fileprivate.h
+sg/audio/load.c
 sg/audio/mixdown.c
 sg/audio/ofile.c
-sg/audio/raw.c
+sg/audio/pcm.c
 sg/audio/resample.c
+sg/audio/sample.c
 sg/audio/source.c
 sg/audio/sysprivate.h
 sg/audio/system.c

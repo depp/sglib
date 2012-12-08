@@ -1,7 +1,6 @@
 /* Copyright 2012 Dietrich Epp <depp@zdome.net> */
-#include "fileprivate.h"
 #include "libpce/binary.h"
-#include "sg/audio_file.h"
+#include "sg/audio_pcm.h"
 #include "sg/error.h"
 #include "sg/log.h"
 #include <stdlib.h>
@@ -118,17 +117,6 @@ enum {
     SG_WAVE_FLOAT = 3
 };
 
-int
-sg_audio_file_checkwav(const void *data, size_t length)
-{
-    const unsigned char *p = data;
-    if (length < 12)
-        return 0;
-    if (!memcmp(p, "RIFF", 4) && !memcmp(p + 8, "WAVE", 4))
-        return 1;
-    return 0;
-}
-
 static struct sg_logger *
 sg_audio_wav_logger(void)
 {
@@ -136,9 +124,8 @@ sg_audio_wav_logger(void)
 }
 
 int
-sg_audio_file_loadwav(struct sg_audio_file *fp,
-                      const void *data, size_t length,
-                      struct sg_error **err)
+sg_audio_pcm_loadwav(struct sg_audio_pcm *buf, const void *data, size_t len,
+                     struct sg_error **err)
 {
     struct sg_riff riff;
     struct sg_riff_tag *tag;
@@ -148,7 +135,7 @@ sg_audio_file_loadwav(struct sg_audio_file *fp,
     const unsigned char *p;
     sg_audio_format_t format;
 
-    r = sg_riff_parse(&riff, data, length, err);
+    r = sg_riff_parse(&riff, data, len, err);
     if (r)
         return -1;
 
@@ -167,7 +154,7 @@ sg_audio_file_loadwav(struct sg_audio_file *fp,
     rate = pce_read_lu32(p + 4);
     /* blkalign = pce_read_lu16(p + 12); */
     sampbits = pce_read_lu16(p + 14);
-    if (rate < SG_AUDIO_MINRATE || rate > SG_AUDIO_MAXRATE) {
+    if (rate < SG_AUDIO_PCM_MINRATE || rate > SG_AUDIO_PCM_MAXRATE) {
         sg_logf(sg_audio_wav_logger(), LOG_ERROR,
                 "WAVE sample rate too extreme (%u Hz)", rate);
         goto fmterr;
@@ -225,8 +212,14 @@ sg_audio_file_loadwav(struct sg_audio_file *fp,
 
     sg_riff_destroy(&riff);
 
-    return sg_audio_file_loadraw(fp, p, nframe,
-                                 format, nchan, rate, err);
+    free(buf->alloc);
+    buf->alloc = NULL;
+    buf->data = p;
+    buf->format = format;
+    buf->rate = rate;
+    buf->nchan = nchan;
+    buf->nframe = nframe;
+    return 0;
 
 fmterr:
     sg_error_data(err, "WAVE");

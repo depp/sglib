@@ -1,5 +1,6 @@
 /* Copyright 2012 Dietrich Epp <depp@zdome.net> */
 #include "keycode/keycode.h"
+#include "sg/audio_sample.h"
 #include "sg/audio_system.h"
 #include "sg/aio.h"
 #include "sg/clock.h"
@@ -61,6 +62,7 @@ sg_sys_init(void)
     sg_rand_seed(&sg_rand_global, 1);
     sg_resource_init();
     sg_texture_init();
+    sg_audio_sample_init();
     sg_audio_sys_init();
     sg_game_init();
     sg_log_video = sg_logger_get("video");
