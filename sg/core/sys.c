@@ -11,7 +11,6 @@
 #include "sg/log.h"
 #include "sg/rand.h"
 #include "sg/record.h"
-#include "sg/resource.h"
 #include "sg/texture.h"
 #include "sg/version.h"
 
@@ -60,7 +59,6 @@ sg_sys_init(void)
     sg_dispatch_sync_init();
     sg_clock_init();
     sg_rand_seed(&sg_rand_global, 1);
-    sg_resource_init();
     sg_texture_init();
     sg_audio_sample_init();
     sg_audio_sys_init();
@@ -138,7 +136,6 @@ sg_sys_draw(void)
     unsigned msec, n;
 
     sg_dispatch_sync_run(SG_PRE_RENDER);
-    sg_resource_updateall();
 
     msec = sg_clock_get() - sg_sst.tick_offset;
     if (sg_sst.rec_numer && (int) (msec - sg_sst.rec_next) >= 0) {

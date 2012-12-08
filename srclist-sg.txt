@@ -20,7 +20,6 @@ include/sg/opengl.h
 include/sg/pixbuf.h
 include/sg/rand.h
 include/sg/record.h
-include/sg/resource.h
 include/sg/texture.h
 include/sg/type.h
 include/sg/version.h
@@ -71,7 +70,6 @@ sg/core/model.c
 sg/core/net.c
 sg/core/opengl.c
 sg/core/rand.c
-sg/core/resource.c
 sg/core/sys.c
 sg/core/texture.c
 sg/core/version.c
