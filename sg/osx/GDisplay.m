@@ -1,14 +1,13 @@
 /* Copyright 2012 Dietrich Epp <depp@zdome.net> */
-#import "base/opengl.h"
+#import "sg/opengl.h"
 #import <Carbon/Carbon.h>
 #import "GDisplay.h"
 #import "GView.h"
 #import "GWindow.h"
 #import "GController.h"
-#import "base/entry.h"
-#import "base/keycode/keyid.h"
-#import "base/keycode/keytable.h"
-#import "base/resource.h"
+#import "sg/entry.h"
+#import "keycode/keyid.h"
+#import "keycode/keytable.h"
 
 static int sg_glew_initted;
 

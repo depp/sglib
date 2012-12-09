@@ -1,6 +1,6 @@
 /* Copyright 2012 Dietrich Epp <depp@zdome.net> */
-#include "file.h"
-#include "pixbuf.h"
+#include "sg/file.h"
+#include "sg/pixbuf.h"
 #include <ApplicationServices/ApplicationServices.h>
 #include <assert.h>
 
@@ -54,7 +54,7 @@ imageToPixbuf(struct sg_pixbuf *pbuf, CGImageRef img, struct sg_error **err)
     CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
     assert(colorSpace);
     CGBitmapInfo info = alpha
-        ? kCGImageAlphaPremultipliedLast : kCGImageAlphaNoneSkipLast);
+        ? kCGImageAlphaPremultipliedLast : kCGImageAlphaNoneSkipLast;
     CGContextRef cxt = CGBitmapContextCreate(
         pbuf->data, pw, ph, 8, pbuf->rowbytes, colorSpace, info);
     assert(cxt);
@@ -138,7 +138,7 @@ sg_pixbuf_writepng(struct sg_pixbuf *pbuf, struct sg_file *fp,
         case SG_YA:   nchan = 2; ifo = kCGImageAlphaLast; break;
         /* SG_RGB not supported */
         case SG_RGBA: nchan = 4; ifo = kCGImageAlphaNoneSkipLast; break;
-        case SG_RGBA: nchan = 4; ifo = kCGImageAlphaPremultipliedLast; break;
+        /* case SG_RGBA: nchan = 4; ifo = kCGImageAlphaPremultipliedLast; break; */
         default: assert(0);
     }
 

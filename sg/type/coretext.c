@@ -1,6 +1,6 @@
 /* Copyright 2012 Dietrich Epp <depp@zdome.net> */
-#include "pixbuf.h"
-#include "type_impl.h"
+#include "impl.h"
+#include "sg/pixbuf.h"
 #include <ApplicationServices/ApplicationServices.h>
 
 static const float FRAME_HEIGHT = 2048.0f;

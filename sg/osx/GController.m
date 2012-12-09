@@ -1,11 +1,11 @@
 /* Copyright 2012 Dietrich Epp <depp@zdome.net> */
 #import "GController.h"
 #import "GDisplay.h"
-#import "base/audio_system.h"
-#import "base/entry.h"
-#import "base/cvar.h"
-#import "base/error.h"
-#import "base/version.h"
+#import "sg/audio_system.h"
+#import "sg/entry.h"
+#import "sg/cvar.h"
+#import "sg/error.h"
+#import "sg/version.h"
 
 static GController *gController;
 
