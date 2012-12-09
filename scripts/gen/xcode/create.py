@@ -248,6 +248,7 @@ def targetConfig(targenv):
     mname = targenv.simple_name
     env = targenv.unionenv()
     base = {
+        'USE_HEADERMAP': False,
         'ALWAYS_SEARCH_USER_PATHS': False,
         'GCC_DYNAMIC_NO_PIC': False,
         'GCC_ENABLE_FIX_AND_CONTINUE': True,
