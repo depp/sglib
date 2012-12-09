@@ -255,16 +255,7 @@ sg_audio_sys_pstart(void)
     sg_logf(sg_audio_alsa_logger, LOG_INFO,
             "audio buffer size: %lu", bufsize);
     alsa->bufsize = bufsize;
-
-    r = snd_pcm_hw_params_get_period_size(
-        hwparms, &periodsize, 0);
-    if (r < 0) {
-        why = "could not get period size";
-        goto cleanup;
-    }
-    sg_logf(sg_audio_alsa_logger, LOG_INFO,
-            "audio period size: %lu", periodsize);
-    assert(periodsize < INT_MAX);
+    periodsize = (bufsize + 1) >> 1;
     alsa->periodsize = periodsize;
 
     r = snd_pcm_hw_params(alsa->pcm, hwparms);
