@@ -406,7 +406,7 @@ pce_atomic_fetch_add_acq_rel(pce_atomic_t *p, int x)
 
 struct pce_atomic_s {
     volatile int v;
-}
+};
 
 PCE_INLINE
 void
