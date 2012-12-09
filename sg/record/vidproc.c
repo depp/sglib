@@ -2,6 +2,8 @@
 #define _XOPEN_SOURCE 700
 /* To get dirfd with outdated libc feature tests */
 #define _BSD_SOURCE 1
+/* To get dirfd on Darwin */
+#define _DARWIN_C_SOURCE 1
 
 #include "sg/defs.h"
 #include "sg/audio_ofile.h"
@@ -25,6 +27,14 @@
 #include <fcntl.h>
 #include <pthread.h>
 #include <unistd.h>
+
+#if defined(__linux__)
+# define FD_DIR "/proc/self/fd"
+#elif defined(__APPLE__)
+# define FD_DIR "/dev/fd"
+#else
+# error "Don't know how to close all fds on this platform"
+#endif
 
 #define SG_REC_MAXFRAME 16
 
@@ -114,7 +124,7 @@ sg_closefds(int min)
     long n;
     char *e;
 
-    dirp = opendir("/proc/self/fd");
+    dirp = opendir(FD_DIR);
     if (!dirp) abort();
     dfd = dirfd(dirp);
     while ((d = readdir(dirp))) {
