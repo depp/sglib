@@ -288,8 +288,7 @@ pce_round_up_pow2(size_t x)
     x |= x >> 4;
     x |= x >> 8;
     x |= x >> 16;
-    if (sizeof(x) == 8)
-        x |= x >> 32;
+    x |= (x >> 16) >> 16;
     return x + 1;
 }
 
