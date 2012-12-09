@@ -277,7 +277,7 @@ def add_sources(graph, proj, env, settings):
         lookup = TargetLookup(proj.info, module.info)
         graph.add(target.Template(
             src.relpath,
-            Path(proj.sgpath, 'resources/mac/MainMenu.xib'),
+            Path(proj.sgpath, 'sg/osx/MainMenu.xib'),
             lookup))
 
 def add_targets(graph, proj, env, settings):
