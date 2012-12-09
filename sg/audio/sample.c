@@ -148,7 +148,7 @@ sg_audio_sample_decodecb(void *cxt)
     if (r)
         goto finish;
 
-    if (pcm.rate != rate) {
+    if (rate && pcm.rate != rate) {
         r = sg_audio_pcm_resample(&pcm, rate, &err);
         if (r)
             goto finish;
@@ -156,7 +156,7 @@ sg_audio_sample_decodecb(void *cxt)
     }
 
     data = sg_audio_pcm_detach(&pcm, &err);
-    if (!data)
+    if (pcm.nframe && !data)
         goto finish;
 
     sg_buffer_decref(buf);
@@ -164,7 +164,7 @@ sg_audio_sample_decodecb(void *cxt)
 
     pce_lock_acquire(&gp->lock);
     sp = lp->sample;
-    if (!sp) {
+    if (sp) {
         sp->flags = flags;
         sp->nframe = pcm.nframe;
         sp->playtime = (int)
