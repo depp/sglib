@@ -299,7 +299,7 @@ pce_atomic_set(pce_atomic_t *p, int x)
 }
 
 PCE_INLINE
-int
+void
 pce_atomic_set_release(pce_atomic_t *p, int x)
 {
     pce_atomic_lwsync();
@@ -343,23 +343,14 @@ PCE_INLINE
 void
 pce_atomic_inc(pce_atomic_t *p)
 {
-    pce_atomic_fetch_add(p, x, 1);
+    pce_atomic_fetch_add(p, 1);
 }
 
 PCE_INLINE
 void
 pce_atomic_dec(pce_atomic_t *p)
 {
-    pce_atomic_fetch_add(p, x, -1);
-}
-
-PCE_INLINE
-int
-pce_atomic_fetch_add_acquire(pce_atomic_t *p, int x)
-{
-    int r;
-    r = pce_atomic_fetch_add(p, x);
-    __asm__ __volatile__("lwsync" : : : "memory");
+    pce_atomic_fetch_add(p, -1);
 }
 
 PCE_INLINE
