@@ -22,7 +22,7 @@
 #elif defined(__ppc64__)
 # define PCE_CPU_PPC64 1
 # define PCE_CPU_PPC 1
-#elif defined(__ppe__) || defined(__powerpc__)
+#elif defined(__ppc__) || defined(__powerpc__)
 # define PCE_CPU_PPC 1
 #elif defined(__arm__) || defined(__thumb__)
 # define PCE_CPU_ARM 1
