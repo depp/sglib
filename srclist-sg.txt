@@ -44,11 +44,11 @@ libpce/lib/cpu.c
 libpce/lib/hash.c
 libpce/lib/hashtable.c
 libpce/lib/strbuf.c
-libpce/lib/thread_pthread.c LINUX MACOSX
+libpce/lib/thread_pthread.c POSIX
 libpce/lib/thread_windows.c WINDOWS
-sg/audio/alsa.c LINUX LIBASOUND
+sg/audio/alsa.c LIBASOUND
 sg/audio/convert.c
-sg/audio/coreaudio.c MACOSX
+sg/audio/coreaudio.c COREAUDIO
 sg/audio/directsound8.c WINDOWS
 sg/audio/load.c
 sg/audio/mixdown.c
@@ -77,29 +77,29 @@ sg/dispatch/sync.c
 sg/file/impl.h
 sg/file/norm.c
 sg/file/path.c
-sg/file/posix.c LINUX MACOSX
+sg/file/posix.c POSIX
 sg/file/read.c
 sg/file/win.c WINDOWS
-sg/gtk/gtk.c GTK LINUX
+sg/gtk/gtk.c GTK
 sg/log/console.c
 sg/log/impl.h
 sg/log/log.c
 sg/log/network.c
-sg/osx/GApplication.h MACOSX
-sg/osx/GApplication.m MACOSX
-sg/osx/GController.h MACOSX
-sg/osx/GController.m MACOSX
-sg/osx/GDisplay.h MACOSX
-sg/osx/GDisplay.m MACOSX
-sg/osx/GMain.m MACOSX
-sg/osx/GPrefix.h MACOSX
-sg/osx/GView.h MACOSX
-sg/osx/GView.m MACOSX
-sg/osx/GWindow.h MACOSX
-sg/osx/GWindow.m MACOSX
-sg/pixbuf/coregraphics.c MACOSX
-sg/pixbuf/libjpeg.c LIBJPEG LINUX
-sg/pixbuf/libpng.c LIBPNG LINUX
+sg/osx/GApplication.h COCOA
+sg/osx/GApplication.m COCOA
+sg/osx/GController.h COCOA
+sg/osx/GController.m COCOA
+sg/osx/GDisplay.h COCOA
+sg/osx/GDisplay.m COCOA
+sg/osx/GMain.m COCOA
+sg/osx/GPrefix.h COCOA
+sg/osx/GView.h COCOA
+sg/osx/GView.m COCOA
+sg/osx/GWindow.h COCOA
+sg/osx/GWindow.m COCOA
+sg/pixbuf/coregraphics.c COREGRAPHICS
+sg/pixbuf/libjpeg.c LIBJPEG
+sg/pixbuf/libpng.c LIBPNG
 sg/pixbuf/loadimage.c
 sg/pixbuf/pixbuf.c
 sg/pixbuf/premultiply_alpha.c
@@ -108,16 +108,15 @@ sg/record/record.c
 sg/record/shot.c
 sg/record/vidproc.c
 sg/record/yuv.c
-# sg/sdl/sdl.c
-sg/type/coretext.c MACOSX
+sg/sdl/sdl.c SDL
+sg/type/coretext.c CORETEXT
 sg/type/impl.h
-sg/type/pango.c PANGO LINUX
+sg/type/pango.c PANGO
 sg/type/type.c
 sg/type/uniscribe.c WINDOWS
-# sg/type/win.c
 sg/windows/windows.c WINDOWS
 sg/work/aio.c
 sg/work/dispatch.c
-sg/work/pthread.c MACOSX LINUX
+sg/work/pthread.c POSIX
 sg/work/windows.c WINDOWS
 sg/work/work.h
