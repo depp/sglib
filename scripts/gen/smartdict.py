@@ -217,7 +217,8 @@ class AtomKey(Key):
 class AtomListKey(Key):
     """An atom list dictionary key.
 
-    When combining two values, duplicates will be removed.
+    When combining two values, duplicates will be removed.  The
+    default is empty.
     """
 
     @staticmethod
@@ -246,6 +247,9 @@ class AtomListKey(Key):
             if p not in nvalue:
                 nvalue.append(p)
         return tuple(nvalue)
+
+    def default(self, instance):
+        return ()
 
 class PathKey(Key):
     """A path smart dictionary key."""
