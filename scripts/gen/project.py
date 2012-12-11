@@ -33,7 +33,7 @@ class Project(object):
         self.feature = []
 
     def add_module(self, module):
-        if module.name is not None:
+        if module.modid is not None:
             if module.modid in self.module_names:
                 raise ValueError('duplicate module name: %s' % module.modid)
             self.module_names[module.modid] = module
