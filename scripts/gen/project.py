@@ -117,6 +117,26 @@ class ExternalLibrary(object):
     def is_target(self):
         return False
 
+    @property
+    def header_path(self):
+        return []
+
+    @property
+    def define(self):
+        return []
+
+    @property
+    def require(self):
+        return []
+
+    @property
+    def cvar(self):
+        return []
+
+    @property
+    def feature(self):
+        return []
+
     def add_libsource(self, source):
         self.sources.append(source)
 
