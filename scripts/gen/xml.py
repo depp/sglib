@@ -574,7 +574,7 @@ def parse_project(node, path):
 
 ########################################
 
-def load(path):
+def load(path, base):
     """Load the project or module XML file at the given path."""
     doc = xml.dom.minidom.parse(open(path, 'rb'))
     root = doc.documentElement
@@ -585,4 +585,4 @@ def load(path):
             func = MODULE_TAG[root.tagName]
         except KeyError:
             raise ValueError('unexpected root element')
-    return func(root, Path())
+    return func(root, base)
