@@ -166,7 +166,7 @@
     <src path="sdl.c" tag="SDL"/>
   </group>
   <group path="sg/type">
-    <src path="coretext.c" tag="CAIRO"/>
+    <src path="coretext.c" tag="CORETEXT"/>
     <src path="impl.h"/>
     <src path="pango.c" tag="PANGO"/>
     <src path="type.c"/>
