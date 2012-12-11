@@ -1,235 +1,110 @@
-import os
-import gen.source as source
-import sys
-import gen.smartdict as smartdict
-from gen.env import Environment
-from gen.path import Path
-from gen.info import ProjectInfo, ExecInfo
-from gen.version import version_cmp
-__all__ = ['Module', 'Executable', 'Project', 'Path']
+__all__ = ['OS', 'Project', 'BaseModule',
+           'Module', 'BundledLibrary', 'Executable']
 
-class Module(object):
-    """Optional project module.
-
-    A module is identified by an atom.  Sources tagged with that atom
-    will be skipped unless the corresponding module is enabled.
-    Enabling a module will also add header paths to the target, and
-    enable all modules that the module depends on.
-    """
-    __slots__ = ['_atom', '_desc', '_ipath', '_defs', '_reqs']
-
-    def __init__(self, atom, desc, ipath=(), reqs=(), defs=()):
-        self._atom = smartdict.AtomKey.check(atom)
-        self._desc = desc
-        self._ipath = smartdict.PathListKey.check(ipath)
-        self._defs = smartdict.CDefsKey.check(defs)
-        self._reqs = smartdict.AtomListKey.check(reqs)
-
-    @property
-    def atom(self):
-        """The atom that identifies this module."""
-        return self._atom
-
-    @property
-    def desc(self):
-        """A human-readable description of this module."""
-        return self._desc
-
-    @property
-    def ipath(self):
-        """Header search paths for this module."""
-        return self._ipath
-
-    @property
-    def defs(self):
-        """C preprocessor definitions."""
-        return self._defs
-
-    @property
-    def reqs(self):
-        """Atoms identifying modules which this module depends on."""
-        return self._reqs
-
-class Executable(Module):
-    """Module that produces an executable."""
-    __slots__ = ['_atom', '_desc', '_ipath', '_reqs', '_info']
-
-    def __init__(self, atom, desc, ipath=(), reqs=(), **kw):
-        Module.__init__(self, atom, desc, ipath, reqs)
-        self._info = ExecInfo(**kw)
-
-    @property
-    def info(self):
-        """The executable info dictionary."""
-        return self._info
-
-GLEW_SOURCE = """\
-src/glew.c
-include/GL/glew.h
-include/GL/glxew.h
-include/GL/wglew.h
-"""
+OS = frozenset(['linux', 'windows', 'osx'])
 
 class Project(object):
-    """Top level project.
-
-    A project consists of a project info dictionary, a list of source
-    files, and a list of modules.
-    """
-    __slots__ = ['_sources', '_info', '_sgpath', '_modules',
-                 '_libavail']
-
-    def __init__(self, rootdir):
-        rootpath = os.path.abspath(rootdir)
-        sgpath = os.path.abspath(__file__)
-        for i in xrange(3):
-            sgpath = os.path.dirname(sgpath)
-        # Find common parent directory
-        sgrel = []
-        p = sgpath
-        r = rootpath + os.path.sep
-        while not r.startswith(p + os.path.sep):
-            np, c = os.path.split(p)
-            if np == p:
-                print >>sys.stderr, 'root: %s, sglib: %s' % (rootpath, sgpath)
-                print >>sys.stderr, 'error: no common directory'
-                sys.exit(1)
-            p = np
-            sgrel.append(c);
-        r = rootpath
-        while r != p:
-            np, c = os.path.split(r)
-            assert np != r
-            r = np
-            sgrel.append('..')
-        sgrel.reverse()
-        sgpath = os.path.join(*sgrel)
-        os.chdir(rootpath)
-
-        self._sources = source.SourceList()
-        self._info = ProjectInfo()
-        self._sgpath = Path(sgpath.replace(os.path.sep, '/'))
-        self._modules = {}
-
-        sgincpath = [
-            Path(self._sgpath, 'include'),
-            Path(self._sgpath, 'keycode/include'),
-            Path(self._sgpath, 'libpce/include'),
-        ]
-        self._sources.read_list(
-            'SGLib', os.path.join(sgpath, 'srclist-sg.txt'),
-            ('SG',))
-        self._sources.read_list(
-            'SGLib', os.path.join(sgpath, 'srclist-sgpp.txt'),
-            ('SGPP',))
-        self.add_module(
-            Module('SG', 'SGLib C client code',
-                   ipath=sgincpath, reqs='LIBGLEW'))
-        self.add_module(
-            Module('SGPP', 'SGLib C++ client code',
-                   ipath=sgincpath, reqs='SG'))
-
-        p = self._find_library('glew')
-        self.add_module(
-            Module('LIBGLEW', 'GLEW source code',
-                   ipath=Path(p, 'include'), defs='GLEW_STATIC'))
-        self.add_sourcelist_str('GLEW', p, GLEW_SOURCE,
-                                'LIBGLEW', 'EXTERNAL')
-
-    @property
-    def modules(self):
-        """All modules in the project."""
-        return self._modules
-
-    @property
-    def sgpath(self):
-        """The path to the sglib library root."""
-        return self._sgpath
-
-    @property
-    def sourcelist(self):
-        """The SourceList object containing this project's sources."""
-        return self._sources
-
-    @property
-    def info(self):
-        """The project info dictionary."""
-        return self._info
-
-    def add_sourcelist(self, name, path, *atoms):
-        """Add a list of source files from a list at the given path.
-
-        The file is relative to the source directory, and paths in the
-        file are relative to the file's directory.  The name controls
-        how the source list appears as a group in IDEs.
-
-        The path to the sourcelist may be specified as a POSIX path or
-        using native directory separators.
-        """
-        self._sources.read_list(name, path.replace('/', os.path.sep), atoms)
-
-    def add_sourcelist_str(self, name, gpath, text, *atoms):
-        """Add a list of source files to the given group.
-
-        Like add_sourcelist, except with a string instead of a filename.
-        """
-        self._sources.read_list_str(name, Path(gpath), text, atoms)
-
-    def includepath(self, *paths):
-        """Search the given directories for header files."""
-        for path in paths:
-            if not os.path.isdir(path):
-                print >>sys.stderr, 'Warning: not a directory: %r' % path
-        raise Exception('not implemented')
-
-    def run(self):
-        """Run the command line tool for building the project."""
-        import gen.run
-        gen.run.run(self)
+    """A project is a set of modules and project-wide settings."""
+    def __init__(self):
+        self.name = None
+        self.ident = None
+        self.filename = None
+        self.url = None
+        self.email = None
+        self.copyright = None
+        self.cvar = []
+        self.modules = []
+        self.module_names = {}
 
     def add_module(self, module):
-        if not isinstance(module, Module):
-            raise TypeError('module must be Module')
-        if module.atom in self._modules:
-            raise Exception('duplicate module added: %s' % (module.atom,))
-        self._modules[module.atom] = module
+        if module.name is not None:
+            if module.name in self.module_names:
+                raise ValueError('duplicate module name: %s' % module.name)
+            self.module_names[module.name] = module
+        self.modules.append(module)
 
     def targets(self):
         """Iterate over all target modules."""
-        for m in self._modules.itervalues():
-            if isinstance(m, Executable):
+        for m in self.modules:
+            if m.is_target:
                 yield m
 
-    def _find_library(self, name):
-        """Get the path to the given library."""
-        libpath = Path(self._sgpath, 'lib')
-        try:
-            libavail = self._libavail
-        except AttributeError:
-            libavail = {}
-            for fname in os.listdir(libpath.native):
-                i = fname.find('-')
-                if i >= 0:
-                    libname = fname[:i]
-                    libver = fname[i+1:]
-                else:
-                    libname = fname
-                    libver = ''
-                try:
-                    vers = libavail[libname]
-                except KeyError:
-                    vers = []
-                    libavail[libname] = vers
-                vers.append((libver, fname))
-            self._libavail = libavail
-        try:
-            libvers = libavail[name]
-        except KeyError:
-            print >>sys.stderr, 'error: library not found: %s' % (name,)
-            print >>sys.stderr, 'please extract library code in %s' % \
-                (libpath.native,)
-            sys.exit(1)
-        libvers.sort(cmp=lambda x, y: version_cmp(x[0], y[0]))
-        libver, fname = libvers[-1]
-        print >>sys.stderr, 'using %s version %s' % (name, libver)
-        return Path(libpath, fname)
+class BaseModule(object):
+    """A module.
+
+    A project module is a group of sources.  Modules can depend on
+    other modules, so when one module is built, dependent modules will
+    also be built and linked in.  All paths are relative to the module
+    root, and the module root is a native path.  Concrete module
+    subclasses can be just source code, or they can be targets such as
+    executables.
+
+    name: identifies the module
+
+    desc: human-readable description
+
+    header_path: list of header include paths, both for this module
+    and any source depending on it, including indirect dependencies
+
+    define: list of preprocessor definitions, both for this module and
+    any source depending on it, including indirect dependencies
+
+    require: list of modules this module depends on
+
+    cvar: list of cvars and values to be set by default for developers
+    """
+
+    __slots__ = ['modid', 'name', 'header_path',
+                 'define', 'require', 'cvar', 'sources']
+
+    def __init__(self, modid):
+        self.modid = modid
+        self.name = None
+        self.header_path = []
+        self.define = []
+        self.require = []
+        self.cvar = []
+        self.sources = []
+
+    @property
+    def is_target(self):
+        """Whether this module is a buildable target."""
+        return False
+
+    def add_source(self, src):
+        self.sources.append(src)
+
+class Module(BaseModule):
+    """Simple module with a fixed location and sources."""
+
+    __slots__ = BaseModule.__slots__
+
+class BundledLibrary(BaseModule):
+    """Module which is an external library.
+
+    The 'lib' directory will be searched for a directory with a name
+    that matches 'libname', and that directory will be used as the
+    module root.
+    """
+
+    __slots__ = BaseModule.__slots__ + ['libname']
+
+    def __init__(self, modid, libname):
+        super(BundledLibrary, self).__init__(modid)
+        self.libname = libname
+
+class Executable(Module):
+    """Module that produces an executable."""
+
+    __slots__ = (BaseModule.__slots__ +
+                 ['exe_name', 'exe_icon', 'apple_category'])
+
+    @property
+    def is_target(self):
+        return True
+
+    def __init__(self, modid):
+        super(Executable, self).__init__(modid)
+        self.exe_name = {}
+        self.exe_icon = {}
+        self.apple_category = None
