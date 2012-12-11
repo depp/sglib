@@ -2,6 +2,7 @@
 <module id="SGPP" path="..">
   <name>SGLib++</name>
   <header-path path="include"/>
+  <require require="SG"/>
 
   <group path="include/sgpp">
     <src path="audio.hpp"/>
