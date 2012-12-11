@@ -6,6 +6,26 @@
   <header-path path="libpce/include"/>
   <require require="GLEW"/>
 
+  <variant varname="win32">
+    <name>Windows executable</name>
+    <require require="WINDOWS"/>
+  </variant>
+
+  <variant varname="cocoa">
+    <name>Cocoa application</name>
+    <require require="COCOA"/>
+  </variant>
+
+  <variant varname="gtk">
+    <name>GTK executable</name>
+    <require require="GTK GTKGLEXT"/>
+  </variant>
+
+  <variant varname="sdl">
+    <name>SDL executable</name>
+    <require require="SDL"/>
+  </variant>
+
   <feature id="JPEG">
     <name>JPEG image support</name>
     <impl require="LIBJPEG"/>
