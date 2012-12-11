@@ -85,6 +85,12 @@ class BaseModule(object):
         self.sources = []
         self.feature = []
 
+    def __repr__(self):
+        if self.modid is not None:
+            return '<%s %s>' % (self.__class__.__name__, self.modid)
+        else:
+            return '<%s %#x>' % (self.__class__.__name__, id(self))
+
     @property
     def is_target(self):
         """Whether this module is a buildable target."""
@@ -112,6 +118,9 @@ class ExternalLibrary(object):
         self.modid = modid
         self.name = None
         self.sources = []
+
+    def __repr__(self):
+        return '<ExternalLibrary %s>' % self.modid
 
     @property
     def is_target(self):
@@ -245,6 +254,9 @@ class Feature(object):
         self.modid = modid
         self.desc = None
         self.impl = []
+
+    def __repr__(self):
+        return '<Feature %s>' % self.modid
 
 class Implementation(object):
     """A set of modules required for an implementation."""
