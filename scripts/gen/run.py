@@ -1,11 +1,67 @@
 from __future__ import with_statement
 
 from gen.path import Path
-import gen.project
+from gen.source import Source
+import gen.project as project
 import os
 import sys
 
 CACHE_FILE = 'init.cache.dat'
+
+def use_bundled_lib(proj, lib, lsrc, fname):
+    root = Path(proj.lib_path, fname)
+    sys.stderr.write('found bundled library: %s\n' % root.posix)
+
+    lib.header_path = lsrc.header_path
+    lib.define = lsrc.define
+    lib.require = lsrc.require
+    lib.cvar = lsrc.cvar
+    lib.sources = [Source(Path(root, s.path), s.tags + ('$external',))
+                   for s in lsrc.sources]
+    lib.have_bundled_library = True
+
+def find_bundled_lib(proj, lib, libs):
+    for lsrc in lib.libsources:
+        if not isinstance(lsrc, project.BundledLibrary):
+            continue
+        searchname = lsrc.libname
+        for fname in libs:
+            i = fname.rfind('-')
+            if i >= 0:
+                libname = fname[:i]
+            else:
+                libname = fname
+            if searchname == libname:
+                use_bundled_lib(proj, lib, lsrc, fname)
+                return
+
+def find_bundled_libs(proj):
+    """Scan the bundled library folder for bundled libraries.
+
+    This will fill in the module fields for every ExternalLibrary that
+    can be bundled, if that library is found in the library folder.
+    """
+
+    if proj.lib_path is None:
+        return
+
+    libs = []
+    for fname in os.listdir(proj.lib_path.native):
+        npath = os.path.join(proj.lib_path.native, fname)
+        if fname.startswith('.'):
+            continue
+        if not os.path.isdir(npath):
+            continue
+        try:
+            Path(fname)
+        except ValueError:
+            sys.stderr.write('warning: ignoring %s\n' % npath)
+            continue
+        libs.append(fname)
+
+    for m in proj.modules:
+        if isinstance(m, project.ExternalLibrary):
+            find_bundled_lib(proj, m, libs)
 
 def parse_feature_args(proj, keys, p):
     import optparse
@@ -42,18 +98,14 @@ def parse_feature_args(proj, keys, p):
     del f
 
     for m in proj.modules:
-        if not isinstance(m, gen.project.ExternalLibrary):
+        if not isinstance(m, project.ExternalLibrary):
             continue
         nm = m.modid.lower()
         desc = m.name if m.name is not None else '%s library' % m.modid
-        has_bundled = False
-        for s in m.sources:
-            if isinstance(s, gen.project.BundledLibrary):
-                has_bundled = True
         opts = []
         if m.modid in optlibs:
             opts.append((nm, 'with_%s' % m.modid, desc))
-        if has_bundled:
+        if m.have_bundled_library:
             opts.append(('bundled-%s' % nm, 'bundled_%s' % m.modid,
                          '%s (bundled copy)' % desc))
 
@@ -93,6 +145,8 @@ class Configuration(object):
                 mod = xml.load(os.path.join(modpath.native, fname), modpath)
                 proj.add_module(mod)
         self.project = proj
+
+        find_bundled_libs(proj)
 
         p = optparse.OptionParser()
         keys = []

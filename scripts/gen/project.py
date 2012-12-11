@@ -107,50 +107,33 @@ class Module(BaseModule):
 
     __slots__ = BaseModule.__slots__
 
-class ExternalLibrary(object):
+class ExternalLibrary(BaseModule):
     """Module which is an external library.
 
     A module has a number possible library sources.  Each library
     source specifies a method of locating the library, finding its
     header search paths, and linking the library into a program.
+
+    When the project is configured or reconfigured, the library
+    directory will be searched for bundled libraries.  Any library
+    which is found will be used to fill in the base module properties:
+    header_path, sources, et cetera, and the have_bundled_library
+    attribute will be set to True.
     """
 
-    __slots__ = ['modid', 'name', 'sources']
+    __slots__ = (BaseModule.__slots__ +
+                 ['libsources', 'have_bundled_library'])
 
     def __init__(self, modid):
-        self.modid = modid
-        self.name = None
-        self.sources = []
+        super(ExternalLibrary, self).__init__(modid)
+        self.libsources = []
+        self.have_bundled_library = False
 
     def __repr__(self):
         return '<ExternalLibrary %s>' % self.modid
 
-    @property
-    def is_target(self):
-        return False
-
-    @property
-    def header_path(self):
-        return []
-
-    @property
-    def define(self):
-        return []
-
-    @property
-    def require(self):
-        return []
-
-    @property
-    def cvar(self):
-        return []
-
-    @property
-    def feature(self):
-        return []
-
     def add_libsource(self, source):
-        self.sources.append(source)
+        self.libsources.append(source)
 
 class BundledLibrary(object):
     """Library source for libraries bundled with the project.
