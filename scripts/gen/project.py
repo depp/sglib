@@ -15,6 +15,7 @@ class Project(object):
         'name', 'ident', 'filename', 'url', 'email', 'copyright',
         'cvar', 'modules', 'module_names',
         'module_path', 'lib_path',
+        'feature',
     ]
 
     def __init__(self):
@@ -29,12 +30,14 @@ class Project(object):
         self.module_names = {}
         self.module_path = []
         self.lib_path = None
+        self.feature = []
 
     def add_module(self, module):
         if module.name is not None:
-            if module.name in self.module_names:
-                raise ValueError('duplicate module name: %s' % module.name)
-            self.module_names[module.name] = module
+            if module.modid in self.module_names:
+                raise ValueError('duplicate module name: %s' % module.modid)
+            self.module_names[module.modid] = module
+        self.feature.extend(module.feature)
         self.modules.append(module)
 
     def targets(self):
