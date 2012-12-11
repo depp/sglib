@@ -3,7 +3,7 @@ __all__ = [
     'Module', 'Intrinsic', 'ExternalLibrary', 'Executable',
     'BundledLibrary', 'LibraryGroup', 'PkgConfig', 'Framework', 'SdlConfig',
     'LibrarySearch', 'TestSource',
-    'Feature', 'Implementation', 'Variant',
+    'Feature', 'Implementation', 'Variant', 'Defaults',
 ]
 
 OS = frozenset(['linux', 'windows', 'osx'])
@@ -14,7 +14,7 @@ class Project(object):
     __slots__ = [
         'name', 'ident', 'filename', 'url', 'email', 'copyright',
         'cvar', 'modules', 'module_names',
-        'module_path', 'lib_path',
+        'module_path', 'lib_path', 'defaults',
     ]
 
     def __init__(self):
@@ -29,6 +29,7 @@ class Project(object):
         self.module_names = {}
         self.module_path = []
         self.lib_path = None
+        self.defaults = []
 
     def add_module(self, module):
         if module.modid is not None:
@@ -150,7 +151,7 @@ class BaseModule(object):
     __slots__ = [
         'modid', 'name',
         'header_path', 'define', 'require', 'cvar',
-        'sources', 'feature', 'variant'
+        'sources', 'feature', 'variant', 'defaults',
     ]
 
     def __init__(self, modid):
@@ -163,6 +164,7 @@ class BaseModule(object):
         self.sources = []
         self.feature = []
         self.variant = []
+        self.defaults = []
 
     def __repr__(self):
         if self.modid is not None:
@@ -368,3 +370,14 @@ class Variant(object):
         self.varname = varname
         self.name = None
         self.require = []
+
+class Defaults(object):
+    """A defaults object controls the default libraries to use."""
+
+    __slots__ = ['os', 'variants', 'libs', 'features']
+
+    def __init__(self, os, variants, libs, features):
+        self.os = os
+        self.variants = variants
+        self.libs = libs
+        self.features = features

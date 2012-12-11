@@ -131,6 +131,26 @@ def parse_tags(attr):
         tags.append(tag)
     return tuple(tags)
 
+def parse_defaults(node):
+    os = None
+    variants = None
+    libs = None
+    features = None
+    for i in xrange(node.attributes.length):
+        attr = node.attributes.item(i)
+        if attr.name == 'os':
+            os = parse_tags(attr)
+        elif attr.name == 'variants':
+            variants = parse_tags(attr)
+        elif attr.name == 'libs':
+            libs = parse_tags(attr)
+        elif attr.name == 'features':
+            features = parse_tags(attr)
+        else:
+            unexpected_attr(node, attr)
+    node_empty(node)
+    return Defaults(os, variants, libs, features)
+
 ####################
 
 def mod_group(mod, node, path, tags):
@@ -306,6 +326,9 @@ def mod_variant(mod, node, path, tags):
         raise ValueError('variants must require at least one module')
     mod.variant.append(var)
 
+def mod_defaults(mod, node, path, tags):
+    mod.defaults.append(parse_defaults(node))
+
 MOD_ELEM = {
     'name': mod_name,
     'header-path': mod_header_path,
@@ -314,6 +337,7 @@ MOD_ELEM = {
     'cvar': mod_cvar,
     'feature': mod_feature,
     'variant': mod_variant,
+    'defaults': mod_defaults,
 }
 MOD_ELEM.update(GROUP_ELEM)
 
@@ -625,6 +649,9 @@ def proj_libpath(proj, node, path):
         raise ValueError('duplicate lib-path element')
     proj.lib_path = Path(path, mpath)
 
+def proj_defaults(proj, node, path):
+    proj.defaults.append(parse_defaults(node))
+
 MODULE_TAG = {
     'executable': parse_executable,
     'module': parse_module,
@@ -641,6 +668,7 @@ PROJ_ELEM = {
     'cvar': proj_cvar,
     'module-path': proj_modpath,
     'lib-path': proj_libpath,
+    'defaults': proj_defaults,
 }
 
 def parse_project(node, path):

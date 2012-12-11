@@ -6,6 +6,23 @@
   <header-path path="libpce/include"/>
   <require require="GLEW"/>
 
+  <defaults
+      os="OSX"
+      variants="cocoa"
+      libs="COREGRAPHICS COREAUDIO CORETEXT"
+      />
+
+  <defaults
+      os="LINUX"
+      variants="gtk sdl"
+      libs="LIBJPEG LIBPNG ALSA PANGO"
+      />
+
+  <defaults
+      os="WINDOWS"
+      variants="win32"
+      />
+
   <variant varname="win32">
     <name>Windows executable</name>
     <require require="WINDOWS"/>
@@ -29,14 +46,14 @@
   <feature id="JPEG">
     <name>JPEG image support</name>
     <impl require="LIBJPEG"/>
-    <impl require="COREGRAPHICS" provide="COREGRAPHICS_JPEG"/>
+    <impl require="COREGRAPHICS"/>
     <impl require="WINDOWS"/>
   </feature>
 
   <feature id="PNG">
     <name>PNG image support</name>
     <impl require="LIBPNG"/>
-    <impl require="COREGRAPHICS" provide="COREGRAPHICS_PNG"/>
+    <impl require="COREGRAPHICS"/>
     <impl require="WINDOWS"/>
   </feature>
 
