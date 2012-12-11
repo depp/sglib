@@ -3,6 +3,7 @@ __all__ = [
     'Module', 'ExternalLibrary', 'Executable',
     'BundledLibrary', 'PkgConfig', 'Framework', 'SdlConfig',
     'LibrarySearch', 'TestSource',
+    'Feature', 'Implementation',
 ]
 
 OS = frozenset(['linux', 'windows', 'osx'])
@@ -65,10 +66,14 @@ class BaseModule(object):
     require: list of modules this module depends on
 
     cvar: list of cvars and values to be set by default for developers
+
+    sources: list of source files
+
+    feature: list of features this module has
     """
 
     __slots__ = ['modid', 'name', 'header_path',
-                 'define', 'require', 'cvar', 'sources']
+                 'define', 'require', 'cvar', 'sources', 'feature']
 
     def __init__(self, modid):
         self.modid = modid
@@ -78,6 +83,7 @@ class BaseModule(object):
         self.require = []
         self.cvar = []
         self.sources = []
+        self.feature = []
 
     @property
     def is_target(self):
@@ -204,3 +210,27 @@ class Executable(Module):
         self.exe_name = {}
         self.exe_icon = {}
         self.apple_category = None
+
+class Feature(object):
+    """A feature is a part of the code that can be enabled or disabled.
+
+    A feature can have multiple imlementations.  Exactly one
+    implementation can be chosen.  The implementation is chosen during
+    the configuration process.
+    """
+
+    __slots__ = ['modid', 'desc', 'impl']
+
+    def __init__(self, modid):
+        self.modid = modid
+        self.desc = None
+        self.impl = []
+
+class Implementation(object):
+    """A set of modules required for an implementation."""
+
+    __slots__ = ['require', 'provide']
+
+    def __init__(self, require, provide):
+        self.require = require
+        self.provide = provide

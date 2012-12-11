@@ -4,7 +4,35 @@
   <header-path path="include"/>
   <header-path path="keycode/include"/>
   <header-path path="libpce/include"/>
-  <require name="GLEW"/>
+  <require require="GLEW"/>
+
+  <feature id="JPEG">
+    <name>JPEG image support</name>
+    <impl require="LIBJPEG"/>
+    <impl require="COREGRAPHICS" provide="COREGRAPHICS_JPEG"/>
+    <impl require="WINDOWS"/>
+  </feature>
+
+  <feature id="PNG">
+    <name>PNG image support</name>
+    <impl require="LIBPNG"/>
+    <impl require="COREGRAPHICS" provide="COREGRAPHICS_PNG"/>
+    <impl require="WINDOWS"/>
+  </feature>
+
+  <feature id="AUDIO">
+    <name>Audio support</name>
+    <impl require="ALSA"/>
+    <impl require="COREAUDIO"/>
+    <impl require="WINDOWS"/>
+  </feature>
+
+  <feature id="TYPE">
+    <name>Type rendering support</name>
+    <impl require="PANGO"/>
+    <impl require="CORETEXT"/>
+    <impl require="WINDOWS"/>
+  </feature>
 
   <!-- SGLib -->
   <group path="include/sg">

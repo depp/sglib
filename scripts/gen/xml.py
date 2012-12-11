@@ -208,21 +208,56 @@ def mod_define(mod, node, path, tags):
     mod.define.append((name, value))
 
 def mod_require(mod, node, path, tags):
-    name = None
+    require = None
     for i in xrange(node.attributes.length):
         attr = node.attributes.item(i)
-        if attr.name == 'name':
-            name = attr.value
-            if not is_ident(name):
-                raise ValueError('invalid module requirement: %s' % name)
+        if attr.name == 'require':
+            require = parse_tags(attr)
         else:
             unexpected_attr(node, attr)
+    if require is None:
+        missing_attr(node, 'require')
     node_empty(node)
-    mod.require.append(name)
+    mod.require.extend(require)
 
 def mod_cvar(mod, node, path, tags):
     name, value = parse_cvar(node, path)
     mod.cvar.append((name, value))
+
+def mod_feature(mod, node, path, tags):
+    name = None
+    for i in xrange(node.attributes.length):
+        attr = node.attributes.item(i)
+        if attr.name == 'id':
+            name = attr.value
+            if not is_ident(name):
+                raise ValueError('invalid feature name: %s' % name)
+        else:
+            unexpected_attr(node, attr)
+    feature = Feature(name)
+    for c in node_elements(node):
+        if c.tagName == 'impl':
+            require = ()
+            provide = ()
+            for i in xrange(c.attributes.length):
+                attr = c.attributes.item(i)
+                if attr.name == 'require':
+                    require = parse_tags(attr)
+                elif attr.name == 'provide':
+                    provide = parse_tags(attr)
+                else:
+                    unexpected_attr(c, attr)
+            node_empty(c)
+            impl = Implementation(require, provide)
+            feature.impl.append(impl)
+        elif c.tagName == 'name':
+            if feature.desc is not None:
+                raise ValueError('duplicate name element')
+            node_noattr(c)
+            feature.desc = node_text(c)
+        else:
+            unexpected(node, c)
+    mod.feature.append(feature)
 
 MOD_ELEM = {
     'name': mod_name,
@@ -230,6 +265,7 @@ MOD_ELEM = {
     'define': mod_define,
     'require': mod_require,
     'cvar': mod_cvar,
+    'feature': mod_feature,
 }
 MOD_ELEM.update(GROUP_ELEM)
 
