@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module id="SG" path="..">
+  <name>SGLib</name>
+  <header-path path="include"/>
+  <header-path path="keycode/include"/>
+  <header-path path="libpce/include"/>
+  <require name="GLEW"/>
+
+  <!-- SGLib -->
+  <group path="include/sg">
+    <src path="audio_mixdown.h"/>
+    <src path="audio_ofile.h"/>
+    <src path="audio_pcm.h"/>
+    <src path="audio_sample.h"/>
+    <src path="audio_source.h"/>
+    <src path="audio_system.h"/>
+    <src path="clock.h"/>
+    <src path="configfile.h"/>
+    <src path="cvar.h"/>
+    <src path="defs.h"/>
+    <src path="dispatch.h"/>
+    <src path="entry.h"/>
+    <src path="error.h"/>
+    <src path="event.h"/>
+    <src path="file.h"/>
+    <src path="log.h"/>
+    <src path="model.h"/>
+    <src path="net.h"/>
+    <src path="opengl.h"/>
+    <src path="pixbuf.h"/>
+    <src path="rand.h"/>
+    <src path="record.h"/>
+    <src path="texture.h"/>
+    <src path="type.h"/>
+    <src path="version.h"/>
+  </group>
+  <group path="sg/audio">
+    <src path="alsa.c" tag="LIBASOUND"/>
+    <src path="convert.c"/>
+    <src path="coreaudio.c" tag="COREAUDIO"/>
+    <src path="directsound8.c" tag="WINDOWS"/>
+    <src path="load.c"/>
+    <src path="mixdown.c"/>
+    <src path="ofile.c"/>
+    <src path="pcm.c"/>
+    <src path="resample.c"/>
+    <src path="sample.c"/>
+    <src path="source.c"/>
+    <src path="sysprivate.h"/>
+    <src path="system.c"/>
+    <src path="wav.c"/>
+  </group>
+  <group path="sg/core">
+    <src path="clock.c"/>
+    <src path="clock_impl.h"/>
+    <src path="configfile.c"/>
+    <src path="configfile_read.c"/>
+    <src path="cvar.c"/>
+    <src path="error.c"/>
+    <src path="model.c"/>
+    <src path="net.c"/>
+    <src path="opengl.c"/>
+    <src path="rand.c"/>
+    <src path="sys.c"/>
+    <src path="texture.c"/>
+    <src path="version.c"/>
+  </group>
+  <group path="sg/dispatch">
+    <src path="sync.c"/>
+  </group>
+  <group path="sg/file">
+    <src path="impl.h"/>
+    <src path="norm.c"/>
+    <src path="path.c"/>
+    <src path="posix.c" tag="POSIX"/>
+    <src path="read.c"/>
+    <src path="win.c" tag="WINDOWS"/>
+  </group>
+  <group path="sg/gtk">
+    <src path="gtk.c" tag="GTK"/>
+  </group>
+  <group path="sg/log">
+    <src path="console.c"/>
+    <src path="impl.h"/>
+    <src path="log.c"/>
+    <src path="network.c"/>
+  </group>
+  <group path="sg/osx" tag="COCOA">
+    <src path="GApplication.h"/>
+    <src path="GApplication.m"/>
+    <src path="GController.h"/>
+    <src path="GController.m"/>
+    <src path="GDisplay.h"/>
+    <src path="GDisplay.m"/>
+    <src path="GMain.m"/>
+    <src path="GPrefix.h"/>
+    <src path="GView.h"/>
+    <src path="GView.m"/>
+    <src path="GWindow.h"/>
+    <src path="GWindow.m"/>
+  </group>
+  <group path="sg/pixbuf">
+    <src path="coregraphics.c" tag="COREGRAPHICS"/>
+    <src path="libjpeg.c" tag="LIBJPEG"/>
+    <src path="libpng.c" tag="LIBPNG"/>
+    <src path="loadimage.c"/>
+    <src path="pixbuf.c"/>
+    <src path="premultiply_alpha.c"/>
+    <src path="wincodec.cpp" tag="WINDOWS"/>
+  </group>
+  <group path="sg/record">
+    <src path="record.c"/>
+    <src path="shot.c"/>
+    <src path="vidproc.c"/>
+    <src path="yuv.c"/>
+  </group>
+  <group path="sg/sdl">
+    <src path="sdl.c" tag="SDL"/>
+  </group>
+  <group path="sg/type">
+    <src path="coretext.c" tag="CAIRO"/>
+    <src path="impl.h"/>
+    <src path="pango.c" tag="PANGO"/>
+    <src path="type.c"/>
+    <src path="uniscribe.c" tag="WINDOWS"/>
+  </group>
+  <group path="sg/windows">
+    <src path="windows.c" tag="WINDOWS"/>
+  </group>
+  <group path="sg/work">
+    <src path="aio.c"/>
+    <src path="dispatch.c"/>
+    <src path="pthread.c" tag="POSIX"/>
+    <src path="windows.c" tag="WINDOWS"/>
+    <src path="work.h"/>
+  </group>
+
+  <!-- Keycode submodule -->
+  <group path="keycode/include/keycode">
+    <src path="keycode.h"/>
+    <src path="keyid.h"/>
+    <src path="keytable.h"/>
+  </group>
+  <group path="keycode/src">
+    <src path="keyid.c"/>
+    <src path="keytable_evdev.c" tag="LINUX"/>
+    <src path="keytable_mac.c" tag="MACOSX"/>
+    <src path="keytable_win.c" tag="WINDOWS"/>
+  </group>
+
+  <!-- LibPCE submodule -->
+  <group path="libpce/include/libpce">
+    <src path="arch.h"/>
+    <src path="atomic.h"/>
+    <src path="attribute.h"/>
+    <src path="byteorder.h"/>
+    <src path="cpu.h"/>
+    <src path="hash.h"/>
+    <src path="hashtable.h"/>
+    <src path="strbuf.h"/>
+    <src path="thread.h"/>
+    <src path="util.h"/>
+  </group>
+  <group path="libpce/lib">
+    <src path="cpu.c"/>
+    <src path="hash.c"/>
+    <src path="hashtable.c"/>
+    <src path="strbuf.c"/>
+    <src path="thread_pthread.c" tag="POSIX"/>
+    <src path="thread_windows.c" tag="WINDOWS"/>
+  </group>
+</module>
