@@ -493,6 +493,29 @@ def lib_libsearch(mod, node):
             flags.append(d)
     mod.add_libsource(LibrarySearch(source, flags))
 
+def lib_group(mod, node):
+    node_noattr(node)
+    src = LibraryGroup()
+    has_elem = False
+    for c in node_elements(node):
+        has_elem = True
+        try:
+            func = LIB_ELEM[c.tagName]
+        except KeyError:
+            unexpected(node, c)
+        func(src, c)
+    if not has_elem:
+        raise ValueError('empty library-group')
+    mod.add_libsource(src)
+
+LIB_ELEM = {
+    'name': mod_name,
+    'framework': lib_framework,
+    'pkg-config': lib_pkgconfig,
+    'sdl-config': lib_sdlconfig,
+    'library-search': lib_libsearch,
+}
+
 BUNDLE_ELEM = {
     'header-path': mod_header_path,
     'define': mod_define,
@@ -525,13 +548,10 @@ def lib_bundled(mod, node):
     mod.add_libsource(src)
 
 EXTLIB_ELEM = {
-    'name': mod_name,
-    'framework': lib_framework,
-    'pkg-config': lib_pkgconfig,
-    'sdl-config': lib_sdlconfig,
-    'library-search': lib_libsearch,
+    'library-group': lib_group,
     'bundled-library': lib_bundled,
 }
+EXTLIB_ELEM.update(LIB_ELEM)
 
 def parse_external_library(node, path):
     name = None

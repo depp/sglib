@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<external-library id="COCOA">
+  <name>Cocoa framework</name>
+  <library-group>
+    <framework>Foundation</framework>
+    <framework>AppKit</framework>
+  </library-group>
+</external-library>

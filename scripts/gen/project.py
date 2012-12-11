@@ -1,7 +1,7 @@
 __all__ = [
     'OS', 'Project', 'BaseModule',
     'Module', 'ExternalLibrary', 'Executable',
-    'BundledLibrary', 'PkgConfig', 'Framework', 'SdlConfig',
+    'BundledLibrary', 'LibraryGroup', 'PkgConfig', 'Framework', 'SdlConfig',
     'LibrarySearch', 'TestSource',
     'Feature', 'Implementation', 'Variant',
 ]
@@ -233,6 +233,21 @@ class BundledLibrary(object):
 
     def add_source(self, source):
         self.sources.append(source)
+
+class LibraryGroup(object):
+    """Library source which aggregates sources.
+
+    All library sources in the group must be present.  Bundled
+    libraries can not be included inside the group.
+    """
+
+    __slots__ = ['libsources']
+
+    def __init__(self):
+        self.libsources = []
+
+    def add_libsource(self, source):
+        self.libsources.append(source)
 
 class PkgConfig(object):
     """Library source which uses pkg-config to find a library."""
