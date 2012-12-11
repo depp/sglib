@@ -2,7 +2,7 @@ from __future__ import absolute_import
 
 from gen.source import Source
 from gen.path import Path
-from gen.project import OS, Project, Module, BundledLibrary, Executable
+from gen.project import *
 from gen.util import *
 from xml.dom import Node
 import xml.dom.minidom
@@ -172,7 +172,7 @@ GROUP_ELEM = {
     'src': mod_src,
 }
 
-def mod_name(mod, node, path, tags):
+def mod_name(mod, node, path=None, tags=None):
     node_noattr(node)
     name = node_text(node)
     if mod.name is not None:
@@ -354,34 +354,125 @@ def parse_executable(node, path):
         mod.exe_name[osval] = val
     return mod
 
-def parse_bundled_library(node, path):
-    name = None
+####################
+
+def lib_framework(mod, node):
+    node_noattr(node)
+    name = node_text(node)
+    if not is_ident(name):
+        raise ValueError('invalid framework name: %s' % name)
+    mod.add_libsource(Framework(name))
+
+def lib_pkgconfig(mod, node):
+    node_noattr(node)
+    spec = node_text(node)
+    mod.add_libsource(PkgConfig(spec))
+
+def lib_sdlconfig(mod, node):
+    node_noattr(node)
+    version = node_text(node)
+    mod.add_libsource(SdlConfig(version))
+
+def lib_libsearch(mod, node):
+    node_noattr(node)
+    source = None
+    flags = []
+    for c in node_elements(node):
+        if c.tagName == 'test-source':
+            if source is not None:
+                raise ValueError('duplicate test-source')
+            node_noattr(c)
+            prologue = None
+            body = None
+            for cc in node_elements(c):
+                if cc.tagName == 'test-prologue':
+                    if prologue is not None:
+                        raise ValueError('duplicate prologue')
+                    node_noattr(cc)
+                    prologue = node_text(cc)
+                elif cc.tagName == 'test-body':
+                    if body is not None:
+                        raise ValueError('duplicate body')
+                    node_noattr(cc)
+                    body = node_text(cc)
+                else:
+                    unexpected(c, cc)
+            source = TestSource(prologue, body)
+        elif c.tagName == 'flags':
+            node_empty(c)
+            d = {}
+            for i in xrange(c.attributes.length):
+                attr = c.attributes.item(i)
+                if attr.name not in ('LIBS', 'CFLAGS', 'LDFLAGS'):
+                    unexpected_attr(c, attrr)
+                d[attr.name] = tuple(attr.value.split())
+            flags.append(d)
+    mod.add_libsource(LibrarySearch(source, flags))
+
+BUNDLE_ELEM = {
+    'header-path': mod_header_path,
+    'define': mod_define,
+    'require': mod_require,
+    'cvar': mod_cvar,
+}
+BUNDLE_ELEM.update(GROUP_ELEM)
+
+def lib_bundled(mod, node):
     libname = None
+    path = Path()
     for i in xrange(node.attributes.length):
         attr = node.attributes.item(i)
         if attr.name == 'path':
             val = Path(attr.value)
             path = Path(path, val)
-        elif attr.name == 'id':
-            name = attr.value
-            if not is_ident(name):
-                raise ValueError('invalid id: %s' % name)
         elif attr.name == 'libname':
             libname = attr.value
         else:
             unexpected_attr(node, attr)
-    if name is None:
-        missing_attr(node, 'id')
     if libname is None:
         missing_attr(node, 'libname')
-    mod = BundledLibrary(name, libname)
+    src = BundledLibrary(libname)
     for c in node_elements(node):
         try:
-            func = MOD_ELEM[c.tagName]
+            func = BUNDLE_ELEM[c.tagName]
         except KeyError:
             unexpected(node, c)
-        func(mod, c, path, ())
+        func(src, c, path, ())
+    mod.add_libsource(src)
+
+EXTLIB_ELEM = {
+    'name': mod_name,
+    'framework': lib_framework,
+    'pkg-config': lib_pkgconfig,
+    'sdl-config': lib_sdlconfig,
+    'library-search': lib_libsearch,
+    'bundled-library': lib_bundled,
+}
+
+def parse_external_library(node, path):
+    name = None
+    for i in xrange(node.attributes.length):
+        attr = node.attributes.item(i)
+        if attr.name == 'id':
+            name = attr.value
+            if not is_ident(name):
+                raise ValueError('invalid id: %s' % name)
+        else:
+            unexpected_attr(node, attr)
+    if name is None:
+        missing_attr(node, 'id')
+    mod = ExternalLibrary(name)
+    for c in node_elements(node):
+        try:
+            func = EXTLIB_ELEM[c.tagName]
+        except KeyError:
+            unexpected(node, c)
+        func(mod, c)
     return mod
+
+def parse_bundled_library(node, path):
+    name = None
+    libname = None
 
 ####################
 
@@ -405,7 +496,7 @@ def proj_cvar(proj, node, path):
 MODULE_TAG = {
     'executable': parse_executable,
     'module': parse_module,
-    'bundled-library': parse_bundled_library,
+    'external-library': parse_external_library,
 }
 
 PROJ_ELEM = {

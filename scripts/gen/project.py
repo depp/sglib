@@ -1,5 +1,9 @@
-__all__ = ['OS', 'Project', 'BaseModule',
-           'Module', 'BundledLibrary', 'Executable']
+__all__ = [
+    'OS', 'Project', 'BaseModule',
+    'Module', 'ExternalLibrary', 'Executable',
+    'BundledLibrary', 'PkgConfig', 'Framework', 'SdlConfig',
+    'LibrarySearch', 'TestSource',
+]
 
 OS = frozenset(['linux', 'windows', 'osx'])
 
@@ -79,19 +83,102 @@ class Module(BaseModule):
 
     __slots__ = BaseModule.__slots__
 
-class BundledLibrary(BaseModule):
+class ExternalLibrary(object):
     """Module which is an external library.
 
-    The 'lib' directory will be searched for a directory with a name
-    that matches 'libname', and that directory will be used as the
-    module root.
+    A module has a number possible library sources.  Each library
+    source specifies a method of locating the library, finding its
+    header search paths, and linking the library into a program.
     """
 
-    __slots__ = BaseModule.__slots__ + ['libname']
+    __slots__ = ['modid', 'name', 'sources']
 
-    def __init__(self, modid, libname):
-        super(BundledLibrary, self).__init__(modid)
+    def __init__(self, modid):
+        self.modid = modid
+        self.name = None
+        self.sources = []
+
+    @property
+    def is_target(self):
+        return False
+
+    def add_libsource(self, source):
+        self.sources.append(source)
+
+class BundledLibrary(object):
+    """Library source for libraries bundled with the project.
+
+    The 'lib' directory will be searched for a directory matching the
+    specified 'libname', and that library will be used as the root
+    path.  A bundled library is otherwise similar to an ordinary
+    module.
+    """
+
+    __slots__ = ['libname', 'header_path', 'define',
+                 'require', 'cvar', 'sources']
+
+    def __init__(self, libname):
         self.libname = libname
+        self.header_path = []
+        self.define = []
+        self.require = []
+        self.cvar = []
+        self.sources = []
+
+    def add_source(self, source):
+        self.sources.append(source)
+
+class PkgConfig(object):
+    """Library source which uses pkg-config to find a library."""
+
+    __slots__ = ['spec']
+
+    def __init__(self, spec):
+        self.spec = spec
+
+class Framework(object):
+    """Library source which is a Darwin framework."""
+
+    __slots__ = ['name']
+
+    def __init__(self, name):
+        self.name = name
+
+class SdlConfig(object):
+    """Library source which uses sdl-config to find LibSDL."""
+
+    __slots__ = ['version']
+
+    def __init__(self, version):
+        self.version = version
+
+class LibrarySearch(object):
+    """Library source which searches for a library.
+
+    This creates a source file, and then tries a series of different
+    compilation flags until it finds a set that can compile and link
+    the source file.
+    """
+
+    __slots__ = ['source', 'flags']
+
+    def __init__(self, source, flags):
+        self.source = source
+        self.flags = flags
+
+class TestSource(object):
+    """Test source file.
+
+    Consists of a prologue and a body.  The prologue is placed at the
+    top of the source file.  Below the prologue the main() function is
+    defined, which contains the body followed by a return statement.
+    """
+
+    __slots__ = ['prologue', 'body']
+
+    def __init__(self, prologue, body):
+        self.prologue = prologue
+        self.body = body
 
 class Executable(Module):
     """Module that produces an executable."""
