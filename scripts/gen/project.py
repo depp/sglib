@@ -9,6 +9,13 @@ OS = frozenset(['linux', 'windows', 'osx'])
 
 class Project(object):
     """A project is a set of modules and project-wide settings."""
+
+    __slots__ = [
+        'name', 'ident', 'filename', 'url', 'email', 'copyright',
+        'cvar', 'modules', 'module_names',
+        'module_path', 'lib_path',
+    ]
+
     def __init__(self):
         self.name = None
         self.ident = None
@@ -19,6 +26,8 @@ class Project(object):
         self.cvar = []
         self.modules = []
         self.module_names = {}
+        self.module_path = []
+        self.lib_path = None
 
     def add_module(self, module):
         if module.name is not None:

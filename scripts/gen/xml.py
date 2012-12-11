@@ -493,6 +493,34 @@ def proj_cvar(proj, node, path):
     name, value = parse_cvar(node, path)
     proj.cvar.append((name, value))
 
+def proj_modpath(proj, node, path):
+    mpath = None
+    for i in xrange(node.attributes.length):
+        attr = node.attributes.item(i)
+        if attr.name == 'path':
+            mpath = Path(attr.value)
+        else:
+            unexpected_attr(node, attr)
+    if mpath is None:
+        missing_attr(node, 'path')
+    node_empty(node)
+    proj.module_path.append(Path(path, mpath))
+
+def proj_libpath(proj, node, path):
+    mpath = None
+    for i in xrange(node.attributes.length):
+        attr = node.attributes.item(i)
+        if attr.name == 'path':
+            mpath = Path(attr.value)
+        else:
+            unexpected_attr(node, attr)
+    if mpath is None:
+        missing_attr(node, 'path')
+    node_empty(node)
+    if proj.lib_path is not None:
+        raise ValueError('duplicate lib-path element')
+    proj.lib_path = Path(path, mpath)
+
 MODULE_TAG = {
     'executable': parse_executable,
     'module': parse_module,
@@ -507,6 +535,8 @@ PROJ_ELEM = {
     'email': proj_prop('email'),
     'copyright': proj_prop('copyright'),
     'cvar': proj_cvar,
+    'module-path': proj_modpath,
+    'lib-path': proj_libpath,
 }
 
 def parse_project(node, path):
