@@ -192,7 +192,7 @@
   <group path="keycode/src">
     <src path="keyid.c"/>
     <src path="keytable_evdev.c" tag="LINUX"/>
-    <src path="keytable_mac.c" tag="MACOSX"/>
+    <src path="keytable_mac.c" tag="OSX"/>
     <src path="keytable_win.c" tag="WINDOWS"/>
   </group>
 

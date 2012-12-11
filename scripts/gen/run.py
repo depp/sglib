@@ -177,7 +177,7 @@ class Configuration(object):
         self.project = proj
 
         trim_project(proj)
-        for tag in ('POSIX', 'WINDOWS', 'MACOSX', 'LINUX'):
+        for tag in ('POSIX', 'WINDOWS', 'OSX', 'LINUX'):
             proj.add_module(project.Intrinsic(tag))
         check_deps(proj)
         find_bundled_libs(proj)
