@@ -63,6 +63,19 @@ def find_bundled_libs(proj):
         if isinstance(m, project.ExternalLibrary):
             find_bundled_lib(proj, m, libs)
 
+def trim_project(proj):
+    """Remove unreferenced modules from the project."""
+
+    mods, unsat = proj.closure(proj.targets())
+    if unsat:
+        sys.stderr.write(
+            'warning: unsatisfied dependencies: %s\n' % ' '.join(unsat))
+    all_mods = set(proj.module_names)
+    used_mods = set(mod.modid for mod in mods if mod.modid is not None)
+    unused_mods = all_mods.difference(used_mods)
+    for mid in unused_mods:
+        del proj.module_names[mid]
+
 def parse_feature_args(proj, keys, p):
     import optparse
     ge = optparse.OptionGroup(p, 'Optional Features')
@@ -71,7 +84,7 @@ def parse_feature_args(proj, keys, p):
     p.add_option_group(gw)
 
     optlibs = set()
-    for f in proj.feature:
+    for f in proj.features():
         default = True
         nm = f.modid.lower()
         desc = '%s feature' % f.modid if f.desc is None else f.desc
@@ -145,6 +158,8 @@ class Configuration(object):
                 mod = xml.load(os.path.join(modpath.native, fname), modpath)
                 proj.add_module(mod)
         self.project = proj
+
+        trim_project(proj)
 
         find_bundled_libs(proj)
 

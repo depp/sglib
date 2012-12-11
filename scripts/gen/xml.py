@@ -259,6 +259,53 @@ def mod_feature(mod, node, path, tags):
             unexpected(node, c)
     mod.feature.append(feature)
 
+def var_name(var, node):
+    node_noattr(node)
+    v = node_text(node)
+    if var.name is not None:
+        raise ValueError('variant has duplicate name')
+    var.name = v
+
+def var_require(var, node):
+    require = None
+    for i in xrange(node.attributes.length):
+        attr = node.attributes.item(i)
+        if attr.name == 'require':
+            require = parse_tags(attr)
+        else:
+            unexpected_attr(node, attr)
+    if require is None:
+        expected_attr(node, 'require')
+    var.require.extend(require)
+
+VAR_ELEM = {
+    'name': var_name,
+    'require': var_require,
+}
+
+def mod_variant(mod, node, path, tags):
+    varname = None
+    for i in xrange(node.attributes.length):
+        attr = node.attributes.item(i)
+        if attr.name =='varname':
+            if not is_ident(attr.value):
+                raise ValueError('invalid varname')
+            varname = attr.value
+        else:
+            unexpected_attr(node, attr)
+    if varname is None:
+        raise ValueError('variant needs varname')
+    var = Variant(varname)
+    for c in node_elements(node):
+        try:
+            func = VAR_ELEM[c.tagName]
+        except KeyError:
+            unexpected(node, c)
+        func(var, c)
+    if not var.require:
+        raise ValueError('variants must require at least one module')
+    mod.variant.append(var)
+
 MOD_ELEM = {
     'name': mod_name,
     'header-path': mod_header_path,
@@ -266,6 +313,7 @@ MOD_ELEM = {
     'require': mod_require,
     'cvar': mod_cvar,
     'feature': mod_feature,
+    'variant': mod_variant,
 }
 MOD_ELEM.update(GROUP_ELEM)
 

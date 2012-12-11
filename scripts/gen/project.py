@@ -3,7 +3,7 @@ __all__ = [
     'Module', 'ExternalLibrary', 'Executable',
     'BundledLibrary', 'PkgConfig', 'Framework', 'SdlConfig',
     'LibrarySearch', 'TestSource',
-    'Feature', 'Implementation',
+    'Feature', 'Implementation', 'Variant',
 ]
 
 OS = frozenset(['linux', 'windows', 'osx'])
@@ -15,7 +15,6 @@ class Project(object):
         'name', 'ident', 'filename', 'url', 'email', 'copyright',
         'cvar', 'modules', 'module_names',
         'module_path', 'lib_path',
-        'feature',
     ]
 
     def __init__(self):
@@ -30,14 +29,12 @@ class Project(object):
         self.module_names = {}
         self.module_path = []
         self.lib_path = None
-        self.feature = []
 
     def add_module(self, module):
         if module.modid is not None:
             if module.modid in self.module_names:
                 raise ValueError('duplicate module name: %s' % module.modid)
             self.module_names[module.modid] = module
-        self.feature.extend(module.feature)
         self.modules.append(module)
 
     def targets(self):
@@ -45,6 +42,81 @@ class Project(object):
         for m in self.modules:
             if m.is_target:
                 yield m
+
+    def closure(self, modules):
+        """Get a list of all modules the given modules depend on.
+
+        This returns (mods, unsat), where mods is a list of the
+        modules (including the original modules), and unsat is a list
+        of tags which are unsatisfied.
+        """
+        used = set()
+        q = list(modules)
+        unsat = []
+        mods = list(q)
+        while q:
+            m = q.pop()
+            deps = set(m.require)
+            for f in m.feature:
+                for i in f.impl:
+                    deps.update(i.require)
+            for v in m.variant:
+                deps.update(v.require)
+            for mid in deps.difference(used):
+                try:
+                    m = self.module_names[mid]
+                except KeyError:
+                    unsat.append(mid)
+                else:
+                    mods.append(m)
+                    q.append(m)
+            used.update(deps)
+        return mods, unsat
+
+    def features(self, modules=None):
+        """Get a list of features for the given modules.
+
+        If no iterable of modules is supplied, then all features are
+        returned.
+        """
+        if modules is not None:
+            mods, unsat = self.closure(modules)
+        else:
+            mods = self.modules
+        a = []
+        for m in mods:
+            a.extend(m.feature)
+        return a
+
+    def variants(self, targets=None):
+        """Get a list of variants for the given modules.
+
+        If no iterable of modules is supplied, then all variants are
+        returned.
+        """
+        if modules is not None:
+            mods, unsat = self.closure(modules)
+        else:
+            mods = self.modules
+        a = []
+        for m in mods:
+            a.extend(m.variant)
+        return a
+
+    def sources(self, target, getenv):
+        """Iterate over the sources in a given target.
+
+        Yields (source, env) pairs, where env is the environment for
+        building the given source.  The environment is taken from the
+        getenv function, which should map a module name and a set of
+        tags to either the corresponding environment if the source
+        should be built, or None if the source should not be built.
+        """
+        modules = set()
+        mlist = [target]
+
+        while mlist:
+            m = mlist.pop()
 
 class BaseModule(object):
     """A module.
@@ -75,8 +147,11 @@ class BaseModule(object):
     feature: list of features this module has
     """
 
-    __slots__ = ['modid', 'name', 'header_path',
-                 'define', 'require', 'cvar', 'sources', 'feature']
+    __slots__ = [
+        'modid', 'name',
+        'header_path', 'define', 'require', 'cvar',
+        'sources', 'feature', 'variant'
+    ]
 
     def __init__(self, modid):
         self.modid = modid
@@ -87,6 +162,7 @@ class BaseModule(object):
         self.cvar = []
         self.sources = []
         self.feature = []
+        self.variant = []
 
     def __repr__(self):
         if self.modid is not None:
@@ -252,3 +328,17 @@ class Implementation(object):
     def __init__(self, require, provide):
         self.require = require
         self.provide = provide
+
+class Variant(object):
+    """A variant is a different version of the code that can be built.
+
+    Multiple variants can be built in parallel, but only one will ever
+    be linked into the same executable.
+    """
+
+    __slots__ = ['varname', 'name', 'require']
+
+    def __init__(self, varname):
+        self.varname = varname
+        self.name = None
+        self.require = []
