@@ -1,6 +1,6 @@
 __all__ = [
     'OS', 'Project', 'BaseModule',
-    'Module', 'ExternalLibrary', 'Executable',
+    'Module', 'Intrinsic', 'ExternalLibrary', 'Executable',
     'BundledLibrary', 'LibraryGroup', 'PkgConfig', 'Framework', 'SdlConfig',
     'LibrarySearch', 'TestSource',
     'Feature', 'Implementation', 'Variant',
@@ -182,6 +182,17 @@ class Module(BaseModule):
     """Simple module with a fixed location and sources."""
 
     __slots__ = BaseModule.__slots__
+
+class Intrinsic(BaseModule):
+    """Module which is intrinsically present or not present.
+
+    There is no XML representation for this kind of module.
+    """
+
+    __slots__ = BaseModule.__slots__
+
+    def __repr__(self):
+        return '<Intrinsic %s>' % self.modid
 
 class ExternalLibrary(BaseModule):
     """Module which is an external library.

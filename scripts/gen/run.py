@@ -81,8 +81,9 @@ def check_deps(proj):
             ', '.join(sorted(unsat)))
     all_tags = set()
     used_tags = set()
-    for m in mods:
-        all_tags.add(m.modid)
+    for m in proj.modules:
+        if m.modid is not None:
+            all_tags.add(m.modid)
         all_tags.update(f.modid for f in m.feature)
         for s in m.sources:
             used_tags.update(s.tags)
@@ -176,6 +177,8 @@ class Configuration(object):
         self.project = proj
 
         trim_project(proj)
+        for tag in ('POSIX', 'WINDOWS', 'MACOSX', 'LINUX'):
+            proj.add_module(project.Intrinsic(tag))
         check_deps(proj)
         find_bundled_libs(proj)
 
