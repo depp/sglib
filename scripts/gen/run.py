@@ -33,27 +33,37 @@ def parse_feature_args(proj, p):
         for i in f.impl:
             optlibs.update(i.require)
 
-    optlibs.difference_update(x.upper() for x in gen.project.OS)
-    for libid in optlibs:
-        try:
-            m = proj.module_names[libid]
-        except KeyError:
-            sys.stderr.write('warning: cannod find module %s' % (libid))
+    del f
+
+    for m in proj.modules:
+        if not isinstance(m, gen.project.ExternalLibrary):
             continue
         nm = m.modid.lower()
         desc = m.name if m.name is not None else '%s library' % m.modid
-        gw.add_option(
-            '--with-%s' % nm,
-            default=None,
-            action='store_true',
-            dest='with_%s' % f.modid,
-            help='use %s' % desc)
-        gw.add_option(
-            '--without-%s' % nm,
-            default=None,
-            action='store_false',
-            dest='with_%s' % f.modid,
-            help=optparse.SUPPRESS_HELP)
+        has_bundled = False
+        for s in m.sources:
+            if isinstance(s, gen.project.BundledLibrary):
+                has_bundled = True
+        opts = []
+        if m.modid in optlibs:
+            opts.append((nm, 'with_%s' % m.modid, desc))
+        if has_bundled:
+            opts.append(('bundled-%s' % nm, 'bundled_%s' % m.modid,
+                         '%s (bundled copy)' % desc))
+
+        for argn, var, desc in opts:
+            gw.add_option(
+                '--with-%s' % argn,
+                default=None,
+                action='store_true',
+                dest=var,
+                help='use %s' % desc)
+            gw.add_option(
+                '--without-%s' % argn,
+                default=None,
+                action='store_false',
+                dest=var,
+                help=optparse.SUPPRESS_HELP)
 
 def run():
     proj = xml.load('project.xml', Path())
