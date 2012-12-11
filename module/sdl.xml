@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<external-library id="SDL">
+  <name>LibSDL</name>
+  <!--
+    From the changelog: "SDL 1.2.10 is a major release, featuring a
+    revamp of the build system and many API improvements and bug
+    fixes."
+  -->
+  <sdl-config>1.2.10</sdl-config>
+</external-library>

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<external-library id="LIBJPEG">
+  <name>LibJPEG</name>
+  <library-search>
+    <test-source>
+      <test-prologue>#include "jpeglib.h"</test-prologue>
+      <test-body>
+	int version;
+	struct jpeg_decompress_struct cinfo;
+	version = JPEG_LIB_VERSION;
+	jpeg_create_decompress(&amp;cinfo);
+      </test-body>
+    </test-source>
+    <flags LIBS="-ljpeg"/>
+  </library-search>
+</external-library>

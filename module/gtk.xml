@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<external-library id="GTK">
+  <name>GTK+ 2</name>
+  <pkg-config>gtk+-2.0</pkg-config>
+</external-library>
