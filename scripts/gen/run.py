@@ -65,16 +65,32 @@ def find_bundled_libs(proj):
 
 def trim_project(proj):
     """Remove unreferenced modules from the project."""
-
     mods, unsat = proj.closure(proj.targets())
-    if unsat:
-        sys.stderr.write(
-            'warning: unsatisfied dependencies: %s\n' % ' '.join(unsat))
     all_mods = set(proj.module_names)
     used_mods = set(mod.modid for mod in mods if mod.modid is not None)
     unused_mods = all_mods.difference(used_mods)
     for mid in unused_mods:
         del proj.module_names[mid]
+
+def check_deps(proj):
+    """Check for unsatisfied dependencies in the project."""
+    mods, unsat = proj.closure(proj.targets())
+    if unsat:
+        sys.stderr.write(
+            'warning: unknown module dependencies: %s\n' %
+            ', '.join(sorted(unsat)))
+    all_tags = set()
+    used_tags = set()
+    for m in mods:
+        all_tags.add(m.modid)
+        all_tags.update(f.modid for f in m.feature)
+        for s in m.sources:
+            used_tags.update(s.tags)
+    unsat_tags = used_tags.difference(all_tags)
+    if unsat_tags:
+        sys.stderr.write(
+            'warning: unknown source tags: %s\n' %
+            ', '.join(sorted(unsat_tags)))
 
 def parse_feature_args(proj, keys, p):
     import optparse
@@ -160,7 +176,7 @@ class Configuration(object):
         self.project = proj
 
         trim_project(proj)
-
+        check_deps(proj)
         find_bundled_libs(proj)
 
         p = optparse.OptionParser()
