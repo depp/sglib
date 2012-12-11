@@ -63,7 +63,7 @@
     <src path="version.h"/>
   </group>
   <group path="sg/audio">
-    <src path="alsa.c" tag="LIBASOUND"/>
+    <src path="alsa.c" tag="ALSA"/>
     <src path="convert.c"/>
     <src path="coreaudio.c" tag="COREAUDIO"/>
     <src path="directsound8.c" tag="WINDOWS"/>
