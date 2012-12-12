@@ -7,6 +7,9 @@ import gen.project as project
 import os
 import sys
 
+# TODO: After loading the project,
+# make sure each tag refers to one module
+
 def use_bundled_lib(proj, lib, lsrc, fname):
     root = Path(proj.lib_path, fname)
     sys.stderr.write('found bundled library: %s\n' % root.posix)
@@ -15,8 +18,7 @@ def use_bundled_lib(proj, lib, lsrc, fname):
     lib.define = lsrc.define
     lib.require = lsrc.require
     lib.cvar = lsrc.cvar
-    lib.sources = [Source(Path(root, s.path), s.tags + ('$external',))
-                   for s in lsrc.sources]
+    lib.sources = [Source(Path(root, s.path), s.tags) for s in lsrc.sources]
     lib.have_bundled_library = True
 
 def find_bundled_lib(proj, lib, libs):
@@ -324,15 +326,66 @@ class ProjectConfig(object):
         cfg.features = frozenset(enabled_features)
         cfg.libs = frozenset(needed_libs)
         cfg.bundledlibs = frozenset(bundled_libs)
+        cfg._calculate_targets()
         return cfg
 
 class BuildConfig(object):
     """Configuration for a specific build."""
 
     __slots__ = ['project', 'projectconfig', 'os',
-                 'variants', 'features', 'libs', 'bundledlibs']
+                 'variants', 'features', 'libs', 'bundledlibs',
+                 'targets']
 
     def dump(self):
         print 'os: %s' % self.os
         for attr in ('variants', 'features', 'libs', 'bundledlibs'):
             print '%s: %s' % (attr, ' '.join(getattr(self, attr)))
+
+    def _calculate_targets(self):
+        self.targets = []
+        for t in self.project.targets():
+            for v in self.variants:
+                vinst = []
+                libs = set()
+                mods = [t]
+                q = list(mods)
+                while q:
+                    m = q.pop()
+                    reqs = set()
+                    reqs.update(m.require)
+                    for f in m.feature:
+                        if f.modid not in self.features:
+                            continue
+                        for i in f.impl:
+                            if all(x in self.libs for x in i.require):
+                                reqs.update(i.require)
+                    for vv in m.variant:
+                        if vv.varname == v:
+                            reqs.update(vv.require)
+                            vinst.append(vv)
+                    reqs.difference_update(libs)
+                    libs.update(reqs)
+                    for modid in reqs:
+                        m = self.project.module_names[modid]
+                        q.append(m)
+                        mods.append(m)
+                assert len(vinst) == 1
+                bt = BuildTarget(t, vinst[0], mods)
+                self.targets.append(bt)
+
+class BuildTarget(object):
+    __slots__ = ['target', 'variant', 'modules', 'module_names']
+
+    def __init__(self, target, variant, modules):
+        self.target = target
+        self.variant = variant
+        self.modules = list(modules)
+        self.module_names = {}
+        for m in modules:
+            if m.modid is not None:
+                self.module_names[m.modid] = m
+
+    def dump(self):
+        print 'target:', self.target
+        print 'variant:', self.variant.varname
+        print 'libs:', ' '.join(self.module_names)

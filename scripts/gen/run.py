@@ -44,6 +44,8 @@ def run():
             store(cfg)
             bcfg = cfg.get_config('LINUX')
             bcfg.dump()
+            for t in bcfg.targets:
+                t.dump()
         elif mode == 'reconfig':
             cfg = load()
             cfg.reconfig()
