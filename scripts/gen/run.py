@@ -1,4 +1,5 @@
 import gen.config as config
+from gen.error import ConfigError
 import os
 import sys
 
@@ -34,21 +35,23 @@ def store(cfg):
 
 def run():
     mode = sys.argv[1]
+    argv = sys.argv[2:]
     try:
         if mode == 'config':
-            cfg = config.Configuration()
-            cfg.argv = sys.argv[2:]
+            cfg = config.ProjectConfig()
+            cfg.argv = argv
             targets = cfg.reconfig()
             store(cfg)
-            print cfg.get_config('LINUX')
-            cfg.build(targets)
+            bcfg = cfg.get_config('LINUX')
+            bcfg.dump()
         elif mode == 'reconfig':
             cfg = load()
             cfg.reconfig()
             store(cfg)
+            targets = []
         elif mode == 'build':
             cfg = load()
-            cfg.build(sys.argv[2:])
+            targets = argv
         else:
             sys.stderr.write('error: invalid mode: %s\n' % mode)
             sys.exit(1)

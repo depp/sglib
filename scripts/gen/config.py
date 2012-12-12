@@ -153,7 +153,9 @@ def parse_feature_args(proj, keys, p):
                 dest=var,
                 help=optparse.SUPPRESS_HELP)
 
-class Configuration(object):
+class ProjectConfig(object):
+    """Project-wide configuration."""
+
     __slots__ = ['argv', 'project', 'opts', 'vars']
 
     def __init__(self):
@@ -205,13 +207,25 @@ class Configuration(object):
             targets = ['default']
         return targets
 
-    def build(self, targets):
-        pass
+    def is_enabled(self, featid):
+        """Return the --enable state of the feature."""
+        return self.opts['enable_' + featid]
+
+    def is_with(self, modid):
+        """Return the --with state of the library."""
+        return self.opts.get('with_' + modid, None)
+
+    def is_bundled(self, modid):
+        """Return the --with-bundled state of the library."""
+        v = self.opts.get('bundled_' + modid, None)
+        if v is None:
+            return True
+        return v
 
     def get_config(self, os):
-        """Get the selected configuration for the given os.
+        """Get the build configuration for the given os.
 
-        Returns (variants, features, libs).
+        Returns a BuildConfig object.
         """
 
         intrinsics = set(project.OS[os])
@@ -237,14 +251,13 @@ class Configuration(object):
         # Override defaults with user settings
         features = list(self.project.features())
         for f in features:
-            v = self.opts['enable_' + f.modid]
-            if v:
+            if self.is_enabled(f.modid):
                 enabled_features.add(f.modid)
             else:
                 enabled_features.discard(f.modid)
         user_libs = set()
         for modid in self.project.module_names:
-            v = self.opts.get('with_' + modid, None)
+            v = self.is_with(modid)
             if v is None:
                 continue
             if v:
@@ -295,4 +308,31 @@ class Configuration(object):
             needed_libs.update(impls[0].require)
         needed_libs.difference_update(intrinsics)
 
-        return enabled_variants, enabled_features, needed_libs
+        # Check which bundled libraries should be used.
+        bundled_libs = set()
+        for m in self.project.modules:
+            if (isinstance(m, project.ExternalLibrary) and
+                m.have_bundled_library and
+                self.is_bundled(m.modid)):
+                bundled_libs.add(m.modid)
+
+        cfg = BuildConfig()
+        cfg.project = self.project
+        cfg.projectconfig = self
+        cfg.os = os
+        cfg.variants = frozenset(enabled_variants)
+        cfg.features = frozenset(enabled_features)
+        cfg.libs = frozenset(needed_libs)
+        cfg.bundledlibs = frozenset(bundled_libs)
+        return cfg
+
+class BuildConfig(object):
+    """Configuration for a specific build."""
+
+    __slots__ = ['project', 'projectconfig', 'os',
+                 'variants', 'features', 'libs', 'bundledlibs']
+
+    def dump(self):
+        print 'os: %s' % self.os
+        for attr in ('variants', 'features', 'libs', 'bundledlibs'):
+            print '%s: %s' % (attr, ' '.join(getattr(self, attr)))
