@@ -1,5 +1,14 @@
 import platform
 
+class ConfigError(Exception):
+    """Project configuration failed."""
+
+    __slots__ = ['reason', 'details']
+
+    def __init__(self, reason, details=None):
+        self.reason = reason
+        self.details = details
+
 class BuildError(Exception):
     def advice(self):
         funcs = []
