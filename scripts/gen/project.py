@@ -6,7 +6,13 @@ __all__ = [
     'Feature', 'Implementation', 'Variant', 'Defaults',
 ]
 
-OS = frozenset(['linux', 'windows', 'osx'])
+# Intrinsics for each OS
+OS = {
+    'LINUX': ('LINUX', 'POSIX'),
+    'OSX': ('OSX', 'POSIX'),
+    'WINDOWS': ('WINDOWS',),
+}
+INTRINSICS = set(x for v in OS.itervalues() for x in v)
 
 class Project(object):
     """A project is a set of modules and project-wide settings."""

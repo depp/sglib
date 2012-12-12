@@ -140,6 +140,9 @@ def parse_defaults(node):
         attr = node.attributes.item(i)
         if attr.name == 'os':
             os = parse_tags(attr)
+            for x in os:
+                if x not in OS:
+                    raise ValueError('unknown OS: %s' % x)
         elif attr.name == 'variants':
             variants = parse_tags(attr)
         elif attr.name == 'libs':
@@ -343,9 +346,9 @@ MOD_ELEM.update(GROUP_ELEM)
 
 EXENAME = {
     None: (is_title, None),
-    'linux': (is_filename, make_filename),
-    'osx': (is_title, None),
-    'windows': (is_title, None),
+    'LINUX': (is_filename, make_filename),
+    'OSX': (is_title, None),
+    'WINDOWS': (is_title, None),
 }
 
 def exe_name(mod, node, path, tags):
@@ -366,7 +369,7 @@ def exe_name(mod, node, path, tags):
         raise ValueError('invalid exe-name')
     mod.exe_name[osval] = val
 
-def exe_mac_icon(mod, node, path, tags):
+def exe_icon(mod, node, path, tags):
     osval = None
     spath = None
     for i in xrange(node.attributes.length):
@@ -395,7 +398,7 @@ def exe_category(mod, node, path, tags):
 
 EXE_ELEM = {
     'exe-name': exe_name,
-    'exe-icon': exe_mac_icon,
+    'exe-icon': exe_icon,
     'apple-category': exe_category,
 }
 EXE_ELEM.update(MOD_ELEM)

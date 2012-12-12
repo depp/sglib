@@ -178,7 +178,7 @@ class Configuration(object):
         self.project = proj
 
         trim_project(proj)
-        for tag in ('POSIX', 'WINDOWS', 'OSX', 'LINUX'):
+        for tag in project.INTRINSICS:
             proj.add_module(project.Intrinsic(tag))
         check_deps(proj)
         find_bundled_libs(proj)
@@ -225,13 +225,13 @@ class Configuration(object):
             except OSError:
                 pass
 
-    def get_config(self, os, intrinsics):
+    def get_config(self, os):
         """Get the selected configuration for the given os.
 
         Returns (variants, features, libs).
         """
 
-        intrinsics = set(intrinsics)
+        intrinsics = set(project.OS[os])
 
         dlist = self.project.defaults
         for m in self.project.modules:
@@ -335,7 +335,7 @@ def run():
             cfg.argv = sys.argv[2:]
             targets = cfg.reconfig()
             cfg.store()
-            print cfg.get_config('LINUX', ['LINUX', 'POSIX'])
+            print cfg.get_config('LINUX')
             cfg.build(targets)
         elif mode == 'reconfig':
             cfg = load()
