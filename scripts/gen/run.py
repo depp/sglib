@@ -48,7 +48,7 @@ def run():
             build_cfg = cfg.get_config('LINUX')
             base_env = {'CC': 'gcc'}
             build_env = env.BuildEnv(
-                build_cfg, base_env, nix.NixConfig(base_env))
+                cfg.project, base_env, nix.NixConfig(base_env))
 
             build_cfg.dump()
 

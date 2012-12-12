@@ -572,7 +572,7 @@ def lib_bundled(mod, node):
         except KeyError:
             unexpected(node, c)
         func(src, c, path, ())
-    mod.add_libsource(src)
+    mod.bundled_versions.append(src)
 
 EXTLIB_ELEM = {
     'library-group': lib_group,

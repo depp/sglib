@@ -200,22 +200,19 @@ class BuildEnv(object):
     automatically be cached.
     """
 
-    __slots__ = ['build_config', 'base_env', 'func', '_cache']
+    __slots__ = ['project', 'base_env', 'func', '_cache']
 
-    def __init__(self, build_config, base_env, func):
-        self.build_config = build_config
+    def __init__(self, project, base_env, func):
+        self.project = project
         self.base_env = base_env
         self.func = func
         self._cache = {}
 
     def _env1(self, tag):
-        m = self.build_config.project.module_names[tag]
-        if (isinstance(m, project.ExternalLibrary) and
-            not tag in self.build_config.bundledlibs):
+        m = self.project.module_names[tag]
+        if isinstance(m, project.ExternalLibrary) and not m.use_bundled:
             srcs = None
             for s in m.libsources:
-                if isinstance(s, project.BundledLibrary):
-                    continue
                 if isinstance(s, project.LibraryGroup):
                     srcs = s.libsources
                 else:

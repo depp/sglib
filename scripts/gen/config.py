@@ -19,12 +19,10 @@ def use_bundled_lib(proj, lib, lsrc, fname):
     lib.require = lsrc.require
     lib.cvar = lsrc.cvar
     lib.sources = [Source(Path(root, s.path), s.tags) for s in lsrc.sources]
-    lib.have_bundled_library = True
+    lib.use_bundled = True
 
 def find_bundled_lib(proj, lib, libs):
-    for lsrc in lib.libsources:
-        if not isinstance(lsrc, project.BundledLibrary):
-            continue
+    for lsrc in lib.bundled_versions:
         searchname = lsrc.libname
         for fname in libs:
             i = fname.rfind('-')
@@ -36,7 +34,7 @@ def find_bundled_lib(proj, lib, libs):
                 use_bundled_lib(proj, lib, lsrc, fname)
                 return
 
-def find_bundled_libs(proj):
+def find_bundled_libs(proj, opt_dict):
     """Scan the bundled library folder for bundled libraries.
 
     This will fill in the module fields for every ExternalLibrary that
@@ -61,8 +59,12 @@ def find_bundled_libs(proj):
         libs.append(fname)
 
     for m in proj.modules:
-        if isinstance(m, project.ExternalLibrary):
-            find_bundled_lib(proj, m, libs)
+        if isinstance(m, project.ExternalLibrary) and m.bundled_versions:
+            use_bundled = opt_dict['bundled_' + m.modid]
+            if use_bundled is None:
+                use_bundled = True
+            if use_bundled:
+                find_bundled_lib(proj, m, libs)
 
 def trim_project(proj):
     """Remove unreferenced modules from the project."""
@@ -136,7 +138,7 @@ def parse_feature_args(proj, keys, p):
         opts = []
         if m.modid in optlibs:
             opts.append((nm, 'with_%s' % m.modid, desc))
-        if m.have_bundled_library:
+        if m.bundled_versions:
             opts.append(('bundled-%s' % nm, 'bundled_%s' % m.modid,
                          '%s (bundled copy)' % desc))
 
@@ -183,7 +185,6 @@ class ProjectConfig(object):
         for tag in project.INTRINSICS:
             proj.add_module(project.Intrinsic(tag))
         check_deps(proj)
-        find_bundled_libs(proj)
 
         p = optparse.OptionParser()
         keys = []
@@ -203,6 +204,8 @@ class ProjectConfig(object):
             else:
                 targets.append(arg)
 
+        find_bundled_libs(proj, opt_dict)
+
         self.opts = opt_dict
         self.vars = var_dict
         if not targets:
@@ -216,13 +219,6 @@ class ProjectConfig(object):
     def is_with(self, modid):
         """Return the --with state of the library."""
         return self.opts.get('with_' + modid, None)
-
-    def is_bundled(self, modid):
-        """Return the --with-bundled state of the library."""
-        v = self.opts.get('bundled_' + modid, None)
-        if v is None:
-            return True
-        return v
 
     def get_config(self, os):
         """Get the build configuration for the given os.
@@ -310,14 +306,6 @@ class ProjectConfig(object):
             needed_libs.update(impls[0].require)
         needed_libs.difference_update(intrinsics)
 
-        # Check which bundled libraries should be used.
-        bundled_libs = set()
-        for m in self.project.modules:
-            if (isinstance(m, project.ExternalLibrary) and
-                m.have_bundled_library and
-                self.is_bundled(m.modid)):
-                bundled_libs.add(m.modid)
-
         cfg = BuildConfig()
         cfg.project = self.project
         cfg.projectconfig = self
@@ -325,7 +313,6 @@ class ProjectConfig(object):
         cfg.variants = frozenset(enabled_variants)
         cfg.features = frozenset(enabled_features)
         cfg.libs = frozenset(needed_libs)
-        cfg.bundledlibs = frozenset(bundled_libs)
         cfg._calculate_targets()
         return cfg
 
@@ -333,12 +320,12 @@ class BuildConfig(object):
     """Configuration for a specific build."""
 
     __slots__ = ['project', 'projectconfig', 'os',
-                 'variants', 'features', 'libs', 'bundledlibs',
+                 'variants', 'features', 'libs',
                  'targets']
 
     def dump(self):
         print 'os: %s' % self.os
-        for attr in ('variants', 'features', 'libs', 'bundledlibs'):
+        for attr in ('variants', 'features', 'libs'):
             print '%s: %s' % (attr, ' '.join(getattr(self, attr)))
 
     def _calculate_targets(self):

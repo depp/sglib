@@ -212,17 +212,18 @@ class ExternalLibrary(BaseModule):
     When the project is configured or reconfigured, the library
     directory will be searched for bundled libraries.  Any library
     which is found will be used to fill in the base module properties:
-    header_path, sources, et cetera, and the have_bundled_library
-    attribute will be set to True.
+    header_path, sources, et cetera, and the use_bundled attribute
+    will be set to True.
     """
 
     __slots__ = (BaseModule.__slots__ +
-                 ['libsources', 'have_bundled_library'])
+                 ['libsources', 'bundled_versions', 'use_bundled'])
 
     def __init__(self, modid):
         super(ExternalLibrary, self).__init__(modid)
         self.libsources = []
-        self.have_bundled_library = False
+        self.bundled_versions = []
+        self.use_bundled = False
 
     def __repr__(self):
         return '<ExternalLibrary %s>' % self.modid
