@@ -1,6 +1,9 @@
 import subprocess
 import os
+import re
 from gen.error import BuildError
+
+__all__ = ['getproc', 'getoutput', 'run', 'escape']
 
 PROC_CACHE = {}
 def getproc(name):
@@ -34,3 +37,22 @@ def getoutput(cmd, **kw):
 def run(obj, cmd, **kw):
     print ' '.join(cmd)
     subprocess.check_call(cmd, **kw)
+
+# POSIX: special are |&;<>()$\\\"' *?[#~=%
+#        non-special are !+,-./:@]^_`{}
+# We escape some ones that are unnecessary
+_SHELL_SPECIAL = re.compile(r'[^-A-Za-z0-9+,./:@^_]')
+_SHELL_QSPECIAL = re.compile('["\\\\]')
+def escape1(x):
+    x = x.group(0)
+    i = ord(x)
+    if 32 <= i <= 126:
+        return '\\' + x
+    return '\\x%02x' % i
+def escape(x):
+    """Escape a string for use in the shell."""
+    if _SHELL_SPECIAL.search(x):
+        return '"' + _SHELL_QSPECIAL.sub(escape1, x) + '"'
+    if not x:
+        return "''"
+    return x

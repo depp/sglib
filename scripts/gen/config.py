@@ -346,7 +346,7 @@ class BuildConfig(object):
         for t in self.project.targets():
             for v in self.variants:
                 vinst = []
-                libs = set()
+                tags = set()
                 mods = [t]
                 q = list(mods)
                 while q:
@@ -363,29 +363,74 @@ class BuildConfig(object):
                         if vv.varname == v:
                             reqs.update(vv.require)
                             vinst.append(vv)
-                    reqs.difference_update(libs)
-                    libs.update(reqs)
+                    reqs.difference_update(tags)
+                    tags.update(reqs)
                     for modid in reqs:
                         m = self.project.module_names[modid]
                         q.append(m)
                         mods.append(m)
                 assert len(vinst) == 1
-                bt = BuildTarget(t, vinst[0], mods)
+                tags.update(self.features)
+                tags.update(project.OS[self.os])
+                bt = BuildTarget(t, vinst[0], mods, tags)
                 self.targets.append(bt)
 
 class BuildTarget(object):
-    __slots__ = ['target', 'variant', 'modules', 'module_names']
+    __slots__ = ['target', 'variant', 'modules', 'tags', 'tag_closure',
+                 'tag_modules']
 
-    def __init__(self, target, variant, modules):
+    def __init__(self, target, variant, modules, tags):
         self.target = target
         self.variant = variant
         self.modules = list(modules)
-        self.module_names = {}
-        for m in modules:
-            if m.modid is not None:
-                self.module_names[m.modid] = m
+        self.tags = frozenset(tags)
+        tag_map = {}
+        tag_modules = set()
+        for m in self.modules:
+            if m.modid is None:
+                continue
+            tag_modules.add(m.modid)
+            if m.require:
+                tag_map[m.modid] = frozenset(m.require)
+        tag_closure = {}
+        for tag in tag_map:
+            deps = set()
+            ndeps = set(tag_map[tag])
+            while ndeps:
+                deps.update(ndeps)
+                odeps = ndeps
+                ndeps = set()
+                for dtag in odeps:
+                    try:
+                        ndeps.update(tag_map[dtag])
+                    except KeyError:
+                        pass
+                ndeps.difference_update(deps)
+            deps.discard(tag)
+            if deps:
+                tag_closure[tag] = frozenset(deps)
+        self.tag_closure = tag_closure
+        self.tag_modules = tag_modules
 
     def dump(self):
         print 'target:', self.target
         print 'variant:', self.variant.varname
-        print 'libs:', ' '.join(self.module_names)
+        print 'tags:', ' '.join(self.tags)
+
+    def sources(self):
+        usedtags = set()
+        for m in self.modules:
+            base = set(m.require)
+            if m.modid is not None:
+                base.add(m.modid)
+            for s in m.sources:
+                tags = base.union(s.tags)
+                for tag in tuple(tags):
+                    try:
+                        tags.update(self.tag_closure[tag])
+                    except KeyError:
+                        pass
+                if tags.issubset(self.tags):
+                    tags.intersection_update(self.tag_modules)
+                    usedtags.update(tags)
+                    yield Source(s.path, tuple(sorted(tags)))

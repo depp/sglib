@@ -276,6 +276,8 @@ class PkgConfig(object):
     def __init__(self, spec):
         self.spec = spec
 
+    srcname = 'pkgconfig'
+
 class Framework(object):
     """Library source which is a Darwin framework."""
 
@@ -284,6 +286,8 @@ class Framework(object):
     def __init__(self, name):
         self.name = name
 
+    srcname = 'framework'
+
 class SdlConfig(object):
     """Library source which uses sdl-config to find LibSDL."""
 
@@ -291,6 +295,8 @@ class SdlConfig(object):
 
     def __init__(self, version):
         self.version = version
+
+    srcname = 'sdlconfig'
 
 class LibrarySearch(object):
     """Library source which searches for a library.
@@ -305,6 +311,8 @@ class LibrarySearch(object):
     def __init__(self, source, flags):
         self.source = source
         self.flags = flags
+
+    srcname = 'librarysearch'
 
 class TestSource(object):
     """Test source file.
