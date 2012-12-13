@@ -28,6 +28,10 @@ def _compute_exts():
 EXTS = _compute_exts()
 del _compute_exts
 
+TYPE_DESCS = {
+    'c': 'C', 'cxx': 'C++', 'm': 'ObjC', 'mm': 'ObjC++'
+}
+
 def filterexts(paths, exts):
     """Return a list of the paths whose extensions are in exts."""
     return [x for x in paths if os.path.splitext(x)[1] in exts]

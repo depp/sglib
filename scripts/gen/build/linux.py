@@ -2,7 +2,7 @@ from gen.build.nix import cc_cmd, ld_cmd
 from gen.build.gmake import Makefile
 from gen.env.nix import NixConfig, default_env, getmachine
 from gen.env.env import BuildEnv
-from gen.path import Path
+from gen.path import Path, TYPE_DESCS
 
 def extract_debug(dest, src):
     """Return commands for extracting debug info from an object."""
@@ -52,7 +52,8 @@ def gen_makefile(config):
                     e = benv.env(src.tags)
                     assert e is not None
                     makefile.add_rule(obj, [p],
-                                      [cc_cmd(e, obj, p, t, depfile=dep)])
+                                      [cc_cmd(e, obj, p, t, depfile=dep)],
+                                      qname=TYPE_DESCS[t])
                     makefile.opt_include(dep)
             else:
                 raise Exception('unknown source type: %s')
@@ -67,13 +68,16 @@ def gen_makefile(config):
         prod_dbg = prod_exe.addext('.dbg')
         makefile.add_rule(
             obj_exe, objects,
-            [ld_cmd(exe_env, obj_exe, objects, sourcetypes)])
+            [ld_cmd(exe_env, obj_exe, objects, sourcetypes)],
+            qname='Link')
         makefile.add_rule(
             prod_dbg, [obj_exe],
-            extract_debug(prod_dbg, obj_exe))
+            extract_debug(prod_dbg, obj_exe),
+            qname='ObjCopy')
         makefile.add_rule(
             prod_exe, [obj_exe, prod_dbg],
-            strip(prod_exe, obj_exe, prod_dbg))
+            strip(prod_exe, obj_exe, prod_dbg),
+            qname='Strip')
         makefile.add_default(prod_exe)
 
     with open('Makefile', 'w') as fp:

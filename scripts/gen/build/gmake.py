@@ -21,15 +21,27 @@ def mk_escape(x):
 class Makefile(object):
     """GMake Makefile generator."""
 
-    __slots__ = ['_rulefp', '_all', '_phony', '_opt_include']
+    __slots__ = ['_rulefp', '_all', '_phony', '_opt_include',
+                 '_qnames', '_qctr']
 
     def __init__(self):
         self._rulefp = StringIO()
         self._all = set()
         self._phony = set()
         self._opt_include = set()
+        self._qnames = {}
+        self._qctr = 0
 
-    def add_rule(self, target, sources, cmds):
+    def _get_qctr(self, name):
+        try:
+            return self._qnames[name]
+        except KeyError:
+            n = self._qctr
+            self._qctr = n + 1
+            self._qnames[name] = n
+            return n
+
+    def add_rule(self, target, sources, cmds, qname=None):
         """Add a rule to the makefile.
 
         The target should be a string, and the sources should be a
@@ -54,8 +66,13 @@ class Makefile(object):
         if dirs:
             write('\t@mkdir -p %s\n' %
                   ' '.join(escape(d) for d in dirs))
+        first = True
         for cmd in cmds:
             write('\t')
+            if qname is not None:
+                write('$(QUIET%d)' % self._get_qctr(
+                    qname if first else None))
+                first = False
             write(escape(cmd[0]))
             for arg in cmd[1:]:
                 if isinstance(arg, Path):
@@ -79,6 +96,13 @@ class Makefile(object):
             fp.write('-include %s\n' %
                      ' '.join(mk_escape(x)
                               for x in sorted(self._opt_include)))
+        fp.write('ifndef V\n')
+        for k, v in sorted(self._qnames.iteritems()):
+            if k is not None:
+                fp.write("QUIET%d = @echo '    %s' $@;\n" % (v, k))
+            else:
+                fp.write("QUIET%d = @\n" % v)
+        fp.write('endif\n')
         fp.write(
             '.PHONY: all clean\n'
             'clean:\n'
