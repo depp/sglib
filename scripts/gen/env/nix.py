@@ -2,7 +2,7 @@ from gen.error import ConfigError
 from gen.build.nix import cc_cmd, ld_cmd
 from gen.shell import getproc
 from gen.path import Path
-from gen.env.env import merge_env, MergeEnvironment
+from gen.env.env import parse_env, merge_env, MergeEnvironment
 import subprocess
 import platform
 import os
@@ -159,6 +159,7 @@ def default_env(config, os):
         envs.append({
             'LDFLAGS': ('-Wl,-dead_strip', '-Wl,-dead_strip_dylibs'),
         })
+    envs.append(parse_env(config.vars))
     return merge_env(envs)
 
 def getmachine(env):

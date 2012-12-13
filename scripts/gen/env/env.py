@@ -139,6 +139,20 @@ VAR = {
     'external': VarBool,
 }
 
+def parse_env(d):
+    e = {}
+    for varname, vardef in VAR.iteritems():
+        try:
+            p = vardef.parse
+        except AttributeError:
+            continue
+        try:
+            x = d[varname]
+        except KeyError:
+            continue
+        e[varname] = p(x)
+    return e
+
 def merge_env(a):
     if not a:
         return {}
