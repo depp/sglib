@@ -1,12 +1,11 @@
-from gen.error import ConfigError
+from gen.error import ConfigError, format_block
 from gen.build.nix import cc_cmd, ld_cmd
-from gen.shell import getproc
+from gen.shell import get_output, describe_proc
 from gen.path import Path
 from gen.env.env import parse_env, merge_env, MergeEnvironment
-import subprocess
 import platform
 import os
-from cStringIO import StringIO
+from io import StringIO
 
 def gen_source(prologue, body):
     fp = StringIO()
@@ -38,37 +37,26 @@ class NixConfig(object):
 
     def config_pkgconfig(self, obj):
         name = 'pkg-config'
-        exe = getproc(name)
-        if exe is None:
-            raise ConfigError('could not find %s' % name)
         env = {}
         for varname, arg in (('LIBS', '--libs'), ('CFLAGS', '--cflags')):
-            cmd = [name, '--silence-errors', arg, obj.spec]
-            proc = subprocess.Popen(
-                cmd, stdout=subprocess.PIPE, executable=exe)
-            stdout, stderr = proc.communicate()
-            if proc.returncode:
-                cmd = [name, '--print-errors', '--exists', obj.spec]
-                proc = subprocess.Popen(
-                    cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                    executable=exe)
-                stdout, stderr = proc.communicate()
-                raise ConfigError('%s failed' % name, stdout)
+            stdout, stderr, retcode = get_output(
+                [name, '--silence-errors', arg, obj.spec])
+            if retcode:
+                stdout, retcode = get_output(
+                    [name, '--print-errors', '--exists', obj.spec],
+                    combine_output=True)
+                raise ConfigError('{} failed'.format(name), stdout)
             env[varname] = tuple(stdout.split())
         return env
 
     def config_sdlconfig(self, obj):
         name = 'sdl-config'
-        exe = getproc(name)
-        if exe is None:
-            raise ConfigError('could not find %s' % name)
         env = {}
         for varname, arg in (('LIBS', '--libs'), ('CFLAGS', '--cflags')):
-            proc = subprocess.Popen(
-                [name, arg], stdout=subprocess.PIPE, executable=exe)
-            stdout, stderr = proc.communicate()
-            if proc.returncode:
-                raise ConfigError('%s failed' % name)
+            stdout, stderr, retcode = get_output([name, arg])
+            if retcode:
+                # FIXME failed should return code
+                raise ConfigError('{} failed'.format(name), stderr)
             env[varname] = tuple(stdout.split())
         return env
 
@@ -79,8 +67,7 @@ class NixConfig(object):
         log = StringIO()
         sourcetext = gen_source(prologue, body)
         log.write('Test file:\n')
-        for line in sourcetext.splitlines():
-            log.write('  | %s\n' % line)
+        log.write(format_block(sourcetext))
         try:
             with open('config.tmp.c', 'w') as fp:
                 fp.write(sourcetext)
@@ -89,18 +76,9 @@ class NixConfig(object):
                 cmd1 = cc_cmd(test_env, obj, src, 'c')
                 cmd2 = ld_cmd(test_env, out, [obj], ['c'])
                 for cmd in (cmd1, cmd2):
-                    log.write('Command: %s\n' % ' '.join(cmd))
-                    exe = getproc(cmd[0])
-                    proc = subprocess.Popen(
-                        cmd, executable=exe,
-                        stdout=subprocess.PIPE,
-                        stderr=subprocess.STDOUT)
-                    stdout, stderr = proc.communicate()
-                    log.write('Returned code %d\n' % proc.returncode)
-                    log.write('Command output:\n')
-                    for line in stdout.splitlines():
-                        log.write('  | %s\n' % line)
-                    if proc.returncode:
+                    stdout, retcode = get_output(cmd, combine_output=True)
+                    log.write(describe_proc(cmd, stdout, retcode))
+                    if retcode:
                         break
                 else:
                     return env
@@ -165,20 +143,14 @@ def default_env(config, os):
 def getmachine(env):
     """Get the name of the target machine."""
     cc = env['CC']
-    exe = getproc(cc)
     cmd = [cc, '-dumpmachine']
     cmd.extend(env.get('CPPFLAGS', ()))
     cmd.extend(env.get('CFLAGS', ()))
-    proc = subprocess.Popen(
-        cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-        executable=exe)
-    stdout, stderr = proc.communicate()
-    if proc.returncode:
+    stdout, stderr, retcode = get_output(cmd)
+    if retcode:
         raise ConfigError(
             'could not get machine specs',
-            'Command: %s\n'
-            '%s' % (' '.join(cmd),
-                    ''.join('  | %s\n' % s for s in stderr.splitlines())))
+            describe_proc(cmd, stderr, retcode))
     m = stdout.splitlines()
     if m:
         m = m[0]
@@ -192,7 +164,7 @@ def getmachine(env):
             if m == 'powerpc':
                 return 'ppc'
             sys.stderr.write(
-                'warning: unknown machine name: %r' % (m,))
-    raise ConfigError('unable to parse machine name',
-                      'Command output:\n%s' %
-                      ''.join('  | %s\n' % s for s in stdout.splitlines()))
+                'warning: unknown machine name: {}' % (m,))
+    raise ConfigError(
+        'unable to parse machine name',
+        describe_proc(cmd, stdout + stderr, retcode))

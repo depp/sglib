@@ -1,6 +1,5 @@
-from gen.shell import getproc
+from gen.shell import get_output
 from gen.error import ConfigError, format_block
-import subprocess
 import sys
 
 def get_info(config, path):
@@ -8,19 +7,9 @@ def get_info(config, path):
 
     Returns (sha1, version).
     """
-    procname = config.vars.get('GIT', 'git')
-    exe = getproc(procname)
+    git = config.vars.get('GIT', 'git')
 
-    def git(*args):
-        cmd = [procname]
-        cmd.extend(args)
-        proc = subprocess.Popen(
-            cmd, executable=exe, cwd=path.native,
-            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        stdout, stderr = proc.communicate()
-        return stdout, stderr, proc.returncode
-
-    stdout, stderr, retcode = git('rev-parse', 'HEAD')
+    stdout, stderr, retcode = get_output([git, 'rev-parse', 'HEAD'])
     if retcode:
         sys.stderr.write(
             'warning: could not get SHA-1 of %s\n' % path.native)
@@ -28,13 +17,13 @@ def get_info(config, path):
         return '<none>', '0.0'
     sha1 = stdout.strip()
 
-    stdout, stderr, retcode = git('describe')
+    stdout, stderr, retcode = get_output(['git', 'describe'])
     if retcode:
         sys.stderr.write(
             'warning: could not get version number in %s\n' % path.native)
         sys.stderr.write(format_block(stderr))
 
-        stdout, stderr, retcode = git('rev-list', 'HEAD')
+        stdout, stderr, retcode = get_output(['git', 'rev-list', 'HEAD'])
         if retcode:
             sys.stderr.write(
                 'warning: could not get list of git revisions in %s\n'

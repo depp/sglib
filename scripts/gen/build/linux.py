@@ -24,18 +24,10 @@ def strip(dest, src, debugsyms):
 def gen_regen(makefile, bcfg):
     from gen.config import CACHE_FILE, DEFAULT_ACTIONS
     import os.path
-    spath = os.path.join(
-        os.path.dirname(
-            os.path.dirname(
-                os.path.dirname(
-                    os.path.abspath(__file__)))),
-        'init.py')
-    try:
-        relpath = os.path.relpath
-    except AttributeError:
-        pass # Python 2.5
-    else:
-        spath = relpath(spath)
+    spath = os.path.abspath(__file__)
+    for i in range(3):
+        spath = os.path.dirname(spath)
+    spath = os.path.relpath(os.path.join(spath, 'init.py'))
     config_script = [sys.executable, spath]
     cache_file = Path(CACHE_FILE)
     makefile.add_rule(

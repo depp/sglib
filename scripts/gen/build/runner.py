@@ -1,6 +1,4 @@
-from __future__ import with_statement
-
-from cStringIO import StringIO
+from io import StringIO
 from gen.env.nix import default_env, getmachine
 from gen.shell import escape
 from gen.path import Path
@@ -77,7 +75,7 @@ def gen_runner(config):
 
 
     fd = os.open('run.sh', os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o777)
-    fp = os.fdopen(fd, 'wb')
+    fp = os.fdopen(fd, 'w')
     fp.write(script)
     fp.close()
 

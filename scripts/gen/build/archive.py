@@ -29,14 +29,14 @@ class Tarball(target.Target):
         return iter(self._src)
 
     def build(self, verbose):
-        import cStringIO
+        import io
         import subprocess
         env = self._env
         if not verbose:
-            print 'TAR', self._dest.posix
+            print('TAR', self._dest.posix)
         paths = [p.posix for p in self._src]
         paths.sort()
-        io = cStringIO.StringIO()
+        io = io.StringIO()
         for p in paths:
             io.write(p)
             io.write('\n')
@@ -47,7 +47,7 @@ class Tarball(target.Target):
         if self._prefix:
             cmd.extend(('--transform', 's,^,%s,' % self._prefix))
         if verbose:
-            print ' '.join(cmd)
+            print(' '.join(cmd))
         proc = subprocess.Popen(cmd, stdin=subprocess.PIPE)
         out, err = proc.communicate(slist)
         status = proc.returncode

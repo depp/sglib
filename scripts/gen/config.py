@@ -1,5 +1,3 @@
-from __future__ import with_statement
-
 from gen.path import Path
 from gen.source import Source
 from gen.error import ConfigError
@@ -424,7 +422,7 @@ class ProjectConfig(object):
             if self.project is None:
                 raise AttributeError('repos')
             versions = {}
-            for k, v in self.repos.iteritems():
+            for k, v in self.repos.items():
                 versions[k] = git.get_info(self, v)
             self._versions = versions
         return self._versions
@@ -497,9 +495,9 @@ class BuildConfig(object):
                  'targets']
 
     def dump(self):
-        print 'os: %s' % self.os
+        print('os: %s' % self.os)
         for attr in ('variants', 'features', 'libs'):
-            print '%s: %s' % (attr, ' '.join(getattr(self, attr)))
+            print('%s: %s' % (attr, ' '.join(getattr(self, attr))))
 
     def _calculate_targets(self):
         self.targets = []
@@ -577,9 +575,9 @@ class BuildTarget(object):
         self.cvars = list(cvars)
 
     def dump(self):
-        print 'target:', self.target
-        print 'variant:', self.variant.varname
-        print 'tags:', ' '.join(self.tags)
+        print('target:', self.target)
+        print('variant:', self.variant.varname)
+        print('tags:', ' '.join(self.tags))
 
     def sources(self):
         usedtags = set()

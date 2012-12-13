@@ -1,7 +1,7 @@
 from gen.shell import escape
 from gen.path import Path
 import re
-from cStringIO import StringIO
+from io import StringIO
 import posixpath
 
 MK_SPECIAL = re.compile('[^-_.+/A-Za-z0-9]')
@@ -11,7 +11,7 @@ def mk_escape1(x):
         return '\\ '
     raise ValueError('invalid character: %r' % (c,))
 def mk_escape(x):
-    if not isinstance(x, basestring):
+    if not isinstance(x, str):
         raise TypeError('expected string, got %s' % repr(x))
     try:
         return MK_SPECIAL.sub(escape, x)
@@ -72,7 +72,7 @@ class Makefile(object):
             write('\t')
             if qname is not None:
                 write('$(QUIET%d)' % self._get_qctr(
-                    qname if first else None))
+                    qname if first else ''))
                 first = False
             write(escape(cmd[0]))
             for arg in cmd[1:]:
@@ -98,8 +98,8 @@ class Makefile(object):
                      ' '.join(mk_escape(x)
                               for x in sorted(self._opt_include)))
         fp.write('ifndef V\n')
-        for k, v in sorted(self._qnames.iteritems()):
-            if k is not None:
+        for k, v in sorted(self._qnames.items()):
+            if k:
                 fp.write("QUIET%d = @echo '    %s' $@;\n" % (v, k))
             else:
                 fp.write("QUIET%d = @\n" % v)

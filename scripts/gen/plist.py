@@ -118,7 +118,7 @@ class Writer(object):
             pass
         elif isinstance(obj, dict):
             self.start_dict()
-            for k, v in sorted(obj.iteritems()):
+            for k, v in sorted(obj.items()):
                 self.write_pair(k, v)
             self.end_dict()
             return

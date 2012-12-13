@@ -1,4 +1,3 @@
-from __future__ import with_statement
 import gen.build.target as target
 import gen.build.nix as nix
 import gen.atom as atom
@@ -34,47 +33,47 @@ class InfoPlist(target.StaticFile):
         except AttributeError:
             icon = None
         else:
-            icon = unicode(icon, 'ascii')
+            icon = str(icon, 'ascii')
 
         try:
             copyright = pinfo.PKG_COPYRIGHT
         except AttributeError:
-            print >>sys.stderr, 'warning: PKG_COPYRIGHT is unset'
-            getinfo = unicode(pinfo.PKG_APP_VERSION)
+            print('warning: PKG_COPYRIGHT is unset', file=sys.stderr)
+            getinfo = str(pinfo.PKG_APP_VERSION)
         else:
-            getinfo = u'%s, %s' % (pinfo.PKG_APP_VERSION, copyright)
+            getinfo = '%s, %s' % (pinfo.PKG_APP_VERSION, copyright)
 
         try:
             category = tinfo.EXE_APPLE_CATEGORY
         except AttributeError:
-            category = u'public.app-category.games'
+            category = 'public.app-category.games'
         else:
-            category = unicode(category, 'ascii')
+            category = str(category, 'ascii')
 
         plist = {
-            u'CFBundleDevelopmentRegion': u'English',
-            u'CFBundleExecutable': u'${EXECUTABLE_NAME}',
-            u'CFBundleGetInfoString': getinfo,
+            'CFBundleDevelopmentRegion': 'English',
+            'CFBundleExecutable': '${EXECUTABLE_NAME}',
+            'CFBundleGetInfoString': getinfo,
             # CFBundleName
-            u'CFBundleIconFile': icon,
-            u'CFBundleIdentifier': unicode(pinfo.PKG_IDENT, 'ascii'),
-            u'CFBundleInfoDictionaryVersion': u'6.0',
-            u'CFBundlePackageType': u'APPL',
-            u'CFBundleShortVersionString':
-                unicode(pinfo.PKG_APP_VERSION, 'ascii'),
-            u'CFBundleSignature': u'????',
-            u'CFBundleVersion':
-                unicode(pinfo.PKG_APP_VERSION, 'ascii'),
-            u'LSApplicationCategoryType': category,
+            'CFBundleIconFile': icon,
+            'CFBundleIdentifier': str(pinfo.PKG_IDENT, 'ascii'),
+            'CFBundleInfoDictionaryVersion': '6.0',
+            'CFBundlePackageType': 'APPL',
+            'CFBundleShortVersionString':
+                str(pinfo.PKG_APP_VERSION, 'ascii'),
+            'CFBundleSignature': '????',
+            'CFBundleVersion':
+                str(pinfo.PKG_APP_VERSION, 'ascii'),
+            'LSApplicationCategoryType': category,
             # LSArchicecturePriority
             # LSFileQuarantineEnabled
-            u'LSMinimumSystemVersion': u'10.5.0',
-            u'NSMainNibFile': u'MainMenu',
-            u'NSPrincipalClass': u'GApplication',
+            'LSMinimumSystemVersion': '10.5.0',
+            'NSMainNibFile': 'MainMenu',
+            'NSPrincipalClass': 'GApplication',
             # NSSupportsAutomaticTermination
             # NSSupportsSuddenTermination
         }
-        plist = dict((k,v) for (k,v) in plist.iteritems() if v is not None)
+        plist = dict((k,v) for (k,v) in plist.items() if v is not None)
         import gen.plistxml
         f.write(gen.plistxml.dump(plist))
 
@@ -233,7 +232,7 @@ class XcodeProject(target.Target):
         yield self._dest
 
     def build(self, verbose):
-        print 'XCODE', self._dest.posix
+        print('XCODE', self._dest.posix)
         d = self._dest
         import shutil
         path = d.native

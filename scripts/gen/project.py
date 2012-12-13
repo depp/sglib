@@ -13,7 +13,7 @@ OS = {
     'OSX': ('OSX', 'POSIX'),
     'WINDOWS': ('WINDOWS',),
 }
-INTRINSICS = set(x for v in OS.itervalues() for x in v)
+INTRINSICS = set(x for v in OS.values() for x in v)
 
 class Project(object):
     """A project is a set of modules and project-wide settings."""

@@ -1,5 +1,3 @@
-from __future__ import absolute_import
-
 from gen.source import Source
 from gen.path import Path
 from gen.project import *
@@ -74,7 +72,7 @@ def node_text(node):
             pass
         else:
             unexpected(node, c)
-    return u''.join(a)
+    return ''.join(a)
 
 def node_noattr(node):
     """Raise an exception if an element has any attributes."""
@@ -85,7 +83,7 @@ def node_noattr(node):
 
 def cvar_path(node, path):
     npath = None
-    for i in xrange(node.attributes.length):
+    for i in range(node.attributes.length):
         attr = node.attributes.item(i)
         if attr.name == 'path':
             npath = Path(attr.value)
@@ -97,7 +95,7 @@ def cvar_path(node, path):
 
 def parse_cvar(node, path):
     name = None
-    for i in xrange(node.attributes.length):
+    for i in range(node.attributes.length):
         attr = node.attributes.item(i)
         if attr.name == 'name':
             name = attr.value
@@ -136,7 +134,7 @@ def parse_defaults(node):
     variants = None
     libs = None
     features = None
-    for i in xrange(node.attributes.length):
+    for i in range(node.attributes.length):
         attr = node.attributes.item(i)
         if attr.name == 'os':
             os = parse_tags(attr)
@@ -157,7 +155,7 @@ def parse_defaults(node):
 ####################
 
 def mod_group(mod, node, path, tags):
-    for i in xrange(node.attributes.length):
+    for i in range(node.attributes.length):
         attr = node.attributes.item(i)
         if attr.name == 'path':
             val = Path(attr.value)
@@ -176,7 +174,7 @@ def mod_group(mod, node, path, tags):
 
 def mod_src(mod, node, path, tags):
     spath = None
-    for i in xrange(node.attributes.length):
+    for i in range(node.attributes.length):
         attr = node.attributes.item(i)
         if attr.name == 'path':
             spath = Path(attr.value)
@@ -204,7 +202,7 @@ def mod_name(mod, node, path=None, tags=None):
 
 def mod_header_path(mod, node, path, tags):
     ipath = None
-    for i in xrange(node.attributes.length):
+    for i in range(node.attributes.length):
         attr = node.attributes.item(i)
         if attr.name == 'path':
             ipath = Path(attr.value)
@@ -217,7 +215,7 @@ def mod_header_path(mod, node, path, tags):
 def mod_define(mod, node, path, tags):
     name = None
     value = None
-    for i in xrange(node.attributes.length):
+    for i in range(node.attributes.length):
         attr = node.attributes.item(i)
         if attr.name == 'name':
             name = attr.value
@@ -232,7 +230,7 @@ def mod_define(mod, node, path, tags):
 
 def mod_require(mod, node, path, tags):
     require = None
-    for i in xrange(node.attributes.length):
+    for i in range(node.attributes.length):
         attr = node.attributes.item(i)
         if attr.name == 'require':
             require = parse_tags(attr)
@@ -249,7 +247,7 @@ def mod_cvar(mod, node, path, tags):
 
 def mod_feature(mod, node, path, tags):
     name = None
-    for i in xrange(node.attributes.length):
+    for i in range(node.attributes.length):
         attr = node.attributes.item(i)
         if attr.name == 'id':
             name = attr.value
@@ -262,7 +260,7 @@ def mod_feature(mod, node, path, tags):
         if c.tagName == 'impl':
             require = ()
             provide = ()
-            for i in xrange(c.attributes.length):
+            for i in range(c.attributes.length):
                 attr = c.attributes.item(i)
                 if attr.name == 'require':
                     require = parse_tags(attr)
@@ -291,7 +289,7 @@ def var_name(var, node):
 
 def var_require(var, node):
     require = None
-    for i in xrange(node.attributes.length):
+    for i in range(node.attributes.length):
         attr = node.attributes.item(i)
         if attr.name == 'require':
             require = parse_tags(attr)
@@ -308,7 +306,7 @@ VAR_ELEM = {
 
 def mod_variant(mod, node, path, tags):
     varname = None
-    for i in xrange(node.attributes.length):
+    for i in range(node.attributes.length):
         attr = node.attributes.item(i)
         if attr.name =='varname':
             if not is_ident(attr.value):
@@ -353,7 +351,7 @@ EXENAME = {
 
 def exe_name(mod, node, path, tags):
     osval = None
-    for i in xrange(node.attributes.length):
+    for i in range(node.attributes.length):
         attr = node.attributes.item(i)
         if attr.name == 'os':
             if attr.value not in OS:
@@ -372,7 +370,7 @@ def exe_name(mod, node, path, tags):
 def exe_icon(mod, node, path, tags):
     osval = None
     spath = None
-    for i in xrange(node.attributes.length):
+    for i in range(node.attributes.length):
         attr = node.attributes.item(i)
         if attr.name == 'os':
             if attr.value not in OS:
@@ -405,7 +403,7 @@ EXE_ELEM.update(MOD_ELEM)
 
 def parse_module(node, path):
     name = None
-    for i in xrange(node.attributes.length):
+    for i in range(node.attributes.length):
         attr = node.attributes.item(i)
         if attr.name == 'path':
             val = Path(attr.value)
@@ -429,7 +427,7 @@ def parse_module(node, path):
 
 def parse_executable(node, path):
     name = None
-    for i in xrange(node.attributes.length):
+    for i in range(node.attributes.length):
         attr = node.attributes.item(i)
         if attr.name == 'path':
             val = Path(attr.value)
@@ -512,7 +510,7 @@ def lib_libsearch(mod, node):
         elif c.tagName == 'flags':
             node_empty(c)
             d = {}
-            for i in xrange(c.attributes.length):
+            for i in range(c.attributes.length):
                 attr = c.attributes.item(i)
                 if attr.name not in ('LIBS', 'CFLAGS', 'LDFLAGS'):
                     unexpected_attr(c, attrr)
@@ -554,7 +552,7 @@ BUNDLE_ELEM.update(GROUP_ELEM)
 def lib_bundled(mod, node):
     libname = None
     path = Path()
-    for i in xrange(node.attributes.length):
+    for i in range(node.attributes.length):
         attr = node.attributes.item(i)
         if attr.name == 'path':
             val = Path(attr.value)
@@ -582,7 +580,7 @@ EXTLIB_ELEM.update(LIB_ELEM)
 
 def parse_external_library(node, path):
     name = None
-    for i in xrange(node.attributes.length):
+    for i in range(node.attributes.length):
         attr = node.attributes.item(i)
         if attr.name == 'id':
             name = attr.value
@@ -626,7 +624,7 @@ def proj_cvar(proj, node, path):
 
 def proj_modpath(proj, node, path):
     mpath = None
-    for i in xrange(node.attributes.length):
+    for i in range(node.attributes.length):
         attr = node.attributes.item(i)
         if attr.name == 'path':
             mpath = Path(attr.value)
@@ -639,7 +637,7 @@ def proj_modpath(proj, node, path):
 
 def proj_libpath(proj, node, path):
     mpath = None
-    for i in xrange(node.attributes.length):
+    for i in range(node.attributes.length):
         attr = node.attributes.item(i)
         if attr.name == 'path':
             mpath = Path(attr.value)
@@ -676,7 +674,7 @@ PROJ_ELEM = {
 
 def parse_project(node, path):
     proj = Project()
-    for i in xrange(node.attributes.length):
+    for i in range(node.attributes.length):
         attr = node.attributes.item(i)
         if attr.name == 'path':
             val = Path(attr.value)
@@ -702,7 +700,7 @@ def parse_project(node, path):
     if proj.filename is None:
         try:
             proj.filename = make_filename(proj.name)
-        except ValueError, ex:
+        except ValueError as ex:
             raise ValueError(
                 'project has no filename element, cannot use default')
     return proj

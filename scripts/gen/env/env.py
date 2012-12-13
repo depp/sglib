@@ -141,7 +141,7 @@ VAR = {
 
 def parse_env(d):
     e = {}
-    for varname, vardef in VAR.iteritems():
+    for varname, vardef in VAR.items():
         try:
             p = vardef.parse
         except AttributeError:
@@ -159,7 +159,7 @@ def merge_env(a):
     if len(a) == 1:
         return a[0]
     e = {}
-    for varname, vardef in VAR.iteritems():
+    for varname, vardef in VAR.items():
         x = []
         for d in a:
             try:
@@ -202,8 +202,8 @@ class MergeEnvironment(object):
         return v.combine(a)
 
     def dump(self):
-        for k, v in VAR.iteritems():
-            print '%s = %s' % (k, self[k])
+        for k, v in VAR.items():
+            print('%s = %s' % (k, self[k]))
 
 class BuildEnv(object):
     """A BuildEnv maps tags to build environments.

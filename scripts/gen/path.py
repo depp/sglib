@@ -21,7 +21,7 @@ def _compute_exts():
     for t in plain:
         TYPES[t] = ['.' + t]
     exts = {}
-    for what, texts in TYPES.iteritems():
+    for what, texts in TYPES.items():
         for ext in texts:
             exts[ext] = what
     return exts
