@@ -292,108 +292,76 @@ class ProjectConfig(object):
         self.scan_bundles()
 
     def get_config(self, os):
-        """Get the build configuration for the given os.
+        """Get the set of enabled flags for the given os.
 
-        Returns a BuildConfig object.
+        Returns (flags, variants), where variants contain all the
+        enabled variant flags, and flags contain the other enabled
+        flags.
         """
 
-        intrinsics = set(project.OS[os])
+        intrinsics = project.OS[os]
 
-        dlist = self.project.defaults
+        # Defaults for this platform
+        enabled = set()
         for m in self.project.modules:
-            dlist.extend(m.defaults)
+            for d in m.defaults:
+                if d.os is None or os == d.os:
+                    enabled.update(d.enable)
 
-        # Get defaults
-        enabled_variants = set()
-        enabled_features = set()
-        enabled_libs = set()
-        for d in dlist:
-            if d.os is not None and os not in d.os:
-                continue
-            if d.variants is not None:
-                enabled_variants.update(d.variants)
-            if d.features is not None:
-                enabled_features.update(d.features)
-            if d.libs is not None:
-                enabled_libs.update(d.libs)
+        print(', '.join(enabled))
 
-        # Override defaults with user settings
-        features = list(self.project.features())
-        for f in features:
-            if self.is_enabled(f.modid):
-                enabled_features.add(f.modid)
-            else:
-                enabled_features.discard(f.modid)
-        user_libs = set()
-        for modid in self.project.module_names:
-            v = self.is_with(modid)
-            if v is None:
-                continue
+        # User settings override defaults
+        uenabled = set()
+        for k, v in self.opt_enable.items():
             if v:
-                enabled_libs.add(modid)
-                user_libs.add(modid)
+                uenabled.add(k)
             else:
-                enabled_libs.discard(modid)
-        for m in self.project.modules:
-            for v in m.variant:
-                val = self.opts.get('variant_' + v.varname, None)
-                if val is not None:
-                    if val:
-                        enabled_variants.add(v.varname)
-                    else:
-                        enabled_variants.discard(v.varname)
+                enabled.discard(k)
 
-        # Add platform intrinsics (you can't disable WINDOWS on Windows)
-        enabled_libs.update(intrinsics)
-
-        # Remove defaults that conflict with user preferences
-        # So you can specify --with-x without needing --without-y
-        for f in features:
-            if f.modid not in enabled_features:
+        # Disable defaults that conflict with user settings
+        for c in self.project.configs():
+            if not isinstance(c, project.Alternatives):
                 continue
-            has_user = False
-            for i in f.impl:
-                if user_libs.intersection(i.require):
-                    has_user = True
-            if not has_user:
-                continue
-            for i in f.impl:
-                if not user_libs.intersection(i.require):
-                    enabled_libs.difference_update(i.require)
+            if any(alt.flagid in uenabled for alt in c.alternatives):
+                enabled.difference_update(
+                    alt.flagid for alt in c.alternatives)
+        enabled.update(uenabled)
 
-        # Check for conflicts and unsatisfied dependencies
-        needed_libs = set()
-        for f in features:
-            if f.modid not in enabled_features:
+        # Limit flags to those actually reachable
+        # Set aside list of variants
+        # Check for unsatisfied / oversatisfied alternatives
+        reachable = set()
+        variants = set()
+        for c in self.project.configs(enabled.union(intrinsics)):
+            if isinstance(c, project.Variant):
+                variants.add(c.flagid)
                 continue
-            impls = []
-            for i in f.impl:
-                if all(lib in enabled_libs for lib in i.require):
-                    impls.append(i)
-            if not impls:
-                raise ConfigError(
-                    'unsatisfied feature: {}'.format(f.modid.lower()),
-                    'libraries required for this feature are disabled\n'
-                    'use --disable-{} if you want to disable this feature\n'
-                    .format(f.modid.lower()))
-            if len(impls) > 1:
-                raise ConfigError(
-                    'overly satisfied feature: {}'.format(f.modid.lower()),
-                    'this feature is satisfied in multiple ways: {}\n'
-                    'use fewer --with-lib options\n'
-                    .format(', '.join(' '.join(i.require) for i in impls)))
-            needed_libs.update(impls[0].require)
-        needed_libs.difference_update(intrinsics)
+            try:
+                flagid = c.flagid
+            except AttributeError:
+                pass
+            else:
+                reachable.add(flagid)
+            if isinstance(c, project.Alternatives):
+                alts = [alt for alt in c.alternatives
+                        if alt.flagid in enabled]
+                if not alts:
+                    raise ConfigError(
+                        'unsatisfied alternative',
+                        'none of the following alternatives are enabled:\n'
+                        + ''.join('  --with-{}\n'.format(alt.flagid)
+                                  for alt in c.alternatives))
+                if len(alts) > 1:
+                    raise ConfigError(
+                        'conflicting settings',
+                        'the following settings conflict:\n'
+                        + ''.join('  --with-{}\n'.format(alt.flagid)
+                                  for alt in alts))
 
-        cfg = BuildConfig()
-        cfg.project = self.project
-        cfg.projectconfig = self
-        cfg.os = os
-        cfg.variants = frozenset(enabled_variants)
-        cfg.features = frozenset(enabled_features)
-        cfg.libs = frozenset(needed_libs)
-        cfg._calculate_targets()
-        return cfg
+        if not variants:
+            raise ConfigError('no build targets are enabled')
+        reachable.update(intrinsics)
+        return reachable, variants
 
     @property
     def repos(self):
@@ -596,6 +564,10 @@ class BuildTarget(object):
 def configure(argv):
     config = ProjectConfig()
     config.parse_args(argv)
+    for os in ('linux', 'osx', 'windows'):
+        enabled, variants = config.get_config(os)
+        print('{}-enabled: {}'.format(os, ', '.join(enabled)))
+        print('{}-variants: {}'.format(os, ', '.join(variants)))
     print('STOPPING HERE')
     sys.exit(1)
 
