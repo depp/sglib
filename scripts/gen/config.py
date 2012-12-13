@@ -110,10 +110,19 @@ def parse_enable(keys, p, name, dest=None, default=None, help_enable=None,
                  dest=dest, help=help_disable)
 
 def parse_feature_args(proj, keys, p):
+    gv = optparse.OptionGroup(p, 'Variants')
     ge = optparse.OptionGroup(p, 'Optional Features')
     gw = optparse.OptionGroup(p, 'Optional Packages')
+    p.add_option_group(gv)
     p.add_option_group(ge)
     p.add_option_group(gw)
+
+    for m in proj.modules:
+        for v in m.variant:
+            parse_enable(
+                keys, gv, v.varname,
+                dest='variant_' + v.varname,
+                help_enable='build %s' % v.name)
 
     optlibs = set()
     for f in proj.features():
@@ -291,6 +300,14 @@ class ProjectConfig(object):
                 user_libs.add(modid)
             else:
                 enabled_libs.discard(modid)
+        for m in self.project.modules:
+            for v in m.variant:
+                val = self.opts.get('variant_' + v.varname, None)
+                if val is not None:
+                    if val:
+                        enabled_variants.add(v.varname)
+                    else:
+                        enabled_variants.discard(v.varname)
 
         # Add platform intrinsics (you can't disable WINDOWS on Windows)
         enabled_libs.update(intrinsics)
