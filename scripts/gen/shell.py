@@ -19,7 +19,7 @@ def getproc(name):
         if os.access(fullpath, os.R_OK | os.X_OK):
             break
     else:
-        raise ConfigError('could not find the "%s" program' % name)
+        return None
     PROC_CACHE[name] = fullpath
     return fullpath
 

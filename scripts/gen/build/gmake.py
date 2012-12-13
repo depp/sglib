@@ -63,6 +63,7 @@ class Makefile(object):
                 s = s.posix
             write(' ' + mk_escape(s))
         write('\n')
+        dirs = [x for x in dirs if x]
         if dirs:
             write('\t@mkdir -p %s\n' %
                   ' '.join(escape(d) for d in dirs))

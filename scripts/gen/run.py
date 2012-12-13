@@ -3,7 +3,7 @@ from gen.error import ConfigError
 import os
 import sys
 
-CACHE_FILE = 'init.cache.dat'
+CACHE_FILE = config.CACHE_FILE
 
 def load():
     import cPickle
@@ -44,11 +44,13 @@ def run():
             store(cfg)
         elif mode == 'reconfig':
             cfg = load()
+            cfg.quiet = True
             cfg.reconfig()
             store(cfg)
             actions = []
         elif mode == 'build':
             cfg = load()
+            cfg.quiet = True
             actions = argv
         else:
             sys.stderr.write('error: invalid mode: %s\n' % mode)

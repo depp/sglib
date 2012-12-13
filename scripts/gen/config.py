@@ -10,6 +10,8 @@ import os
 import sys
 import platform
 
+CACHE_FILE = 'config.dat'
+
 # TODO: After loading the project,
 # make sure each tag refers to one module
 
@@ -19,9 +21,10 @@ DEFAULT_ACTIONS = {
     'WINDOWS': ('version'),
 }
 
-def use_bundled_lib(proj, lib, lsrc, fname):
-    root = Path(proj.lib_path, fname)
-    sys.stderr.write('found bundled library: %s\n' % root.posix)
+def use_bundled_lib(config, lib, lsrc, fname):
+    root = Path(config.project.lib_path, fname)
+    if not config.quiet:
+        sys.stderr.write('found bundled library: %s\n' % root.posix)
 
     lib.header_path = lsrc.header_path
     lib.define = lsrc.define
@@ -30,7 +33,7 @@ def use_bundled_lib(proj, lib, lsrc, fname):
     lib.sources = [Source(Path(root, s.path), s.tags) for s in lsrc.sources]
     lib.use_bundled = True
 
-def find_bundled_lib(proj, lib, libs):
+def find_bundled_lib(config, lib, libs):
     for lsrc in lib.bundled_versions:
         searchname = lsrc.libname
         for fname in libs:
@@ -40,15 +43,16 @@ def find_bundled_lib(proj, lib, libs):
             else:
                 libname = fname
             if searchname == libname:
-                use_bundled_lib(proj, lib, lsrc, fname)
+                use_bundled_lib(config, lib, lsrc, fname)
                 return
 
-def find_bundled_libs(proj, opt_dict):
+def find_bundled_libs(config):
     """Scan the bundled library folder for bundled libraries.
 
     This will fill in the module fields for every ExternalLibrary that
     can be bundled, if that library is found in the library folder.
     """
+    proj = config.project
 
     if proj.lib_path is None:
         return
@@ -70,8 +74,8 @@ def find_bundled_libs(proj, opt_dict):
     for m in proj.modules:
         if (isinstance(m, project.ExternalLibrary) and
             m.bundled_versions and
-            opt_dict.get('bundled_' + m.modid, True)):
-            find_bundled_lib(proj, m, libs)
+            config.opts.get('bundled_' + m.modid, True)):
+            find_bundled_lib(config, m, libs)
 
 def trim_project(proj):
     """Remove unreferenced modules from the project."""
@@ -203,7 +207,7 @@ class ProjectConfig(object):
     __slots__ = [
         'argv', 'xmlfiles', 'project', 'opts', 'vars',
         '_repos', '_versions', '_native_os', '_actions',
-        '_executed',
+        '_executed', '_quiet',
     ]
 
     def __init__(self):
@@ -216,7 +220,8 @@ class ProjectConfig(object):
         self._versions = None
         self._native_os = None
         self._actions = None
-        self._executed = set()
+        self._executed = None
+        self._quiet = None
 
     def __getstate__(self):
         d = dict()
@@ -276,12 +281,13 @@ class ProjectConfig(object):
             else:
                 actions.append(arg)
 
-        find_bundled_libs(proj, opt_dict)
-
         self.opts = opt_dict
         self.vars = var_dict
         if not actions:
             actions = DEFAULT_ACTIONS[self.native_os]
+
+        find_bundled_libs(self)
+
         return actions
 
     def is_enabled(self, featid):
@@ -449,6 +455,8 @@ class ProjectConfig(object):
         return os
 
     def exec_action(self, action_name):
+        if self._executed is None:
+            self._executed = set()
         if action_name in self._executed:
             return
         actions = self.actions
@@ -457,13 +465,24 @@ class ProjectConfig(object):
         except KeyError:
             raise ConfigError('unknown action: %s' % action_name)
         path, func_name = action
-        sys.stderr.write('generating %s\n' % path.native)
+        if not self.quiet:
+            sys.stderr.write('generating %s\n' % path.native)
         func_path = action[1].split('.')
         obj = __import__('gen.build.' + '.'.join(func_path[:-1])).build
         for part in func_path:
             obj = getattr(obj, part)
         obj(self)
         self._executed.add(action_name)
+
+    def get_quiet(self):
+        return self._quiet
+
+    def set_quiet(self, v):
+        self._quiet = v
+
+    quiet = property(get_quiet, set_quiet)
+    del get_quiet
+    del set_quiet
 
 class BuildConfig(object):
     """Configuration for a specific build."""

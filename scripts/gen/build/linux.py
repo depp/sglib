@@ -3,6 +3,7 @@ from gen.build.gmake import Makefile
 from gen.env.nix import NixConfig, default_env, getmachine
 from gen.env.env import BuildEnv
 from gen.path import Path, TYPE_DESCS
+import sys
 
 def extract_debug(dest, src):
     """Return commands for extracting debug info from an object."""
@@ -20,6 +21,37 @@ def strip(dest, src, debugsyms):
     cmd.extend((src.posix, dest.posix))
     return [cmd]
 
+def gen_regen(makefile, bcfg):
+    from gen.config import CACHE_FILE, DEFAULT_ACTIONS
+    import os.path
+    spath = os.path.join(
+        os.path.dirname(
+            os.path.dirname(
+                os.path.dirname(
+                    os.path.abspath(__file__)))),
+        'init.py')
+    try:
+        relpath = os.path.relpath
+    except AttributeError:
+        pass # Python 2.5
+    else:
+        spath = relpath(spath)
+    config_script = [sys.executable, spath]
+    cache_file = Path(CACHE_FILE)
+    makefile.add_rule(
+        cache_file, bcfg.projectconfig.xmlfiles,
+        [[sys.executable, spath, 'reconfig']],
+        qname='Reconfigure')
+    actions = bcfg.projectconfig.actions
+    for action_name in DEFAULT_ACTIONS[bcfg.os]:
+        target = actions[action_name][0]
+        makefile.add_rule(
+            target, [cache_file],
+            [[sys.executable, spath, 'build', action_name]],
+            qname='Regen')
+        if target.posix != 'Makefile':
+            makefile.add_default(target)
+
 def gen_makefile(config):
     bcfg = config.get_config('LINUX')
     base = default_env(config, 'LINUX')
@@ -30,6 +62,7 @@ def gen_makefile(config):
 
     machine = getmachine(base)
     makefile = Makefile()
+    gen_regen(makefile, bcfg)
 
     types_cc = 'c', 'cxx'
     types_ignore = 'h', 'hxx'
