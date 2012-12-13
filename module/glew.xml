@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<external-library id="GLEW">
+<external-library modid="glew">
   <name>The OpenGL Extension Wrangler Library</name>
   <bundled-library libname="glew">
     <header-path path="include"/>

@@ -1,74 +1,134 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<module id="SG" path="..">
+<module modid="sg" path="..">
   <name>SGLib</name>
   <header-path path="include"/>
   <header-path path="keycode/include"/>
   <header-path path="libpce/include"/>
-  <require require="GLEW"/>
+  <require module="glew"/>
 
   <defaults
-      os="OSX"
-      variants="cocoa"
-      libs="APPLICATIONSERVICES COREAUDIO AUDIOUNIT"
+      enable="jpeg png audio type"
       />
 
   <defaults
-      os="LINUX"
-      variants="gtk sdl"
-      libs="LIBJPEG LIBPNG ALSA PANGO"
+      os="osx"
+      enable="app-cocoa jpeg-coregraphics png-coregraphics audio-coreaudio
+	      type-coretext"
       />
 
   <defaults
-      os="WINDOWS"
-      variants="win32"
+      os="linux"
+      enable="app-gtk jpeg-libjpeg png-libpng audio-alsa type-pango"
       />
 
-  <variant varname="win32">
+  <defaults
+      os="windows"
+      enable="app-win32 jpeg-wincodec png-wincodec audio-directsound
+	      type-uniscribe"
+      />
+
+  <variant flag="app-win32">
     <name>Windows executable</name>
-    <require require="WINDOWS"/>
+    <exe-suffix>Windows</exe-suffix>
+    <exe-suffix os="windows"/>
+    <require module="windows"/>
   </variant>
 
-  <variant varname="cocoa">
+  <variant flag="app-cocoa">
     <name>Cocoa application</name>
-    <require require="COCOA COREVIDEO OPENGL CARBON"/>
+    <exe-suffix>Cocoa</exe-suffix>
+    <exe-suffix os="osx"/>
+    <require module="osx/foundation osx/appkit
+		     osx/corevideo opengl osx/carbon"/>
   </variant>
 
-  <variant varname="gtk">
+  <variant flag="app-gtk">
     <name>GTK executable</name>
-    <require require="GTK GTKGLEXT"/>
+    <exe-suffix>GTK</exe-suffix>
+    <require module="gtk gtkglext"/>
   </variant>
 
-  <variant varname="sdl">
+  <variant flag="app-sdl">
     <name>SDL executable</name>
-    <require require="SDL"/>
+    <exe-suffix>SDL</exe-suffix>
+    <require module="sdl"/>
   </variant>
 
-  <feature id="JPEG">
+  <feature flag="jpeg">
     <name>JPEG image support</name>
-    <impl require="LIBJPEG"/>
-    <impl require="APPLICATIONSERVICES"/>
-    <impl require="WINDOWS"/>
+    <alternatives>
+      <alt flag="jpeg-libjpeg">
+	<name>LibJPEG JPEG support</name>
+	<require module="libjpeg"/>
+      </alt>
+      <alt flag="jpeg-coregraphics">
+	<name>Core Graphics JPEG support</name>
+	<require module="osx/applicationservices"/>
+      </alt>
+      <alt flag="jpeg-wincodec">
+	<name>WinCodec JPEG support</name>
+	<require module="windows"/>
+      </alt>
+    </alternatives>
   </feature>
 
-  <feature id="PNG">
+  <feature flag="png">
     <name>PNG image support</name>
-    <impl require="LIBPNG"/>
-    <impl require="APPLICATIONSERVICES"/>
-    <impl require="WINDOWS"/>
+    <alternatives>
+      <alt flag="png-libpng">
+	<name>LibPNG PNG support</name>
+	<require module="libpng"/>
+      </alt>
+      <alt flag="png-coregraphics">
+	<name>Core Graphics PNG support</name>
+	<require module="osx/applicationservices"/>
+      </alt>
+      <alt flag="png-wincodec">
+	<name>WinCodec PNG support</name>
+	<require module="windows"/>
+      </alt>
+    </alternatives>
   </feature>
 
-  <feature id="AUDIO">
+  <feature flag="audio">
     <name>Audio support</name>
-    <impl require="ALSA"/>
-    <impl require="COREAUDIO AUDIOUNIT"/>
-    <impl require="WINDOWS"/>
+    <alternatives>
+      <alt flag="alsa">
+	<name>ALSA sound output</name>
+	<require module="alsa"/>
+      </alt>
+      <alt flag="coreaudio">
+	<name>Core Audio sound output</name>
+	<require module="osx/coreaudio osx/audiounit"/>
+      </alt>
+      <alt flag="directsound">
+	<name>DirectSound sound output</name>
+	<require module="windows"/>
+      </alt>
+    </alternatives>
   </feature>
 
-  <feature id="TYPE">
+  <feature flag="type">
     <name>Type rendering support</name>
-    <impl require="PANGO"/>
-    <impl require="APPLICATIONSERVICES"/>
-    <impl require="WINDOWS"/>
+    <alternatives>
+      <alt flag="type-pango">
+	<name>Pango type rendering</name>
+	<reqire module="pango"/>
+      </alt>
+      <alt flag="type-coretext">
+	<name>Core Text type rendering</name>
+	<require module="osx/applicationservices"/>
+      </alt>
+      <alt flag="type-uniscribe">
+	<name>Uniscribe type rendering</name>
+	<require module="windows"/>
+      </alt>
+    </alternatives>
+  </feature>
+
+  <feature flag="video-recording">
+    <name>Video recording support</name>
+    <require module="posix"/>
   </feature>
 
   <!-- SGLib -->
@@ -100,10 +160,13 @@
     <src path="version.h"/>
   </group>
   <group path="sg/audio">
-    <src path="alsa.c" tag="ALSA"/>
+    <src path="alsa.c"
+	 enable="audio-alsa" module="alsa"/>
     <src path="convert.c"/>
-    <src path="coreaudio.c" tag="COREAUDIO"/>
-    <src path="directsound8.c" tag="WINDOWS"/>
+    <src path="coreaudio.c"
+	 enable="audio-coresound" module="osx/coreaudio osx/audiounit"/>
+    <src path="directsound8.c"
+	 enable="audio-directsound" module="windows"/>
     <src path="load.c"/>
     <src path="mixdown.c"/>
     <src path="ofile.c"/>
@@ -140,12 +203,13 @@
     <src path="impl.h"/>
     <src path="norm.c"/>
     <src path="path.c"/>
-    <src path="posix.c" tag="POSIX"/>
+    <src path="posix.c" enable="posix"/>
     <src path="read.c"/>
-    <src path="win.c" tag="WINDOWS"/>
+    <src path="win.c" enable="windows"/>
   </group>
-  <group path="sg/gtk">
-    <src path="gtk.c" tag="GTK GTKGLEXT"/>
+  <group path="sg/gtk"
+	 enable="app-gtk" module="gtk gtkglext">
+    <src path="gtk.c"/>
   </group>
   <group path="sg/log">
     <src path="console.c"/>
@@ -153,7 +217,8 @@
     <src path="log.c"/>
     <src path="network.c"/>
   </group>
-  <group path="sg/osx" tag="COCOA">
+  <group path="sg/osx"
+	 enable="app-cocoa" module="osx/appkit osx/foundation">
     <src path="GApplication.h"/>
     <src path="GApplication.m"/>
     <src path="GController.h"/>
@@ -168,38 +233,47 @@
     <src path="GWindow.m"/>
   </group>
   <group path="sg/pixbuf">
-    <src path="coregraphics.c" tag="APPLICATIONSERVICES"/>
-    <src path="libjpeg.c" tag="LIBJPEG"/>
-    <src path="libpng.c" tag="LIBPNG"/>
+    <src path="coregraphics.c"
+	 enable="jpeg-coregraphics" module="osx/applicationservices"/>
+    <src path="libjpeg.c"
+	 enable="jpeg-libjpeg" module="libjpeg"/>
+    <src path="libpng.c"
+	 enable="png-libpng" module="libpng"/>
     <src path="loadimage.c"/>
     <src path="pixbuf.c"/>
     <src path="premultiply_alpha.c"/>
-    <src path="wincodec.cpp" tag="WINDOWS"/>
+    <src path="wincodec.cpp"
+	 enable="jpeg-wincodec" module="windows"/>
   </group>
   <group path="sg/record">
     <src path="record.c"/>
     <src path="shot.c"/>
-    <src path="vidproc.c"/>
-    <src path="yuv.c"/>
+    <src path="vidproc.c" enable="video-recording"/>
+    <src path="yuv.c" enable="video-recording"/>
   </group>
-  <group path="sg/sdl">
-    <src path="sdl.c" tag="SDL"/>
+  <group path="sg/sdl"
+	 enable="app-sdl" module="sdl">
+    <src path="sdl.c"/>
   </group>
   <group path="sg/type">
-    <src path="coretext.c" tag="APPLICATIONSERVICES"/>
+    <src path="coretext.c"
+	 enable="type-coretext" module="osx/applicationservices"/>
     <src path="impl.h"/>
-    <src path="pango.c" tag="PANGO"/>
+    <src path="pango.c"
+	 enable="type-pango" module="pango"/>
     <src path="type.c"/>
-    <src path="uniscribe.c" tag="WINDOWS"/>
+    <src path="uniscribe.c"
+	 enable="type-uniscribe" module="windows"/>
   </group>
-  <group path="sg/windows">
-    <src path="windows.c" tag="WINDOWS"/>
+  <group path="sg/windows"
+	 enable="app-win32" module="windows">
+    <src path="windows.c"/>
   </group>
   <group path="sg/work">
     <src path="aio.c"/>
     <src path="dispatch.c"/>
-    <src path="pthread.c" tag="POSIX"/>
-    <src path="windows.c" tag="WINDOWS"/>
+    <src path="pthread.c" enable="posix"/>
+    <src path="windows.c" enable="windows"/>
     <src path="work.h"/>
   </group>
 
@@ -211,9 +285,9 @@
   </group>
   <group path="keycode/src">
     <src path="keyid.c"/>
-    <src path="keytable_evdev.c" tag="LINUX"/>
-    <src path="keytable_mac.c" tag="OSX"/>
-    <src path="keytable_win.c" tag="WINDOWS"/>
+    <src path="keytable_evdev.c" enable="linux"/>
+    <src path="keytable_mac.c" enable="osx"/>
+    <src path="keytable_win.c" enable="windows"/>
   </group>
 
   <!-- LibPCE submodule -->
@@ -234,7 +308,7 @@
     <src path="hash.c"/>
     <src path="hashtable.c"/>
     <src path="strbuf.c"/>
-    <src path="thread_pthread.c" tag="POSIX"/>
-    <src path="thread_windows.c" tag="WINDOWS"/>
+    <src path="thread_pthread.c" enable="posix"/>
+    <src path="thread_windows.c" enable="posix"/>
   </group>
 </module>

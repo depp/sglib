@@ -27,6 +27,14 @@ def is_ident(x):
     """Get whether the string is a valid identifier."""
     return bool(_IS_IDENT.match(x))
 
+_IS_TAG = re.compile('^[a-z0-9]+(?:-[a-z0-9]+)*$')
+def is_flat_tag(x):
+    """Get whether the string is a valid flat tag."""
+    return bool(_IS_TAG.match(x))
+def is_hier_tag(x):
+    """Get whether the string is a valid hierarchical tag."""
+    return bool(all(_IS_TAG.match(p) for p in x.split('/')))
+
 _IS_TITLE = re.compile(r'^\w[-\w]*(?: [-\w]+)*$')
 def is_title(x):
     """Get whether the string is a valid title.

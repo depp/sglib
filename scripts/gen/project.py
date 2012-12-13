@@ -1,19 +1,24 @@
 __all__ = [
-    'OS', 'Project', 'BaseModule',
-    'Module', 'Intrinsic', 'ExternalLibrary', 'Executable',
-    'BundledLibrary', 'LibraryGroup', 'PkgConfig', 'Framework', 'SdlConfig',
-    'LibrarySearch', 'TestSource',
-    'Feature', 'Implementation', 'Variant', 'Defaults',
+    'OS', 'INTRINSICS',
+    'Project',
+    'BaseModule', 'Module', 'Intrinsic', 'ExternalLibrary',
+    'BundledLibrary', 'LibraryGroup', 'PkgConfig', 'Framework',
+    'SdlConfig', 'LibrarySearch', 'TestSource', 'Executable',
+    'Feature', 'Alternatives', 'Alternative', 'Require',
+    'Variant', 'Defaults',
 ]
 from gen.path import common_ancestor
 
 # Intrinsics for each OS
 OS = {
-    'LINUX': ('LINUX', 'POSIX'),
-    'OSX': ('OSX', 'POSIX'),
-    'WINDOWS': ('WINDOWS',),
+    'linux': ('linux', 'posix'),
+    'osx': ('osx', 'posix'),
+    'windows': ('windows',),
 }
 INTRINSICS = set(x for v in OS.values() for x in v)
+
+########################################
+# Project
 
 class Project(object):
     """A project is a set of modules and project-wide settings."""
@@ -127,6 +132,9 @@ class Project(object):
         while mlist:
             m = mlist.pop()
 
+########################################
+# Modules
+
 class BaseModule(object):
     """A module.
 
@@ -137,9 +145,9 @@ class BaseModule(object):
     subclasses can be just source code, or they can be targets such as
     executables.
 
-    name: identifies the module
+    modid: identifies the module
 
-    desc: human-readable description
+    name: human-readable description
 
     header_path: list of header include paths, both for this module
     and any source depending on it, including indirect dependencies
@@ -158,8 +166,8 @@ class BaseModule(object):
 
     __slots__ = [
         'modid', 'name',
-        'header_path', 'define', 'require', 'cvar',
-        'sources', 'feature', 'variant', 'defaults',
+        'header_path', 'define', 'cvar',
+        'sources', 'config', 'defaults',
     ]
 
     def __init__(self, modid):
@@ -167,11 +175,9 @@ class BaseModule(object):
         self.name = None
         self.header_path = []
         self.define = []
-        self.require = []
         self.cvar = []
         self.sources = []
-        self.feature = []
-        self.variant = []
+        self.config = []
         self.defaults = []
 
     def __repr__(self):
@@ -194,6 +200,7 @@ class BaseModule(object):
         This will throw an exception for modules containing no sources
         (e.g., external libraries).
         """
+        # FIXME: use of this method is sign of a HACK
         return common_ancestor(src.path for src in self.sources)
 
 class Module(BaseModule):
@@ -251,14 +258,14 @@ class BundledLibrary(object):
     """
 
     __slots__ = ['libname', 'header_path', 'define',
-                 'require', 'cvar', 'sources']
+                 'cvar', 'config', 'sources']
 
     def __init__(self, libname):
         self.libname = libname
         self.header_path = []
         self.define = []
-        self.require = []
         self.cvar = []
+        self.config = []
         self.sources = []
 
     def add_source(self, source):
@@ -355,54 +362,104 @@ class Executable(Module):
         self.exe_icon = {}
         self.apple_category = None
 
-class Feature(object):
-    """A feature is a part of the code that can be enabled or disabled.
+########################################
+# Config
 
-    A feature can have multiple imlementations.  Exactly one
-    implementation can be chosen.  The implementation is chosen during
-    the configuration process.
-    """
+class BaseConfig(object):
+    def configs(self, enable=None):
+        """Iterate over this and all child config objects."""
+        assert False # Must be overridden by subclass
 
-    __slots__ = ['modid', 'desc', 'impl']
+class Feature(BaseConfig):
+    """A feature is a part of the code that can be enabled or disabled."""
 
-    def __init__(self, modid):
-        self.modid = modid
-        self.desc = None
-        self.impl = []
+    __slots__ = ['flagid', 'name', 'config']
 
-    def __repr__(self):
-        return '<Feature {}>'.format(self.modid)
+    def __init__(self, flagid):
+        self.flagid = flagid
+        self.name = None
+        self.config = []
 
-class Implementation(object):
-    """A set of modules required for an implementation."""
+    def configs(self, enable=None):
+        """Iterate over this and all child config objects."""
+        if enable is None or self.flagid in enable:
+            yield self
+            for c in self.config:
+                for x in c.configs(enable):
+                    yield x
 
-    __slots__ = ['require', 'provide']
+class Alternatives(BaseConfig):
+    """Alternatives specify multiple ways to satisfy requirements."""
 
-    def __init__(self, require, provide):
-        self.require = require
-        self.provide = provide
+    __slots__ = ['alternatives']
 
-class Variant(object):
+    def __init__(self):
+        self.alternatives = []
+
+    def configs(self, enable=None):
+        """Iterate over this and all child config objects."""
+        yield self
+        for c in self.alternatives:
+            for x in c.configs(enable):
+                yield x
+
+class Alternative(BaseConfig):
+    __slots__ = ['flagid', 'name', 'config']
+
+    def __init__(self, flagid):
+        self.flagid = flagid
+        self.name = None
+        self.config = []
+
+    def configs(self, enable=None):
+        """Iterate over this and all child config objects."""
+        if enable is None or self.flagid in enable:
+            yield self
+            for c in self.config:
+                for x in c.configs(enable):
+                    yield x
+
+class Require(BaseConfig):
+    __slots__ = ['modules']
+
+    def __init__(self, modules):
+        self.modules = tuple(modules)
+
+    def configs(self, enable=None):
+        """Iterate over this and all child config objects."""
+        yield self
+
+class Variant(BaseConfig):
     """A variant is a different version of the code that can be built.
 
     Multiple variants can be built in parallel, but only one will ever
     be linked into the same executable.
     """
 
-    __slots__ = ['varname', 'name', 'require']
+    __slots__ = ['flagid', 'name', 'config', 'exe_suffix']
 
-    def __init__(self, varname):
-        self.varname = varname
+    def __init__(self, flagid):
+        self.flagid = flagid
         self.name = None
-        self.require = []
+        self.config = []
+        self.exe_suffix = {}
+
+    def configs(self, enable=None):
+        """Iterate over this and all child config objects."""
+        if enable is None or self.flagid in enable:
+            yield self
+            for c in self.config:
+                for x in c.configs(enable):
+                    yield x
+
+########################################
+# Misc
 
 class Defaults(object):
     """A defaults object controls the default libraries to use."""
 
-    __slots__ = ['os', 'variants', 'libs', 'features']
+    __slots__ = ['os', 'enable']
 
-    def __init__(self, os, variants, libs, features):
+    def __init__(self, os, enable):
         self.os = os
-        self.variants = variants
-        self.libs = libs
-        self.features = features
+        self.enable = tuple(enable)
