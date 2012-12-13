@@ -34,7 +34,7 @@ def escape1(x):
     i = ord(x)
     if 32 <= i <= 126:
         return '\\' + x
-    return '\\x%02x' % i
+    return '\\x{:02x}'.format(i)
 def escape(x):
     """Escape a string for use in the shell."""
     if _SHELL_SPECIAL.search(x):

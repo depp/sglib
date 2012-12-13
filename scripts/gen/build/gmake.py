@@ -9,14 +9,14 @@ def mk_escape1(x):
     c = x.group(0)
     if c == ' ':
         return '\\ '
-    raise ValueError('invalid character: %r' % (c,))
+    raise ValueError('invalid character: {!r}'.format(c))
 def mk_escape(x):
     if not isinstance(x, str):
-        raise TypeError('expected string, got %s' % repr(x))
+        raise TypeError('expected string, got {!r}'.format(x))
     try:
         return MK_SPECIAL.sub(escape, x)
     except ValueError:
-        raise ValueError('invalid character in %r' % (x,))
+        raise ValueError('invalid character in {!r}'.format(x))
 
 class Makefile(object):
     """GMake Makefile generator."""
@@ -65,14 +65,14 @@ class Makefile(object):
         write('\n')
         dirs = [x for x in dirs if x]
         if dirs:
-            write('\t@mkdir -p %s\n' %
-                  ' '.join(escape(d) for d in dirs))
+            write('\t@mkdir -p {}\n'.format(
+                  ' '.join(escape(d) for d in dirs)))
         first = True
         for cmd in cmds:
             write('\t')
             if qname is not None:
-                write('$(QUIET%d)' % self._get_qctr(
-                    qname if first else ''))
+                write('$(QUIET{})'.format(self._get_qctr(
+                    qname if first else '')))
                 first = False
             write(escape(cmd[0]))
             for arg in cmd[1:]:
@@ -94,15 +94,15 @@ class Makefile(object):
             fp.write(' ' + target)
         fp.write('\n')
         if self._opt_include:
-            fp.write('-include %s\n' %
+            fp.write('-include {}\n'.format(
                      ' '.join(mk_escape(x)
-                              for x in sorted(self._opt_include)))
+                              for x in sorted(self._opt_include))))
         fp.write('ifndef V\n')
         for k, v in sorted(self._qnames.items()):
             if k:
-                fp.write("QUIET%d = @echo '    %s' $@;\n" % (v, k))
+                fp.write("QUIET{} = @echo '    {}' $@;\n".format(v, k))
             else:
-                fp.write("QUIET%d = @\n" % v)
+                fp.write("QUIET{} = @\n".format(v))
         fp.write('endif\n')
         fp.write(
             '.PHONY: all clean\n'

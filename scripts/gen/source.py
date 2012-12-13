@@ -20,21 +20,21 @@ class Source(object):
         ext = path.ext
         if not ext:
             raise ValueError(
-                'source file has no extension, cannot determine type: %s' %
-                (path.posix,))
+                'source file has no extension, cannot determine type: {}'
+                .format(path.posix))
         try:
             stype = gen.path.EXTS[ext]
         except KeyError:
             raise ValueError(
-                'source file %s has unknown extension, cannot determine type' %
-                (path.posix,))
+                'source file {} has unknown extension, cannot determine type'
+                .format(path.posix))
 
         self.path = path
         self.tags = tags
         self.sourcetype = stype
 
     def __repr__(self):
-        return 'Source(%r, %r)' % (self.path, self.tags)
+        return 'Source({!r}, {!r})'.format(self.path, self.tags)
 
     def __cmp__(self, other):
         if not isinstance(other, Source):

@@ -164,7 +164,7 @@ def getmachine(env):
             if m == 'powerpc':
                 return 'ppc'
             sys.stderr.write(
-                'warning: unknown machine name: {}' % (m,))
+                'warning: unknown machine name: {}'.format(m))
     raise ConfigError(
         'unable to parse machine name',
         describe_proc(cmd, stdout + stderr, retcode))

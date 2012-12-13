@@ -8,7 +8,7 @@ import xml.dom.minidom
 def unexpected(node, c):
     """Raise an exception for an unexpected child of the given element."""
     if c.nodeType == Node.ELEMENT_NODE:
-        v = '%s element' % c.tagName
+        v = '{} element'.format(c.tagName)
     elif c.nodeType == Node.TEXT_NODE:
         v = 'text'
     elif c.nodeType == Node.CDATA_SECTION_NODE:
@@ -21,15 +21,15 @@ def unexpected(node, c):
         v = 'comment'
     else:
         v = 'node'
-    raise ValueError('unexpected %s in %s element' % (v, node.tagName))
+    raise ValueError('unexpected {} in {} element'.format(v, node.tagName))
 
 def unexpected_attr(node, attr):
-    raise ValueError('unexpected %s attribute on %s element' %
-                     (attr.name, node.tagName))
+    raise ValueError('unexpected {} attribute on {} element'
+                     .format(attr.name, node.tagName))
 
 def missing_attr(node, attr):
-    raise ValueError('missing %s attribute on %s element' %
-                     (attr, node.tagName))
+    raise ValueError('missing {} attribute on {} element'
+                     .format(attr, node.tagName))
 
 def node_elements(node):
     """Iterate over the children of a node that are element nodes.
@@ -100,7 +100,7 @@ def parse_cvar(node, path):
         if attr.name == 'name':
             name = attr.value
             if not is_cvar(name):
-                raise ValueError('invalid cvar name: %s' % name)
+                raise ValueError('invalid cvar name: {}'.format(name))
         else:
             unexpected_attr(node, attr)
     if name is None:
@@ -125,7 +125,7 @@ def parse_tags(attr):
     tags = []
     for tag in attr.value.split():
         if not is_ident(tag):
-            raise ValueError('invalid tag: %s' % (tag,))
+            raise ValueError('invalid tag: {}'.format(tag))
         tags.append(tag)
     return tuple(tags)
 
@@ -140,7 +140,7 @@ def parse_defaults(node):
             os = parse_tags(attr)
             for x in os:
                 if x not in OS:
-                    raise ValueError('unknown OS: %s' % x)
+                    raise ValueError('unknown OS: {}'.format(x))
         elif attr.name == 'variants':
             variants = parse_tags(attr)
         elif attr.name == 'libs':
@@ -220,7 +220,8 @@ def mod_define(mod, node, path, tags):
         if attr.name == 'name':
             name = attr.value
             if not is_ident(name):
-                raise ValueError('invalid definition name: %s' % name)
+                raise ValueError(
+                    'invalid definition name: {}'.format(name))
         elif attr.name == 'value':
             value = attr.value
         else:
@@ -252,7 +253,8 @@ def mod_feature(mod, node, path, tags):
         if attr.name == 'id':
             name = attr.value
             if not is_ident(name):
-                raise ValueError('invalid feature name: %s' % name)
+                raise ValueError(
+                    'invalid feature name: {}'.format(name))
         else:
             unexpected_attr(node, attr)
     feature = Feature(name)
@@ -355,7 +357,7 @@ def exe_name(mod, node, path, tags):
         attr = node.attributes.item(i)
         if attr.name == 'os':
             if attr.value not in OS:
-                raise ValueError('unknown os: %s' % attr.value)
+                raise ValueError('unknown os: {}'.format(attr.value))
             osval = attr.value
         else:
             unexpected_attr(node, attr)
@@ -374,7 +376,7 @@ def exe_icon(mod, node, path, tags):
         attr = node.attributes.item(i)
         if attr.name == 'os':
             if attr.value not in OS:
-                raise ValueError('unknown os: %s' % attr.value)
+                raise ValueError('unknown os: {}'.format(attr.value))
             osval = attr.value
         elif attr.name == 'path':
             spath = Path(attr.value)
@@ -411,7 +413,7 @@ def parse_module(node, path):
         elif attr.name == 'id':
             name = attr.value
             if not is_ident(name):
-                raise ValueError('invalid id: %s' % name)
+                raise ValueError('invalid id: {}'.format(name))
         else:
             unexpected_attr(node, attr)
     if name is None:
@@ -435,7 +437,7 @@ def parse_executable(node, path):
         elif attr.name == 'id':
             name = attr.value
             if not is_ident(name):
-                raise ValueError('invalid id: %s' % name)
+                raise ValueError('invalid id: {}'.format(name))
         else:
             unexpected_attr(node, attr)
     mod = Executable(name)
@@ -454,12 +456,12 @@ def parse_executable(node, path):
             base = mod.name
         if base is None:
             raise ValueError(
-                'no exe-name for os %s and no default' % osval)
+                'no exe-name for os {} and no default'.format(osval))
         check_func, make_func = EXENAME[osval]
         val = base if make_func is None else make_func(val)
         if not check_func(val):
             raise ValueError(
-                'bad default exe-name for %s' % osval)
+                'bad default exe-name for {}'.format(osval))
         mod.exe_name[osval] = val
     return mod
 
@@ -469,7 +471,7 @@ def lib_framework(mod, node):
     node_noattr(node)
     name = node_text(node)
     if not is_ident(name):
-        raise ValueError('invalid framework name: %s' % name)
+        raise ValueError('invalid framework name: {}'.format(name))
     mod.add_libsource(Framework(name))
 
 def lib_pkgconfig(mod, node):
@@ -585,7 +587,7 @@ def parse_external_library(node, path):
         if attr.name == 'id':
             name = attr.value
             if not is_ident(name):
-                raise ValueError('invalid id: %s' % name)
+                raise ValueError('invalid id: {}'.format(name))
         else:
             unexpected_attr(node, attr)
     if name is None:
@@ -609,12 +611,12 @@ def proj_prop(propname, check=None):
     def parse(proj, node, path):
         oldval = getattr(proj, propname)
         if oldval is not None:
-            raise ValueError('project has duplicate %s element' %
-                             node.tagName)
+            raise ValueError('project has duplicate {} element'
+                             .format(node.tagName))
         node_noattr(node)
         val = node_text(node)
         if check is not None and not check(val):
-            raise ValueError('invalid %s vaue' % node.tagName)
+            raise ValueError('invalid {} vaue'.format(node.tagName))
         setattr(proj, propname, val)
     return parse
 

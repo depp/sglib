@@ -1,8 +1,8 @@
 
 def mkdef(k, v):
     if v is None:
-        return '-D%s' % (k,)
-    return '-D%s=%s' % (k, v)
+        return '-D{}'.format(k)
+    return '-D{}={}'.format(k, v)
 
 def cc_cmd(env, output, source, sourcetype, depfile=None):
     """Get the command to compile the given source."""

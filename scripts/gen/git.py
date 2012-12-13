@@ -12,7 +12,7 @@ def get_info(config, path):
     stdout, stderr, retcode = get_output([git, 'rev-parse', 'HEAD'])
     if retcode:
         sys.stderr.write(
-            'warning: could not get SHA-1 of %s\n' % path.native)
+            'warning: could not get SHA-1 of {}\n'.format(path.native))
         sys.stderr.write(format_block(stderr))
         return '<none>', '0.0'
     sha1 = stdout.strip()
@@ -20,19 +20,20 @@ def get_info(config, path):
     stdout, stderr, retcode = get_output(['git', 'describe'])
     if retcode:
         sys.stderr.write(
-            'warning: could not get version number in %s\n' % path.native)
+            'warning: could not get version number in {}\n'
+            .format(path.native))
         sys.stderr.write(format_block(stderr))
 
         stdout, stderr, retcode = get_output(['git', 'rev-list', 'HEAD'])
         if retcode:
             sys.stderr.write(
-                'warning: could not get list of git revisions in %s\n'
-                % path.native)
+                'warning: could not get list of git revisions in {}\n'
+                .format(path.native))
             sys.stderr.write(format_block(stderr))
             version = '0.0'
         else:
             nrev = len(stdout.splitlines())
-            version = '0.0-%d-g%s' % (nrev, sha1[:7])
+            version = '0.0-{}-g{}'.format(nrev, sha1[:7])
     else:
         version = stdout.strip()
 

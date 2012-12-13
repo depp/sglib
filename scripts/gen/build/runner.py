@@ -12,7 +12,7 @@ def mkcvar(c):
         if isinstance(x, Path):
             x = x.posix
         a.append(x)
-    return '-d%s=%s' % (k, ''.join(a))
+    return '-d{}={}'.format(k, ''.join(a))
 
 def subst(text, d):
     def func(m):
@@ -32,7 +32,7 @@ def gen_runner(config):
         targets.add(app_name)
         variant = target.variant.varname.lower()
         variants.add(variant)
-        exe_name = '%s_%s_%s' % (app_name, machine, variant)
+        exe_name = '{}_{}_{}'.format(app_name, machine, variant)
         d = {
             'APP': escape(app_name),
             'VARIANT': escape(variant),
@@ -51,11 +51,11 @@ def gen_runner(config):
     for variant in variants:
         d = {'VARIANT': escape(variant)}
         arg_dispatch.write(subst(VARIANT_CASE, d))
-        variant_list.write('  %s\n' % variant)
+        variant_list.write('  {}\n'.format(variant))
     for app in targets:
         d = {'APP': escape(app)}
         arg_dispatch.write(subst(APP_CASE, d))
-        app_list.write('  %s\n' % app)
+        app_list.write('  {}\n'.format(app))
 
     d = {
         'TARGETS': app_list.getvalue(),

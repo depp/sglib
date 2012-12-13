@@ -81,10 +81,10 @@ def gen_makefile(config):
                                       qname=TYPE_DESCS[t])
                     makefile.opt_include(dep)
             else:
-                raise Exception('unknown source type: %s')
+                raise Exception('unknown source type: {}'.format(s.path))
         exe_env = benv.env(target.tag_modules)
         assert exe_env is not None
-        exe_name = '%s_%s_%s' % (
+        exe_name = '{}_{}_{}'.format(
             target.target.exe_name['LINUX'],
             machine,
             target.variant.varname.lower())

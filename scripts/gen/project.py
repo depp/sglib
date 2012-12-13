@@ -41,7 +41,8 @@ class Project(object):
     def add_module(self, module):
         if module.modid is not None:
             if module.modid in self.module_names:
-                raise ValueError('duplicate module name: %s' % module.modid)
+                raise ValueError('duplicate module name: {}'
+                                 .format(module.modid))
             self.module_names[module.modid] = module
         self.modules.append(module)
 
@@ -175,9 +176,9 @@ class BaseModule(object):
 
     def __repr__(self):
         if self.modid is not None:
-            return '<%s %s>' % (self.__class__.__name__, self.modid)
+            return '<{} {}>'.format(self.__class__.__name__, self.modid)
         else:
-            return '<%s %#x>' % (self.__class__.__name__, id(self))
+            return '<{} {:#}>'.format(self.__class__.__name__, id(self))
 
     @property
     def is_target(self):
@@ -209,7 +210,7 @@ class Intrinsic(BaseModule):
     __slots__ = BaseModule.__slots__
 
     def __repr__(self):
-        return '<Intrinsic %s>' % self.modid
+        return '<Intrinsic {}>'.format(self.modid)
 
 class ExternalLibrary(BaseModule):
     """Module which is an external library.
@@ -235,7 +236,7 @@ class ExternalLibrary(BaseModule):
         self.use_bundled = False
 
     def __repr__(self):
-        return '<ExternalLibrary %s>' % self.modid
+        return '<ExternalLibrary {}>'.format(self.modid)
 
     def add_libsource(self, source):
         self.libsources.append(source)
@@ -370,7 +371,7 @@ class Feature(object):
         self.impl = []
 
     def __repr__(self):
-        return '<Feature %s>' % self.modid
+        return '<Feature {}>'.format(self.modid)
 
 class Implementation(object):
     """A set of modules required for an implementation."""

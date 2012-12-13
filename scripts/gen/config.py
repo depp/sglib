@@ -22,7 +22,7 @@ DEFAULT_ACTIONS = {
 def use_bundled_lib(config, lib, lsrc, fname):
     root = Path(config.project.lib_path, fname)
     if not config.quiet:
-        sys.stderr.write('found bundled library: %s\n' % root.posix)
+        sys.stderr.write('found bundled library: {}\n'.format(root.posix))
 
     lib.header_path = lsrc.header_path
     lib.define = lsrc.define
@@ -70,7 +70,7 @@ def find_bundled_libs(config):
         try:
             Path(fname)
         except ValueError:
-            sys.stderr.write('warning: ignoring %s\n' % npath)
+            sys.stderr.write('warning: ignoring {}\n'.format(npath))
             continue
         libs.append(fname)
 
@@ -94,8 +94,8 @@ def check_deps(proj):
     mods, unsat = proj.closure(proj.targets())
     if unsat:
         sys.stderr.write(
-            'warning: unknown module dependencies: %s\n' %
-            ', '.join(sorted(unsat)))
+            'warning: unknown module dependencies: {}\n'
+            .format(', '.join(sorted(unsat))))
     all_tags = set()
     used_tags = set()
     for m in proj.modules:
@@ -107,8 +107,8 @@ def check_deps(proj):
     unsat_tags = used_tags.difference(all_tags)
     if unsat_tags:
         sys.stderr.write(
-            'warning: unknown source tags: %s\n' %
-            ', '.join(sorted(unsat_tags)))
+            'warning: unknown source tags: {}\n'
+            .format(', '.join(sorted(unsat_tags))))
 
 def parse_enable(keys, p, name, dest=None, default=None, help_enable=None,
                  help_disable=None):
@@ -136,14 +136,14 @@ def parse_feature_args(proj, keys, p):
             parse_enable(
                 keys, gv, v.varname,
                 dest='variant_' + v.varname,
-                help_enable='build %s' % v.name)
+                help_enable='build {}'.format(v.name))
 
     optlibs = set()
     for f in proj.features():
         if f.desc is not None:
-            help_enable = 'enable %s' % f.desc
+            help_enable = 'enable {}'.format(f.desc)
         else:
-            help_enable = 'enable %s feature' % f.modid
+            help_enable = 'enable {} feature'.format(f.modid)
         parse_enable(
             keys, ge, f.modid.lower(),
             dest='enable_' + f.modid,
@@ -159,24 +159,24 @@ def parse_feature_args(proj, keys, p):
         if not isinstance(m, project.ExternalLibrary):
             continue
         nm = m.modid.lower()
-        desc = m.name if m.name is not None else '%s library' % m.modid
+        desc = m.name if m.name is not None else '{} library'.format(modid)
         opts = []
         if m.modid in optlibs:
-            opts.append((nm, 'with_%s' % m.modid, desc))
+            opts.append((nm, 'with_' + m.modid, desc))
         if m.bundled_versions:
-            opts.append(('bundled-%s' % nm, 'bundled_%s' % m.modid,
-                         '%s (bundled copy)' % desc))
+            opts.append(('bundled-' + nm, 'bundled_' + m.modid,
+                         '{} (bundled copy)'.format(desc)))
 
         for argn, var, desc in opts:
             keys.append(var)
             gw.add_option(
-                '--with-%s' % argn,
+                '--with-' + argn,
                 default=None,
                 action='store_true',
                 dest=var,
-                help='use %s' % desc)
+                help='use {}'.format(desc))
             gw.add_option(
-                '--without-%s' % argn,
+                '--without-' + argn,
                 default=None,
                 action='store_false',
                 dest=var,
@@ -382,16 +382,16 @@ class ProjectConfig(object):
                     impls.append(i)
             if not impls:
                 raise ConfigError(
-                    'unsatisfied feature: %s' % f.modid.lower(),
+                    'unsatisfied feature: {}'.format(f.modid.lower()),
                     'libraries required for this feature are disabled\n'
-                    'use --disable-%s if you want to disable this feature\n'
-                    % f.modid.lower())
+                    'use --disable-{} if you want to disable this feature\n'
+                    .format(f.modid.lower()))
             if len(impls) > 1:
                 raise ConfigError(
-                    'overly satisfied feature: %s' % f.modid.lower(),
-                    'this feature is satisfied in multiple ways: %s\n'
-                    'use fewer --with-lib options\n' %
-                    (', '.join(' '.join(i.require) for i in impls)))
+                    'overly satisfied feature: {}'.format(f.modid.lower()),
+                    'this feature is satisfied in multiple ways: {}\n'
+                    'use fewer --with-lib options\n'
+                    .format(', '.join(' '.join(i.require) for i in impls)))
             needed_libs.update(impls[0].require)
         needed_libs.difference_update(intrinsics)
 
@@ -453,7 +453,7 @@ class ProjectConfig(object):
             try:
                 os = d[s]
             except KeyError:
-                raise ConfigError('unsupported platform: %s' % s)
+                raise ConfigError('unsupported platform: {}'.format(s))
             self._native_os = os
         return os
 
@@ -466,10 +466,10 @@ class ProjectConfig(object):
         try:
             action = actions[action_name]
         except KeyError:
-            raise ConfigError('unknown action: %s' % action_name)
+            raise ConfigError('unknown action: {}'.format(action_name))
         path, func_name = action
         if not self.quiet:
-            sys.stderr.write('generating %s\n' % path.native)
+            sys.stderr.write('generating {}s\n'.format(path.native))
         func_path = action[1].split('.')
         obj = __import__('gen.build.' + '.'.join(func_path[:-1])).build
         for part in func_path:
@@ -495,9 +495,9 @@ class BuildConfig(object):
                  'targets']
 
     def dump(self):
-        print('os: %s' % self.os)
+        print('os: {}'.format(self.os))
         for attr in ('variants', 'features', 'libs'):
-            print('%s: %s' % (attr, ' '.join(getattr(self, attr))))
+            print('%}: {}'.format(attr, ' '.join(getattr(self, attr))))
 
     def _calculate_targets(self):
         self.targets = []

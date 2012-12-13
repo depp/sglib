@@ -1,6 +1,7 @@
 import os
 import re
 
+# FIXME is this function used?
 def relpath(path, base):
     parts = []
     p = path
@@ -8,7 +9,8 @@ def relpath(path, base):
     while not r.startswith(p + os.path.sep):
         np, c = os.path.split(p)
         if np == p:
-            raise ValueError('no common directory: %s, %s' % (path, base))
+            raise ValueError('no common directory: {!r}, {!r}'
+                             .format(path, base))
         p = np
         parts.append(c)
     r = base

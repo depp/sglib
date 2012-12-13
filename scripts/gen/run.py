@@ -53,7 +53,7 @@ def run():
             cfg.quiet = True
             actions = argv
         else:
-            sys.stderr.write('error: invalid mode: %s\n' % mode)
+            sys.stderr.write('error: invalid mode: {}\n'.format(mode))
             sys.exit(1)
         for action in actions:
             cfg.exec_action(action)

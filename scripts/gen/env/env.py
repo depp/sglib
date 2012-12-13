@@ -99,7 +99,7 @@ class VarDefs(object):
 
     @staticmethod
     def show(x):
-        return ' '.join('%s=%s' % (k, v) for k, v in x)
+        return ' '.join('{}={}'.format(k, v) for k, v in x)
 
 class VarCondition(object):
     """An environment variable specifying when something is built."""
@@ -203,7 +203,7 @@ class MergeEnvironment(object):
 
     def dump(self):
         for k, v in VAR.items():
-            print('%s = %s' % (k, self[k]))
+            print('{} = {}'.format(k, self[k]))
 
 class BuildEnv(object):
     """A BuildEnv maps tags to build environments.

@@ -78,7 +78,8 @@ class Path(object):
             if isinstance(path, Path):
                 path = path._p
             if path.startswith('/'):
-                raise ValueError("Invalid path %r: absolute" % (path,))
+                raise ValueError(
+                    "Invalid path {!r}: absolute".format(path))
             for p in path.split('/'):
                 if p == '.' or p == '':
                     pass
@@ -94,7 +95,8 @@ class Path(object):
                         isdir = False
                     else:
                         raise ValueError(
-                            "Invalid path %r: bad component %r" % (path, p))
+                            "Invalid path {!r}: bad component {!r}"
+                            .format(path, p))
         if not pp:
             self._p = '.'
         else:
@@ -119,7 +121,7 @@ class Path(object):
         result, unless the path has no extension."""
         return posixpath.splitext(self._p)[1]
     def __repr__(self):
-        return 'Path(%r)' % (self._p,)
+        return 'Path({})'.format(self._p)
     def __div__(self, other):
         return Path(self._p, other._p)
     def __eq__(self, other):
