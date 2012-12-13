@@ -8,7 +8,7 @@ def gen_version(config):
     fp.write('/* Generated automatically by build system */\n')
     for k, v in sorted(vers.iteritems()):
         for kk, vv in zip(('VERSION', 'COMMIT'), v):
-            fp.write('const char *SG_%s_%s = "%s";\n' % (k, kk, vv))
+            fp.write('const char SG_%s_%s[] = "%s";\n' % (k, kk, vv))
     text = fp.getvalue()
 
     # FIXME this is a hack...
