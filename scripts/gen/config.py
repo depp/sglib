@@ -15,7 +15,7 @@ CACHE_FILE = 'config.dat'
 
 DEFAULT_ACTIONS = {
     'LINUX': ('makefile', 'runner', 'version'),
-    'OSX': ('version',),
+    'OSX': ('makefile', 'version',),
     'WINDOWS': ('version',),
 }
 
@@ -432,7 +432,7 @@ class ProjectConfig(object):
         if self._actions is None:
             from gen.build import version
             self._actions = {
-                'makefile': (Path('Makefile'), 'linux.gen_makefile'),
+                'makefile': (Path('Makefile'), 'make.gen_makefile'),
                 'version': (
                     Path(self.repos['SG'], 'sg/core/version_const.c'),
                     'version.gen_version'),

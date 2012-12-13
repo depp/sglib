@@ -3,6 +3,7 @@ from gen.path import Path
 import re
 from io import StringIO
 import posixpath
+import sys
 
 MK_SPECIAL = re.compile('[^-_.+/A-Za-z0-9]')
 def mk_escape1(x):
@@ -113,3 +114,27 @@ class Makefile(object):
 
     def opt_include(self, path):
         self._opt_include.add(path.posix)
+
+    def gen_regen(self, bcfg):
+        """Generate commands to regenerate built sources."""
+        from gen.config import CACHE_FILE, DEFAULT_ACTIONS
+        import os.path
+        spath = os.path.abspath(__file__)
+        for i in range(3):
+            spath = os.path.dirname(spath)
+        spath = os.path.relpath(os.path.join(spath, 'init.py'))
+        config_script = [sys.executable, spath]
+        cache_file = Path(CACHE_FILE)
+        self.add_rule(
+            cache_file, bcfg.projectconfig.xmlfiles,
+            [[sys.executable, spath, 'reconfig']],
+            qname='Reconfigure')
+        actions = bcfg.projectconfig.actions
+        for action_name in DEFAULT_ACTIONS[bcfg.os]:
+            target = actions[action_name][0]
+            self.add_rule(
+                target, [cache_file],
+                [[sys.executable, spath, 'build', action_name]],
+                qname='Regen')
+            if target.posix != 'Makefile':
+                self.add_default(target)
