@@ -50,7 +50,7 @@ def gen_makefile(config):
                     sources.add(p.posix)
                     e = benv.env(src.tags)
                     assert e is not None
-                    makefile.add_rule(obj.posix, [p.posix],
+                    makefile.add_rule(obj, [p],
                                       [cc_cmd(e, obj, p, t)])
             else:
                 raise Exception('unknown source type: %s')
@@ -64,15 +64,15 @@ def gen_makefile(config):
         prod_exe = Path('build/product', exe_name)
         prod_dbg = prod_exe.addext('.dbg')
         makefile.add_rule(
-            obj_exe.posix, [x.posix for x in objects],
+            obj_exe, objects,
             [ld_cmd(exe_env, obj_exe, objects, sourcetypes)])
         makefile.add_rule(
-            prod_dbg.posix, [obj_exe.posix],
+            prod_dbg, [obj_exe],
             extract_debug(prod_dbg, obj_exe))
         makefile.add_rule(
-            prod_exe.posix, [obj_exe.posix, prod_dbg.posix],
+            prod_exe, [obj_exe, prod_dbg],
             strip(prod_exe, obj_exe, prod_dbg))
-        makefile.add_default(prod_exe.posix)
+        makefile.add_default(prod_exe)
 
     with open('Makefile', 'w') as fp:
         makefile.write(fp)
