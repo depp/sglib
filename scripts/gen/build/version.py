@@ -11,8 +11,7 @@ def gen_version(config):
             fp.write('const char SG_%s_%s[] = "%s";\n' % (k, kk, vv))
     text = fp.getvalue()
 
-    # FIXME this is a hack...
-    path = Path(config.repos['SG'], 'sg/core/version_const.c')
+    path = config.actions['version'][0]
 
     with open(path.native, 'w') as fp:
         fp.write(text)

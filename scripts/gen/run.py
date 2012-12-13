@@ -40,28 +40,21 @@ def run():
         if mode == 'config':
             cfg = config.ProjectConfig()
             cfg.argv = argv
-            targets = cfg.reconfig()
+            actions = cfg.reconfig()
             store(cfg)
-
-            import gen.build.version
-            gen.build.version.gen_version(cfg)
-
-            import gen.build.linux
-            gen.build.linux.gen_makefile(cfg)
-
-            import gen.build.runner
-            gen.build.runner.gen_runner(cfg)
         elif mode == 'reconfig':
             cfg = load()
             cfg.reconfig()
             store(cfg)
-            targets = []
+            actions = []
         elif mode == 'build':
             cfg = load()
-            targets = argv
+            actions = argv
         else:
             sys.stderr.write('error: invalid mode: %s\n' % mode)
             sys.exit(1)
+        for action in actions:
+            cfg.exec_action(action)
     except ConfigError, ex:
         sys.stderr.write('\n')
         sys.stderr.write('error: ' + ex.reason + '\n')

@@ -8,9 +8,16 @@ import optparse
 import gen.project as project
 import os
 import sys
+import platform
 
 # TODO: After loading the project,
 # make sure each tag refers to one module
+
+DEFAULT_ACTIONS = {
+    'LINUX': ('makefile', 'runner', 'version'),
+    'OSX': ('version'),
+    'WINDOWS': ('version'),
+}
 
 def use_bundled_lib(proj, lib, lsrc, fname):
     root = Path(proj.lib_path, fname)
@@ -193,26 +200,54 @@ def parse_general(keys, p):
 class ProjectConfig(object):
     """Project-wide configuration."""
 
-    __slots__ = ['argv', 'project', 'opts', 'vars', '_repos', '_versions']
+    __slots__ = [
+        'argv', 'xmlfiles', 'project', 'opts', 'vars',
+        '_repos', '_versions', '_native_os', '_actions',
+        '_executed',
+    ]
 
     def __init__(self):
         self.argv = None
+        self.xmlfiles = None
         self.project = None
         self.opts = None
         self.vars = None
         self._repos = None
         self._versions = None
+        self._native_os = None
+        self._actions = None
+        self._executed = set()
+
+    def __getstate__(self):
+        d = dict()
+        for attr in self.__slots__:
+            if attr.startswith('_'):
+                continue
+            d[attr] = getattr(self, attr)
+        return d
+
+    def __setstate__(self, d):
+        for attr in self.__slots__:
+            if attr.startswith('_'):
+                v = None
+            else:
+                v = d[attr]
+            setattr(self, attr, v)
 
     def reconfig(self):
         import gen.xml as xml
 
+        xmlfiles = [Path('project.xml')]
         proj = xml.load('project.xml', Path())
         for modpath in proj.module_path:
             for fname in os.listdir(modpath.native):
                 if fname.startswith('.') or not fname.endswith('.xml'):
                     continue
-                mod = xml.load(os.path.join(modpath.native, fname), modpath)
+                path = Path(modpath, fname)
+                mod = xml.load(path.native, modpath)
                 proj.add_module(mod)
+                xmlfiles.append(path)
+        self.xmlfiles = xmlfiles
         self.project = proj
 
         trim_project(proj)
@@ -233,21 +268,21 @@ class ProjectConfig(object):
                 opt_dict[k] = v
 
         var_dict = {}
-        targets = []
+        actions = []
         for arg in args:
             i = arg.find('=')
             if i >= 0:
                 var_dict[arg[:i]] = arg[i+1:]
             else:
-                targets.append(arg)
+                actions.append(arg)
 
         find_bundled_libs(proj, opt_dict)
 
         self.opts = opt_dict
         self.vars = var_dict
-        if not targets:
-            targets = ['default']
-        return targets
+        if not actions:
+            actions = DEFAULT_ACTIONS[self.native_os]
+        return actions
 
     def is_enabled(self, featid):
         """Return the --enable state of the feature."""
@@ -364,6 +399,8 @@ class ProjectConfig(object):
     @property
     def repos(self):
         if self._repos is None:
+            if self.project is None:
+                raise AttributeError('repos')
             self._repos = {
                 'APP': Path(),
                 'SG': self.project.module_names['SG'].module_root(),
@@ -373,11 +410,60 @@ class ProjectConfig(object):
     @property
     def versions(self):
         if self._versions is None:
+            if self.project is None:
+                raise AttributeError('repos')
             versions = {}
             for k, v in self.repos.iteritems():
                 versions[k] = git.get_info(self, v)
             self._versions = versions
         return self._versions
+
+    @property
+    def actions(self):
+        if self._actions is None:
+            from gen.build import version
+            self._actions = {
+                'makefile': (Path('Makefile'), 'linux.gen_makefile'),
+                'version': (
+                    Path(self.repos['SG'], 'sg/core/version_const.c'),
+                    'version.gen_version'),
+                'runner': (Path('run.sh'), 'runner.gen_runner'),
+            }
+        return self._actions
+
+    @property
+    def native_os(self):
+        os = self._native_os
+        if os is None:
+            d = {
+                'Darwin': 'OSX',
+                'Linux': 'LINUX',
+                'Windows': 'WINDOWS',
+            }
+            s = platform.system()
+            try:
+                os = d[s]
+            except KeyError:
+                raise ConfigError('unsupported platform: %s' % s)
+            self._native_os = os
+        return os
+
+    def exec_action(self, action_name):
+        if action_name in self._executed:
+            return
+        actions = self.actions
+        try:
+            action = actions[action_name]
+        except KeyError:
+            raise ConfigError('unknown action: %s' % action_name)
+        path, func_name = action
+        sys.stderr.write('generating %s\n' % path.native)
+        func_path = action[1].split('.')
+        obj = __import__('gen.build.' + '.'.join(func_path[:-1])).build
+        for part in func_path:
+            obj = getattr(obj, part)
+        obj(self)
+        self._executed.add(action_name)
 
 class BuildConfig(object):
     """Configuration for a specific build."""
