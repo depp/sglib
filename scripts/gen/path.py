@@ -154,3 +154,18 @@ class Path(object):
     def basename(self):
         """Get the base name, the last component of the path."""
         return posixpath.basename(self._p)
+
+def common_ancestor(paths):
+    i = iter(paths)
+    for p in i:
+        common = p.posix.split('/')[:-1]
+        break
+    else:
+        raise ValueError('need at least one path')
+    for p in i:
+        parts = p.posix.split('/')[:-1]
+        for n in range(len(common)):
+            if common[n] != parts[n]:
+                common = common[:n]
+                break
+    return Path('/'.join(common))

@@ -1,34 +1,50 @@
-import gen.shell as shell
+from gen.shell import getproc
+from gen.error import ConfigError, format_block
 import subprocess
-import re
 import sys
 
-GOOD_VERSION = re.compile(r'^[0-9]+(?:\.[0-9]+)(?:-.+)?$')
+def get_info(config, path):
+    """Get the version number and SHA-1 of the given Git repository.
 
-def git(env, path, *cmd):
-    return shell.getoutput([env.GIT] + list(cmd), cwd=path.native)
-
-def get_version(env, path):
-    """Get the version number from the Git repository.
-
-    This will use git-describe to get the version number.  If
-    git-describe fails, then this will return 0.0.
+    Returns (sha1, version).
     """
-    try:
-        desc = git(env, path, 'describe', '--abbrev=0')
-    except subprocess.CalledProcessError:
-        print >>sys.stderr, 'warning: no git tags found'
-        return '0.0'
-    desc = desc.strip()
-    if not GOOD_VERSION.match(desc):
-        print >>sys.stderr, \
-            'warning: cannot parse version string: %s' % (desc,)
-    return desc
+    procname = config.vars.get('GIT', 'git')
+    exe = getproc(procname)
 
-def get_sha1(env, path):
-    try:
-        sha1 = git(env, path, 'rev-parse', 'HEAD')
-    except subprocess.CalledProcessError:
-        print >>sys.stderr, 'warning: no git HEAD found'
-        return '0' * 40
-    return sha1.strip()
+    def git(*args):
+        cmd = [procname]
+        cmd.extend(args)
+        proc = subprocess.Popen(
+            cmd, executable=exe, cwd=path.native,
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        stdout, stderr = proc.communicate()
+        return stdout, stderr, proc.returncode
+
+    stdout, stderr, retcode = git('rev-parse', 'HEAD')
+    if retcode:
+        sys.stderr.write(
+            'warning: could not get SHA-1 of %s\n' % path.native)
+        sys.stderr.write(format_block(stderr))
+        return '<none>', '0.0'
+    sha1 = stdout.strip()
+
+    stdout, stderr, retcode = git('describe')
+    if retcode:
+        sys.stderr.write(
+            'warning: could not get version number in %s\n' % path.native)
+        sys.stderr.write(format_block(stderr))
+
+        stdout, stderr, retcode = git('rev-list', 'HEAD')
+        if retcode:
+            sys.stderr.write(
+                'warning: could not get list of git revisions in %s\n'
+                % path.native)
+            sys.stderr.write(format_block(stderr))
+            version = '0.0'
+        else:
+            nrev = len(stdout.splitlines())
+            version = '0.0-%d-g%s' % (nrev, sha1[:7])
+    else:
+        version = stdout.strip()
+
+    return sha1, version

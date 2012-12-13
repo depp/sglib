@@ -3,6 +3,7 @@ from __future__ import with_statement
 from gen.path import Path
 from gen.source import Source
 from gen.error import ConfigError
+import gen.git as git
 import optparse
 import gen.project as project
 import os
@@ -183,13 +184,15 @@ def parse_general(keys, p):
 class ProjectConfig(object):
     """Project-wide configuration."""
 
-    __slots__ = ['argv', 'project', 'opts', 'vars']
+    __slots__ = ['argv', 'project', 'opts', 'vars', '_repos', '_versions']
 
     def __init__(self):
         self.argv = None
         self.project = None
         self.opts = None
         self.vars = None
+        self._repos = None
+        self._versions = None
 
     def reconfig(self):
         import gen.xml as xml
@@ -340,6 +343,24 @@ class ProjectConfig(object):
         cfg.libs = frozenset(needed_libs)
         cfg._calculate_targets()
         return cfg
+
+    @property
+    def repos(self):
+        if self._repos is None:
+            self._repos = {
+                'APP': Path(),
+                'SG': self.project.module_names['SG'].module_root(),
+            }
+        return self._repos
+
+    @property
+    def versions(self):
+        if self._versions is None:
+            versions = {}
+            for k, v in self.repos.iteritems():
+                versions[k] = git.get_info(self, v)
+            self._versions = versions
+        return self._versions
 
 class BuildConfig(object):
     """Configuration for a specific build."""

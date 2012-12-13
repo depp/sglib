@@ -53,3 +53,10 @@ class MissingPackage(BuildError):
             return None
         return 'To install %s, run\n    $ sudo apt-get install %s\n' % \
             (human_name, pkgident)
+
+def format_block(text):
+    """Format a block to separate it in error messages."""
+    a = []
+    for line in text.splitlines():
+        a.extend(('  | ', line, '\n'))
+    return ''.join(a)

@@ -5,6 +5,7 @@ __all__ = [
     'LibrarySearch', 'TestSource',
     'Feature', 'Implementation', 'Variant', 'Defaults',
 ]
+from gen.path import common_ancestor
 
 # Intrinsics for each OS
 OS = {
@@ -185,6 +186,14 @@ class BaseModule(object):
 
     def add_source(self, src):
         self.sources.append(src)
+
+    def module_root(self):
+        """Get the directory containing all module sources.
+
+        This will throw an exception for modules containing no sources
+        (e.g., external libraries).
+        """
+        return common_ancestor(src.path for src in self.sources)
 
 class Module(BaseModule):
     """Simple module with a fixed location and sources."""
