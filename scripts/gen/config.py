@@ -15,8 +15,8 @@ CACHE_FILE = 'config.dat'
 
 DEFAULT_ACTIONS = {
     'LINUX': ('makefile', 'runner', 'version'),
-    'OSX': ('version'),
-    'WINDOWS': ('version'),
+    'OSX': ('version',),
+    'WINDOWS': ('version',),
 }
 
 def use_bundled_lib(config, lib, lsrc, fname):
@@ -469,7 +469,7 @@ class ProjectConfig(object):
             raise ConfigError('unknown action: {}'.format(action_name))
         path, func_name = action
         if not self.quiet:
-            sys.stderr.write('generating {}s\n'.format(path.native))
+            sys.stderr.write('generating {}\n'.format(path.native))
         func_path = action[1].split('.')
         obj = __import__('gen.build.' + '.'.join(func_path[:-1])).build
         for part in func_path:

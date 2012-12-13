@@ -458,7 +458,7 @@ def parse_executable(node, path):
             raise ValueError(
                 'no exe-name for os {} and no default'.format(osval))
         check_func, make_func = EXENAME[osval]
-        val = base if make_func is None else make_func(val)
+        val = base if make_func is None else make_func(base)
         if not check_func(val):
             raise ValueError(
                 'bad default exe-name for {}'.format(osval))
