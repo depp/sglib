@@ -238,14 +238,14 @@ pce_atomic_get(pce_atomic_t *p)
     return p->v;
 }
 
-#define pce_atomic_get_acquire pce_get_set
+#define pce_atomic_get_acquire pce_atomic_get
 
 PCE_INLINE
 void
 pce_atomic_inc(pce_atomic_t *p)
 {
     __asm__ __volatile__(
-        "lock incl %0"
+        "lock; incl %0"
         : "+m"(p->v));
 }
 
@@ -254,7 +254,7 @@ void
 pce_atomic_dec(pce_atomic_t *p)
 {
     __asm__ __volatile__(
-        "lock decl %0"
+        "lock; decl %0"
         : "+m"(p->v));
 }
 
@@ -264,7 +264,7 @@ pce_atomic_fetch_add_acq_rel(pce_atomic_t *p, int x)
 {
     int r;
     __asm__ __volatile__(
-        "lock xaddl %0,%1"
+        "lock; xaddl %0, %1"
         : "=r"(r), "=m"(*p)
         : "0"(x), "m"(*p)
         : "memory");
