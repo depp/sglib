@@ -20,6 +20,7 @@ def cc_cmd(env, output, source, sourcetype, depfile=None):
     if depfile is not None:
         cmd.extend(('-MF', depfile.posix, '-MMD', '-MP'))
     cmd.extend('-I' + p.posix for p in env['CPPPATH'])
+    cmd.extend('-F' + p for p in env['FPATH'])
     cmd.extend(mkdef(k, v) for k, v in env['DEFS'])
     cmd.extend(env['CPPFLAGS'])
     if not env['external']:
@@ -37,5 +38,6 @@ def ld_cmd(env, output, sources, sourcetypes):
     cmd.extend(env['LDFLAGS'])
     cmd.extend(('-o', output.posix))
     cmd.extend(s.posix for s in sources)
+    cmd.extend('-F' + p for p in env['FPATH'])
     cmd.extend(env['LIBS'])
     return cmd

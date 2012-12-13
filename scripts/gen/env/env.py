@@ -84,6 +84,24 @@ class VarPathList(object):
     def show(x):
         return ' '.join(i.posix for i in x)
 
+class VarAbsPathList(object):
+    """An environment for absolute path lists."""
+
+    @staticmethod
+    def combine(x):
+        paths = set()
+        a = []
+        for i in x:
+            for p in i:
+                if p not in paths:
+                    paths.add(p)
+                    a.append(p)
+        return tuple(a)
+
+    @staticmethod
+    def show(x):
+        return ' '.join(x)
+
 class VarDefs(object):
     """An environment variable for preprocessor definitions."""
 
@@ -132,6 +150,7 @@ VAR = {
     'CXXWARN':  VarFlags,
     'LDFLAGS':  VarFlags,
     'LIBS':     VarFlags,
+    'FPATH':    VarAbsPathList,
 
     # condition: list of tags which are necessary in this environment
     'condition': VarCondition,
