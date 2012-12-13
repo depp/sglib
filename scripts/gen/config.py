@@ -2,7 +2,6 @@ from gen.path import Path
 from gen.source import Source
 from gen.error import ConfigError
 import gen.git as git
-import optparse
 import gen.project as project
 import os
 import sys
@@ -80,135 +79,13 @@ def find_bundled_libs(config):
             config.opts.get('bundled_' + m.modid, True)):
             find_bundled_lib(config, m, libs)
 
-def trim_project(proj):
-    """Remove unreferenced modules from the project."""
-    mods, unsat = proj.closure(proj.targets())
-    all_mods = set(proj.module_names)
-    used_mods = set(mod.modid for mod in mods if mod.modid is not None)
-    unused_mods = all_mods.difference(used_mods)
-    for mid in unused_mods:
-        del proj.module_names[mid]
-
-def check_deps(proj):
-    """Check for unsatisfied dependencies in the project."""
-    mods, unsat = proj.closure(proj.targets())
-    if unsat:
-        sys.stderr.write(
-            'warning: unknown module dependencies: {}\n'
-            .format(', '.join(sorted(unsat))))
-    all_tags = set()
-    used_tags = set()
-    for m in proj.modules:
-        if m.modid is not None:
-            all_tags.add(m.modid)
-        all_tags.update(f.modid for f in m.feature)
-        for s in m.sources:
-            used_tags.update(s.tags)
-    unsat_tags = used_tags.difference(all_tags)
-    if unsat_tags:
-        sys.stderr.write(
-            'warning: unknown source tags: {}\n'
-            .format(', '.join(sorted(unsat_tags))))
-
-def parse_enable(keys, p, name, dest=None, default=None, help_enable=None,
-                 help_disable=None):
-    assert dest is not None
-    keys.append(dest)
-    if help_enable is None:
-        help_enable = optparse.SUPPRESS_HELP
-    if help_disable is None:
-        help_disable = optparse.SUPPRESS_HELP
-    p.add_option('--enable-' + name, default=default, action='store_true',
-                 dest=dest, help=help_enable)
-    p.add_option('--disable-' + name, default=default, action='store_false',
-                 dest=dest, help=help_disable)
-
-def parse_feature_args(proj, keys, p):
-    gv = optparse.OptionGroup(p, 'Variants')
-    ge = optparse.OptionGroup(p, 'Optional Features')
-    gw = optparse.OptionGroup(p, 'Optional Packages')
-    p.add_option_group(gv)
-    p.add_option_group(ge)
-    p.add_option_group(gw)
-
-    for m in proj.modules:
-        for v in m.variant:
-            parse_enable(
-                keys, gv, v.varname,
-                dest='variant_' + v.varname,
-                help_enable='build {}'.format(v.name))
-
-    optlibs = set()
-    for f in proj.features():
-        if f.desc is not None:
-            help_enable = 'enable {}'.format(f.desc)
-        else:
-            help_enable = 'enable {} feature'.format(f.modid)
-        parse_enable(
-            keys, ge, f.modid.lower(),
-            dest='enable_' + f.modid,
-            default=True,
-            help_enable=help_enable)
-
-        for i in f.impl:
-            optlibs.update(i.require)
-
-    del f
-
-    for m in proj.modules:
-        if not isinstance(m, project.ExternalLibrary):
-            continue
-        nm = m.modid.lower()
-        desc = m.name if m.name is not None else '{} library'.format(modid)
-        opts = []
-        if m.modid in optlibs:
-            opts.append((nm, 'with_' + m.modid, desc))
-        if m.bundled_versions:
-            opts.append(('bundled-' + nm, 'bundled_' + m.modid,
-                         '{} (bundled copy)'.format(desc)))
-
-        for argn, var, desc in opts:
-            keys.append(var)
-            gw.add_option(
-                '--with-' + argn,
-                default=None,
-                action='store_true',
-                dest=var,
-                help='use {}'.format(desc))
-            gw.add_option(
-                '--without-' + argn,
-                default=None,
-                action='store_false',
-                dest=var,
-                help=optparse.SUPPRESS_HELP)
-
-def parse_general(keys, p):
-    p.add_option(
-        '--debug',
-        dest='config', default='release',
-        action='store_const', const='debug',
-        help='use debug configuration')
-    p.add_option(
-        '--release',
-        dest='config', default='release',
-        action='store_const', const='release',
-        help='use release configuration')
-    keys.append('config')
-
-    parse_enable(
-        keys, p, 'warnings',
-        dest='warnings',
-        help_enable='enable extra compiler warnings')
-    parse_enable(
-        keys, p, 'werror',
-        dest='werror',
-        help_enable='treat warnings as errors')
 
 class ProjectConfig(object):
     """Project-wide configuration."""
 
     __slots__ = [
         'xmlfiles', 'project',
+        'features', 'bundles', 'vars', 'opts',
         # 'opts', 'vars',
         # 'argv', 'xmlfiles', 'project', 'opts', 'vars',
         # '_repos', '_versions', '_native_os', '_actions',
@@ -263,47 +140,118 @@ class ProjectConfig(object):
             sys.stderr.write(
                 'warning: referenced modules do not exist: {}\n'
                 .format(', '.join(sorted(missing))))
+        proj.validate()
         self.xmlfiles = xmlfiles
         self.project = proj
 
-    def reconfig(self):
-        import gen.xml as xml
+    def arg_parser(self):
+        """Get the argument parser."""
+        import argparse
+        p = argparse.ArgumentParser(
+            description='configure the project')
 
+        def parse_yesno(p, name, dest=None, default=None, help=None,
+                        help_neg=None):
+            assert dest is not None
+            if help_neg is None:
+                help_neg = argparse.SUPPRESS
+            p.add_argument(
+                '--' + name,
+                default=default, action='store_true',
+                dest=dest, help=help)
+            p.add_argument(
+                '--no-' + name,
+                default=default, action='store_false',
+                dest=dest, help=help_neg)
 
-        trim_project(proj)
-        for tag in project.INTRINSICS:
-            proj.add_module(project.Intrinsic(tag))
-        check_deps(proj)
+        def parse_enable(p, name, dest=None, default=None, help=None):
+            assert dest is not None
+            p.add_argument(
+                '--enable-' + name,
+                default=default, action='store_true',
+                dest=dest, help=help)
+            p.add_argument(
+                '--disable-' + name,
+                default=default, action='store_false',
+                dest=dest, help=argparse.SUPPRESS)
 
-        p = optparse.OptionParser()
-        keys = []
-        parse_feature_args(proj, keys, p)
-        parse_general(keys, p)
+        def parse_with(p, name, dest=None, default=None, help=None):
+            assert dest is not None
+            p.add_argument(
+                '--with-' + name,
+                default=default, action='store_true',
+                dest=dest, help=help)
+            p.add_argument(
+                '--without-' + name,
+                default=default, action='store_true',
+                dest=dest, help=argparse.SUPPRESS)
 
-        opts, args = p.parse_args(self.argv)
-        opt_dict = {}
-        for k in keys:
-            v = getattr(opts, k)
-            if v is not None:
-                opt_dict[k] = v
+        ####################
+        # General options
 
-        var_dict = {}
-        actions = []
-        for arg in args:
-            i = arg.find('=')
-            if i >= 0:
-                var_dict[arg[:i]] = arg[i+1:]
-            else:
-                actions.append(arg)
+        p.add_argument(
+            '--debug', dest='config', default='release',
+            action='store_const', const='debug',
+            help='use debug configuration')
+        p.add_argument(
+            '--release', dest='config', default='release',
+            action='store_const', const='release',
+            help='use release configuration')
 
-        self.opts = opt_dict
-        self.vars = var_dict
-        if not actions:
-            actions = DEFAULT_ACTIONS[self.native_os]
+        parse_yesno(
+            p, 'warnings', dest='warnings',
+            help='enable extra compiler warnings',
+            help_neg='disable extra compiler warnings')
+        parse_yesno(
+            p, 'werror', dest='werror',
+            help='treat warnings as errors',
+            help_neg='do not treat warnings as errors')
 
-        find_bundled_libs(self)
+        ####################
+        # Enable/disable options
 
-        return actions
+        gvar = p.add_argument_group(
+            description='build variants:')
+        gfeat = p.add_argument_group(
+            description='optional features:')
+        gmod = p.add_argument_group(
+            description='optional packages:')
+
+        for m in self.project.modules:
+            if (isinstance(m, project.ExternalLibrary) and
+                m.bundled_versions):
+                nm = m.modid
+                i = nm.rfind('/')
+                if i >= 0:
+                    nm = nm[i+1:]
+                parse_with(
+                    gmod, 'bundled-' + nm, dest='bundle:' + m.modid,
+                    help='use bundled copy of {}'.format(m.name))
+
+            for c in m.configs():
+                if isinstance(c, project.Feature):
+                    parse_enable(
+                        gfeat, c.flagid, dest='enable:' + c.flagid,
+                        help='enable {}'.format(c.name))
+                elif isinstance(c, project.Alternative):
+                    parse_with(
+                        gmod, c.flagid, dest='enable:' + c.flagid,
+                        help='use {}'.format(c.name))
+                elif isinstance(c, project.Variant):
+                    parse_enable(
+                        gvar, c.flagid, dest='enable:' + c.flagid,
+                        help='build {}'.format(c.name))
+
+        ####################
+        # Positional arguments
+
+        p.add_argument('arg', nargs='*', help=argparse.SUPPRESS)
+
+        return p
+
+    def parse_args(self, args):
+        opts = vars(self.arg_parser().parse_args(args))
+        print(repr(opts))
 
     def is_enabled(self, featid):
         """Return the --enable state of the feature."""
@@ -617,6 +565,7 @@ class BuildTarget(object):
 
 def configure(argv):
     config = ProjectConfig()
+    config.parse_args(argv)
     print('STOPPING HERE')
     sys.exit(1)
 

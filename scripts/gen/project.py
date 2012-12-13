@@ -8,6 +8,7 @@ __all__ = [
     'Variant', 'Defaults',
 ]
 from gen.path import common_ancestor
+from gen.error import ConfigError
 
 # Intrinsics for each OS
 OS = {
@@ -81,7 +82,7 @@ class Project(object):
                     missing.add(modid)
                     continue
                 q.append(m)
-                new_modules.append(q)
+                new_modules.append(m)
                 mnames[modid] = m
             visited.update(cmodules)
         missing.difference_update(INTRINSICS)
@@ -89,6 +90,31 @@ class Project(object):
         self.modules = new_modules
         self.module_names = mnames
         return missing
+
+    def validate(self):
+        flagids = set()
+        dup_flagids = set()
+        for m in self.modules:
+            for c in m.configs():
+                try:
+                    flagid = c.flagid
+                except AttributeError:
+                    pass
+                else:
+                    if flagid in flagids:
+                        dup_flagids.add(flagid)
+                    else:
+                        flagids.add(flagid)
+        if dup_flagids:
+            raise ConfigError(
+                'duplicate flags: {}'
+                .format(', '.join(sorted(dup_flagids))))
+
+    def configs(self, enable=None):
+        """Iterate over all config objects in the project."""
+        for m in self.modules:
+            for c in m.configs(enable):
+                yield c
 
     def closure(self, modules):
         """Get a list of all modules the given modules depend on.
