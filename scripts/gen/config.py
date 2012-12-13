@@ -57,8 +57,13 @@ def find_bundled_libs(config):
     if proj.lib_path is None:
         return
 
+    try:
+        fnames = os.listdir(proj.lib_path.native)
+    except OSError:
+        return
+
     libs = []
-    for fname in os.listdir(proj.lib_path.native):
+    for fname in fnames:
         npath = os.path.join(proj.lib_path.native, fname)
         if fname.startswith('.'):
             continue
