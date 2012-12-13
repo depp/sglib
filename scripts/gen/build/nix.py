@@ -4,7 +4,7 @@ def mkdef(k, v):
         return '-D%s' % (k,)
     return '-D%s=%s' % (k, v)
 
-def cc_cmd(env, output, source, sourcetype):
+def cc_cmd(env, output, source, sourcetype, depfile=None):
     """Get the command to compile the given source."""
     if sourcetype in ('c', 'm'):
         cc = env['CC']
@@ -17,6 +17,8 @@ def cc_cmd(env, output, source, sourcetype):
     else:
         assert False
     cmd = [cc, '-o', output.posix, source.posix, '-c']
+    if depfile is not None:
+        cmd.extend(('-MF', depfile.posix, '-MMD', '-MP'))
     cmd.extend('-I' + p.posix for p in env['CPPPATH'])
     cmd.extend(mkdef(k, v) for k, v in env['DEFS'])
     cmd.extend(env['CPPFLAGS'])

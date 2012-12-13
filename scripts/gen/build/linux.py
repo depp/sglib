@@ -45,13 +45,15 @@ def gen_makefile(config):
                 pass
             elif t in types_cc:
                 obj = Path('build/obj', p.withext('.o'))
+                dep = obj.withext('.d')
                 objects.append(obj)
                 if p.posix not in sources:
                     sources.add(p.posix)
                     e = benv.env(src.tags)
                     assert e is not None
                     makefile.add_rule(obj, [p],
-                                      [cc_cmd(e, obj, p, t)])
+                                      [cc_cmd(e, obj, p, t, depfile=dep)])
+                    makefile.opt_include(dep)
             else:
                 raise Exception('unknown source type: %s')
         exe_env = benv.env(target.tag_modules)

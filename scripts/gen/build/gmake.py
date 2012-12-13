@@ -21,12 +21,13 @@ def mk_escape(x):
 class Makefile(object):
     """GMake Makefile generator."""
 
-    __slots__ = ['_rulefp', '_all', '_phony']
+    __slots__ = ['_rulefp', '_all', '_phony', '_opt_include']
 
     def __init__(self):
         self._rulefp = StringIO()
         self._all = set()
         self._phony = set()
+        self._opt_include = set()
 
     def add_rule(self, target, sources, cmds):
         """Add a rule to the makefile.
@@ -74,9 +75,16 @@ class Makefile(object):
         for target in sorted(self._all):
             fp.write(' ' + target)
         fp.write('\n')
+        if self._opt_include:
+            fp.write('-include %s\n' %
+                     ' '.join(mk_escape(x)
+                              for x in sorted(self._opt_include)))
         fp.write(
             '.PHONY: all clean\n'
             'clean:\n'
             '\trm -rf build\n'
         )
         fp.write(self._rulefp.getvalue())
+
+    def opt_include(self, path):
+        self._opt_include.add(path.posix)
