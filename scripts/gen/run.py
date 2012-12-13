@@ -43,25 +43,8 @@ def run():
             targets = cfg.reconfig()
             store(cfg)
 
-            import gen.env.nix as nix
-            import gen.env.env as env
-            build_cfg = cfg.get_config('LINUX')
-            base_env = nix.default_env(cfg, 'LINUX')
-            print base_env
-            build_env = env.BuildEnv(
-                cfg.project, base_env, nix.NixConfig(base_env))
-
-            build_cfg.dump()
-
-            for t in build_cfg.targets:
-                print '-----'
-                t.dump()
-                for s in t.sources():
-                    e = build_env.env(s.tags)
-                    if e is None:
-                        print 'SKIP:', s.path.posix
-                    else:
-                        print s.path.posix, ' '.join(s.tags)
+            import gen.build.linux
+            gen.build.linux.gen_makefile(cfg)
         elif mode == 'reconfig':
             cfg = load()
             cfg.reconfig()
