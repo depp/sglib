@@ -422,14 +422,17 @@ class BuildConfig(object):
                 assert len(vinst) == 1
                 tags.update(self.features)
                 tags.update(project.OS[self.os])
-                bt = BuildTarget(t, vinst[0], mods, tags)
+                cvars = list(self.project.cvar)
+                for m in mods:
+                    cvars.extend(m.cvar)
+                bt = BuildTarget(t, vinst[0], mods, tags, cvars)
                 self.targets.append(bt)
 
 class BuildTarget(object):
     __slots__ = ['target', 'variant', 'modules', 'tags', 'tag_closure',
-                 'tag_modules']
+                 'tag_modules', 'cvars']
 
-    def __init__(self, target, variant, modules, tags):
+    def __init__(self, target, variant, modules, tags, cvars):
         self.target = target
         self.variant = variant
         self.modules = list(modules)
@@ -461,6 +464,7 @@ class BuildTarget(object):
                 tag_closure[tag] = frozenset(deps)
         self.tag_closure = tag_closure
         self.tag_modules = tag_modules
+        self.cvars = list(cvars)
 
     def dump(self):
         print 'target:', self.target

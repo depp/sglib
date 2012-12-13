@@ -48,6 +48,9 @@ def run():
 
             import gen.build.linux
             gen.build.linux.gen_makefile(cfg)
+
+            import gen.build.runner
+            gen.build.runner.gen_runner(cfg)
         elif mode == 'reconfig':
             cfg = load()
             cfg.reconfig()
