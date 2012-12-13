@@ -1,4 +1,5 @@
 from gen.shell import escape
+from gen.error import ConfigError
 import gen.project as project
 
 class MakefileVar(object):
@@ -236,7 +237,15 @@ class BuildEnv(object):
             assert srcs is not None
             a = []
             for s in srcs:
-                a.append(self.func(s))
+                try:
+                    a.append(self.func(s))
+                except ConfigError as ex:
+                    details = 'caused by error: {}\n'.format(ex.reason)
+                    if ex.details:
+                        details = details + ex.details
+                    raise ConfigError(
+                        'could not configure {} module'.format(m.modid),
+                        details)
             e = merge_env(a)
         else:
             e = {}
