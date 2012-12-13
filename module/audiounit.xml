@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<external-library id="AUDIOUNIT">
+  <name>Audio Unit framework</name>
+  <framework>AudioUnit</framework>
+</external-library>

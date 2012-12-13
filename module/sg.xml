@@ -9,7 +9,7 @@
   <defaults
       os="OSX"
       variants="cocoa"
-      libs="COREGRAPHICS COREAUDIO CORETEXT"
+      libs="APPLICATIONSERVICES COREAUDIO AUDIOUNIT"
       />
 
   <defaults
@@ -30,7 +30,7 @@
 
   <variant varname="cocoa">
     <name>Cocoa application</name>
-    <require require="COCOA"/>
+    <require require="COCOA COREVIDEO OPENGL CARBON"/>
   </variant>
 
   <variant varname="gtk">
@@ -46,28 +46,28 @@
   <feature id="JPEG">
     <name>JPEG image support</name>
     <impl require="LIBJPEG"/>
-    <impl require="COREGRAPHICS"/>
+    <impl require="APPLICATIONSERVICES"/>
     <impl require="WINDOWS"/>
   </feature>
 
   <feature id="PNG">
     <name>PNG image support</name>
     <impl require="LIBPNG"/>
-    <impl require="COREGRAPHICS"/>
+    <impl require="APPLICATIONSERVICES"/>
     <impl require="WINDOWS"/>
   </feature>
 
   <feature id="AUDIO">
     <name>Audio support</name>
     <impl require="ALSA"/>
-    <impl require="COREAUDIO"/>
+    <impl require="COREAUDIO AUDIOUNIT"/>
     <impl require="WINDOWS"/>
   </feature>
 
   <feature id="TYPE">
     <name>Type rendering support</name>
     <impl require="PANGO"/>
-    <impl require="CORETEXT"/>
+    <impl require="APPLICATIONSERVICES"/>
     <impl require="WINDOWS"/>
   </feature>
 
@@ -168,7 +168,7 @@
     <src path="GWindow.m"/>
   </group>
   <group path="sg/pixbuf">
-    <src path="coregraphics.c" tag="COREGRAPHICS"/>
+    <src path="coregraphics.c" tag="APPLICATIONSERVICES"/>
     <src path="libjpeg.c" tag="LIBJPEG"/>
     <src path="libpng.c" tag="LIBPNG"/>
     <src path="loadimage.c"/>
@@ -186,7 +186,7 @@
     <src path="sdl.c" tag="SDL"/>
   </group>
   <group path="sg/type">
-    <src path="coretext.c" tag="CORETEXT"/>
+    <src path="coretext.c" tag="APPLICATIONSERVICES"/>
     <src path="impl.h"/>
     <src path="pango.c" tag="PANGO"/>
     <src path="type.c"/>
