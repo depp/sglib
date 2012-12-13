@@ -30,9 +30,13 @@ class ProjectConfig(object):
 
         # Map from module ID to (path, bundle).
         'bundles',
+
+        # Cache for get_config
+        '_config_cache',
     ]
 
     def __init__(self):
+        self._config_cache = None
         self.load_modules()
 
     def __getstate__(self):
@@ -299,6 +303,13 @@ class ProjectConfig(object):
         flags.
         """
 
+        if self._config_cache is None:
+            self._config_cache = {}
+        try:
+            return self._config_cache[os]
+        except KeyError:
+            pass
+
         intrinsics = project.OS[os]
 
         # Defaults for this platform
@@ -361,7 +372,9 @@ class ProjectConfig(object):
         if not variants:
             raise ConfigError('no build targets are enabled')
         reachable.update(intrinsics)
-        return reachable, variants
+        result = frozenset(reachable), frozenset(variants)
+        self._config_cache[os] = result
+        return result
 
     @property
     def repos(self):
