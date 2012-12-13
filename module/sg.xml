@@ -12,18 +12,18 @@
 
   <defaults
       os="osx"
-      enable="app-cocoa jpeg-coregraphics png-coregraphics audio-coreaudio
+      enable="app-cocoa jpeg-coregraphics png-coregraphics coreaudio
 	      type-coretext"
       />
 
   <defaults
       os="linux"
-      enable="app-gtk jpeg-libjpeg png-libpng audio-alsa type-pango"
+      enable="app-gtk jpeg-libjpeg png-libpng alsa type-pango"
       />
 
   <defaults
       os="windows"
-      enable="app-win32 jpeg-wincodec png-wincodec audio-directsound
+      enable="app-win32 jpeg-wincodec png-wincodec directsound
 	      type-uniscribe"
       />
 
@@ -113,7 +113,7 @@
     <alternatives>
       <alt flag="type-pango">
 	<name>Pango type rendering</name>
-	<reqire module="pango"/>
+	<require module="pango"/>
       </alt>
       <alt flag="type-coretext">
 	<name>Core Text type rendering</name>
