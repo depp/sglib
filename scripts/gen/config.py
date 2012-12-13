@@ -18,78 +18,18 @@ DEFAULT_ACTIONS = {
     'WINDOWS': ('version',),
 }
 
-def use_bundled_lib(config, lib, lsrc, fname):
-    root = Path(config.project.lib_path, fname)
-    if not config.quiet:
-        sys.stderr.write('found bundled library: {}\n'.format(root.posix))
-
-    lib.header_path = lsrc.header_path
-    lib.define = lsrc.define
-    lib.require = lsrc.require
-    lib.cvar = lsrc.cvar
-    lib.sources = [Source(Path(root, s.path), s.tags) for s in lsrc.sources]
-    lib.use_bundled = True
-
-def find_bundled_lib(config, lib, libs):
-    for lsrc in lib.bundled_versions:
-        searchname = lsrc.libname
-        for fname in libs:
-            i = fname.rfind('-')
-            if i >= 0:
-                libname = fname[:i]
-            else:
-                libname = fname
-            if searchname == libname:
-                use_bundled_lib(config, lib, lsrc, fname)
-                return
-
-def find_bundled_libs(config):
-    """Scan the bundled library folder for bundled libraries.
-
-    This will fill in the module fields for every ExternalLibrary that
-    can be bundled, if that library is found in the library folder.
-    """
-    proj = config.project
-
-    if proj.lib_path is None:
-        return
-
-    try:
-        fnames = os.listdir(proj.lib_path.native)
-    except OSError:
-        return
-
-    libs = []
-    for fname in fnames:
-        npath = os.path.join(proj.lib_path.native, fname)
-        if fname.startswith('.'):
-            continue
-        if not os.path.isdir(npath):
-            continue
-        try:
-            Path(fname)
-        except ValueError:
-            sys.stderr.write('warning: ignoring {}\n'.format(npath))
-            continue
-        libs.append(fname)
-
-    for m in proj.modules:
-        if (isinstance(m, project.ExternalLibrary) and
-            m.bundled_versions and
-            config.opts.get('bundled_' + m.modid, True)):
-            find_bundled_lib(config, m, libs)
-
-
 class ProjectConfig(object):
     """Project-wide configuration."""
 
     __slots__ = [
         'xmlfiles', 'project',
-        'features', 'bundles', 'vars', 'opts',
-        # 'opts', 'vars',
-        # 'argv', 'xmlfiles', 'project', 'opts', 'vars',
-        # '_repos', '_versions', '_native_os', '_actions',
-        # '_executed', '_quiet',
+
+        # Option dictionaries.
+        # Options set to None are removed.
+        'opt_misc', 'opt_enable', 'opt_bundle', 'opt_env',
+
+        # Map from module ID to (path, bundle).
+        'bundles',
     ]
 
     def __init__(self):
@@ -249,17 +189,107 @@ class ProjectConfig(object):
 
         return p
 
+    def read_opts(self, opts):
+        """Read the options from ArgParse.parse_args().
+
+        Returns a list of actions.
+        """
+        opts = vars(opts)
+        misc = {}
+        enable = {}
+        bundle = {}
+        for k, v in opts.items():
+            if v is None:
+                continue
+            i = k.find(':')
+            if i >= 0:
+                group = k[:i]
+                key = k[i+1:]
+            else:
+                group = None
+                key = k
+            if group == 'bundle':
+                bundle[key] = v
+            elif group == 'enable':
+                enable[key] = v
+            elif group is None:
+                misc[key] = v
+            else:
+                assert False
+        args = misc['arg']
+        del misc['arg']
+        env = {}
+        actions = set()
+        for arg in args:
+            i = arg.find('=')
+            if i >= 0:
+                env[arg[:i]] = arg[i+1:]
+            else:
+                actions.append(arg)
+        self.opt_misc = misc
+        self.opt_enable = enable
+        self.opt_bundle = bundle
+        self.opt_env = env
+        return list(sorted(actions))
+
+    def scan_bundles(self):
+        self.bundles = {}
+
+        if self.project.lib_path is None:
+            return
+
+        libs = None
+        def scan_libdir():
+            nonlocal libs
+            if libs is not None:
+                return
+            libs = []
+            for path in self.project.lib_path:
+                try:
+                    fnames = os.listdir(path.native)
+                except OSError:
+                    continue
+                for fname in fnames:
+                    npath = os.path.join(path.native, fname)
+                    if fname.startswith('.') or not os.path.isdir(npath):
+                        continue
+                    try:
+                        lpath = Path(path, fname)
+                    except ValueError:
+                        sys.stderr.write(
+                            'warning: ignoring {}\n'.format(npath))
+                        continue
+                    libs.append((fname, lpath))
+
+        for m in self.project.modules:
+            if (not isinstance(m, project.ExternalLibrary) or
+                not m.bundled_versions or
+                not self.opt_bundle.get(m.modid, True)):
+                continue
+            scan_libdir()
+            for v in m.bundled_versions:
+                for fname, lpath in libs:
+                    i = fname.rfind('-')
+                    if i >= 0:
+                        libname = fname[:i]
+                    else:
+                        libname = fname
+                    if v.libname == libname:
+                        sys.stderr.write(
+                            'using {}\n'.format(lpath.native))
+                        self.bundles[m.modid] = (lpath, v)
+                        break
+                else:
+                    continue
+                break
+
     def parse_args(self, args):
-        opts = vars(self.arg_parser().parse_args(args))
-        print(repr(opts))
+        """Parse the given command line options.
 
-    def is_enabled(self, featid):
-        """Return the --enable state of the feature."""
-        return self.opts['enable_' + featid]
-
-    def is_with(self, modid):
-        """Return the --with state of the library."""
-        return self.opts.get('with_' + modid, None)
+        Returns a list of actions.
+        """
+        actions = self.read_opts(self.arg_parser().parse_args(args))
+        self.scan_bundles()
 
     def get_config(self, os):
         """Get the build configuration for the given os.
