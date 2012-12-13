@@ -315,13 +315,13 @@ def config_feature(mod, node):
 
 def alt_name(obj, node):
     node_noattr(node)
-    v = node_text(name)
+    obj.name = node_text(node)
 
 def config_alternatives(obj, node):
     node_noattr(node)
     alts = Alternatives()
     for c in node_elements(node):
-        if c.tagName == 'alternative':
+        if c.tagName == 'alt':
             flagid = None
             for i in range(c.attributes.length):
                 attr = c.attributes.item(i)
@@ -339,6 +339,8 @@ def config_alternatives(obj, node):
                     unexpected(c, cc)
                 func(alt, cc)
             alts.alternatives.append(alt)
+        else:
+            unexpected(node, c)
     obj.config.append(alts)
 
 def var_name(var, node):
@@ -392,7 +394,7 @@ FEAT_ELEM = {
 FEAT_ELEM.update(CONFIG_ELEM)
 
 ALT_ELEMS = {
-    'alt_name': alt_name,
+    'name': alt_name,
 }
 ALT_ELEMS.update(CONFIG_ELEM)
 
