@@ -3,6 +3,7 @@ from __future__ import with_statement
 from gen.path import Path
 from gen.source import Source
 from gen.error import ConfigError
+import optparse
 import gen.project as project
 import os
 import sys
@@ -59,12 +60,10 @@ def find_bundled_libs(proj, opt_dict):
         libs.append(fname)
 
     for m in proj.modules:
-        if isinstance(m, project.ExternalLibrary) and m.bundled_versions:
-            use_bundled = opt_dict['bundled_' + m.modid]
-            if use_bundled is None:
-                use_bundled = True
-            if use_bundled:
-                find_bundled_lib(proj, m, libs)
+        if (isinstance(m, project.ExternalLibrary) and
+            m.bundled_versions and
+            opt_dict.get('bundled_' + m.modid, True)):
+            find_bundled_lib(proj, m, libs)
 
 def trim_project(proj):
     """Remove unreferenced modules from the project."""
@@ -96,8 +95,20 @@ def check_deps(proj):
             'warning: unknown source tags: %s\n' %
             ', '.join(sorted(unsat_tags)))
 
+def parse_enable(keys, p, name, dest=None, default=None, help_enable=None,
+                 help_disable=None):
+    assert dest is not None
+    keys.append(dest)
+    if help_enable is None:
+        help_enable = optparse.SUPPRESS_HELP
+    if help_disable is None:
+        help_disable = optparse.SUPPRESS_HELP
+    p.add_option('--enable-' + name, default=default, action='store_true',
+                 dest=dest, help=help_enable)
+    p.add_option('--disable-' + name, default=default, action='store_false',
+                 dest=dest, help=help_disable)
+
 def parse_feature_args(proj, keys, p):
-    import optparse
     ge = optparse.OptionGroup(p, 'Optional Features')
     gw = optparse.OptionGroup(p, 'Optional Packages')
     p.add_option_group(ge)
@@ -105,25 +116,15 @@ def parse_feature_args(proj, keys, p):
 
     optlibs = set()
     for f in proj.features():
-        default = True
-        nm = f.modid.lower()
-        desc = '%s feature' % f.modid if f.desc is None else f.desc
-        var = 'enable_%s' % f.modid
-        keys.append(var)
-        ge.add_option(
-            '--enable-%s' % nm,
-            default=default,
-            action='store_true',
-            dest=var,
-            help=('enable %s' % desc if not default
-                  else optparse.SUPPRESS_HELP))
-        ge.add_option(
-            '--disable-%s' % nm,
-            default=default,
-            action='store_false',
-            dest=var,
-            help=('disable %s' % desc if default
-                  else optparse.SUPPRESS_HELP))
+        if f.desc is not None:
+            help_enable = 'enable %s' % f.desc
+        else:
+            help_enable = 'enable %s feature' % f.modid
+        parse_enable(
+            keys, ge, f.modid.lower(),
+            dest='enable_' + f.modid,
+            default=True,
+            help_enable=help_enable)
 
         for i in f.impl:
             optlibs.update(i.require)
@@ -157,6 +158,28 @@ def parse_feature_args(proj, keys, p):
                 dest=var,
                 help=optparse.SUPPRESS_HELP)
 
+def parse_general(keys, p):
+    p.add_option(
+        '--debug',
+        dest='config', default='release',
+        action='store_const', const='debug',
+        help='use debug configuration')
+    p.add_option(
+        '--release',
+        dest='config', default='release',
+        action='store_const', const='release',
+        help='use release configuration')
+    keys.append('config')
+
+    parse_enable(
+        keys, p, 'warnings',
+        dest='warnings',
+        help_enable='enable extra compiler warnings')
+    parse_enable(
+        keys, p, 'werror',
+        dest='werror',
+        help_enable='treat warnings as errors')
+
 class ProjectConfig(object):
     """Project-wide configuration."""
 
@@ -169,7 +192,6 @@ class ProjectConfig(object):
         self.vars = None
 
     def reconfig(self):
-        import optparse
         import gen.xml as xml
 
         proj = xml.load('project.xml', Path())
@@ -189,11 +211,14 @@ class ProjectConfig(object):
         p = optparse.OptionParser()
         keys = []
         parse_feature_args(proj, keys, p)
+        parse_general(keys, p)
 
         opts, args = p.parse_args(self.argv)
         opt_dict = {}
         for k in keys:
-            opt_dict[k] = getattr(opts, k)
+            v = getattr(opts, k)
+            if v is not None:
+                opt_dict[k] = v
 
         var_dict = {}
         targets = []
