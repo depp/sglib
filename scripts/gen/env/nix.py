@@ -160,3 +160,38 @@ def default_env(config, os):
             'LDFLAGS': ('-Wl,-dead_strip', '-Wl,-dead_strip_dylibs'),
         })
     return merge_env(envs)
+
+def getmachine(env):
+    """Get the name of the target machine."""
+    cc = env['CC']
+    exe = getproc(cc)
+    cmd = [cc, '-dumpmachine']
+    cmd.extend(env.get('CPPFLAGS', ()))
+    cmd.extend(env.get('CFLAGS', ()))
+    proc = subprocess.Popen(
+        cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+        executable=exe)
+    stdout, stderr = proc.communicate()
+    if proc.returncode:
+        raise ConfigError(
+            'could not get machine specs',
+            'Command: %s\n'
+            '%s' % (' '.join(cmd),
+                    ''.join('  | %s\n' % s for s in stderr.splitlines())))
+    m = stdout.splitlines()
+    if m:
+        m = m[0]
+        i = m.find('-')
+        if i >= 0:
+            m = m[:i]
+            if m == 'x86_64':
+                return 'x64'
+            if re.match('i\d86', m):
+                return 'x86'
+            if m == 'powerpc':
+                return 'ppc'
+            sys.stderr.write(
+                'warning: unknown machine name: %r' % (m,))
+    raise ConfigError('unable to parse machine name',
+                      'Command output:\n%s' %
+                      ''.join('  | %s\n' % s for s in stdout.splitlines()))

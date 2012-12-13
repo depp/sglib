@@ -1,6 +1,6 @@
 from gen.build.nix import cc_cmd, ld_cmd
 from gen.build.gmake import Makefile
-from gen.env.nix import NixConfig, default_env
+from gen.env.nix import NixConfig, default_env, getmachine
 from gen.env.env import BuildEnv
 from gen.path import Path
 
@@ -28,6 +28,7 @@ def gen_makefile(config):
         default_env(config, 'LINUX'),
         NixConfig(base))
 
+    machine = getmachine(base)
     makefile = Makefile()
 
     types_cc = 'c', 'cxx'
@@ -55,8 +56,9 @@ def gen_makefile(config):
                 raise Exception('unknown source type: %s')
         exe_env = benv.env(target.tag_modules)
         assert exe_env is not None
-        exe_name = '%s_%s' % (
+        exe_name = '%s_%s_%s' % (
             target.target.exe_name['LINUX'],
+            machine,
             target.variant.varname.lower())
         obj_exe = Path('build/obj', exe_name)
         prod_exe = Path('build/product', exe_name)
