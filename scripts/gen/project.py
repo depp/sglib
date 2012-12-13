@@ -40,7 +40,7 @@ class Project(object):
         self.modules = []
         self.module_names = {}
         self.module_path = []
-        self.lib_path = None
+        self.lib_path = []
         self.defaults = []
 
     def add_module(self, module):
@@ -56,6 +56,39 @@ class Project(object):
         for m in self.modules:
             if m.is_target:
                 yield m
+
+    def trim(self):
+        """Remove modules not reachable from any target.
+
+        Return the set of module names that are referenced but do not
+        exist.
+        """
+        q = list(self.targets())
+        new_modules = list(q)
+        visited = set()
+        missing = set()
+        mnames = {}
+        while q:
+            m = q.pop()
+            cmodules = set()
+            for c in m.configs():
+                cmodules.update(c.modules)
+            cmodules.difference_update(visited)
+            for modid in cmodules:
+                try:
+                    m = self.module_names[modid]
+                except KeyError:
+                    missing.add(modid)
+                    continue
+                q.append(m)
+                new_modules.append(q)
+                mnames[modid] = m
+            visited.update(cmodules)
+        missing.difference_update(INTRINSICS)
+
+        self.modules = new_modules
+        self.module_names = mnames
+        return missing
 
     def closure(self, modules):
         """Get a list of all modules the given modules depend on.
@@ -202,6 +235,12 @@ class BaseModule(object):
         """
         # FIXME: use of this method is sign of a HACK
         return common_ancestor(src.path for src in self.sources)
+
+    def configs(self, enable=None):
+        """Iterate over all configs recursively."""
+        for c in self.config:
+            for cc in c.configs(enable):
+                yield cc
 
 class Module(BaseModule):
     """Simple module with a fixed location and sources."""
@@ -369,6 +408,8 @@ class BaseConfig(object):
     def configs(self, enable=None):
         """Iterate over this and all child config objects."""
         assert False # Must be overridden by subclass
+
+    modules = ()
 
 class Feature(BaseConfig):
     """A feature is a part of the code that can be enabled or disabled."""

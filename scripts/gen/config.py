@@ -208,23 +208,15 @@ class ProjectConfig(object):
     """Project-wide configuration."""
 
     __slots__ = [
-        'argv', 'xmlfiles', 'project', 'opts', 'vars',
-        '_repos', '_versions', '_native_os', '_actions',
-        '_executed', '_quiet',
+        'xmlfiles', 'project',
+        # 'opts', 'vars',
+        # 'argv', 'xmlfiles', 'project', 'opts', 'vars',
+        # '_repos', '_versions', '_native_os', '_actions',
+        # '_executed', '_quiet',
     ]
 
     def __init__(self):
-        self.argv = None
-        self.xmlfiles = None
-        self.project = None
-        self.opts = None
-        self.vars = None
-        self._repos = None
-        self._versions = None
-        self._native_os = None
-        self._actions = None
-        self._executed = None
-        self._quiet = None
+        self.load_modules()
 
     def __getstate__(self):
         d = dict()
@@ -242,21 +234,41 @@ class ProjectConfig(object):
                 v = d[attr]
             setattr(self, attr, v)
 
-    def reconfig(self):
+    def load_modules(self):
+        """Load XML project file and module files."""
         import gen.xml as xml
 
         xmlfiles = [Path('project.xml')]
         proj = xml.load('project.xml', Path())
-        for modpath in proj.module_path:
-            for fname in os.listdir(modpath.native):
-                if fname.startswith('.') or not fname.endswith('.xml'):
+        paths = list(proj.module_path)
+        while paths:
+            path = paths.pop()
+            for fname in os.listdir(path.native):
+                if fname.startswith('.'):
                     continue
-                path = Path(modpath, fname)
-                mod = xml.load(path.native, modpath)
-                proj.add_module(mod)
-                xmlfiles.append(path)
+                try:
+                    fpath = Path(path, fname)
+                except ValueError:
+                    continue
+                if os.path.isdir(fpath.native):
+                    paths.append(fpath)
+                else:
+                    if fname.endswith('.xml'):
+                        mod = xml.load(fpath.native, path)
+                        proj.add_module(mod)
+                        xmlfiles.append(path)
+
+        missing = proj.trim()
+        if missing:
+            sys.stderr.write(
+                'warning: referenced modules do not exist: {}\n'
+                .format(', '.join(sorted(missing))))
         self.xmlfiles = xmlfiles
         self.project = proj
+
+    def reconfig(self):
+        import gen.xml as xml
+
 
         trim_project(proj)
         for tag in project.INTRINSICS:
@@ -601,3 +613,12 @@ class BuildTarget(object):
                     if external:
                         tags = tags + ('.external',)
                     yield Source(s.path, tuple(sorted(tags)))
+
+
+def configure(argv):
+    config = ProjectConfig()
+    print('STOPPING HERE')
+    sys.exit(1)
+
+def reconfigure(argv):
+    pass

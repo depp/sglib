@@ -725,9 +725,7 @@ def proj_libpath(proj, node, path):
     if mpath is None:
         missing_attr(node, 'path')
     node_empty(node)
-    if proj.lib_path is not None:
-        raise ValueError('duplicate lib-path element')
-    proj.lib_path = Path(path, mpath)
+    proj.lib_path.append(mpath)
 
 def proj_defaults(proj, node, path):
     proj.defaults.append(parse_defaults(node))

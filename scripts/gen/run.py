@@ -35,28 +35,26 @@ def store(cfg):
 
 def run():
     mode = sys.argv[1]
-    argv = sys.argv[2:]
     try:
+        quiet = False
         if mode == 'config':
-            cfg = config.ProjectConfig()
-            cfg.argv = argv
-            actions = cfg.reconfig()
-            store(cfg)
+            argv = sys.argv[2:]
+            cfg, actions = config.configure(argv)
+            store((argv, cfg))
         elif mode == 'reconfig':
-            cfg = load()
-            cfg.quiet = True
-            cfg.reconfig()
-            store(cfg)
+            argv, cfg = load()
+            cfg = config.reconfigure(argv)
+            store((argv, cfg))
             actions = []
         elif mode == 'build':
-            cfg = load()
-            cfg.quiet = True
-            actions = argv
+            argv, cfg = load()
+            actions = sys.argv[2:]
+            quiet = True
         else:
             sys.stderr.write('error: invalid mode: {}\n'.format(mode))
             sys.exit(1)
         for action in actions:
-            cfg.exec_action(action)
+            cfg.exec_action(action, quiet)
     except ConfigError as ex:
         sys.stderr.write('\n')
         sys.stderr.write('error: ' + ex.reason + '\n')
