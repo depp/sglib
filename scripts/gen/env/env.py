@@ -220,7 +220,7 @@ class BuildEnv(object):
         self.project = project
         self.base_env = base_env
         self.func = func
-        self._cache = {}
+        self._cache = {'.external': {'external': True}}
 
     def _env1(self, tag):
         m = self.project.module_names[tag]

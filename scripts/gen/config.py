@@ -473,6 +473,8 @@ class BuildTarget(object):
             base = set(m.require)
             if m.modid is not None:
                 base.add(m.modid)
+            external = (isinstance(m, project.ExternalLibrary) and
+                        m.use_bundled)
             for s in m.sources:
                 tags = base.union(s.tags)
                 for tag in tuple(tags):
@@ -483,4 +485,7 @@ class BuildTarget(object):
                 if tags.issubset(self.tags):
                     tags.intersection_update(self.tag_modules)
                     usedtags.update(tags)
+                    tags = tuple(sorted(tags))
+                    if external:
+                        tags = tags + ('.external',)
                     yield Source(s.path, tuple(sorted(tags)))
