@@ -223,7 +223,7 @@ def src_src(mod, node, path, enable, module):
     if spath is None:
         missing_attr(node, 'path')
     node_empty(node)
-    mod.add_source(Source(Path(path, spath), enable, module))
+    mod.add_source(Source(spath, enable, module))
 
 SRC_ELEM = {
     'group': src_group,
@@ -250,7 +250,6 @@ def mod_header_path(mod, node, path):
             unexpected_attr(node, attr)
     if not ipath:
         expected_attr(node, 'path')
-    ipath = Path(path, ipath)
     node_empty(node)
     mod.header_path.append(ipath)
 
@@ -374,7 +373,13 @@ def var_exe_suffix(var, node):
     v = node_text(node)
     if os in var.exe_suffix:
         raise ValueError('variant has conflicting exe-suffix')
-    var.exe_suffix[os] = os
+    var.exe_suffix[os] = v
+
+VAR_NAME = {
+    'linux': lambda x: x.lower(),
+    'osx': lambda x: x,
+    'windows': lambda x: x,
+}
 
 def config_variant(obj, node):
     flagid = None
@@ -393,6 +398,15 @@ def config_variant(obj, node):
         except KeyError:
             unexpected(node, c)
         func(var, c)
+    for os, func in VAR_NAME.items():
+        try:
+            var.exe_suffix[os]
+        except KeyError:
+            try:
+                base = var.exe_suffix[None]
+            except KeyError:
+                raise ValueError('missing variant exe-suffix')
+            var.exe_suffix[os] = func(base)
     obj.config.append(var)
 
 CONFIG_ELEM = {

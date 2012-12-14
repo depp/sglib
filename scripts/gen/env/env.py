@@ -1,6 +1,8 @@
 from gen.shell import escape
 from gen.error import ConfigError
 import gen.project as project
+from io import StringIO
+import sys
 
 class MakefileVar(object):
     """A makefile variable."""
@@ -234,45 +236,55 @@ class BuildEnv(object):
     automatically be cached.
     """
 
-    __slots__ = ['project', 'base_env', 'func', '_cache']
+    __slots__ = ['base_env', '_env']
 
-    def __init__(self, project, base_env, func):
-        self.project = project
+    def __init__(self, base_env, func, modules, module_names):
         self.base_env = base_env
-        self.func = func
-        self._cache = {'.external': {'external': True}}
-
-    def _env1(self, tag):
-        m = self.project.module_names[tag]
-        if isinstance(m, project.ExternalLibrary) and not m.use_bundled:
-            srcs = None
-            for s in m.libsources:
-                if isinstance(s, project.LibraryGroup):
-                    srcs = s.libsources
-                else:
-                    srcs = [s]
-                break
-            # FIXME error
-            assert srcs is not None
-            a = []
-            for s in srcs:
+        self._env = {'.external': {'external': True}}
+        for modid in modules:
+            m = module_names[modid]
+            if isinstance(m, project.ExternalLibrary):
+                sys.stdout.write('Checking for {}...'.format(m.name))
+                sys.stdout.flush()
+                message = 'error'
                 try:
-                    a.append(self.func(s))
-                except ConfigError as ex:
-                    details = 'caused by error: {}\n'.format(ex.reason)
-                    if ex.details:
-                        details = details + ex.details
-                    raise ConfigError(
-                        'could not configure {} module'.format(m.modid),
-                        details)
-            e = merge_env(a)
-        else:
-            e = {}
-            if m.header_path:
-                e['CPPPATH'] = tuple(m.header_path)
-            if m.define:
-                e['DEFS'] = tuple(m.define)
-        return e
+                    srcs = []
+                    for s in m.libsources:
+                        if isinstance(s, project.LibraryGroup):
+                            srcs.append(s.libsources)
+                        else:
+                            srcs.append([s])
+                        break
+                    log = StringIO()
+                    for src in srcs:
+                        a = []
+                        try:
+                            for s in src:
+                                a.append(func(s))
+                        except ConfigError as ex:
+                            log.write(
+                                'configuration failed:\n'
+                                'error: {}\n'.format(ex.reason))
+                            if ex.details is not None:
+                                log.write(ex.details)
+                            continue
+                        message = 'yes'
+                        break
+                    else:
+                        message = 'no'
+                        raise ConfigError(
+                            'could not configure {} module'.format(modid),
+                            log.getvalue())
+                finally:
+                    sys.stdout.write(' {}\n'.format(message))
+                e = merge_env(a)
+            else:
+                e = {}
+                if m.header_path:
+                    e['CPPPATH'] = tuple(m.header_path)
+                if m.define:
+                    e['DEFS'] = tuple(m.define)
+            self._env[modid] = e
 
     def env(self, tags):
         """Get the environment for a given set of tags.
@@ -282,11 +294,7 @@ class BuildEnv(object):
         """
         a = [self.base_env]
         for tag in tags:
-            try:
-                e = self._cache[tag]
-            except KeyError:
-                e = self._env1(tag)
-                self._cache[tag] = e
+            e = self._env[tag]
             assert e is not None
             a.append(e)
         return MergeEnvironment(a)

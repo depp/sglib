@@ -21,12 +21,13 @@ def strip(dest, src, debugsyms):
     return [cmd]
 
 def gen_makefile(config):
-    bcfg = config.get_config('LINUX')
-    base = default_env(config, 'LINUX')
+    bcfg = config.get_config('linux')
+    base = default_env(config, 'linux')
     benv = BuildEnv(
-        config.project,
-        default_env(config, 'LINUX'),
-        NixConfig(base))
+        default_env(config, 'linux'),
+        NixConfig(base),
+        bcfg.all_modules(),
+        config.project.module_names)
 
     machine = getmachine(base)
     makefile = Makefile()
@@ -35,7 +36,7 @@ def gen_makefile(config):
     types_cc = 'c', 'cxx'
     types_ignore = 'h', 'hxx'
     sources = set()
-    for target in bcfg.targets:
+    for target in bcfg.targets():
         objects = []
         sourcetypes = set()
         for src in target.sources():
@@ -50,7 +51,7 @@ def gen_makefile(config):
                 objects.append(obj)
                 if p.posix not in sources:
                     sources.add(p.posix)
-                    e = benv.env(src.tags)
+                    e = benv.env(src.module)
                     assert e is not None
                     makefile.add_rule(obj, [p],
                                       [cc_cmd(e, obj, p, t, depfile=dep)],
@@ -58,12 +59,9 @@ def gen_makefile(config):
                     makefile.opt_include(dep)
             else:
                 raise Exception('unknown source type: {}'.format(s.path))
-        exe_env = benv.env(target.tag_modules)
+        exe_env = benv.env(target.module_names)
         assert exe_env is not None
-        exe_name = '{}_{}_{}'.format(
-            target.target.exe_name['LINUX'],
-            machine,
-            target.variant.varname.lower())
+        exe_name = target.exe_name(machine)
         obj_exe = Path('build/obj', exe_name)
         prod_exe = Path('build/product', exe_name)
         prod_dbg = prod_exe.addext('.dbg')

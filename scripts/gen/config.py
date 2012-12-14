@@ -13,9 +13,9 @@ CACHE_FILE = 'config.dat'
 # make sure each tag refers to one module
 
 DEFAULT_ACTIONS = {
-    'LINUX': ('makefile', 'runner', 'version'),
-    'OSX': ('makefile', 'version',),
-    'WINDOWS': ('version',),
+    'linux': ('makefile', 'runner', 'version'),
+    'osx': ('makefile', 'version',),
+    'windows': ('version',),
 }
 
 class ProjectConfig(object):
@@ -33,6 +33,8 @@ class ProjectConfig(object):
 
         # Cache for get_config
         '_config_cache',
+
+        '_repos', '_versions', '_actions', '_native_os', '_executed',
     ]
 
     def __init__(self):
@@ -294,6 +296,9 @@ class ProjectConfig(object):
         """
         actions = self.read_opts(self.arg_parser().parse_args(args))
         self.scan_bundles()
+        if actions:
+            return actions
+        return DEFAULT_ACTIONS[self.native_os]
 
     def get_config(self, os):
         """Get the set of enabled flags for the given os.
@@ -303,7 +308,7 @@ class ProjectConfig(object):
         flags.
         """
 
-        if self._config_cache is None:
+        if getattr(self, '_config_cache', None) is None:
             self._config_cache = {}
         try:
             return self._config_cache[os]
@@ -380,24 +385,24 @@ class ProjectConfig(object):
 
         if not variants:
             raise ConfigError('no build targets are enabled')
-        result = BuildConfig(self, reachable, variants)
+        result = BuildConfig(os, self, reachable, variants)
         self._config_cache[os] = result
         return result
 
     @property
     def repos(self):
-        if self._repos is None:
+        if getattr(self, '_repos', None) is None:
             if self.project is None:
                 raise AttributeError('repos')
             self._repos = {
                 'APP': Path(),
-                'SG': self.project.module_names['SG'].module_root(),
+                'SG': self.project.module_names['sg'].module_root(),
             }
         return self._repos
 
     @property
     def versions(self):
-        if self._versions is None:
+        if getattr(self, '_versions', None) is None:
             if self.project is None:
                 raise AttributeError('repos')
             versions = {}
@@ -408,7 +413,7 @@ class ProjectConfig(object):
 
     @property
     def actions(self):
-        if self._actions is None:
+        if getattr(self, '_actions', None) is None:
             from gen.build import version
             self._actions = {
                 'makefile': (Path('Makefile'), 'make.gen_makefile'),
@@ -421,12 +426,12 @@ class ProjectConfig(object):
 
     @property
     def native_os(self):
-        os = self._native_os
+        os = getattr(self, '_native_os', None)
         if os is None:
             d = {
-                'Darwin': 'OSX',
-                'Linux': 'LINUX',
-                'Windows': 'WINDOWS',
+                'Darwin': 'osx',
+                'Linux': 'linux',
+                'Windows': 'windows',
             }
             s = platform.system()
             try:
@@ -436,8 +441,8 @@ class ProjectConfig(object):
             self._native_os = os
         return os
 
-    def exec_action(self, action_name):
-        if self._executed is None:
+    def exec_action(self, action_name, quiet):
+        if getattr(self, '_executed', None) is None:
             self._executed = set()
         if action_name in self._executed:
             return
@@ -447,7 +452,7 @@ class ProjectConfig(object):
         except KeyError:
             raise ConfigError('unknown action: {}'.format(action_name))
         path, func_name = action
-        if not self.quiet:
+        if not quiet:
             sys.stderr.write('generating {}\n'.format(path.native))
         func_path = action[1].split('.')
         obj = __import__('gen.build.' + '.'.join(func_path[:-1])).build
@@ -456,28 +461,21 @@ class ProjectConfig(object):
         obj(self)
         self._executed.add(action_name)
 
-    def get_quiet(self):
-        return self._quiet
-
-    def set_quiet(self, v):
-        self._quiet = v
-
-    quiet = property(get_quiet, set_quiet)
-    del get_quiet
-    del set_quiet
-
 class BuildConfig(object):
     """Configuration for a specific os."""
 
     __slots__ = [
         'config', 'enabled', 'variants', '_targets', '_all_modules',
+        'os',
     ]
 
-    def __init__(self, config, enabled, variants):
+    def __init__(self, os, config, enabled, variants):
+        self.os = os
         self.config = config
         self.enabled = frozenset(enabled)
         self.variants = frozenset(variants)
         self._targets = None
+        self._all_modules = None
 
     def targets(self):
         if self._targets is not None:
@@ -506,7 +504,10 @@ class BuildConfig(object):
             return self._all_modules
         allmods = set()
         for t in self.targets():
-            allmods.update(t, modids)
+            allmods.update(t.module_names)
+        allmods = frozenset(allmods)
+        self._all_modules = allmods
+        return allmods
 
 class BuildTarget(object):
     __slots__ = [
@@ -587,19 +588,25 @@ class BuildTarget(object):
                 mod.discard(None)
                 yield Source(source.path, (), mod)
 
+    def exe_name(self, machine=None):
+        os = self.buildconfig.os
+        a = [self.target.exe_name[os]]
+        if machine:
+            a.append(machine)
+        v = self.variant.exe_suffix[os]
+        if v:
+            a.append(v)
+        if os == 'linux':
+            return '_'.join(a)
+        else:
+            return ' '.join(a)
+
 def configure(argv):
     config = ProjectConfig()
-    config.parse_args(argv)
-    for os in ('linux', 'osx', 'windows'):
-        bcfg = config.get_config(os)
-        for t in bcfg.targets():
-            print('----------')
-            print(t)
-            for s in t.sources():
-                print(s.path.posix, ' '.join(s.module))
-
-    print('STOPPING HERE')
-    sys.exit(1)
+    actions = config.parse_args(argv)
+    return config, actions
 
 def reconfigure(argv):
-    pass
+    config = ProjectConfig()
+    config.parse_args(argv)
+    return config

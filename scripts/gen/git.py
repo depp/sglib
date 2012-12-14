@@ -7,7 +7,7 @@ def get_info(config, path):
 
     Returns (sha1, version).
     """
-    git = config.vars.get('GIT', 'git')
+    git = config.opt_env.get('GIT', 'git')
 
     stdout, stderr, retcode = get_output(
         [git, 'rev-parse', 'HEAD'], cwd=path.native)

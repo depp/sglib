@@ -20,19 +20,19 @@ def subst(text, d):
     return re.sub(r'@(\w+)@', func, text)
 
 def gen_runner(config):
-    bcfg = config.get_config('LINUX')
-    base = default_env(config, 'LINUX')
+    bcfg = config.get_config('linux')
+    base = default_env(config, 'linux')
     machine = getmachine(base)
 
     targets = set()
     variants = set()
     run_dispatch = StringIO()
-    for target in bcfg.targets:
-        app_name = target.target.exe_name['LINUX']
+    for target in bcfg.targets():
+        app_name = target.target.exe_name['linux']
         targets.add(app_name)
-        variant = target.variant.varname.lower()
+        variant = target.variant.flagid.lower()
         variants.add(variant)
-        exe_name = '{}_{}_{}'.format(app_name, machine, variant)
+        exe_name = target.exe_name(machine)
         d = {
             'APP': escape(app_name),
             'VARIANT': escape(variant),

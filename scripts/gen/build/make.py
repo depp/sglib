@@ -1,8 +1,8 @@
 from gen.error import ConfigError
 
 OS_MAKEFILE = {
-    'LINUX': 'linux',
-    'OSX': 'osx',
+    'linux': 'linux',
+    'osx': 'osx',
 }
 
 def gen_makefile(config):

@@ -102,9 +102,9 @@ class NixConfig(object):
 
 def default_env(config, os):
     """Get the default environment."""
-    assert os in ('LINUX', 'OSX')
+    assert os in ('linux', 'osx')
     envs = []
-    if config.opts['config'] == 'debug':
+    if config.opt_misc['config'] == 'debug':
         cflags = ('-O0', '-g')
     else:
         cflags = ('-O2', '-g')
@@ -114,7 +114,7 @@ def default_env(config, os):
         'CFLAGS': cflags,
         'CXXFLAGS': cflags,
     })
-    if config.opts.get('warnings', True):
+    if config.opt_misc.get('warnings', True):
         envs.append({
             'CWARN': tuple(
                 '-Wall -Wextra -Wpointer-arith -Wno-sign-compare '
@@ -124,20 +124,20 @@ def default_env(config, os):
                 '-Wall -Wextra -Wpointer-arith -Wno-sign-compare '
                 .split()),
         })
-    if config.opts.get('werror', config.opts['config'] == 'debug'):
+    if config.opt_misc.get('werror', config.opt_misc['config'] == 'debug'):
         envs.append({
             'CWARN': ('-Werror',),
             'CXXWARN': ('-Werror',),
         })
-    if os == 'LINUX':
+    if os == 'linux':
         envs.append({
             'LDFLAGS': ('-Wl,--as-needed', '-Wl,--gc-sections'),
         })
-    if os == 'OSX':
+    if os == 'osx':
         envs.append({
             'LDFLAGS': ('-Wl,-dead_strip', '-Wl,-dead_strip_dylibs'),
         })
-    envs.append(parse_env(config.vars))
+    envs.append(parse_env(config.opt_env))
     return merge_env(envs)
 
 def getmachine(env):

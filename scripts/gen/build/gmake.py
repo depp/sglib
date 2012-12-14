@@ -126,10 +126,10 @@ class Makefile(object):
         config_script = [sys.executable, spath]
         cache_file = Path(CACHE_FILE)
         self.add_rule(
-            cache_file, bcfg.projectconfig.xmlfiles,
+            cache_file, bcfg.config.xmlfiles,
             [[sys.executable, spath, 'reconfig']],
             qname='Reconfigure')
-        actions = bcfg.projectconfig.actions
+        actions = bcfg.config.actions
         for action_name in DEFAULT_ACTIONS[bcfg.os]:
             target = actions[action_name][0]
             self.add_rule(
