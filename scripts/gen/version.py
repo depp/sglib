@@ -41,6 +41,6 @@ if __name__ == '__main__':
     for x, y, c in TESTS:
         cc = version_cmp(x, y)
         if cc != c:
-            print 'expected %s %s %s; got %s %s %s' % (
-                x, rel(c), y, x, rel(cc), y)
+            print('expected {} {} {}; got {} {} {}'.format(
+                x, rel(c), y, x, rel(cc), y))
             sys.exit(1)

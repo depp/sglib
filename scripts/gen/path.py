@@ -21,12 +21,16 @@ def _compute_exts():
     for t in plain:
         TYPES[t] = ['.' + t]
     exts = {}
-    for what, texts in TYPES.iteritems():
+    for what, texts in TYPES.items():
         for ext in texts:
             exts[ext] = what
     return exts
 EXTS = _compute_exts()
 del _compute_exts
+
+TYPE_DESCS = {
+    'c': 'C', 'cxx': 'C++', 'm': 'ObjC', 'mm': 'ObjC++'
+}
 
 def filterexts(paths, exts):
     """Return a list of the paths whose extensions are in exts."""
@@ -74,7 +78,8 @@ class Path(object):
             if isinstance(path, Path):
                 path = path._p
             if path.startswith('/'):
-                raise ValueError("Invalid path %r: absolute" % (path,))
+                raise ValueError(
+                    "Invalid path {!r}: absolute".format(path))
             for p in path.split('/'):
                 if p == '.' or p == '':
                     pass
@@ -90,7 +95,8 @@ class Path(object):
                         isdir = False
                     else:
                         raise ValueError(
-                            "Invalid path %r: bad component %r" % (path, p))
+                            "Invalid path {!r}: bad component {!r}"
+                            .format(path, p))
         if not pp:
             self._p = '.'
         else:
@@ -115,7 +121,7 @@ class Path(object):
         result, unless the path has no extension."""
         return posixpath.splitext(self._p)[1]
     def __repr__(self):
-        return 'Path(%r)' % (self._p,)
+        return 'Path({})'.format(self._p)
     def __div__(self, other):
         return Path(self._p, other._p)
     def __eq__(self, other):
@@ -154,3 +160,18 @@ class Path(object):
     def basename(self):
         """Get the base name, the last component of the path."""
         return posixpath.basename(self._p)
+
+def common_ancestor(paths):
+    i = iter(paths)
+    for p in i:
+        common = p.posix.split('/')[:-1]
+        break
+    else:
+        raise ValueError('need at least one path')
+    for p in i:
+        parts = p.posix.split('/')[:-1]
+        for n in range(len(common)):
+            if common[n] != parts[n]:
+                common = common[:n]
+                break
+    return Path('/'.join(common))

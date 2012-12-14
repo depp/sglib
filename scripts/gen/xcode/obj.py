@@ -33,7 +33,7 @@ class optional(object):
 def objemit(w, x, ids):
     if isinstance(x, dict):
         w.start_dict()
-        for k, v in x.iteritems():
+        for k, v in x.items():
             w.write_key(k)
             objemit(w, v, ids)
         w.end_dict()
@@ -83,7 +83,7 @@ class XcodeObject(object):
                         if isinstance(x, XcodeObject):
                             x._allobjs(dest)
                 elif isinstance(v, dict):
-                    for x in v.itervalues():
+                    for x in v.values():
                         if isinstance(x, XcodeObject):
                             x._allobjs(dest)
                 elif isinstance(v, XcodeObject):
@@ -500,13 +500,13 @@ class BuildConfiguration(XcodeObject):
         self.buildSettings.update(d)
 
     def keys(self):
-        return self.buildSettings.keys()
+        return list(self.buildSettings.keys())
 
     def items(self):
-        return self.buildSettings.items()
+        return list(self.buildSettings.items())
 
     def values(self):
-        return self.buildSettings.values()
+        return list(self.buildSettings.values())
 
 class Executable(XcodeObject):
     """Information about an executable.
@@ -603,13 +603,13 @@ class Project(XcodeObject):
 
         # Sort according to the ISA list
         isasort = dict(zip(ISAS, ['%03d' % x for x in range(len(ISAS))]))
-        groups = list(groups.iteritems())
+        groups = list(groups.items())
         def getidx(x):
             isa, obj = x
             try:
                 return isasort[isa]
             except KeyError:
-                print >>sys.stderr, 'warning: unknown isa %s' % (isa,)
+                print('warning: unknown isa %s' % (isa,), file=sys.stderr)
                 return '999:' + isa
         groups.sort(key=getidx)
 

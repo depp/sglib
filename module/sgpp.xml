@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module modid="sgpp" path="..">
+  <name>SGLib++</name>
+  <header-path path="include"/>
+  <require module="sg" public="true"/>
+
+  <group path="include/sgpp">
+    <src path="audio.hpp"/>
+    <src path="bitmapfont.hpp"/>
+    <src path="buffer.hpp"/>
+    <src path="color.hpp"/>
+    <src path="error.hpp"/>
+    <src path="file.hpp"/>
+    <src path="keycode.hpp"/>
+    <src path="letterbox.hpp"/>
+    <src path="model.hpp"/>
+    <src path="opengl.hpp"/>
+    <src path="rand.hpp"/>
+    <src path="scene/group.hpp"/>
+    <src path="scene/leafobject.hpp"/>
+    <src path="scene/object.hpp"/>
+    <src path="sharedref.hpp"/>
+    <src path="texture.hpp"/>
+    <src path="type.hpp"/>
+    <src path="viewport.hpp"/>
+  </group>
+  <group path="include/sgpp/ui">
+    <src path="action.hpp"/>
+    <src path="button.hpp"/>
+    <src path="event.hpp"/>
+    <src path="geometry.hpp"/>
+    <src path="keymanager.hpp"/>
+    <src path="menu.hpp"/>
+    <src path="mousemanager.hpp"/>
+    <src path="screen.hpp"/>
+    <src path="widget.hpp"/>
+  </group>
+  <group path="sgpp/core">
+    <src path="audio.cpp"/>
+    <src path="bitmapfont.cpp"/>
+    <src path="error.cpp"/>
+    <src path="file.cpp"/>
+    <src path="letterbox.cpp"/>
+    <src path="model.cpp"/>
+    <src path="texture.cpp"/>
+    <src path="viewport.cpp"/>
+  </group>
+  <group path="sgpp/scene">
+    <src path="group.cpp"/>
+    <src path="leafobject.cpp"/>
+    <src path="object.cpp"/>
+  </group>
+  <group path="sgpp/ui">
+    <src path="button.cpp"/>
+    <src path="keymanager.cpp"/>
+    <src path="menu.cpp"/>
+    <src path="mousemanager.cpp"/>
+    <src path="screen.cpp"/>
+    <src path="widget.cpp"/>
+  </group>
+</module>

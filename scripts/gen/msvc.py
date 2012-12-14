@@ -1,4 +1,3 @@
-from __future__ import with_statement
 import gen.atom as atom
 from gen.path import Path
 import gen.info as info
@@ -68,7 +67,7 @@ class Project(object):
         return self.doc.documentElement
 
     def write(self, fname):
-        print 'FILE', fname
+        print('FILE', fname)
         with open(fname, 'wb') as f:
             self.doc.writexml(f, encoding='UTF-8')
 
@@ -362,9 +361,9 @@ def vcxproj_user_emit(pname, targenv, sources):
     vproj.write(pname + '.vcxproj.user')
 
 def sln_emit(proj, pnames):
-    import cStringIO, uuid
-    x = cStringIO.StringIO()
-    x.write(u'\uFEFF\n'.encode('utf-8'))
+    import io, uuid
+    x = io.StringIO()
+    x.write('\uFEFF\n'.encode('utf-8'))
     x.write('Microsoft Visual Studio Solution File, Format Version 11.00\n')
     x.write('# Visual C++ Express 2010\n')
     uuids = {}
@@ -399,7 +398,7 @@ def sln_emit(proj, pnames):
     x.write('EndGlobal\n')
 
     path = proj.info.PKG_FILENAME + '.sln'
-    print 'FILE', path
+    print('FILE', path)
     with open(path, 'wb') as f:
         f.write(x.getvalue().replace('\n', '\r\n'))
 

@@ -16,7 +16,7 @@ def checkwhite(obj):
         raise PlistError('expected whitespace')
 
 def loadString(n):
-    text = u''
+    text = ''
     for child in n.childNodes:
         if child.nodeType == dom.Node.TEXT_NODE:
             text += child.data
@@ -120,13 +120,13 @@ def load(data):
 def dumpValue(doc, obj):
     if isinstance(obj, dict):
         n = doc.createElement('dict')
-        for k, v in sorted(obj.iteritems()):
+        for k, v in sorted(obj.items()):
             c = doc.createElement('key')
             c.appendChild(doc.createTextNode(k))
             n.appendChild(c)
             c = dumpValue(doc, v)
             n.appendChild(c)
-    elif isinstance(obj, unicode):
+    elif isinstance(obj, str):
         n = doc.createElement('string')
         n.appendChild(doc.createTextNode(obj))
     elif isinstance(obj, bool):

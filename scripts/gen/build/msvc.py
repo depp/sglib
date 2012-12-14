@@ -14,13 +14,13 @@ Path = gen.path.Path
 
 def getreg(key, subkey):
     """Get a value from the Windows registry."""
-    import _winreg
+    import winreg
     h = None
     try:
-        h = _winreg.OpenKey(_winreg.HKEY_LOCAL_MACHINE, key)
+        h = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, key)
         i = 0
         while True:
-            name, value, type = _winreg.EnumValue(h, i)
+            name, value, type = winreg.EnumValue(h, i)
             if name == subkey:
                 return value
             i += 1
@@ -28,10 +28,10 @@ def getreg(key, subkey):
         return None
     finally:
         if h is not None:
-            _winreg.CloseKey(h)
+            winreg.CloseKey(h)
 
 def msvc_fail(why):
-    print >>sys.stderr, 'Cannot find MSVC environment: %s' % why
+    print('Cannot find MSVC environment: %s' % why, file=sys.stderr)
     sys.exit(1)
 
 _SDK_LOC = None
@@ -41,38 +41,38 @@ def get_sdk_loc():
     if _SDK_LOC is not None:
         return _SDK_LOC
     is_version = re.compile(r'^v\d')
-    import _winreg
+    import winreg
     h = None
     try:
         key = r'SOFTWARE\Microsoft\Microsoft SDKs\Windows'
-        h = _winreg.OpenKey(_winreg.HKEY_LOCAL_MACHINE, key)
+        h = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, key)
         i = 0
         versions = []
         while True:
             try:
-                name = _winreg.EnumKey(h, i)
+                name = winreg.EnumKey(h, i)
             except WindowsError:
                 break
             if is_version.match(name):
                 versions.append(name)
             i += 1
-        _winreg.CloseKey(h)
+        winreg.CloseKey(h)
         h = None
         if not versions:
             msvc_fail('cannot parse registry')
         versions.sort(version.version_cmp)
         latest = versions[-1]
-        h = _winreg.OpenKey(_winreg.HKEY_LOCAL_MACHINE, key + '\\' + latest)
+        h = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, key + '\\' + latest)
         i = 0
         subkeys = {}
         while True:
             try:
-                skname, skvalue, sktype = _winreg.EnumValue(h, i)
+                skname, skvalue, sktype = winreg.EnumValue(h, i)
             except WindowsError:
                 break
             subkeys[skname] = skvalue
             i += 1
-        _winreg.CloseKey(h)
+        winreg.CloseKey(h)
         try:
             loc = subkeys['InstallationFolder']
         except KeyError:
@@ -81,17 +81,17 @@ def get_sdk_loc():
         return loc
     finally:
         if h is not None:
-            _winreg.CloseKey(h)
+            winreg.CloseKey(h)
 
 def get_sdk_environ(target, config):
     """Return the environment variables for the Windows SDK."""
-    print
+    print()
     dumpenv = False
     if dumpenv:
-        print '==== Initial environment ===='
+        print('==== Initial environment ====')
         for k, v in sorted(os.environ.items()):
-            print k, '=', v
-        print
+            print(k, '=', v)
+        print()
 
     # Find the location of the latest Microsoft SDK
     sdk_loc = get_sdk_loc()
@@ -117,7 +117,7 @@ def get_sdk_environ(target, config):
     for line in lines:
         line = line.rstrip()
         if dumpenv:
-            print line
+            print(line)
         if line == tag:
             break
     else:
@@ -127,10 +127,10 @@ def get_sdk_environ(target, config):
         k, v = line.rstrip().split('=', 1)
         env[k] = v
     if dumpenv:
-        print '==== MSVC Environment ===='
+        print('==== MSVC Environment ====')
         for k, v in sorted(env.items()):
-            print k, '=', v
-        print
+            print(k, '=', v)
+        print()
     return env
 
 def mkdef(k, v):

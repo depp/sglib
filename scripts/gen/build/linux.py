@@ -1,187 +1,83 @@
-import gen.build.target as target
-import gen.build.nix as nix
-import gen.atom as atom
-from gen.env import Environment
-import gen.shell as shell
-from gen.path import Path
-from gen.error import *
-import subprocess
+from gen.build.nix import cc_cmd, ld_cmd
+from gen.build.gmake import Makefile
+from gen.env.nix import NixConfig, default_env, getmachine
+from gen.env.env import BuildEnv
+from gen.path import Path, TYPE_DESCS
 
-class ExtractDebug(target.Commands):
-    """Extract debug symbols from an executable."""
-    __slots__ = ['_dest', '_src', '_env']
+def extract_debug(dest, src):
+    """Return commands for extracting debug info from an object."""
+    return [['objcopy', '--only-keep-debug', src.posix, dest.posix],
+            ['chmod', '-x', dest.posix]]
 
-    def __init__(self, dest, src, env):
-        target.Commands.__init__(self, env)
-        if not isinstance(dest, Path):
-            raise TypeError('dest must be Path')
-        if not isinstance(src, Path):
-            raise TypeError('src must be Path')
-        self._dest = dest
-        self._src = src
+def strip(dest, src, debugsyms):
+    """Return commands to strip an object.
 
-    def input(self):
-        yield self._src
-
-    def output(self):
-        yield self._dest
-
-    def name(self):
-        return 'OBJCOPY'
-
-    def commands(self):
-        return [['objcopy', '--only-keep-debug', self._src, self._dest],
-                ['chmod', '-x', self._dest]]
-
-class Strip(target.Commands):
-    """Copy an executable, stripping the debug symbols from it.
-
-    Add a link to the external debug symbols.
+    A debug link is added to the debugsyms object if it is not None.
     """
-    __slots__ = ['_dest', '_src', '_debugsyms', '_env']
+    cmd = ['objcopy', '--strip-unneeded']
+    if debugsyms is not None:
+        cmd.append('--add-gnu-debuglink=' + debugsyms.posix)
+    cmd.extend((src.posix, dest.posix))
+    return [cmd]
 
-    def __init__(self, dest, src, debugsyms, env):
-        target.Commands.__init__(self, env)
-        if not isinstance(dest, Path):
-            raise TypeError('dest must be Path')
-        if not isinstance(src, Path):
-            raise TypeError('src must be Path')
-        if not isinstance(debugsyms, Path):
-            raise TypeError('debugsymse must be Path')
-        self._dest = dest
-        self._src = src
-        self._debugsyms = debugsyms
+def gen_makefile(config):
+    bcfg = config.get_config('linux')
+    base = default_env(config, 'linux')
+    benv = BuildEnv(
+        default_env(config, 'linux'),
+        NixConfig(base),
+        bcfg.all_modules(),
+        config.project.module_names)
 
-    def input(self):
-        yield self._src
-        yield self._debugsyms
+    machine = getmachine(base)
+    makefile = Makefile()
+    makefile.gen_regen(bcfg)
 
-    def output(self):
-        yield self._dest
-
-    def name(self):
-        return 'OBJCOPY'
-
-    def commands(self):
-        return [['objcopy', '--strip-unneeded',
-                 ('--add-gnu-debuglink=', self._debugsyms),
-                 self._src, self._dest]]
-
-########################################################################
-
-def customconfig(cmd, name):
-    """Get the environment for a package from a config program."""
-    try:
-        cflags = shell.getoutput(cmd + ['--cflags'])
-        libs = shell.getoutput(cmd + ['--libs'])
-    except subprocess.CalledProcessError, e:
-        if e.returncode > 0:
-            raise MissingPackage(name)
-        raise BuildError('command failed: %s' % ' '.join(cmd))
-    return Environment(CFLAGS=cflags, LIBS=libs)
-
-def pkgconfig(pkg, name=None):
-    """Get the environment for a package from pkg-config."""
-    if name is None:
-        name = pkg
-    return customconfig(['pkg-config', pkg], name)
-
-def add_sources(graph, proj, env, settings):
-    pass
-
-def add_targets(graph, proj, env, settings):
-    import platform
-    if platform.system() == 'Linux':
-        build_linux(graph, proj, env, settings)
-
-def linux_env(env, settings):
-    base_env = Environment(
-        CFLAGS='-g',
-        CXXFLAGS='-g',
-        LDFLAGS='-Wl,--as-needed -Wl,--gc-sections',
-        LIBS='-lGL -lGLU',
-    )
-    user_env = nix.get_default_env(settings)
-    user_env.update(env)
-    return Environment(base_env, user_env)
-
-def build_linux(graph, proj, env, settings):
-    """Generate targets for a normal Linux build.
-
-    This produces the actual executable as a target.
-    """
-    env = linux_env(env, settings)
-
-    machine = nix.getmachine(env)
-    if machine == 'x64':
-        machine = 'linux64'
-    elif machine == 'x86':
-        machine = 'linux32'
-    else:
-        print >>sys.stderr, 'warning: unknown machine %s' % machine
-
-    libs = {
-        'LIBJPEG':    lambda: Environment(LIBS='-ljpeg'),
-        'GTK':        lambda: pkgconfig('gtk+-2.0 gtkglext-1.0', 'gtkglext'),
-        'LIBPNG':     lambda: pkgconfig('libpng'),
-        'PANGO':      lambda: pkgconfig('pangocairo'),
-        'LIBASOUND':  lambda: pkgconfig('alsa'),
-    }
-
-    def lookup_env(atom):
-        try:
-            thunk = libs[atom]
-        except KeyError:
-            return None
-        else:
-            env = thunk()
-            # This flag is added by the gmodule indirect dependency.
-            # We don't need this flag and it's a waste.
-            env.remove_flag('LIBS', '-Wl,--export-dynamic')
-            return env
-
-    projenv = atom.ProjectEnv(proj, lookup_env, env)
-    products = genbuild_linux(graph, projenv, machine)
-    graph.add(target.DepTarget('build', products))
-
-def genbuild_linux(graph, projenv, machine):
-    """Generate all targets for any Linux build.
-
-    The machine parameter is the machine name to add to the name of
-    the executable.  It may be empty.
-    """
-
-    apps = []
     types_cc = 'c', 'cxx'
     types_ignore = 'h', 'hxx'
-    for targetenv in projenv.targets('LINUX'):
-        mname = targetenv.simple_name
-        objs = []
-        def handlec(source, env):
-            opath = Path('build/obj-%s-%s' %
-                         (mname, source.group.simple_name),
-                         source.grouppath.withext('.o'))
-            objs.append(opath)
-            graph.add(nix.CC(opath, source.relpath, env, source.sourcetype))
-        handlers = {}
-        for t in types_cc: handlers[t] = handlec
-        for t in types_ignore: handlers[t] = None
-        targetenv.apply(handlers)
+    sources = set()
+    for target in bcfg.targets():
+        objects = []
+        sourcetypes = set()
+        for src in target.sources():
+            p = src.path
+            t = src.sourcetype
+            sourcetypes.add(t)
+            if t in types_ignore:
+                pass
+            elif t in types_cc:
+                obj = Path('build/obj', p.withext('.o'))
+                dep = obj.withext('.d')
+                objects.append(obj)
+                if p.posix not in sources:
+                    sources.add(p.posix)
+                    e = benv.env(src.module)
+                    assert e is not None
+                    makefile.add_rule(obj, [p],
+                                      [cc_cmd(e, obj, p, t, depfile=dep)],
+                                      qname=TYPE_DESCS[t])
+                    makefile.opt_include(dep)
+            else:
+                raise Exception('unknown source type: {}'.format(s.path))
+        exe_env = benv.env(target.module_names)
+        assert exe_env is not None
+        exe_name = target.exe_name(machine)
+        obj_exe = Path('build/obj', exe_name)
+        prod_exe = Path('build/product', exe_name)
+        prod_dbg = prod_exe.addext('.dbg')
+        makefile.add_rule(
+            obj_exe, objects,
+            [ld_cmd(exe_env, obj_exe, objects, sourcetypes)],
+            qname='Link')
+        makefile.add_rule(
+            prod_dbg, [obj_exe],
+            extract_debug(prod_dbg, obj_exe),
+            qname='ObjCopy')
+        makefile.add_rule(
+            prod_exe, [obj_exe, prod_dbg],
+            strip(prod_exe, obj_exe, prod_dbg),
+            qname='Strip')
+        makefile.add_default(prod_exe)
 
-        env = targetenv.unionenv()
-        exename = targetenv.EXE_LINUX
-        if machine:
-            exename = '%s-%s' % (exename, machine)
-        rawpath = Path('build/exe-%s' % (mname,), exename)
-        exepath = Path('build/product', exename)
-        dbgpath = Path('build/product', exename + '.dbg')
-
-        graph.add(nix.LD(rawpath, objs, env, targetenv.types()))
-        graph.add(ExtractDebug(dbgpath, rawpath, env))
-        graph.add(Strip(exepath, rawpath, dbgpath, env))
-
-        pseudo = 'build-%s' % (mname,)
-        graph.add(target.DepTarget(pseudo, [exepath, rawpath]))
-        apps.append(pseudo)
-
-    return apps
+    with open('Makefile', 'w') as fp:
+        makefile.write(fp)

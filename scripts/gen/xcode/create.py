@@ -21,7 +21,7 @@ def mkphases():
     ],
     }
     d = {}
-    for k, v in phases.iteritems():
+    for k, v in phases.items():
         for t in v:
             assert t not in d
             d[t] = k
