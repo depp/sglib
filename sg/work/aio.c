@@ -106,6 +106,7 @@ sg_aio_request(const char *path, size_t pathlen, int flags,
     rpath[pathlen] = '\0';
     memcpy(rext, extensions, extlen + 1);
 
+    ioreq->cancel = 0;
     ioreq->path = rpath;
     ioreq->pathlen = pathlen;
     ioreq->flags = flags;
