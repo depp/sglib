@@ -13,12 +13,13 @@ def make_exe_name(name):
     return name
 
 def gen_makefile(config):
-    bcfg = config.get_config('OSX')
-    base = default_env(config, 'OSX')
+    bcfg = config.get_config('osx')
+    base = default_env(config, 'osx')
     benv = BuildEnv(
-        config.project,
-        default_env(config, 'OSX'),
-        NixConfig(base))
+        default_env(config, 'osx'),
+        NixConfig(base),
+        bcfg.all_modules(),
+        config.project.module_names)
 
     makefile = Makefile()
     makefile.gen_regen(bcfg)
@@ -26,7 +27,7 @@ def gen_makefile(config):
     types_cc = 'c', 'cxx', 'm', 'mm'
     types_ignore = 'h', 'hxx'
     all_objects = set()
-    for target in bcfg.targets:
+    for target in bcfg.targets():
         objects = []
         sourcetypes = set()
         for src in target.sources():
@@ -41,7 +42,7 @@ def gen_makefile(config):
                 objects.append(obj)
                 if obj.posix not in all_objects:
                     all_objects.add(obj.posix)
-                    e = benv.env(src.tags)
+                    e = benv.env(src.module)
                     assert e is not None
                     makefile.add_rule(
                         obj, [p],
@@ -50,13 +51,10 @@ def gen_makefile(config):
                     makefile.opt_include(dep)
             else:
                 raise Exception('unknown source type: {}'.format(s.path))
-        exe_env = benv.env(target.tag_modules)
+        exe_env = benv.env(target.module_names)
         assert exe_env is not None
-        app_name = target.target.exe_name['OSX']
+        app_name = target.exe_name()
         exe_name = make_exe_name(app_name)
-        if target.variant.varname != 'cocoa':
-            app_name = '{} ({})'.format(app_name, target.variant.varname)
-            exe_name = exe_name + target.variant.varname.title()
         obj_exe = Path('build/obj', exe_name)
         makefile.add_rule(
             obj_exe, objects,
