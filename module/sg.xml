@@ -131,6 +131,10 @@
     <require enable="posix"/>
   </feature>
 
+  <!-- automatically generated,
+       this path is hard coded elsewhere -->
+  <src path="include/config.h"/>
+
   <!-- SGLib -->
   <group path="include/sg">
     <src path="audio_mixdown.h"/>

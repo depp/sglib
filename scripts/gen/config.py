@@ -13,9 +13,9 @@ CACHE_FILE = 'config.dat'
 # make sure each tag refers to one module
 
 DEFAULT_ACTIONS = {
-    'linux': ('makefile', 'runner', 'version'),
-    'osx': ('makefile', 'version',),
-    'windows': ('version',),
+    'linux': ('makefile', 'runner', 'version', 'header'),
+    'osx': ('makefile', 'version', 'header'),
+    'windows': ('version', 'header'),
 }
 
 class ProjectConfig(object):
@@ -432,6 +432,9 @@ class ProjectConfig(object):
                 'version': (
                     Path(self.repos['SG'], 'sg/core/version_const.c'),
                     'version.gen_version'),
+                'header': (
+                    Path(self.repos['SG'], 'include/config.h'),
+                    'header.gen_header'),
                 'runner': (Path('run.sh'), 'runner.gen_runner'),
             }
         return self._actions
