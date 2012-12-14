@@ -116,80 +116,32 @@ class Project(object):
             for c in m.configs(enable):
                 yield c
 
-    def closure(self, modules):
+    def closure(self, modules, enabled):
         """Get a list of all modules the given modules depend on.
 
-        This returns (mods, unsat), where mods is a list of the
-        modules (including the original modules), and unsat is a list
-        of tags which are unsatisfied.
+        Returns (mods, unsat) where mods is the list of all modules,
+        and unsat is a set of module names which were unsatisfied.
         """
-        used = set()
+        unsat = set()
         q = list(modules)
-        unsat = []
+        used = set()
         mods = list(q)
         while q:
             m = q.pop()
-            deps = set(m.require)
-            for f in m.feature:
-                for i in f.impl:
-                    deps.update(i.require)
-            for v in m.variant:
-                deps.update(v.require)
-            for mid in deps.difference(used):
+            reqs = set()
+            for c in m.configs(enabled):
+                if isinstance(c, Require):
+                    reqs.update(c.modules)
+            for modid in reqs.difference(used):
                 try:
-                    m = self.module_names[mid]
+                    m = self.module_names[modid]
                 except KeyError:
-                    unsat.append(mid)
+                    unsat.add(modid)
                 else:
                     mods.append(m)
                     q.append(m)
-            used.update(deps)
+            used.update(reqs)
         return mods, unsat
-
-    def features(self, modules=None):
-        """Get a list of features for the given modules.
-
-        If no iterable of modules is supplied, then all features are
-        returned.
-        """
-        if modules is not None:
-            mods, unsat = self.closure(modules)
-        else:
-            mods = self.modules
-        a = []
-        for m in mods:
-            a.extend(m.feature)
-        return a
-
-    def variants(self, targets=None):
-        """Get a list of variants for the given modules.
-
-        If no iterable of modules is supplied, then all variants are
-        returned.
-        """
-        if modules is not None:
-            mods, unsat = self.closure(modules)
-        else:
-            mods = self.modules
-        a = []
-        for m in mods:
-            a.extend(m.variant)
-        return a
-
-    def sources(self, target, getenv):
-        """Iterate over the sources in a given target.
-
-        Yields (source, env) pairs, where env is the environment for
-        building the given source.  The environment is taken from the
-        getenv function, which should map a module name and a set of
-        tags to either the corresponding environment if the source
-        should be built, or None if the source should not be built.
-        """
-        modules = set()
-        mlist = [target]
-
-        while mlist:
-            m = mlist.pop()
 
 ########################################
 # Modules
@@ -487,10 +439,12 @@ class Alternative(BaseConfig):
                     yield x
 
 class Require(BaseConfig):
-    __slots__ = ['modules']
+    __slots__ = ['modules', 'enable', 'public']
 
-    def __init__(self, modules):
+    def __init__(self, modules, enable, public):
         self.modules = tuple(modules)
+        self.enable = tuple(enable)
+        self.public = bool(public)
 
     def configs(self, enable=None):
         """Iterate over this and all child config objects."""

@@ -4,7 +4,7 @@
   <header-path path="include"/>
   <header-path path="keycode/include"/>
   <header-path path="libpce/include"/>
-  <require module="glew"/>
+  <require module="glew" public="true"/>
 
   <defaults
       enable="jpeg png audio type"
@@ -31,7 +31,7 @@
     <name>Windows executable</name>
     <exe-suffix>Windows</exe-suffix>
     <exe-suffix os="windows"/>
-    <require module="windows"/>
+    <require enable="windows"/>
   </variant>
 
   <variant flag="app-cocoa">
@@ -67,7 +67,7 @@
       </alt>
       <alt flag="jpeg-wincodec">
 	<name>WinCodec JPEG support</name>
-	<require module="windows"/>
+	<require enable="windows"/>
       </alt>
     </alternatives>
   </feature>
@@ -85,7 +85,7 @@
       </alt>
       <alt flag="png-wincodec">
 	<name>WinCodec PNG support</name>
-	<require module="windows"/>
+	<require enable="windows"/>
       </alt>
     </alternatives>
   </feature>
@@ -103,7 +103,7 @@
       </alt>
       <alt flag="directsound">
 	<name>DirectSound sound output</name>
-	<require module="windows"/>
+	<require enable="windows"/>
       </alt>
     </alternatives>
   </feature>
@@ -121,7 +121,7 @@
       </alt>
       <alt flag="type-uniscribe">
 	<name>Uniscribe type rendering</name>
-	<require module="windows"/>
+	<require enable="windows"/>
       </alt>
     </alternatives>
   </feature>
@@ -166,7 +166,7 @@
     <src path="coreaudio.c"
 	 enable="audio-coresound" module="osx/coreaudio osx/audiounit"/>
     <src path="directsound8.c"
-	 enable="audio-directsound" module="windows"/>
+	 enable="audio-directsound"/>
     <src path="load.c"/>
     <src path="mixdown.c"/>
     <src path="ofile.c"/>
@@ -243,7 +243,7 @@
     <src path="pixbuf.c"/>
     <src path="premultiply_alpha.c"/>
     <src path="wincodec.cpp"
-	 enable="jpeg-wincodec" module="windows"/>
+	 enable="jpeg-wincodec"/>
   </group>
   <group path="sg/record">
     <src path="record.c"/>
@@ -263,10 +263,10 @@
 	 enable="type-pango" module="pango"/>
     <src path="type.c"/>
     <src path="uniscribe.c"
-	 enable="type-uniscribe" module="windows"/>
+	 enable="type-uniscribe"/>
   </group>
   <group path="sg/windows"
-	 enable="app-win32" module="windows">
+	 enable="app-win32 windows">
     <src path="windows.c"/>
   </group>
   <group path="sg/work">

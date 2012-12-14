@@ -14,8 +14,8 @@ class Source(object):
 
     def __init__(self, path, enable, module):
         self.path = path
-        self.enable = enable
-        self.module = module
+        self.enable = tuple(enable)
+        self.module = tuple(module)
 
     def __repr__(self):
         return 'Source({!r}, {!r})'.format(self.path, self.tags)

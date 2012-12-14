@@ -81,6 +81,13 @@ def node_noattr(node):
 
 ####################
 
+def attr_bool(attr):
+    if attr.value == 'true':
+        return True
+    elif attr.value == 'false':
+        return False
+    raise ValueError('invalid boolean: {!r}'.format(attr.value))
+
 def attr_cvar(attr):
     if not is_cvar(attr.value):
         raise ValueError('invalid cvar name: {!r}'.format(attr.value))
@@ -275,17 +282,23 @@ def mod_defaults(mod, node, path):
 # Config tags
 
 def config_require(mod, node):
-    modules = None
+    modules = ()
+    enable = ()
+    public = False
     for i in range(node.attributes.length):
         attr = node.attributes.item(i)
         if attr.name == 'module':
             modules = attr_module(attr)
+        elif attr.name == 'enable':
+            enable = attr_enable(attr)
+        elif attr.name == 'public':
+            public = attr_bool(attr)
         else:
             unexpected_attr(node, attr)
     if modules is None:
         missing_attr(node, 'module')
     node_empty(node)
-    mod.config.append(Require(modules))
+    mod.config.append(Require(modules, enable, public))
 
 def feat_name(feat, node):
     node_noattr(node)

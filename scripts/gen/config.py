@@ -319,8 +319,6 @@ class ProjectConfig(object):
                 if d.os is None or os == d.os:
                     enabled.update(d.enable)
 
-        print(', '.join(enabled))
-
         # User settings override defaults
         uenabled = set()
         for k, v in self.opt_enable.items():
@@ -369,10 +367,20 @@ class ProjectConfig(object):
                         + ''.join('  --with-{}\n'.format(alt.flagid)
                                   for alt in alts))
 
+        reachable.update(intrinsics)
+
+        # Check for require.enable
+        for c in self.project.configs(enabled.union(intrinsics)):
+            if isinstance(c, project.Require):
+                for flagid in c.enable:
+                    if flagid not in reachable:
+                        raise ConfigError(
+                            'unsatisfied dependency on {} flag'
+                            .format(flagid))
+
         if not variants:
             raise ConfigError('no build targets are enabled')
-        reachable.update(intrinsics)
-        result = frozenset(reachable), frozenset(variants)
+        result = BuildConfig(self, reachable, variants)
         self._config_cache[os] = result
         return result
 
@@ -459,128 +467,137 @@ class ProjectConfig(object):
     del set_quiet
 
 class BuildConfig(object):
-    """Configuration for a specific build."""
+    """Configuration for a specific os."""
 
-    __slots__ = ['project', 'projectconfig', 'os',
-                 'variants', 'features', 'libs',
-                 'targets']
+    __slots__ = [
+        'config', 'enabled', 'variants', '_targets', '_all_modules',
+    ]
 
-    def dump(self):
-        print('os: {}'.format(self.os))
-        for attr in ('variants', 'features', 'libs'):
-            print('%}: {}'.format(attr, ' '.join(getattr(self, attr))))
+    def __init__(self, config, enabled, variants):
+        self.config = config
+        self.enabled = frozenset(enabled)
+        self.variants = frozenset(variants)
+        self._targets = None
 
-    def _calculate_targets(self):
-        self.targets = []
-        for t in self.project.targets():
-            for v in self.variants:
-                vinst = []
-                tags = set()
-                mods = [t]
-                q = list(mods)
-                while q:
-                    m = q.pop()
-                    reqs = set()
-                    reqs.update(m.require)
-                    for f in m.feature:
-                        if f.modid not in self.features:
-                            continue
-                        for i in f.impl:
-                            if all(x in self.libs for x in i.require):
-                                reqs.update(i.require)
-                    for vv in m.variant:
-                        if vv.varname == v:
-                            reqs.update(vv.require)
-                            vinst.append(vv)
-                    reqs.difference_update(tags)
-                    tags.update(reqs)
-                    for modid in reqs:
-                        m = self.project.module_names[modid]
-                        q.append(m)
-                        mods.append(m)
-                assert len(vinst) == 1
-                tags.update(self.features)
-                tags.update(project.OS[self.os])
-                cvars = list(self.project.cvar)
-                for m in mods:
-                    cvars.extend(m.cvar)
-                bt = BuildTarget(t, vinst[0], mods, tags, cvars)
-                self.targets.append(bt)
+    def targets(self):
+        if self._targets is not None:
+            return self._targets
+        targets = []
+        proj = self.config.project
+        variants = [c for c in proj.configs()
+                    if isinstance(c, project.Variant)
+                    and c.flagid in self.variants]
+        for target in proj.targets():
+            for variant in variants:
+                enabled = set(self.enabled)
+                enabled.add(variant.flagid)
+                mods, unsat = proj.closure([target], enabled)
+                if unsat:
+                    raise ConfigError(
+                        'could not satisfy dependency on modules: {}'
+                        .format(', '.join(sorted(unsat))))
+                targets.append(BuildTarget(
+                    self, target, variant, enabled, mods))
+        self._targets = targets
+        return targets
+
+    def all_modules(self):
+        if self._all_modules is not None:
+            return self._all_modules
+        allmods = set()
+        for t in self.targets():
+            allmods.update(t, modids)
 
 class BuildTarget(object):
-    __slots__ = ['target', 'variant', 'modules', 'tags', 'tag_closure',
-                 'tag_modules', 'cvars']
+    __slots__ = [
+        'buildconfig', 'target', 'variant', 'enabled', 'modules',
+        'module_names', '_cvars', '_module_closure',
+    ]
 
-    def __init__(self, target, variant, modules, tags, cvars):
+    def __init__(self, buildconfig, target, variant, enabled, modules):
+        self.buildconfig = buildconfig
         self.target = target
         self.variant = variant
-        self.modules = list(modules)
-        self.tags = frozenset(tags)
-        tag_map = {}
-        tag_modules = set()
+        self.enabled = frozenset(enabled)
+        self.modules = tuple(modules)
+        self.module_names = {}
         for m in self.modules:
-            if m.modid is None:
-                continue
-            tag_modules.add(m.modid)
-            if m.require:
-                tag_map[m.modid] = frozenset(m.require)
-        tag_closure = {}
-        for tag in tag_map:
-            deps = set()
-            ndeps = set(tag_map[tag])
-            while ndeps:
-                deps.update(ndeps)
-                odeps = ndeps
-                ndeps = set()
-                for dtag in odeps:
+            if m.modid is not None:
+                self.module_names[m.modid] = m
+        self._cvars = None
+        self._module_closure = None
+
+    @property
+    def cvars(self):
+        if self._cvars is not None:
+            return self._cvars
+        cvars = list(self.buildconfig.config.project.cvar)
+        for m in self.modules:
+            cvars.extend(m.cvar)
+        cvars = tuple(cvars)
+        self._cvars = cvars
+        return cvars
+
+    def _get_module_closure(self):
+        """Get the closure of public module dependencies."""
+        if self._module_closure is not None:
+            return self._module_closure
+        proj = self.buildconfig.config.project
+        reqmap = {}
+        for m in self.modules:
+            # 'modid is None' is fine, that's the one and only target
+            reqs = set()
+            for c in m.configs(self.enabled):
+                if isinstance(c, project.Require) and c.public:
+                    reqs.update(c.modules)
+            if reqs:
+                reqmap[m.modid] = reqs
+        req_closure = {}
+        for k, v in reqmap.items():
+            reqs = set()
+            nreqs = set(v)
+            while nreqs:
+                t = set()
+                for r in nreqs:
                     try:
-                        ndeps.update(tag_map[dtag])
+                        t.update(reqmap[r])
                     except KeyError:
                         pass
-                ndeps.difference_update(deps)
-            deps.discard(tag)
-            if deps:
-                tag_closure[tag] = frozenset(deps)
-        self.tag_closure = tag_closure
-        self.tag_modules = tag_modules
-        self.cvars = list(cvars)
-
-    def dump(self):
-        print('target:', self.target)
-        print('variant:', self.variant.varname)
-        print('tags:', ' '.join(self.tags))
+                reqs.update(nreqs)
+                t.difference_update(reqs)
+                nreqs = t
+            req_closure[k] = tuple(reqs)
+        self._module_closure = req_closure
+        return req_closure
 
     def sources(self):
-        usedtags = set()
+        """Iterate over all sources in the target."""
+        module_closure = self._get_module_closure()
         for m in self.modules:
-            base = set(m.require)
-            if m.modid is not None:
-                base.add(m.modid)
-            external = (isinstance(m, project.ExternalLibrary) and
-                        m.use_bundled)
-            for s in m.sources:
-                tags = base.union(s.tags)
-                for tag in tuple(tags):
+            for source in m.sources:
+                if not self.enabled.issuperset(source.enable):
+                    continue
+                mod = set(source.module)
+                mod.add(m.modid)
+                for modid in tuple(mod):
                     try:
-                        tags.update(self.tag_closure[tag])
+                        mod.update(module_closure[modid])
                     except KeyError:
                         pass
-                if tags.issubset(self.tags):
-                    tags.intersection_update(self.tag_modules)
-                    usedtags.update(tags)
-                    tags = tuple(sorted(tags))
-                    if external:
-                        tags = tags + ('.external',)
-                    yield Source(s.path, tuple(sorted(tags)))
-
+                mod.discard(None)
+                yield Source(source.path, (), mod)
 
 def configure(argv):
     config = ProjectConfig()
     config.parse_args(argv)
     for os in ('linux', 'osx', 'windows'):
-        enabled, variants = config.get_config(os)
-        print('{}-enabled: {}'.format(os, ', '.join(enabled)))
-        print('{}-variants: {}'.format(os, ', '.join(variants)))
+        bcfg = config.get_config(os)
+        for t in bcfg.targets():
+            print('----------')
+            print(t)
+            for s in t.sources():
+                print(s.path.posix, ' '.join(s.module))
+
     print('STOPPING HERE')
     sys.exit(1)
 
