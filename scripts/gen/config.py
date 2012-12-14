@@ -28,9 +28,6 @@ class ProjectConfig(object):
         # Options set to None are removed.
         'opt_misc', 'opt_enable', 'opt_bundle', 'opt_env',
 
-        # Map from module ID to (path, bundle).
-        'bundles',
-
         # Cache for get_config
         '_config_cache',
 
@@ -239,8 +236,6 @@ class ProjectConfig(object):
         return list(sorted(actions))
 
     def scan_bundles(self):
-        self.bundles = {}
-
         if self.project.lib_path is None:
             return
 
@@ -283,11 +278,28 @@ class ProjectConfig(object):
                     if v.libname == libname:
                         sys.stderr.write(
                             'using {}\n'.format(lpath.native))
-                        self.bundles[m.modid] = (lpath, v)
+                        self.use_bundle(m, lpath, v)
                         break
                 else:
                     continue
                 break
+
+    def use_bundle(self, m, lpath, v):
+        """Replace a library with the bundled version."""
+        mm = project.Module(m.modid)
+        mm.name = m.name
+        mm.header_path = v.header_path
+        mm.define = v.define
+        mm.cvar = v.cvar
+        mm.sources = [
+            Source(Path(lpath, s.path), s.enable, s.module + ('.external',))
+            for s in v.sources]
+        mm.config = v.config
+        # mm.defaults = v.defaults
+        self.project.modules = [
+            pm for pm in self.project.modules if pm.modid != m.modid]
+        self.project.modules.append(mm)
+        self.project.module_names[m.modid] = mm
 
     def parse_args(self, args):
         """Parse the given command line options.
