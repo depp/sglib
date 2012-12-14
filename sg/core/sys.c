@@ -1,4 +1,5 @@
 /* Copyright 2012 Dietrich Epp <depp@zdome.net> */
+#include "config.h"
 #include "keycode/keycode.h"
 #include "sg/audio_sample.h"
 #include "sg/audio_system.h"
@@ -113,6 +114,7 @@ sg_sys_event(union pce_event *evt)
         default:
             break;
 
+#if defined(ENABLE_VIDEO_RECORDING)
         case KEY_F10:
             if (sg_sst.rec_numer) {
                 sg_record_vidstop();
@@ -120,6 +122,7 @@ sg_sys_event(union pce_event *evt)
                 sg_record_vidstart();
             }
             break;
+#endif
 
         case KEY_F12:
             sg_record_screenshot();
@@ -134,10 +137,12 @@ void
 sg_sys_draw(void)
 {
     unsigned msec, n;
+    (void) n;
 
     sg_dispatch_sync_run(SG_PRE_RENDER);
 
     msec = sg_clock_get() - sg_sst.tick_offset;
+#if defined(ENABLE_VIDEO_RECORDING)
     if (sg_sst.rec_numer && (int) (msec - sg_sst.rec_next) >= 0) {
         if ((int) (msec - sg_sst.rec_next) >= 500) {
             sg_logf(sg_log_video, LOG_WARN, "lag over 500ms, adjusting");
@@ -154,6 +159,7 @@ sg_sys_draw(void)
         sg_record_vidframe();
     }
     sg_sst.tick = msec;
+#endif
 
     sg_game_draw(0, 0, sg_sst.width, sg_sst.height, msec);
     sg_dispatch_sync_run(SG_POST_RENDER);

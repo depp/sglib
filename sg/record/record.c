@@ -1,4 +1,5 @@
 /* Copyright 2012 Dietrich Epp <depp@zdome.net> */
+#include "config.h"
 #include "sg/dispatch.h"
 #include "sg/defs.h"
 #include "sg/entry.h"
@@ -98,8 +99,10 @@ sg_record_procpix(struct sg_rec_buf *SG_RESTRICT buf)
     if (buf->reqflags & SG_REC_SHOT)
         sg_record_writeshot(buf->timestamp, mptr, buf->width, buf->height);
 
+#if defined(ENABLE_VIDEO_RECORDING)
     if (buf->reqflags & SG_REC_VID)
         sg_record_writevideo(buf->timestamp, mptr, buf->width, buf->height);
+#endif
 
     glUnmapBuffer(GL_PIXEL_PACK_BUFFER);
     glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
@@ -150,12 +153,14 @@ sg_record_screenshot(void)
     sg_record_schedule();
 }
 
+#if defined(ENABLE_VIDEO_RECORDING)
 void
 sg_record_vidframe(void)
 {
     sg_rec_state.buf[sg_rec_state.which].reqflags |= SG_REC_VID;
     sg_record_schedule();
 }
+#endif
 
 void
 sg_record_fixsize(int width, int height)
