@@ -9,6 +9,7 @@ __all__ = [
 ]
 from gen.path import common_ancestor
 from gen.error import ConfigError
+from io import StringIO
 
 # Intrinsics for each OS
 OS = {
@@ -92,7 +93,7 @@ class Project(object):
         return missing
 
     def validate(self):
-        flagids = set()
+        flagids = set(INTRINSICS)
         dup_flagids = set()
         for m in self.modules:
             for c in m.configs():
@@ -105,10 +106,33 @@ class Project(object):
                         dup_flagids.add(flagid)
                     else:
                         flagids.add(flagid)
-        if dup_flagids:
+
+        dflagids = set()
+        dmodules = set()
+        for m in self.modules:
+            for c in m.configs():
+                if isinstance(c, Require):
+                    dflagids.update(c.enable)
+                    dmodules.update(c.modules)
+            for s in m.sources:
+                dflagids.update(s.enable)
+                dmodules.update(s.module)
+        dflagids.difference_update(flagids)
+        dmodules.difference_update(self.module_names)
+
+        if dflagids or dmodules or dup_flagids:
+            fp = StringIO()
+            if dflagids:
+                fp.write('unsatisfied enable flags: {}\n'
+                         .format(', '.join(sorted(dflagids))))
+            if dmodules:
+                fp.write('unsatisfied modules: {}\n'
+                         .format(', '.join(sorted(dmodules))))
+            if dup_flagids:
+                fp.write('duplicate flags: {}\n'
+                         .format(', '.join(sorted(dup_flagids))))
             raise ConfigError(
-                'duplicate flags: {}'
-                .format(', '.join(sorted(dup_flagids))))
+                'problems with flags and modules', fp.getvalue())
 
     def configs(self, enable=None):
         """Iterate over all config objects in the project."""

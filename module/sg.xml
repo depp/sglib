@@ -128,7 +128,7 @@
 
   <feature flag="video-recording">
     <name>Video recording support</name>
-    <require module="posix"/>
+    <require enable="posix"/>
   </feature>
 
   <!-- SGLib -->
@@ -161,12 +161,12 @@
   </group>
   <group path="sg/audio">
     <src path="alsa.c"
-	 enable="audio-alsa" module="alsa"/>
+	 enable="alsa" module="alsa"/>
     <src path="convert.c"/>
     <src path="coreaudio.c"
-	 enable="audio-coresound" module="osx/coreaudio osx/audiounit"/>
+	 enable="coreaudio" module="osx/coreaudio osx/audiounit"/>
     <src path="directsound8.c"
-	 enable="audio-directsound"/>
+	 enable="directsound"/>
     <src path="load.c"/>
     <src path="mixdown.c"/>
     <src path="ofile.c"/>
@@ -309,6 +309,6 @@
     <src path="hashtable.c"/>
     <src path="strbuf.c"/>
     <src path="thread_pthread.c" enable="posix"/>
-    <src path="thread_windows.c" enable="posix"/>
+    <src path="thread_windows.c" enable="windows"/>
   </group>
 </module>
