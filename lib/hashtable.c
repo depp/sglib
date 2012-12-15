@@ -125,7 +125,7 @@ pce_hashtable_erase(struct pce_hashtable *d,
     struct pce_hashtable_entry *es = d->contents;
     size_t epos = e - d->contents, ppos, pos, n = d->capacity;
     assert(epos < n);
-    for (pos = epos + 1; ; ++pos) {
+    for (pos = epos + 1; pos < epos + n; ++pos) {
         pos = pos & (n - 1);
         if (!es[pos].key)
             break;
