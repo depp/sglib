@@ -35,7 +35,7 @@ pce_read_s8(void const *ptr)
 PCE_INLINE unsigned short
 pce_read_bu16(void const *ptr)
 {
-    unsigned char const *p = ptr;
+    unsigned char const *p = (const unsigned char *) ptr;
     unsigned short r = ((unsigned short) p[0] << 8) | (unsigned short)p[1];
     return r;
 }
@@ -44,7 +44,7 @@ pce_read_bu16(void const *ptr)
 PCE_INLINE unsigned short
 pce_read_lu16(void const *ptr)
 {
-    unsigned char const *p = ptr;
+    unsigned char const *p = (const unsigned char *) ptr;
     unsigned short r = ((unsigned short) p[1] << 8) | (unsigned short)p[0];
     return r;
 }
@@ -67,7 +67,7 @@ pce_read_ls16(void const *ptr)
 PCE_INLINE unsigned
 pce_read_bu32(void const *ptr)
 {
-    unsigned char const *p = ptr;
+    unsigned char const *p = (const unsigned char *) ptr;
     unsigned r = ((unsigned) p[0] << 24)
         | ((unsigned) p[1] << 16)
         | ((unsigned) p[2] << 8)
@@ -79,7 +79,7 @@ pce_read_bu32(void const *ptr)
 PCE_INLINE unsigned
 pce_read_lu32(void const *ptr)
 {
-    unsigned char const *p = ptr;
+    unsigned char const *p = (const unsigned char *) ptr;
     unsigned r = ((unsigned) p[3] << 24)
         | ((unsigned) p[2] << 16)
         | ((unsigned) p[1] << 8)
@@ -105,7 +105,7 @@ pce_read_ls32(void const *ptr)
 PCE_INLINE unsigned long long
 pce_read_bu64(void const *ptr)
 {
-    unsigned char const *p = ptr;
+    unsigned char const *p = (const unsigned char *) ptr;
     return ((unsigned long long) pce_read_bu32(p) << 32) | pce_read_bu32(p + 4);
 }
 
@@ -113,7 +113,7 @@ pce_read_bu64(void const *ptr)
 PCE_INLINE unsigned long long
 pce_read_lu64(void const *ptr)
 {
-    unsigned char const *p = ptr;
+    unsigned char const *p = (const unsigned char *) ptr;
     return ((unsigned long long) pce_read_lu32(p + 4) << 32) | pce_read_lu32(p);
 }
 
@@ -149,7 +149,7 @@ pce_write_s8(void *ptr, signed char v)
 PCE_INLINE void
 pce_write_bu16(void *ptr, unsigned short v)
 {
-    unsigned char *p = ptr;
+    unsigned char *p = (unsigned char *) ptr;
     p[0] = v >> 8;
     p[1] = v;
 }
@@ -158,7 +158,7 @@ pce_write_bu16(void *ptr, unsigned short v)
 PCE_INLINE void
 pce_write_lu16(void *ptr, unsigned short v)
 {
-    unsigned char *p = ptr;
+    unsigned char *p = (unsigned char *) ptr;
     p[0] = v;
     p[1] = v >> 8;
 }
@@ -181,7 +181,7 @@ pce_write_ls16(void *ptr, short v)
 PCE_INLINE void
 pce_write_bu32(void *ptr, unsigned v)
 {
-    unsigned char *p = ptr;
+    unsigned char *p = (unsigned char *) ptr;
     p[0] = v >> 24;
     p[1] = v >> 16;
     p[2] = v >> 8;
@@ -192,7 +192,7 @@ pce_write_bu32(void *ptr, unsigned v)
 PCE_INLINE void
 pce_write_lu32(void *ptr, unsigned v)
 {
-    unsigned char *p = ptr;
+    unsigned char *p = (unsigned char *) ptr;
     p[0] = v;
     p[1] = v >> 8;
     p[2] = v >> 16;
@@ -217,7 +217,7 @@ pce_write_ls32(void *ptr, int v)
 PCE_INLINE void
 pce_write_bu64(void *ptr, unsigned long long v)
 {
-    unsigned char *p = ptr;
+    unsigned char *p = (unsigned char *) ptr;
     pce_write_bu32(p, v >> 32);
     pce_write_bu32(p + 4, v);
 }
@@ -226,7 +226,7 @@ pce_write_bu64(void *ptr, unsigned long long v)
 PCE_INLINE void
 pce_write_lu64(void *ptr, unsigned long long v)
 {
-    unsigned char *p = ptr;
+    unsigned char *p = (unsigned char *) ptr;
     pce_write_lu32(p, v);
     pce_write_lu32(p + 4, v >> 32);
 }
