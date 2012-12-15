@@ -28,7 +28,8 @@ public:
         : m_buf(b)
     { }
 
-    FBuffer(const char *path, int flags, size_t maxsize);
+    FBuffer(const char *path, int flags, const char *extensions,
+            size_t maxsize);
 
     ~FBuffer()
     {

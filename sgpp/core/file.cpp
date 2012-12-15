@@ -4,12 +4,13 @@
 #include <stdio.h>
 #include <string.h>
 
-FBuffer::FBuffer(const char *path, int flags, size_t maxsize)
+FBuffer::FBuffer(const char *path, int flags, const char *extensions,
+                 size_t maxsize)
     : m_buf(0)
 {
     sg_buffer *b;
     struct sg_error *e = NULL;
-    b = sg_file_get(path, strlen(path), flags, NULL, maxsize, &e);
+    b = sg_file_get(path, strlen(path), flags, extensions, maxsize, &e);
     if (!b)
         throw error(&e);
     m_buf = b;
