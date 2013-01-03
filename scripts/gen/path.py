@@ -121,7 +121,7 @@ class Path(object):
         result, unless the path has no extension."""
         return posixpath.splitext(self._p)[1]
     def __repr__(self):
-        return 'Path({})'.format(self._p)
+        return 'Path({!r})'.format(self._p)
     def __div__(self, other):
         return Path(self._p, other._p)
     def __eq__(self, other):
