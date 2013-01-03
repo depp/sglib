@@ -459,6 +459,7 @@ def src_group(node, obj, path, enable, module):
 
 def src_src(node, obj, path, enable, module):
     spath = None
+    generator = None
     for i in range(node.attributes.length):
         attr = node.attributes.item(i)
         if attr.name == 'path':
@@ -467,12 +468,14 @@ def src_src(node, obj, path, enable, module):
             enable = enable + attr_enable(attr)
         elif attr.name == 'module':
             module = module + attr_module(attr)
+        elif attr.name == 'generator':
+            generator = attr.value
         else:
             unexpected_attr(node, attr)
     if spath is None:
         missing_attr(node, 'path')
     node_empty(node)
-    obj.add_source(source.Source(spath, enable, module))
+    obj.add_source(source.Source(spath, enable, module, generator))
 
 SRC_ELEM = {
     'group': src_group,

@@ -12,16 +12,20 @@ class Source(object):
 
     The path is always relative to some root path.
     """
-    __slots__ = ['path', 'enable', 'module']
+    __slots__ = ['path', 'enable', 'module', 'generator']
 
-    def __init__(self, path, enable, module):
+    def __init__(self, path, enable, module, generator=None):
         self.path = Path(path)
         self.enable = tuple(enable)
         self.module = tuple(module)
+        self.generator = generator
 
     def __repr__(self):
-        return ('Source({!r}, {!r}, {!r})'
-                .format(self.path, self.enable, self.module))
+        args = [self.path, self.enable, self.module]
+        if self.generator is not None:
+            args.append(self.generator)
+        return 'Source({})'.format(
+            ', '.join(repr(x) for x in args))
 
     def __cmp__(self, other):
         if not isinstance(other, Source):
