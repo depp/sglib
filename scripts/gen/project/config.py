@@ -101,13 +101,13 @@ class BaseConfig(object):
         galt = parser.add_argument_group('optional packages')
         gvar = parser.add_argument_group('build variants')
 
-        for c, public in self.all_configs():
+        for c in self.all_configs():
             try:
                 flagid = c.flagid
             except AttributeError:
                 continue
             enable_flag, disable_flag = c.flag_names()
-            enable_help, disable_help = c.flag_help()
+            enable_help = c.flag_help()
             gname, gdesc = c.flag_groupname()
             try:
                 group = groups[gname]
@@ -116,13 +116,13 @@ class BaseConfig(object):
                 groups[gname] = group
             varname = 'enable:' + flagid
             group.add_argument(
-                '--{}-{}'.format(flags[0], flagid),
+                enable_flag,
                 default=None,
                 action='store_true',
                 dest=varname,
-                help=help.format(c.name))
+                help=enable_help)
             group.add_argument(
-                '--{}-{}'.format(flags[1], flagid),
+                disable_flag,
                 default=None,
                 action='store_false',
                 dest=varname,
@@ -142,7 +142,7 @@ class BaseConfig(object):
         udisabled = set() # User disabled flags
         conflicts = {} # Map of conflicting flags
         variants = set()
-        for c, public in self.all_configs():
+        for c in self.all_configs():
             if isinstance(c, Defaults):
                 if d.os is None or os == d.os:
                     denabled.update(d.enable)
@@ -169,7 +169,7 @@ class BaseConfig(object):
             fp.write('error: {}\n'.format(desc))
             flagsets = set()
             flagnames = {}
-            for c, public in self.all_configs():
+            for c in self.all_configs():
                 try:
                     flagid = c.flagid
                 except AttributeError:
@@ -392,7 +392,7 @@ class Feature(ConfigSet):
         return ('--enable-{}'.format(self.flagid), 
                 '--disable-{}'.format(self.flagid))
 
-    def flag_groupnames(self):
+    def flag_groupname(self):
         return 'optional features', None
 
     def flag_help(self):
@@ -426,7 +426,7 @@ class Alternative(ConfigSet):
         return ('--with-{}'.format(self.flagid), 
                 '--without-{}'.format(self.flagid))
 
-    def flag_groupnames(self):
+    def flag_groupname(self):
         return 'optional packages', None
 
     def flag_help(self):
@@ -454,9 +454,9 @@ class Variant(ConfigSet):
 
     def flag_names(self):
         return ('--enable-{}'.format(self.flagid), 
-                '--enable-{}'.format(self.flagid))
+                '--disable-{}'.format(self.flagid))
 
-    def flag_groupnames(self):
+    def flag_groupname(self):
         return 'build variants', None
 
     def flag_help(self):

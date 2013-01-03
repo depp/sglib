@@ -45,6 +45,12 @@ class Executable(object):
         if errors:
             raise ConfigError('error in executable', suberrors=errors)
 
+    def sources(self):
+        return iter(self.srcmodule.sources)
+
+    def configs(self):
+        yield self.srcmodule.config
+
 class Module(object):
     """A simple module, consisting of project source code."""
 
@@ -79,6 +85,12 @@ class Module(object):
             errors.append(ex)
         if errors:
             raise ConfigError('error in module', suberrors=errors)
+
+    def sources(self):
+        return iter(self.srcmodule.sources)
+
+    def configs(self):
+        yield self.srcmodule.config
 
 class ExternalLibrary(object):
     """A module which can be incorporated into a target multiple ways.
@@ -141,6 +153,17 @@ class ExternalLibrary(object):
                 errors.append(ex)
         if errors:
             raise ConfigError('error in external library', suberrors=errors)
+
+    def sources(self):
+        if self.srcmodule:
+            return iter(self.srcmodule.sources)
+        return ()
+
+    def configs(self):
+        for source in self.libsources:
+            yield source
+        if self.srcmodule is not None:
+            yield self.srcmodule.config
 
 class BundledLibrary(object):
     """Library source for libraries bundled with the project.

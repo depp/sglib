@@ -48,3 +48,26 @@ class Project(object):
         if errors:
             raise ConfigError('error validating project',
                               suberrors=errors)
+
+    def sources(self):
+        for target in self.targets:
+            for source in target.sources():
+                yield source
+        for module in self.modules.values():
+            for source in module.sources():
+                yield source
+
+    def source_paths(self):
+        paths = set()
+        for source in self.sources():
+            paths.add(source.path)
+        return paths
+
+    def super_config(self):
+        """Return a configuration object containing all others."""
+        cfg = ConfigSet()
+        for objlist in (self.targets, self.modules.values()):
+            for obj in objlist:
+                for config in obj.configs():
+                    cfg.add_config(config)
+        return cfg
