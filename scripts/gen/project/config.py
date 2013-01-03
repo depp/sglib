@@ -81,6 +81,18 @@ class BaseConfig(object):
                 mod_deps.update(cmodules)
         return mod_deps
 
+    def enable_flags(self):
+        """Return a set of all enable flags this config has."""
+        flags = set()
+        for c in self.all_configs():
+            try:
+                flagid = c.flagid
+            except AttributeError:
+                pass
+            else:
+                flags.add(flagid)
+        return flags
+
     def add_options(self, parser):
         """Add config options to the given ArgumentParser."""
 
@@ -320,6 +332,10 @@ class BaseConfig(object):
 
     def create_env(self, config):
         return {}
+
+    def validate(self, enable, is_variant=False):
+        for c in self.children():
+            c.validate(enable, is_variant)
 
 ########################################################################
 # Configuration groups

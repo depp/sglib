@@ -1,10 +1,11 @@
 import os
 import re
+from gen.error import ConfigError
 __all__ = [
     'relpath',
     'is_ident', 'is_flat_tag', 'is_hier_tag', 'is_title',
     'is_filename', 'is_domain', 'is_version', 'is_hash',
-    'is_cvar', 'make_filename',
+    'is_cvar', 'make_filename', 'make_filenames'
 ]
 
 # FIXME is this function used?
@@ -101,3 +102,27 @@ def make_filename(x):
     if not is_filename(y):
         raise ValueError('cannot change %s into filename' % (x,))
     return y
+
+FILENAMES = {
+    'linux': (make_filename, is_filename),
+    'osx': (lambda x: x, is_title),
+    'windows': (lambda x: x, is_title),
+}
+
+def make_filenames(filenames, default):
+    errors = []
+    default = filenames.get(None, default)
+    for os, (mkfunc, chkfunc) in FILENAMES.items():
+        try:
+            filename = filenames[os]
+        except KeyError:
+            filename = mkfunc(default)
+            filenames[os] = filename
+        if not chkfunc(filename):
+            errors.append('invalid filename for os {}: {}'
+                          .format(os, filename))
+    if errors:
+        fp = io.StringIO()
+        for error in errors:
+            fp.write(error + '\n')
+        raise ConfigError('invalid filename', fp.getvalue())

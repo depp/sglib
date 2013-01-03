@@ -1,6 +1,7 @@
 __all__ = ['Source', 'SourceModule']
 from gen.path import Path
 from gen.project.config import ConfigSet
+from gen.error import ConfigError
 
 class Source(object):
     """A source file.
@@ -83,15 +84,11 @@ class SourceModule(object):
 
     def module_deps(self):
         """Return a set of all modules this module may depend on."""
-        modules = set()
-        for c in self.config.all_configs():
-            try:
-                cmodules = c.modules
-            except AttributeError:
-                pass
-            else:
-                modules.update(cmodules)
-        return modules
+        return self.config.module_deps()
+
+    def enable_flags(self):
+        """Return a set of all enable flags this module has."""
+        return self.config.enable_flags()
 
     def validate(self, enable):
         """Validate the source module structure.
@@ -100,11 +97,18 @@ class SourceModule(object):
         the project.
         """
 
+        errors = []
+
+        try:
+            self.config.validate(enable)
+        except ConfigError as ex:
+            errors.append(ex)
+
         modules = self.module_deps()
         unsat_modules = {}
         unsat_enable = {}
         for src in self.sources:
-            for modid in src.modules:
+            for modid in src.module:
                 if modid not in modules:
                     try:
                         unsat = unsat_modules[modid]
@@ -118,23 +122,30 @@ class SourceModule(object):
                         unsat = unsat_enable[flagid]
                     except KeyError:
                         unsat = []
-                        unsat_enable = unsat
+                        unsat_enable[flagid] = unsat
                     unsat.append(src.path.posix)
 
         if unsat_modules or unsat_enable:
-            fp = io.StringIO()
             if unsat_modules:
-                fp.write('modules required by source files must also '
-                         'be required by the module')
+                errors.append(
+                    ConfigError('modules required by source files must '
+                                'also be required by the module'))
             for k, v in unsat_modules.items():
-                fp.write('invalid module requirement: {}\n' .format(k))
-                fp.write('    required by: {}\n'
-                         .format(', '.join(sorted(set(v)))))
+                errors.append(
+                    ConfigError(
+                        'invalid module requirement: {}' .format(k),
+                        'required by: {}\n'
+                        .format(', '.join(sorted(set(v))))))
             for k, v in unsat_enable.items():
-                fp.write('unknown enable flag: {}\n'.format(k))
-                fp.write('    required by: {}\n'
-                         .format(', '.join(sorted(set(v)))))
-            raise ConfigError('source module contains errors', fp.getvalue())
+                errors.append(
+                    ConfigError(
+                        'unknown enable flag: {}'.format(k),
+                        'required by: {}\n'
+                        .format(', '.join(sorted(set(v))))))
+
+        if errors:
+            raise ConfigError('source module contains errors',
+                              suberrors=errors)
 
     def prefix_paths(self, prefix):
         """Modify the module by prepending all paths with a prefix."""

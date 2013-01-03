@@ -36,6 +36,12 @@ def store(cfg):
         except OSError:
             pass
 
+DEFAULT_ACTIONS = {
+    'linux': ('makefile', 'runner', 'version', 'header'),
+    'osx': ('makefile', 'version', 'header'),
+    'windows': ('version', 'header'),
+}
+
 def load_project(path):
     """Load a project and all required modules.
 
@@ -82,7 +88,7 @@ def load_project(path):
                 break
             else:
                 errors.append(
-                    'error: cannot find module: {}\n'.format(modid))
+                    ConfigError('cannot find module: {}'.format(modid)))
                 continue
         module.scan_bundled_libs(bundled_libs)
         new_mod_deps = set(module.module_deps()).difference(mod_deps)
@@ -92,19 +98,21 @@ def load_project(path):
     proj.modules = { k: v for k, v in proj.modules.items()
                      if k in mod_deps }
 
+    try:
+        proj.validate()
+    except ConfigError as ex:
+        errors.append(ex)
+
     if errors:
-        for line in errors:
-            sys.stderr.write(line)
-        sys.exit(1)
+        raise ConfigError('error in project', suberrors=errors)
 
     return proj
 
 def run():
-    proj = load_project(Path('project.xml'))
-    return
-
-    mode = sys.argv[1]
     try:
+        proj = load_project(Path('project.xml'))
+        return
+        mode = sys.argv[1]
         quiet = False
         if mode == 'config':
             argv = sys.argv[2:]
@@ -125,8 +133,5 @@ def run():
         for action in actions:
             cfg.exec_action(action, quiet)
     except ConfigError as ex:
-        sys.stderr.write('\n')
-        sys.stderr.write('error: ' + ex.reason + '\n')
-        if ex.details is not None:
-            sys.stderr.write(ex.details)
+        ex.write(sys.stderr)
         sys.exit(1)

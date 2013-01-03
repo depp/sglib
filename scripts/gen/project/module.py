@@ -1,5 +1,7 @@
 __all__ = ['Executable', 'Module', 'ExternalLibrary', 'BundledLibrary']
 from gen.project.source import SourceModule
+from gen.error import ConfigError
+import gen.util as util
 import sys
 
 class Executable(object):
@@ -24,6 +26,25 @@ class Executable(object):
     def module_deps(self):
         return self.srcmodule.module_deps()
 
+    def enable_flags(self):
+        return self.srcmodule.enable_flags()
+
+    def validate(self, enable):
+        errors = []
+        if self.name is None:
+            errors.append(ConfigError('executable has no name'))
+        else:
+            try:
+                util.make_filenames(self.filename, self.name)
+            except ConfigError as ex:
+                errors.append(ex)
+        try:
+            self.srcmodule.validate(enable)
+        except ConfigError as ex:
+            errors.append(ex)
+        if errors:
+            raise ConfigError('error in executable', suberrors=errors)
+
 class Module(object):
     """A simple module, consisting of project source code."""
 
@@ -44,6 +65,20 @@ class Module(object):
 
     def module_deps(self):
         return self.srcmodule.module_deps()
+
+    def enable_flags(self):
+        return self.srcmodule.enable_flags()
+
+    def validate(self, enable):
+        errors = []
+        if self.name is None:
+            errors.append(ConfigError('module has no name'))
+        try:
+            self.srcmodule.validate(enable)
+        except ConfigError as ex:
+            errors.append(ex)
+        if errors:
+            raise ConfigError('error in module', suberrors=errors)
 
 class ExternalLibrary(object):
     """A module which can be incorporated into a target multiple ways.
@@ -82,6 +117,30 @@ class ExternalLibrary(object):
         for source in self.libsources:
             mod_deps.update(source.module_deps())
         return mod_deps
+
+    def enable_flags(self):
+        flags = set()
+        if self.srcmodule is not None:
+            flags.update(self.srcmodule.enable_flags())
+        for source in self.libsources:
+            flags.update(source.enable_flags())
+        return flags
+
+    def validate(self, enable):
+        errors = []
+        if self.name is None:
+            errors.append(ConfigError('module has no name'))
+        objs = []
+        if self.srcmodule is not None:
+            objs.append(self.srcmodule)
+        objs.extend(self.libsources)
+        for obj in objs:
+            try:
+                obj.validate(enable)
+            except ConfigError as ex:
+                errors.append(ex)
+        if errors:
+            raise ConfigError('error in external library', suberrors=errors)
 
 class BundledLibrary(object):
     """Library source for libraries bundled with the project.

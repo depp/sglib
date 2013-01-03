@@ -1,5 +1,7 @@
 __all__ = ['Project']
 from gen.project.config import ConfigSet
+from gen.error import ConfigError
+from gen.os import INTRINSICS
 
 class Project(object):
     """A project is a set of modules and project-wide settings."""
@@ -24,3 +26,25 @@ class Project(object):
 
     def add_config(self, config):
         self.config.add_config(config)
+
+    def validate(self):
+        errors = []
+        objs = []
+        for target in self.targets:
+            objs.append((target, 'target {}'.format(target.name)))
+        for modid, module in self.modules.items():
+            objs.append((module, 'module {}'.format(modid)))
+        enable = set()
+        enable.update(INTRINSICS)
+        for obj, name in objs:
+            enable.update(obj.enable_flags())
+        enable = frozenset(enable)
+        for obj, name in objs:
+            try:
+                obj.validate(enable)
+            except ConfigError as ex:
+                ex.reason = '{} (in {})'.format(ex.reason, name)
+                errors.append(ex)
+        if errors:
+            raise ConfigError('error validating project',
+                              suberrors=errors)
