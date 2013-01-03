@@ -274,11 +274,16 @@ class BaseConfig(object):
     def apply_config(self, config):
         """Apply configuration.
 
-        Returns (mods,pub,priv), where 'mods' is the list of public
-        module dependencies, 'pub' is the public environment, and
-        'priv' is the private environment.
+        Returns (mods,gmods,pub,priv), where 'mods' is the list of
+        public module dependencies (for all sources which depend on
+        this module), 'gmods' is the list of global module
+        dependencies (for all sources in the module),'pub' is the
+        public environment (for all sources which depend on this
+        module), and 'priv' is the private environment (for all
+        sources in this module).
         """
         modules = set()
+        global_modules = set()
         env_public = []
         env_private = []
         q = [(False, self)]
@@ -292,13 +297,15 @@ class BaseConfig(object):
             else:
                 if flagid not in config.enable:
                     continue
-            if public:
-                try:
-                    cmodules = c.modules
-                except AttributeError:
-                    pass
-                else:
+            try:
+                cmodules = c.modules
+            except AttributeError:
+                pass
+            else:
+                if public:
                     modules.update(cmodules)
+                if c.is_global:
+                    global_modules.update(cmodules)
             obj_env = c.create_env(config)
             if not isinstance(obj_env, dict):
                 raise TypeError('create_env should return a dict')
@@ -306,6 +313,7 @@ class BaseConfig(object):
                 (env_public if public else env_private).append(obj_env)
             q.extend((public, cc) for cc in c.children())
         return (modules,
+                global_modules,
                 env.merge_env(env_public),
                 env.merge_env(env_private))
 

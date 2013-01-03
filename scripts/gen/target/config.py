@@ -6,7 +6,7 @@ import collections
 
 # Base config
 bconfig = collections.namedtuple(
-    'bconfig', 'config srcmodule pub_mods pub_env priv_env')
+    'bconfig', 'config srcmodule pub_mods global_mods pub_env priv_env')
 vconfig = collections.namedtuple(
     'vconfig', 'bconfig priv_mods cvars')
 
@@ -54,8 +54,9 @@ class TargetConfig(object):
     def get_bconfig_simple(self, obj, srcmodule):
         """Get the base config for a simple component."""
         config = srcmodule.config
-        pub_mods, pub_env, priv_env = config.apply_config(self)
-        return bconfig(config, srcmodule, pub_mods, pub_env, priv_env)
+        pub_mods, global_mods, pub_env, priv_env = config.apply_config(self)
+        return bconfig(config, srcmodule,
+                       pub_mods, global_mods, pub_env, priv_env)
 
     def get_bconfig_extlib(self, obj):
         """Get the base config for an external library component."""
@@ -72,10 +73,10 @@ class TargetConfig(object):
             raise ConfigError(
                 'could not configure {}'.format(obj.name),
                 suberrors=errors)
-        pub_mods, pub_env, priv_env = result
+        pub_mods, global_mods, pub_env, priv_env = result
         pub_env = env.merge_env([pub_env, priv_env])
         priv_env = {}
-        return bconfig(config, None, pub_mods, pub_env, priv_env)
+        return bconfig(config, None, pub_mods, None, pub_env, priv_env)
 
     def get_bconfig(self, key):
         """Get the base config for the given component."""
