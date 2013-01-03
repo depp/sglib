@@ -2,6 +2,7 @@ import gen.xml as xml
 from gen.path import Path
 import gen.env.env as env
 import gen.target
+import gen.project.module as module
 from gen.error import ConfigError
 import os
 
@@ -122,6 +123,25 @@ def configure(argv):
         help_neg='do not treat warnings as errors')
 
     cfg.add_options(p)
+    gbundle = None
+    for modid, mod in proj.modules.items():
+        if (not isinstance(mod, module.ExternalLibrary) or
+            mod.srcmodule is None):
+            continue
+        if gbundle is None:
+            gbundle = p.add_argument_group('bundled libraries')
+        gbundle.add_argument(
+            '--with-bundled-{}'.format(modid),
+            dest='bundle:' + modid,
+            default=None,
+            action='store_true',
+            help='use bundled {}'.format(mod.name))
+        gbundle.add_argument(
+            '--without-bundled-{}'.format(modid),
+            dest='bundle:' + modid,
+            default=None,
+            action='store_false',
+            help=argparse.SUPPRESS)
 
     p.add_argument('arg', nargs='*', help=argparse.SUPPRESS)
 
