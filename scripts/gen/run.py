@@ -1,9 +1,12 @@
-import gen.config as config
+#import gen.config as config
 from gen.error import ConfigError
+from gen.path import Path
+import gen.xml as xml
 import os
 import sys
 
-CACHE_FILE = config.CACHE_FILE
+#CACHE_FILE = config.CACHE_FILE
+CACHE_FILE = 'config.dat'
 
 def load():
     import pickle
@@ -33,7 +36,72 @@ def store(cfg):
         except OSError:
             pass
 
+def load_project(path):
+    """Load a project and all required modules.
+
+    This will also scan for bundled libraries in the directory
+    specified by the project file.
+    """
+    errors = []
+
+    xmlfiles = [path]
+    with open(path.native, 'rb') as fp:
+        proj = xml.load(fp, path.dirname)
+
+    bundled_libs = []
+    for lib_path in proj.lib_path:
+        for fname in os.listdir(lib_path.native):
+            if fname.startswith('.'):
+                continue
+            try:
+                path = Path(fname)
+            except ValueError:
+                continue
+            if os.path.isdir(path.native):
+                bundled_libs.append(path)
+
+    mod_paths = list(proj.module_path)
+    mod_deps = set()
+    for target in proj.targets:
+        mod_deps.update(target.module_deps())
+    q = list(mod_deps)
+    while q:
+        modid = q.pop()
+        try:
+            module = proj.modules[modid]
+        except KeyError:
+            for mod_path in mod_paths:
+                try:
+                    fp = open(Path(mod_path, modid + '.xml').native, 'rb')
+                except OSError:
+                    continue
+                with fp:
+                    module = xml.load(fp, mod_path)
+                    proj.modules[modid] = module
+                break
+            else:
+                errors.append(
+                    'error: cannot find module: {}\n'.format(modid))
+                continue
+        module.scan_bundled_libs(bundled_libs)
+        new_mod_deps = set(module.module_deps()).difference(mod_deps)
+        mod_deps.update(new_mod_deps)
+        q.extend(new_mod_deps)
+
+    proj.modules = { k: v for k, v in proj.modules.items()
+                     if k in mod_deps }
+
+    if errors:
+        for line in errors:
+            sys.stderr.write(line)
+        sys.exit(1)
+
+    return proj
+
 def run():
+    proj = load_project(Path('project.xml'))
+    return
+
     mode = sys.argv[1]
     try:
         quiet = False

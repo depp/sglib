@@ -1,14 +1,17 @@
-from gen.source import Source
 from gen.path import Path
-from gen.project import *
-from gen.util import *
+import gen.project.config as config
+import gen.project.source as source
+import gen.project.module as module
+import gen.project.project as project
+import gen.os as os
+import gen.util as util
 from xml.dom import Node
 import xml.dom.minidom
 
-def unexpected(node, c):
+def unexpected(node, c, *, allowed=None):
     """Raise an exception for an unexpected child of the given element."""
     if c.nodeType == Node.ELEMENT_NODE:
-        v = '{} element'.format(c.tagName)
+        v = '<{}> element'.format(c.tagName)
     elif c.nodeType == Node.TEXT_NODE:
         v = 'text'
     elif c.nodeType == Node.CDATA_SECTION_NODE:
@@ -21,14 +24,22 @@ def unexpected(node, c):
         v = 'comment'
     else:
         v = 'node'
-    raise ValueError('unexpected {} in {} element'.format(v, node.tagName))
+    if allowed is None:
+        raise ValueError('unexpected {} in <{}> element'
+                         .format(v, node.tagName))
+    else:
+        raise ValueError(
+            'unexpected {} in <{}> element, allowed elements are: {}'
+            .format(v, node.tagName,
+                    ' '.join('<{}>'.format(tagname)
+                             for tagname in sorted(allowed))))
 
 def unexpected_attr(node, attr):
-    raise ValueError('unexpected {} attribute on {} element'
+    raise ValueError('unexpected "{}" attribute on <{}> element'
                      .format(attr.name, node.tagName))
 
 def missing_attr(node, attr):
-    raise ValueError('missing {} attribute on {} element'
+    raise ValueError('missing "{}" attribute on <{}> element'
                      .format(attr, node.tagName))
 
 def node_elements(node):
@@ -81,6 +92,20 @@ def node_noattr(node):
 
 ####################
 
+def node_elements_apply(node, *args):
+    for c in node_elements(node):
+        for d, a in args:
+            try:
+                func = d[c.tagName]
+                break
+            except KeyError:
+                pass
+        else:
+            unexpected(node, c, allowed=(k for d, a in args for k in d))
+        func(c, *a)
+
+####################
+
 def attr_bool(attr):
     if attr.value == 'true':
         return True
@@ -89,38 +114,38 @@ def attr_bool(attr):
     raise ValueError('invalid boolean: {!r}'.format(attr.value))
 
 def attr_cvar(attr):
-    if not is_cvar(attr.value):
+    if not util.is_cvar(attr.value):
         raise ValueError('invalid cvar name: {!r}'.format(attr.value))
     return attr.value
 
 def attr_enable(attr):
     enable = []
     for tag in attr.value.split():
-        if not is_flat_tag(tag):
+        if not util.is_flat_tag(tag):
             raise ValueError('invalid enable flag: {!r}'.format(tag))
         enable.append(tag)
     return tuple(enable)
 
 def attr_flag(attr):
-    if not is_flat_tag(attr.value):
+    if not util.is_flat_tag(attr.value):
         raise ValueError('invalid enable flag: {!r}'.format(attr.value))
     return attr.value
 
 def attr_modid(attr):
-    if not is_hier_tag(attr.value):
+    if not util.is_hier_tag(attr.value):
         raise ValueError('invalid module name: {!r}'.format(attr.value))
     return attr.value
 
 def attr_module(attr):
     modules = []
     for tag in attr.value.split():
-        if not is_hier_tag(tag):
+        if not util.is_hier_tag(tag):
             raise ValueError('invalid module name: {!r}'.format(tag))
         modules.append(tag)
     return tuple(modules)
 
 def attr_os(attr):
-    if attr.value not in OS:
+    if attr.value not in os.OS:
         raise ValueError('unknown OS: {!r}'.format(attr.value))
     return attr.value
 
@@ -133,7 +158,8 @@ def attr_path(attr, path):
 
 ####################
 
-def cvar_path(node, path):
+def parse_path(node, path):
+    """Parse a 'path' tag."""
     npath = None
     for i in range(node.attributes.length):
         attr = node.attributes.item(i)
@@ -145,7 +171,140 @@ def cvar_path(node, path):
         missing_attr(node, 'path')
     return npath
 
-def parse_cvar(node, path):
+def generic_name(node, obj):
+    """Parse a 'name' tag.  Add it to the object."""
+    node_noattr(node)
+    v = node_text(node)
+    if obj.name is not None:
+        raise ValueError('duplicate name')
+    obj.name = v
+
+NAME_ELEM = { 'name': generic_name }
+
+def generic_filename(node, obj):
+    """Parse a 'filename' tag.  Add it to the object."""
+    os = None
+    for i in range(node.attributes.length):
+        attr = node.attributes.item(i)
+        if attr.name == 'os':
+            os = attr_os(attr)
+        else:
+            unexpected_attr(node, attr)
+    v = node_text(node)
+    if os in obj.filename:
+        raise ValueError('duplicate filename')
+    obj.filename[os] = v
+
+FILENAME_ELEM = { 'filename': generic_filename }
+
+####################
+# Config tags
+
+def config_feature(node, obj, path):
+    flagid = None
+    for i in range(node.attributes.length):
+        attr = node.attributes.item(i)
+        if attr.name == 'flag':
+            flagid = attr_flag(attr)
+        else:
+            unexpected_attr(node, attr)
+    if flagid is None:
+        expected_attr(node, 'flag')
+    feature = config.Feature(flagid)
+    node_elements_apply(
+        node,
+        (CONFIG_ELEM, (feature, path)),
+        (NAME_ELEM, (feature,)))
+    obj.add_config(feature)
+
+def config_alternatives(node, obj, path):
+    node_noattr(node)
+    alts = config.Alternatives()
+    for c in node_elements(node):
+        if c.tagName == 'alt':
+            flagid = None
+            for i in range(c.attributes.length):
+                attr = c.attributes.item(i)
+                if attr.name == 'flag':
+                    flagid = attr_flag(attr)
+                else:
+                    unexpected_attr(c, attr)
+            if flagid is None:
+                expected_attr(c, 'flag')
+            alt = config.Alternative(flagid)
+            node_elements_apply(
+                c,
+                (CONFIG_ELEM, (alt, path)),
+                (NAME_ELEM, (alt,)))
+            alts.add_config(alt)
+        else:
+            unexpected(node, c)
+    obj.add_config(alts)
+
+def config_public(node, obj, path):
+    node_noattr(node)
+    public = config.Public()
+    node_elements_apply(
+        node,
+        (CONFIG_ELEM, (public, path)))
+    obj.add_config(public)
+
+def config_variant(node, obj, path):
+    flagid = None
+    for i in range(node.attributes.length):
+        attr = node.attributes.item(i)
+        if attr.name == 'flag':
+            flagid = attr_flag(attr)
+        else:
+            unexpected_attr(node, attr)
+    if flagid is None:
+        expected_attr(node, 'flag')
+    var = config.Variant(flagid)
+    node_elements_apply(
+        node,
+        (CONFIG_ELEM, (var, path)),
+        (NAME_ELEM, (var,)),
+        (FILENAME_ELEM, (var,)))
+    obj.add_config(var)
+
+def config_require(node, obj, path):
+    modules = ()
+    enable = ()
+    is_global = False
+    for i in range(node.attributes.length):
+        attr = node.attributes.item(i)
+        if attr.name == 'module':
+            modules = attr_module(attr)
+        elif attr.name == 'enable':
+            enable = attr_enable(attr)
+        elif attr.name == 'global':
+            is_global = attr_bool(attr)
+        else:
+            unexpected_attr(node, attr)
+    if modules is None:
+        missing_attr(node, 'module')
+    node_empty(node)
+    obj.add_config(config.Require(modules, enable, is_global))
+
+def config_defaults(node, obj, path):
+    """Parse a 'defaults' config object."""
+    os = None
+    enable = None
+    for i in range(node.attributes.length):
+        attr = node.attributes.item(i)
+        if attr.name == 'os':
+            os = attr_os(attr)
+        elif attr.name == 'enable':
+            enable = attr_enable(attr)
+        else:
+            unexpected_attr(node, attr)
+    if enable is None:
+        expected_attr(node, 'enable')
+    node_empty(node)
+    obj.add_config(config.Defaults(os, enable))
+
+def config_cvar(node, obj, path):
+    """Parse a 'cvar' config object."""
     name = None
     for i in range(node.attributes.length):
         attr = node.attributes.item(i)
@@ -162,85 +321,17 @@ def parse_cvar(node, path):
             v.append(c.data)
         elif c.nodeType == Node.ELEMENT_NODE:
             if c.tagName == 'path':
-                v.append(cvar_path(c, path))
+                v.append(parse_path(c, path))
             else:
                 unexpected(node, c)
         elif c.nodeType == Node.COMMENT_NODE:
             pass
         else:
             unexpected(node, c)
-    return name, v
+    obj.add_config(config.CVar(name, v))
 
-def parse_defaults(node):
-    os = None
-    enable = None
-    for i in range(node.attributes.length):
-        attr = node.attributes.item(i)
-        if attr.name == 'os':
-            os = attr_os(attr)
-        elif attr.name == 'enable':
-            enable = attr_enable(attr)
-        else:
-            unexpected_attr(node, attr)
-    if enable is None:
-        expected_attr(node, 'enable')
-    node_empty(node)
-    return Defaults(os, enable)
-
-####################
-# Source tags
-
-def src_group(mod, node, path, enable, module):
-    for i in range(node.attributes.length):
-        attr = node.attributes.item(i)
-        if attr.name == 'path':
-            path = attr_path(attr, path)
-        elif attr.name == 'enable':
-            enable = enable + attr_enable(attr)
-        elif attr.name == 'module':
-            module = module + attr_module(attr)
-        else:
-            unexpected_attr(node, attr)
-    for c in node_elements(node):
-        try:
-            func = SRC_ELEM[c.tagName]
-        except KeyError:
-            unexpected(node, c)
-        func(mod, c, path, enable, module)
-
-def src_src(mod, node, path, enable, module):
-    spath = None
-    for i in range(node.attributes.length):
-        attr = node.attributes.item(i)
-        if attr.name == 'path':
-            spath = attr_path(attr, path)
-        elif attr.name == 'enable':
-            enable = enable + attr_enable(attr)
-        elif attr.name == 'module':
-            module = module + attr_module(attr)
-        else:
-            unexpected_attr(node, attr)
-    if spath is None:
-        missing_attr(node, 'path')
-    node_empty(node)
-    mod.add_source(Source(spath, enable, module))
-
-SRC_ELEM = {
-    'group': src_group,
-    'src': src_src,
-}
-
-####################
-# Module tags
-
-def mod_name(mod, node, path=None):
-    node_noattr(node)
-    name = node_text(node)
-    if mod.name is not None:
-        raise ValueError('duplicate name tag')
-    mod.name = name
-
-def mod_header_path(mod, node, path):
+def config_header_path(node, obj, path):
+    """Parse a 'header-path' config object."""
     ipath = None
     for i in range(node.attributes.length):
         attr = node.attributes.item(i)
@@ -251,16 +342,16 @@ def mod_header_path(mod, node, path):
     if not ipath:
         expected_attr(node, 'path')
     node_empty(node)
-    mod.header_path.append(ipath)
+    obj.add_config(config.HeaderPath(ipath))
 
-def mod_define(mod, node, path):
+def config_define(node, obj, path):
     name = None
     value = None
     for i in range(node.attributes.length):
         attr = node.attributes.item(i)
         if attr.name == 'name':
             name = attr.value
-            if not is_ident(name):
+            if not util.is_ident(name):
                 raise ValueError(
                     'invalid definition name: {}'.format(name))
         elif attr.name == 'value':
@@ -268,331 +359,26 @@ def mod_define(mod, node, path):
         else:
             unexpected_attr(node, attr)
     node_empty(node)
-    mod.define.append((name, value))
+    obj.add_config(config.Define(name, value))
 
-def mod_cvar(mod, node, path):
-    name, value = parse_cvar(node, path)
-    mod.cvar.append((name, value))
-
-def mod_defaults(mod, node, path):
-    mod.defaults.append(parse_defaults(node))
-
-####################
-# Config tags
-
-def config_require(mod, node):
-    modules = ()
-    enable = ()
-    public = False
-    for i in range(node.attributes.length):
-        attr = node.attributes.item(i)
-        if attr.name == 'module':
-            modules = attr_module(attr)
-        elif attr.name == 'enable':
-            enable = attr_enable(attr)
-        elif attr.name == 'public':
-            public = attr_bool(attr)
-        else:
-            unexpected_attr(node, attr)
-    if modules is None:
-        missing_attr(node, 'module')
-    node_empty(node)
-    mod.config.append(Require(modules, enable, public))
-
-def feat_name(feat, node):
-    node_noattr(node)
-    v = node_text(node)
-    if feat.name is not None:
-        raise ValueError('feature has duplicate name')
-    feat.name = v
-
-def config_feature(mod, node):
-    flagid = None
-    for i in range(node.attributes.length):
-        attr = node.attributes.item(i)
-        if attr.name == 'flag':
-            flagid = attr_flag(attr)
-        else:
-            unexpected_attr(node, attr)
-    if flagid is None:
-        expected_attr(node, 'flag')
-    feature = Feature(flagid)
-    for c in node_elements(node):
-        try:
-            func = FEAT_ELEM[c.tagName]
-        except KeyError:
-            unexpected(node, c)
-        func(feature, c)
-    mod.config.append(feature)
-
-def alt_name(obj, node):
-    node_noattr(node)
-    obj.name = node_text(node)
-
-def config_alternatives(obj, node):
-    node_noattr(node)
-    alts = Alternatives()
-    for c in node_elements(node):
-        if c.tagName == 'alt':
-            flagid = None
-            for i in range(c.attributes.length):
-                attr = c.attributes.item(i)
-                if attr.name == 'flag':
-                    flagid = attr_flag(attr)
-                else:
-                    unexpected_attr(c, attr)
-            if flagid is None:
-                expected_attr(c, 'flag')
-            alt = Alternative(flagid)
-            for cc in node_elements(c):
-                try:
-                    func = ALT_ELEMS[cc.tagName]
-                except KeyError:
-                    unexpected(c, cc)
-                func(alt, cc)
-            alts.alternatives.append(alt)
-        else:
-            unexpected(node, c)
-    obj.config.append(alts)
-
-def var_name(var, node):
-    node_noattr(node)
-    v = node_text(node)
-    if var.name is not None:
-        raise ValueError('variant has duplicate name')
-    var.name = v
-
-def var_exe_suffix(var, node):
-    os = None
-    for i in range(node.attributes.length):
-        attr = node.attributes.item(i)
-        if attr.name == 'os':
-            os = attr_os(attr)
-        else:
-            unexpected_attr(node, attr)
-    v = node_text(node)
-    if os in var.exe_suffix:
-        raise ValueError('variant has conflicting exe-suffix')
-    var.exe_suffix[os] = v
-
-VAR_NAME = {
-    'linux': lambda x: x.lower(),
-    'osx': lambda x: x,
-    'windows': lambda x: x,
-}
-
-def config_variant(obj, node):
-    flagid = None
-    for i in range(node.attributes.length):
-        attr = node.attributes.item(i)
-        if attr.name == 'flag':
-            flagid = attr_flag(attr)
-        else:
-            unexpected_attr(node, attr)
-    if flagid is None:
-        expected_attr(node, 'flag')
-    var = Variant(flagid)
-    for c in node_elements(node):
-        try:
-            func = VAR_ELEM[c.tagName]
-        except KeyError:
-            unexpected(node, c)
-        func(var, c)
-    for os, func in VAR_NAME.items():
-        try:
-            var.exe_suffix[os]
-        except KeyError:
-            try:
-                base = var.exe_suffix[None]
-            except KeyError:
-                raise ValueError('missing variant exe-suffix')
-            var.exe_suffix[os] = func(base)
-    obj.config.append(var)
-
-CONFIG_ELEM = {
-    'require': config_require,
-    'feature': config_feature,
-    'alternatives': config_alternatives,
-}
-
-FEAT_ELEM = {
-    'name': feat_name,
-}
-FEAT_ELEM.update(CONFIG_ELEM)
-
-ALT_ELEMS = {
-    'name': alt_name,
-}
-ALT_ELEMS.update(CONFIG_ELEM)
-
-VAR_ELEM = {
-    'name': var_name,
-    'exe-suffix': var_exe_suffix,
-}
-VAR_ELEM.update(CONFIG_ELEM)
-
-MCONFIG_ELEM = {
-    'variant': config_variant,
-}
-MCONFIG_ELEM.update(CONFIG_ELEM)
-
-####################
-# Executable tags
-
-EXENAME = {
-    None: (is_title, None),
-    'linux': (is_filename, make_filename),
-    'osx': (is_title, None),
-    'windows': (is_title, None),
-}
-
-def exe_name(mod, node, path):
-    osval = None
-    for i in range(node.attributes.length):
-        attr = node.attributes.item(i)
-        if attr.name == 'os':
-            osval = attr_os(attr)
-        else:
-            unexpected_attr(node, attr)
-    if osval in mod.exe_name:
-        raise ValueError('duplicate exe-name with same "os" attribute')
-    val = node_text(node)
-    func = EXENAME[osval][0]
-    if not func(val):
-        raise ValueError('invalid exe-name')
-    mod.exe_name[osval] = val
-
-def exe_icon(mod, node, path):
-    osval = None
-    spath = None
-    for i in range(node.attributes.length):
-        attr = node.attributes.item(i)
-        if attr.name == 'os':
-            osval = attr_os(attr)
-        elif attr.name == 'path':
-            spath = attr_path(attr, path)
-        else:
-            unexpected_attr(node, attr)
-    if spath is None:
-        raise ValueError('missing path attribute on exe-icon')
-    if osval in mod.exe_icon:
-        raise ValueError('duplicate exe-icon')
-    mod.exe_icon[osval] = spath
-
-def exe_category(mod, node, path):
-    node_noattr(node)
-    val = node_text(node)
-    if not is_domain(val):
-        raise ValueError('invalid apple-category')
-    mod.apple_category = val
-
-####################
-# Executable and Module
-
-def mod_config(func):
-    def wrap(mod, node, path):
-        func(mod, node)
-    return wrap
-
-def mod_src(func):
-    def wrap(mod, node, path):
-        func(mod, node, path, (), ())
-    return wrap
-
-MOD_ELEM = {
-    'name': mod_name,
-    'header-path': mod_header_path,
-    'define': mod_define,
-    'cvar': mod_cvar,
-    'defaults': mod_defaults,
-}
-MOD_ELEM.update({k: mod_config(v) for k, v in MCONFIG_ELEM.items()})
-MOD_ELEM.update({k: mod_src(v) for k, v in SRC_ELEM.items()})
-
-EXE_ELEM = {
-    'exe-name': exe_name,
-    'exe-icon': exe_icon,
-    'apple-category': exe_category,
-}
-EXE_ELEM.update(MOD_ELEM)
-
-def parse_module(node, path):
-    modid = None
-    for i in range(node.attributes.length):
-        attr = node.attributes.item(i)
-        if attr.name == 'path':
-            path = attr_path(attr, path)
-        elif attr.name == 'modid':
-            modid = attr_modid(attr)
-        else:
-            unexpected_attr(node, attr)
-    if modid is None:
-        missing_attr(node, 'modid')
-    mod = Module(modid)
-    for c in node_elements(node):
-        try:
-            func = MOD_ELEM[c.tagName]
-        except KeyError:
-            unexpected(node, c)
-        func(mod, c, path)
-    return mod
-
-def parse_executable(node, path):
-    modid = None
-    for i in range(node.attributes.length):
-        attr = node.attributes.item(i)
-        if attr.name == 'path':
-            path = attr_path(attr, path)
-        elif attr.name == 'modid':
-            modid = attr_modid(attr)
-        else:
-            unexpected_attr(node, attr)
-    mod = Executable(modid)
-    for c in node_elements(node):
-        try:
-            func = EXE_ELEM[c.tagName]
-        except KeyError:
-            unexpected(node, c)
-        func(mod, c, path)
-    for osval in OS:
-        if osval in mod.exe_name:
-            continue
-        if None in mod.exe_name:
-            base = mod.exe_name[None]
-        else:
-            base = mod.name
-        if base is None:
-            raise ValueError(
-                'no exe-name for os {} and no default'.format(osval))
-        check_func, make_func = EXENAME[osval]
-        val = base if make_func is None else make_func(base)
-        if not check_func(val):
-            raise ValueError(
-                'bad default exe-name for {}'.format(osval))
-        mod.exe_name[osval] = val
-    return mod
-
-####################
-# External library
-
-def lib_framework(mod, node):
-    node_noattr(node)
-    name = node_text(node)
-    if not is_ident(name):
-        raise ValueError('invalid framework name: {}'.format(name))
-    mod.add_libsource(Framework(name))
-
-def lib_pkgconfig(mod, node):
+def config_pkgconfig(node, obj, path):
     node_noattr(node)
     spec = node_text(node)
-    mod.add_libsource(PkgConfig(spec))
+    obj.add_config(config.PkgConfig(spec))
 
-def lib_sdlconfig(mod, node):
+def config_framework(node, obj, path):
+    node_noattr(node)
+    name = node_text(node)
+    if not util.is_ident(name):
+        raise ValueError('invalid framework name: {}'.format(name))
+    obj.add_config(config.Framework(name))
+
+def config_sdlconfig(node, obj, path):
     node_noattr(node)
     version = node_text(node)
-    mod.add_libsource(SdlConfig(version))
+    obj.add_config(config.SdlConfig(version))
 
-def lib_libsearch(mod, node):
+def config_library_search(node, obj, path):
     node_noattr(node)
     source = None
     flags = []
@@ -616,7 +402,7 @@ def lib_libsearch(mod, node):
                     body = node_text(cc)
                 else:
                     unexpected(c, cc)
-            source = TestSource(prologue, body)
+            source = config.TestSource(prologue, body)
         elif c.tagName == 'flags':
             node_empty(c)
             d = {}
@@ -626,95 +412,189 @@ def lib_libsearch(mod, node):
                     unexpected_attr(c, attrr)
                 d[attr.name] = tuple(attr.value.split())
             flags.append(d)
-    mod.add_libsource(LibrarySearch(source, flags))
+    obj.add_config(config.Search(source, flags))
 
-def lib_group(mod, node):
+def config_group(node, obj, path):
     node_noattr(node)
-    src = LibraryGroup()
-    has_elem = False
-    for c in node_elements(node):
-        has_elem = True
-        try:
-            func = LIB_ELEM[c.tagName]
-        except KeyError:
-            unexpected(node, c)
-        func(src, c)
-    if not has_elem:
-        raise ValueError('empty library-group')
-    mod.add_libsource(src)
+    cfg = config.ConfigSet()
+    node_elements_apply(
+        node,
+        (CONFIG_ELEM, (cfg, path)))
+    obj.add_config(cfg)
 
-LIB_ELEM = {
-    'name': mod_name,
-    'framework': lib_framework,
-    'pkg-config': lib_pkgconfig,
-    'sdl-config': lib_sdlconfig,
-    'library-search': lib_libsearch,
+CONFIG_ELEM = {
+    'feature': config_feature,
+    'alternatives': config_alternatives,
+    'public': config_public,
+    'variant': config_variant,
+    'require': config_require,
+    'defaults': config_defaults,
+    'cvar': config_cvar,
+    'header-path': config_header_path,
+    'define': config_define,
+
+    'pkg-config': config_pkgconfig,
+    'framework': config_framework,
+    'sdl-config': config_sdlconfig,
+    'library-search': config_library_search,
 }
 
-BUNDLE_ELEM = {
-    'header-path': mod_header_path,
-    'define': mod_define,
-    'require': mod_config(config_require),
-    'cvar': mod_cvar,
-}
-BUNDLE_ELEM.update({k: mod_src(v) for k, v in SRC_ELEM.items()})
+####################
+# Source tags
 
-def lib_bundled(mod, node):
+def src_group(node, obj, path, enable, module):
+    for i in range(node.attributes.length):
+        attr = node.attributes.item(i)
+        if attr.name == 'path':
+            path = attr_path(attr, path)
+        elif attr.name == 'enable':
+            enable = enable + attr_enable(attr)
+        elif attr.name == 'module':
+            module = module + attr_module(attr)
+        else:
+            unexpected_attr(node, attr)
+    node_elements_apply(
+        node,
+        (SRC_ELEM, (obj, path, enable, module)))
+
+def src_src(node, obj, path, enable, module):
+    spath = None
+    for i in range(node.attributes.length):
+        attr = node.attributes.item(i)
+        if attr.name == 'path':
+            spath = attr_path(attr, path)
+        elif attr.name == 'enable':
+            enable = enable + attr_enable(attr)
+        elif attr.name == 'module':
+            module = module + attr_module(attr)
+        else:
+            unexpected_attr(node, attr)
+    if spath is None:
+        missing_attr(node, 'path')
+    node_empty(node)
+    obj.add_source(source.Source(spath, enable, module))
+
+SRC_ELEM = {
+    'group': src_group,
+    'src': src_src,
+}
+
+####################
+# Executable tags
+
+def exe_icon(node, obj, path):
+    spath = None
+    for i in range(node.attributes.length):
+        attr = node.attributes.item(i)
+        if attr.name == 'path':
+            spath = attr_path(attr, path)
+        else:
+            unexpected_attr(node, attr)
+    if spath is None:
+        raise ValueError('missing path attribute on exe-icon')
+    obj.exe_icon.append(spath)
+
+def exe_apple_category(node, obj, path):
+    node_noattr(node)
+    val = node_text(node)
+    if not util.is_domain(val):
+        raise ValueError('invalid apple-category')
+    obj.apple_category = val
+
+EXE_ELEM = {
+    'exe-icon': exe_icon,
+    'apple-category': exe_apple_category,
+}
+
+####################
+# Executable and Module
+
+def parse_module(node, path):
+    for i in range(node.attributes.length):
+        attr = node.attributes.item(i)
+        if attr.name == 'path':
+            path = attr_path(attr, path)
+        else:
+            unexpected_attr(node, attr)
+    mod = module.Module()
+    node_elements_apply(
+        node,
+        (CONFIG_ELEM, (mod, path)),
+        (SRC_ELEM, (mod, path, (), ())),
+        (NAME_ELEM, (mod,)))
+    return mod
+
+def parse_executable(node, path):
+    modid = None
+    for i in range(node.attributes.length):
+        attr = node.attributes.item(i)
+        if attr.name == 'path':
+            path = attr_path(attr, path)
+        else:
+            unexpected_attr(node, attr)
+    exe = module.Executable()
+    node_elements_apply(
+        node,
+        (CONFIG_ELEM, (exe, path)),
+        (SRC_ELEM, (exe, path, (), ())),
+        (EXE_ELEM, (exe, path)),
+        (NAME_ELEM, (exe,)),
+        (FILENAME_ELEM, (exe,)))
+    return exe
+
+def parse_libname(node, obj):
+    pattern = None
+    for i in range(node.attributes.length):
+        attr = node.attributes.item(i)
+        if attr.name == 'pattern':
+            pattern = attr.value
+        else:
+            unexpected_attr(node, attr)
+    if pattern is None:
+        missing_attr(node, 'pattern')
+    obj.libnames.append(pattern)
+
+BUNDLED_LIBRARY_ELEM = {
+    'libname': parse_libname,
+}
+
+def parse_bundled_library(node, obj, path):
     libname = None
     path = Path()
     for i in range(node.attributes.length):
         attr = node.attributes.item(i)
         if attr.name == 'path':
             path = attr_path(attr, path)
-        elif attr.name == 'libname':
-            libname = attr.value
         else:
             unexpected_attr(node, attr)
-    if libname is None:
-        missing_attr(node, 'libname')
-    src = BundledLibrary(libname)
-    for c in node_elements(node):
-        try:
-            func = BUNDLE_ELEM[c.tagName]
-        except KeyError:
-            unexpected(node, c)
-        func(src, c, path)
-    mod.bundled_versions.append(src)
+    bundled_library = module.BundledLibrary()
+    node_elements_apply(
+        node,
+        (CONFIG_ELEM, (bundled_library, path)),
+        (SRC_ELEM, (bundled_library, path, (), ())),
+        (CONFIG_ELEM, (bundled_library, path)),
+        (BUNDLED_LIBRARY_ELEM, (bundled_library,)))
+    obj.bundles.append(bundled_library)
 
-EXTLIB_ELEM = {
-    'library-group': lib_group,
-    'bundled-library': lib_bundled,
+EXTERNAL_LIBRARY_ELEM = {
+    'bundled-library': parse_bundled_library,
 }
-EXTLIB_ELEM.update(LIB_ELEM)
 
 def parse_external_library(node, path):
-    modid = None
-    for i in range(node.attributes.length):
-        attr = node.attributes.item(i)
-        if attr.name == 'modid':
-            modid = attr_modid(attr)
-        else:
-            unexpected_attr(node, attr)
-    if modid is None:
-        missing_attr(node, 'modid')
-    mod = ExternalLibrary(modid)
-    for c in node_elements(node):
-        try:
-            func = EXTLIB_ELEM[c.tagName]
-        except KeyError:
-            unexpected(node, c)
-        func(mod, c)
-    return mod
-
-def parse_bundled_library(node, path):
-    name = None
-    libname = None
+    node_noattr(node)
+    lib = module.ExternalLibrary()
+    node_elements_apply(
+        node,
+        (CONFIG_ELEM, (lib, path)),
+        (NAME_ELEM, (lib,)),
+        (EXTERNAL_LIBRARY_ELEM, (lib, path)))
+    return lib
 
 ####################
 # Project
 
-def proj_prop(propname, check=None):
-    def parse(proj, node, path):
+def proj_simple_prop(propname, check=None):
+    def parse(node, proj, path):
         oldval = getattr(proj, propname)
         if oldval is not None:
             raise ValueError('project has duplicate {} element'
@@ -726,38 +606,25 @@ def proj_prop(propname, check=None):
         setattr(proj, propname, val)
     return parse
 
-def proj_cvar(proj, node, path):
-    name, value = parse_cvar(node, path)
-    proj.cvar.append((name, value))
+def proj_pathlist_prop(propname):
+    def parse(node, proj, path):
+        apatth = None
+        for i in range(node.attributes.length):
+            attr = node.attributes.item(i)
+            if attr.name == 'path':
+                apath = attr_path(attr, path)
+            else:
+                unexpected_attr(node, attr)
+        if apath is None:
+            missing_attr(node, 'path')
+        node_empty(node)
+        getattr(proj, propname).append(Path(apath))
+    return parse
 
-def proj_modpath(proj, node, path):
-    mpath = None
-    for i in range(node.attributes.length):
-        attr = node.attributes.item(i)
-        if attr.name == 'path':
-            mpath = attr_path(attr, path)
-        else:
-            unexpected_attr(node, attr)
-    if mpath is None:
-        missing_attr(node, 'path')
-    node_empty(node)
-    proj.module_path.append(Path(path, mpath))
-
-def proj_libpath(proj, node, path):
-    mpath = None
-    for i in range(node.attributes.length):
-        attr = node.attributes.item(i)
-        if attr.name == 'path':
-            mpath = attr_path(attr, path)
-        else:
-            unexpected_attr(node, attr)
-    if mpath is None:
-        missing_attr(node, 'path')
-    node_empty(node)
-    proj.lib_path.append(mpath)
-
-def proj_defaults(proj, node, path):
-    proj.defaults.append(parse_defaults(node))
+def proj_target(func):
+    def parse(node, proj, path):
+        proj.targets.append(func(node, path))
+    return parse
 
 MODULE_TAG = {
     'executable': parse_executable,
@@ -766,62 +633,46 @@ MODULE_TAG = {
 }
 
 PROJ_ELEM = {
-    'name': proj_prop('name', is_title),
-    'ident': proj_prop('ident', is_domain),
-    'filename': proj_prop('filename', is_filename),
-    'url': proj_prop('url'),
-    'email': proj_prop('email'),
-    'copyright': proj_prop('copyright'),
-    'cvar': proj_cvar,
-    'module-path': proj_modpath,
-    'lib-path': proj_libpath,
-    'defaults': proj_defaults,
+    'ident': proj_simple_prop('ident', util.is_domain),
+    'url': proj_simple_prop('url'),
+    'email': proj_simple_prop('email'),
+    'copyright': proj_simple_prop('copyright'),
+    'module-path': proj_pathlist_prop('module_path'),
+    'lib-path': proj_pathlist_prop('lib_path'),
+    'executable': proj_target(parse_executable),
 }
 
 def parse_project(node, path):
-    proj = Project()
+    proj = project.Project()
     for i in range(node.attributes.length):
         attr = node.attributes.item(i)
         if attr.name == 'path':
             path = attr_path(attr, path)
         else:
             unexpected_attr(node, attr)
-    for c in node_elements(node):
-        try:
-            func = PROJ_ELEM[c.tagName]
-        except KeyError:
-            try:
-                func = MODULE_TAG[c.tagName]
-            except KeyError:
-                unexpected(node, c)
-            mod = func(c, path)
-            proj.add_module(mod)
-        else:
-            func(proj, c, path)
-    if proj.name is None:
-        raise ValueError('project has no name element')
-    if proj.ident is None:
-        raise ValueError('project has no ident element')
-    if proj.filename is None:
-        try:
-            proj.filename = make_filename(proj.name)
-        except ValueError as ex:
-            raise ValueError(
-                'project has no filename element, cannot use default')
+    node_elements_apply(
+        node,
+        (CONFIG_ELEM, (proj, path)),
+        (PROJ_ELEM, (proj, path)),
+        (NAME_ELEM, (proj,)),
+        (FILENAME_ELEM, (proj,)))
     return proj
 
 ########################################
 # Top level functions
 
-def load(path, base):
-    """Load the project or module XML file at the given path."""
-    doc = xml.dom.minidom.parse(open(path, 'rb'))
+ROOT_ELEM = {
+    'project': parse_project,
+    'module': parse_module,
+    'external-library': parse_external_library,
+}
+
+def load(fp, base):
+    """Load the project or module XML file from the given file."""
+    doc = xml.dom.minidom.parse(fp)
     root = doc.documentElement
-    if root.tagName == 'project':
-        func = parse_project
-    else:
-        try:
-            func = MODULE_TAG[root.tagName]
-        except KeyError:
-            raise ValueError('unexpected root element')
+    try:
+        func = ROOT_ELEM[root.tagName]
+    except KeyError:
+        raise ValueError('unexpected root element')
     return func(root, base)
