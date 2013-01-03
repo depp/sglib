@@ -160,6 +160,10 @@ class Path(object):
     def basename(self):
         """Get the base name, the last component of the path."""
         return posixpath.basename(self._p)
+    @property
+    def dirname(self):
+        """Get the directory path."""
+        return Path(self, '..')
 
 def common_ancestor(paths):
     i = iter(paths)
