@@ -15,6 +15,7 @@ import argparse
 import io
 from gen.error import ConfigError
 from gen.path import Path
+import gen.env as env
 
 ########################################################################
 # Abstract base class for all config objects
@@ -93,14 +94,17 @@ class BaseConfig(object):
                 flags.add(flagid)
         return flags
 
+    def variants(self):
+        """Return a set of all variants this config has."""
+        variants = set()
+        for c in self.all_configs():
+            if isinstance(c, Variant):
+                variants.add(c.flagid)
+        return variants
+
     def add_options(self, parser):
         """Add config options to the given ArgumentParser."""
-
         groups = {}
-        gfeat = parser.add_argument_group('optional features')
-        galt = parser.add_argument_group('optional packages')
-        gvar = parser.add_argument_group('build variants')
-
         for c in self.all_configs():
             try:
                 flagid = c.flagid
@@ -144,8 +148,8 @@ class BaseConfig(object):
         variants = set()
         for c in self.all_configs():
             if isinstance(c, Defaults):
-                if d.os is None or os == d.os:
-                    denabled.update(d.enable)
+                if c.os is None or os == c.os:
+                    denabled.update(c.enable)
             try:
                 flagid = c.flagid
             except AttributeError:
@@ -174,8 +178,9 @@ class BaseConfig(object):
                     flagid = c.flagid
                 except AttributeError:
                     continue
-                flagnames[flagid] = c.flag_name()[0]
-            for flagid in econflict:
+                else:
+                    flagnames[flagid] = c.flag_names()[0]
+            for flagid in cflags:
                 flags = conflicts[flagid].intersection(econflict)
                 assert len(flags) >= 2
                 flags = tuple(sorted(flags))
@@ -194,11 +199,12 @@ class BaseConfig(object):
                 c = conflicts[flagid]
             except KeyError:
                 continue
-            udisabled.update(c.difference([flagid]))
+            else:
+                udisabled.update(c.difference([flagid]))
 
         # Find conflicting user flags
         econflict = udisabled.intersection(uenabled)
-        if econflict is not None:
+        if econflict:
             errors.append(describe_conflicts(
                 econflict, 'conflicting flags specified'))
 
@@ -210,10 +216,12 @@ class BaseConfig(object):
                 c = conflicts[flagid]
             except KeyError:
                 continue
-            dconflict.update(c)
+            else:
+                dconflict.update(c.difference([flagid]))
+        dconflict.intersection_update(defaults)
         if dconflict:
             errors.append(describe_conflicts(
-                econflict, 'default flags are in conflict'))
+                dconflict, 'default flags are in conflict'))
 
         enabled = uenabled.union(defaults)
 
@@ -229,13 +237,15 @@ class BaseConfig(object):
                 if flagid not in enabled:
                     continue
                 flagname = c.flag_names()[0]
-                if flagid in uenabled:
+                if flagid not in uenabled:
                     flagname = '{} (default)'.format(flagname)
                 f = f + (flagname,)
+            q.extend((f, cc) for cc in c.children())
+            if not isinstance(c, Alternatives):
+                continue
             count = 0
-            if isinstance(c, Alternatives):
-                for cc in c.children():
-                    count += cc.flagid in enabled
+            for cc in c.children():
+                count += cc.flagid in enabled
             if count > 1:
                 assert errors
             if not count:
@@ -289,17 +299,17 @@ class BaseConfig(object):
                     pass
                 else:
                     modules.update(cmodules)
-            env = c.create_env(config)
-            if not isinstance(env, dict):
+            obj_env = c.create_env(config)
+            if not isinstance(obj_env, dict):
                 raise TypeError('create_env should return a dict')
-            if env:
-                (env_public if public else env_private).append(env)
+            if obj_env:
+                (env_public if public else env_private).append(obj_env)
             q.extend((public, cc) for cc in c.children())
         return (modules,
                 env.merge_env(env_public),
                 env.merge_env(env_private))
 
-    def variant_config(self, enable, variant):
+    def variant_config(self, flagids):
         """Get info for a given variant.
 
         Returns (mods,cvars) where 'mods' is a list of dependent
@@ -307,8 +317,6 @@ class BaseConfig(object):
         that variant.
         """
         q = [self]
-        flagids = set(enable)
-        flagids.add(variant)
         modules = set()
         cvars = []
         while q:
@@ -543,7 +551,7 @@ class PkgConfig(BaseConfig):
         self.spec = spec
 
     def create_env(self, config):
-        return config.config_pkgconfig(config, self.spec)
+        return config.config_pkgconfig(self.spec)
 
 class Framework(BaseConfig):
     """Link with a Darwin framework."""
@@ -554,7 +562,7 @@ class Framework(BaseConfig):
         self.name = name
 
     def create_env(self, config):
-        return config.config_framework(config, self.name)
+        return config.config_framework(self.name)
 
 class SdlConfig(BaseConfig):
     """Use sdl-config to find LibSDL."""
@@ -565,7 +573,7 @@ class SdlConfig(BaseConfig):
         self.version = version
 
     def create_env(self, config):
-        return config.config_sdlconfig(config, self.version)
+        return config.config_sdlconfig(self.version)
 
 class Search(BaseConfig):
     """Search for a library.
@@ -582,7 +590,7 @@ class Search(BaseConfig):
         self.flags = flags
 
     def create_env(self, config):
-        return config.config_framework(config, self.source, self.flags)
+        return config.config_librarysearch(self.source, self.flags)
 
 class TestSource(object):
     """Test source file.
@@ -597,4 +605,3 @@ class TestSource(object):
     def __init__(self, prologue, body):
         self.prologue = prologue
         self.body = body
-

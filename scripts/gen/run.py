@@ -1,7 +1,5 @@
 import gen.config as config
 from gen.error import ConfigError
-#from gen.path import Path
-#import gen.xml as xml
 import os
 import sys
 import pickle

@@ -154,9 +154,6 @@ VAR = {
     'LIBS':     VarFlags,
     'FPATH':    VarAbsPathList,
 
-    # condition: list of tags which are necessary in this environment
-    'condition': VarCondition,
-
     # external: if true, disable warnings
     'external': VarBool,
 }
@@ -195,37 +192,6 @@ def merge_env(a):
                 x = x[0]
             e[varname] = x
     return e
-
-class MergeEnvironment(object):
-    """An environment dictionary made from combining other dictionaries.
-
-    Each key is merged according to its type.
-    """
-
-    # _env: list of environment dictionaries
-    __slots__ = ['_env']
-
-    def __init__(self, env):
-        self._env = env
-
-    def __getitem__(self, key):
-        try:
-            v = VAR[key]
-        except KeyError:
-            raise KeyError(key)
-        a = []
-        for e in self._env:
-            try:
-                x = e[key]
-            except KeyError:
-                pass
-            else:
-                a.append(x)
-        return v.combine(a)
-
-    def dump(self):
-        for k, v in VAR.items():
-            print('{} = {}'.format(k, self[k]))
 
 class BuildEnv(object):
     """A BuildEnv maps tags to build environments.

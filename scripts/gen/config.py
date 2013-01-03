@@ -1,7 +1,7 @@
 import gen.xml as xml
 from gen.path import Path
-import gen.env.env as env
-import gen.target
+import gen.env as env
+import gen.target.search
 import gen.project.module as module
 from gen.error import ConfigError
 import os
@@ -177,7 +177,7 @@ def configure(argv):
             envlist.append([{ name: value }])
         else:
             targets.append(arg)
-    base_env = env.merge_env(envlist)
+    user_env = env.merge_env(envlist)
     if not targets:
         targets = ['default']
 
@@ -190,5 +190,5 @@ def configure(argv):
             'error parsing arguments',
             suberrors=errors)
 
-    target_func = gen.target.get_target(targets[0])
-    return target_func(project, opts)
+    target_func = gen.target.search.get_target(targets[0])
+    return target_func(proj, opts, user_env)
