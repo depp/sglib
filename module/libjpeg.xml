@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<external-library modid="libjpeg">
+<external-library>
   <name>LibJPEG</name>
   <library-search>
     <test-source>

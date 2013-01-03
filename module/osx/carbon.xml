@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<external-library modid="osx/carbon">
+<external-library>
   <name>Carbon framework</name>
   <framework>Carbon</framework>
 </external-library>

@@ -1,8 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<external-library modid="glew">
+<external-library>
   <name>The OpenGL Extension Wrangler Library</name>
-  <bundled-library libname="glew">
-    <header-path path="include"/>
+  <bundled-library>
+    <libname pattern="glew"/>
+    <public>
+      <header-path path="include"/>
+    </public>
     <src path="src/glew.c"/>
     <group path="include/GL">
       <src path="glew.h"/>

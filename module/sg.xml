@@ -1,10 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<module modid="sg" path="..">
+<module path="..">
   <name>SGLib</name>
-  <header-path path="include"/>
-  <header-path path="keycode/include"/>
-  <header-path path="libpce/include"/>
-  <require module="glew" public="true"/>
+  <public>
+    <require module="glew" global="true"/>
+    <header-path path="include"/>
+    <header-path path="keycode/include"/>
+    <header-path path="libpce/include"/>
+  </public>
 
   <defaults
       enable="jpeg png audio type"
@@ -29,28 +31,28 @@
 
   <variant flag="app-win32">
     <name>Windows executable</name>
-    <exe-suffix>Windows</exe-suffix>
-    <exe-suffix os="windows"/>
+    <filename>Windows</filename>
+    <filename os="windows"/>
     <require enable="windows"/>
   </variant>
 
   <variant flag="app-cocoa">
     <name>Cocoa application</name>
-    <exe-suffix>Cocoa</exe-suffix>
-    <exe-suffix os="osx"/>
+    <filename>Cocoa</filename>
+    <filename os="osx"/>
     <require module="osx/foundation osx/appkit
 		     osx/corevideo opengl osx/carbon"/>
   </variant>
 
   <variant flag="app-gtk">
     <name>GTK executable</name>
-    <exe-suffix>GTK</exe-suffix>
+    <filename>Gtk</filename>
     <require module="gtk gtkglext"/>
   </variant>
 
   <variant flag="app-sdl">
     <name>SDL executable</name>
-    <exe-suffix>SDL</exe-suffix>
+    <filename>SDL</filename>
     <require module="sdl"/>
   </variant>
 
