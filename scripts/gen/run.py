@@ -57,6 +57,7 @@ def load_project(path):
                 path = Path(fname)
             except ValueError:
                 continue
+            path = Path(lib_path, path)
             if os.path.isdir(path.native):
                 bundled_libs.append(path)
 

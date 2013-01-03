@@ -1,5 +1,6 @@
 __all__ = ['Executable', 'Module', 'ExternalLibrary', 'BundledLibrary']
 from gen.project.source import SourceModule
+import sys
 
 class Executable(object):
     """An executable target."""

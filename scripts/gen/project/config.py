@@ -501,7 +501,7 @@ class HeaderPath(BaseConfig):
         return { 'CPPPATH': (self.path,) }
 
     def _prefix_paths(self, prefix):
-        self.path = Path(prefix, path)
+        self.path = Path(prefix, self.path)
 
 class Define(BaseConfig):
     """A configuration which defines a preprocessor macro."""
