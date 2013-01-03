@@ -1,5 +1,11 @@
 import os
 import re
+__all__ = [
+    'relpath',
+    'is_ident', 'is_flat_tag', 'is_hier_tag', 'is_title',
+    'is_filename', 'is_domain', 'is_version', 'is_hash',
+    'is_cvar', 'make_filename',
+]
 
 # FIXME is this function used?
 def relpath(path, base):
