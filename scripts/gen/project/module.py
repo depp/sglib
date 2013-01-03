@@ -4,17 +4,11 @@ from gen.error import ConfigError
 import gen.util as util
 import sys
 
-class Executable(object):
-    """An executable target."""
-
-    __slots__ = ['name', 'filename', 'exe_icon', 'apple_category',
-                 'config', 'srcmodule']
+class SimpleModule(object):
+    __slots__ = ['name', 'srcmodule']
 
     def __init__(self):
         self.name = None
-        self.filename = {}
-        self.exe_icon = []
-        self.apple_category = None
         self.srcmodule = SourceModule()
 
     def add_source(self, src):
@@ -28,6 +22,25 @@ class Executable(object):
 
     def enable_flags(self):
         return self.srcmodule.enable_flags()
+
+    def sources(self):
+        return iter(self.srcmodule.sources)
+
+    def configs(self):
+        yield self.srcmodule.config
+
+class Executable(SimpleModule):
+    """An executable target."""
+
+    __slots__ = SimpleModule.__slots__ + [
+        'filename', 'exe_icon', 'apple_category', 'config'
+    ]
+
+    def __init__(self):
+        super(Executable, self).__init__()
+        self.filename = {}
+        self.exe_icon = []
+        self.apple_category = None
 
     def validate(self, enable):
         errors = []
@@ -45,35 +58,16 @@ class Executable(object):
         if errors:
             raise ConfigError('error in executable', suberrors=errors)
 
-    def sources(self):
-        return iter(self.srcmodule.sources)
-
-    def configs(self):
-        yield self.srcmodule.config
-
-class Module(object):
+class Module(SimpleModule):
     """A simple module, consisting of project source code."""
 
-    __slots__ = ['name', 'srcmodule']
+    __slots__ = SimpleModule.__slots__
 
     def __init__(self):
-        self.name = None
-        self.srcmodule = SourceModule()
-
-    def add_source(self, src):
-        self.srcmodule.add_source(src)
-
-    def add_config(self, config):
-        self.srcmodule.add_config(config)
+        super(Module, self).__init__()
 
     def scan_bundled_libs(self, paths):
         pass
-
-    def module_deps(self):
-        return self.srcmodule.module_deps()
-
-    def enable_flags(self):
-        return self.srcmodule.enable_flags()
 
     def validate(self, enable):
         errors = []
@@ -85,12 +79,6 @@ class Module(object):
             errors.append(ex)
         if errors:
             raise ConfigError('error in module', suberrors=errors)
-
-    def sources(self):
-        return iter(self.srcmodule.sources)
-
-    def configs(self):
-        yield self.srcmodule.config
 
 class ExternalLibrary(object):
     """A module which can be incorporated into a target multiple ways.
