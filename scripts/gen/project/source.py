@@ -1,5 +1,5 @@
 __all__ = ['Source', 'SourceModule']
-from gen.path import Path
+from gen.path import Path, EXTS
 from gen.project.config import ConfigSet
 from gen.error import ConfigError
 
@@ -40,7 +40,7 @@ class Source(object):
                 'source file has no extension, cannot determine type: {}'
                 .format(self.path.posix))
         try:
-            return gen.path.EXTS[ext]
+            return EXTS[ext]
         except KeyError:
             raise ValueError(
                 'source file {} has unknown extension, cannot determine type'

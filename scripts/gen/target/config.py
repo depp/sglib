@@ -10,17 +10,17 @@ bconfig = collections.namedtuple(
 vconfig = collections.namedtuple(
     'vconfig', 'bconfig priv_mods cvars')
 
-class SimpleComponent(object):
-    __slots__ = ['obj']
-
-    def __init__(self, obj):
-        self.obj = obj
-
-class ExtLibComponent(object):
-    __slots__ = ['obj']
-
-    def __init__(self, obj):
-        self.obj = obj
+def check_sources(x, y):
+    if x.envs != y.envs:
+        raise ConfigError(
+            'duplicate source files cannot be merged',
+            '"{}" has multiple entries with different build environments'
+            .format(src.path.posix))
+    if x.generator != y.generator:
+        raise ConfigError(
+            'duplicate source files cannot be merged',
+            '"{}" has multiple entries with different generators'
+            .format(src.path.posix))
 
 class TargetConfig(object):
     """This is a base class for target configs.
@@ -38,8 +38,11 @@ class TargetConfig(object):
         self.base_env = base_env
         self.os = os
         self.project = project
-        self.enable, self.variants = (project.super_config()
-                                      .get_enables(opts, os))
+        cfg = project.super_config()
+        self.enable, variants = cfg.get_enables(opts, os)
+        variant_table = cfg.variants()
+        self.variants = { k: v for k, v in variant_table.items()
+                          if k in variants }
         print('enable: {}'.format(', '.join(self.enable)))
         print('variants: {}'.format(', '.join(self.variants)))
         self._components = {}
@@ -84,23 +87,30 @@ class TargetConfig(object):
             return self._bconfig[key]
         except KeyError:
             pass
-        obj = self._components[key]
-        srcmodule = obj.srcmodule
-        if isinstance(obj, module.ExternalLibrary):
-            assert key.startswith('module:')
-            modid = key[key.index(':')+1:]
-            if srcmodule is not None:
-                flag = getattr(self.opts, 'bundle:' + modid)
-                if flag is None:
-                    flag = True
-                if not flag:
-                    srcmodule = None
-            if srcmodule:
-                result = self.get_bconfig_simple(obj, srcmodule)
-            else:
-                result = self.get_bconfig_extlib(obj)
+        if key == 'project':
+            config = self.project.config
+            result = config.apply_config(self)
+            pub_mods, global_mods, pub_env, priv_env = result
+            pub_env = env.merge_env([pub_env, priv_env])
+            result = bconfig(config, None, pub_mods, None, pub_env, {})
         else:
-            result = self.get_bconfig_simple(obj, srcmodule)
+            obj = self._components[key]
+            srcmodule = obj.srcmodule
+            if isinstance(obj, module.ExternalLibrary):
+                assert key.startswith('module:')
+                modid = key[key.index(':')+1:]
+                if srcmodule is not None:
+                    flag = getattr(self.opts, 'bundle:' + modid)
+                    if flag is None:
+                        flag = True
+                    if not flag:
+                        srcmodule = None
+                if srcmodule:
+                    result = self.get_bconfig_simple(obj, srcmodule)
+                else:
+                    result = self.get_bconfig_extlib(obj)
+            else:
+                result = self.get_bconfig_simple(obj, srcmodule)
         self._bconfig[key] = result
         return result
 
@@ -158,20 +168,112 @@ class TargetConfig(object):
         flagids = set(self.enable)
         if variant is not None:
             flagids.add(variant)
-        priv_mods, cvars = bconfig.config.variant_config(flagids)
+        config = bconfig.config
+        priv_mods, cvars = config.variant_config(flagids)
         result = vconfig(bconfig, priv_mods, cvars)
         self._vconfig[vkey] = result
         return result
 
     def configure(self):
-        for modid in self.project.modules:
-            try:
-                closure = self.get_closure(modid)
-                bconfig = self.get_bconfig('module:' + modid)
-            except ConfigError as ex:
-                print('{}: <error>'.format(modid))
-            else:
-                print('{}: ({}) {{{}}}'
-                      .format(modid, ', '.join(sorted(closure)),
-                              ','.join('{}={}'.format(k, v)
-                                       for k, v in bconfig.pub_env.items())))
+        targets = []
+        built_sources = {}
+        for ptarget in self.project.targets:
+            tname = 'target:' + ptarget.filename[self.os]
+            for variantid, variant in self.variants.items():
+                flagids = set(self.enable)
+                flagids.add(variantid)
+                sources = {}
+                q = ['project', tname]
+                components = set([tname])
+                envs = []
+                cvars = []
+                while q:
+                    cid = q.pop()
+                    vconfig = self.get_vconfig(cid, variantid)
+                    cvars.append(vconfig.cvars)
+                    bconfig = vconfig.bconfig
+                    envs.extend((bconfig.pub_env, bconfig.priv_env))
+                    for modid in vconfig.priv_mods:
+                        mcid = 'module:' + modid
+                        if mcid in components:
+                            continue
+                        components.add(mcid)
+                        q.append(mcid)
+                    if bconfig.srcmodule is None:
+                        continue
+                    gcomps = set('module:' + modid
+                                 for modid in bconfig.global_mods)
+                    gcomps.add(cid)
+                    gcomps.add('project')
+                    for tsrc in bconfig.srcmodule.sources:
+                        if not flagids.issuperset(tsrc.enable):
+                            continue
+                        stype = tsrc.sourcetype
+                        if stype in ('c', 'cxx', 'm', 'mm'):
+                            comps = set(gcomps)
+                            comps.update('module:' + modid
+                                         for modid in tsrc.module)
+                            for ccid in tuple(comps):
+                                if ccid.startswith('module:'):
+                                    modid = ccid[ccid.index(':')+1:]
+                                    comps.update(
+                                        'module:' + modid
+                                        for modid in self.get_closure(modid))
+                            senvs = [bconfig.priv_env]
+                            senvs.extend(self.get_bconfig(ccid).pub_env
+                                         for ccid in sorted(comps))
+                            senvs = tuple([e for e in senvs if e])
+                        else:
+                            senvs = ()
+                        src = target.Source(
+                            tsrc.path, senvs, tsrc.generator, stype)
+                        if src.generator:
+                            try:
+                                osrc = built_sources[tsrc.path]
+                            except KeyError:
+                                built_sources[tsrc.path] = src
+                            else:
+                                check_sources(src, osrc)
+                                src = osrc
+                        try:
+                            osrc = sources[tsrc.path]
+                        except KeyError:
+                            pass
+                        else:
+                            check_sources(src, osrc)
+                            continue
+                        sources[tsrc.path] = src
+
+                suffix = variant.filename[self.os]
+                if suffix:
+                    if self.os == 'linux':
+                        filename = '{}_{}'.format(tname, suffix)
+                    elif self.os == 'windows':
+                        filename = '{} {}'.format(tname, suffix)
+                    elif self.os == 'osx':
+                        filename = '{} ({})'.format(tname, suffix)
+                    else:
+                        filename = '{}_{}'.format(tname, suffix)
+                else:
+                    filename = tname
+                sources = tuple(v for k, v in sorted(sources.items()))
+                ncvars = []
+                cvar_names = set()
+                for cvarlist in cvars:
+                    for name, value in reversed(cvarlist):
+                        if name in cvar_names:
+                            continue
+                        cvar_names.add(name)
+                        ncvars.append((name, value))
+                ncvars.reverse()
+                exe = target.Executable(
+                    filename,
+                    tuple(ptarget.exe_icon),
+                    ptarget.apple_category,
+                    tuple(ncvars),
+                    tuple(e for e in envs if e),
+                    sources)
+                targets.append(exe)
+        return target.Project(
+            tuple(sorted(targets, key=lambda x:x.filename)),
+            { k: v.generator for k, v in built_sources.items() })

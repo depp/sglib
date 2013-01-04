@@ -16,6 +16,7 @@ import io
 from gen.error import ConfigError
 from gen.path import Path
 import gen.env as env
+import gen.util as util
 
 ########################################################################
 # Abstract base class for all config objects
@@ -95,11 +96,11 @@ class BaseConfig(object):
         return flags
 
     def variants(self):
-        """Return a set of all variants this config has."""
-        variants = set()
+        """Return a map of variant names to variants."""
+        variants = {}
         for c in self.all_configs():
             if isinstance(c, Variant):
-                variants.add(c.flagid)
+                variants[c.flagid] = c
         return variants
 
     def add_options(self, parser):
@@ -336,6 +337,7 @@ class BaseConfig(object):
             else:
                 if flagid not in flagids:
                     continue
+            q.extend(c.children())
             try:
                 cmodules = c.modules
             except AttributeError:
@@ -349,9 +351,9 @@ class BaseConfig(object):
     def create_env(self, config):
         return {}
 
-    def validate(self, enable, is_variant=False):
+    def validate(self, enable, is_optional=False):
         for c in self.children():
-            c.validate(enable, is_variant)
+            c.validate(enable, is_optional)
 
 ########################################################################
 # Configuration groups
@@ -414,6 +416,9 @@ class Feature(ConfigSet):
     def flag_help(self):
         return 'enable {}'.format(self.name)
 
+    def validate(self, enable, is_optional=False):
+        super(Feature, self).validate(enable, True)
+
 class Alternatives(ConfigSet):
     """Alternatives specify multiple ways to satisfy requirements.
 
@@ -448,6 +453,9 @@ class Alternative(ConfigSet):
     def flag_help(self):
         return 'use {}'.format(self.name)
 
+    def validate(self, enable, is_optional=False):
+        super(Alternative, self).validate(enable, True)
+
 class Public(ConfigSet):
     """A public config makes all of its children public."""
 
@@ -477,6 +485,10 @@ class Variant(ConfigSet):
 
     def flag_help(self):
         return 'build {}'.format(self.name)
+
+    def validate(self, enable, is_optional=False):
+        super(Variant, self).validate(enable, True)
+        util.make_filenames(self.filename, self.flagid, allow_empty=True)
 
 ########################################################################
 # Simple config objects

@@ -109,7 +109,7 @@ FILENAMES = {
     'windows': (lambda x: x, is_title),
 }
 
-def make_filenames(filenames, default):
+def make_filenames(filenames, default, *, allow_empty=False):
     errors = []
     default = filenames.get(None, default)
     for os, (mkfunc, chkfunc) in FILENAMES.items():
@@ -118,6 +118,8 @@ def make_filenames(filenames, default):
         except KeyError:
             filename = mkfunc(default)
             filenames[os] = filename
+        if allow_empty and not filename:
+            continue
         if not chkfunc(filename):
             errors.append('invalid filename for os {}: {}'
                           .format(os, filename))

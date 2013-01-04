@@ -1,11 +1,10 @@
+import collections
 
-class Project(object):
-    __slots__ = [
-        'project',
-        'targets',
-        'envs',
-        'files',
-    ]
+Project = collections.namedtuple(
+    'Project', 'targets files')
 
-    def __init__(self, project, targets, envs):
-        pass
+Executable = collections.namedtuple(
+    'Executable', 'filename exe_icon apple_category cvars envs sources')
+
+Source = collections.namedtuple(
+    'Source', 'path envs generator type')

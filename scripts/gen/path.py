@@ -124,12 +124,32 @@ class Path(object):
         return 'Path({!r})'.format(self._p)
     def __div__(self, other):
         return Path(self._p, other._p)
+
     def __eq__(self, other):
         if not isinstance(other, Path):
-            raise TypeError('can only compare against other Path objects')
+            return NotImplemented
         return self._p == other._p
     def __ne__(self, other):
-        return not (self == other)
+        if not isinstance(other, Path):
+            return NotImplemented
+        return self._p != other._p
+    def __lt__(self, other):
+        if not isinstance(other, Path):
+            return NotImplemented
+        return self._p < other._p
+    def __le__(self, other):
+        if not isinstance(other, Path):
+            return NotImplemented
+        return self._p <= other._p
+    def __gt__(self, other):
+        if not isinstance(other, Path):
+            return NotImplemented
+        return self._p > other._p
+    def __ge__(self, other):
+        if not isinstance(other, Path):
+            return NotImplemented
+        return self._p >= other._p
+
     def __hash__(self):
         return hash(self._p)
     def withext(self, ext):
