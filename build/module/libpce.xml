@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module name="libpce" path="../../libpce">
+  <header-path path="include" public="true"/>
+  <group path="include">
+    <src path="arch.h"/>
+    <src path="atomic.h"/>
+    <src path="attribute.h"/>
+    <src path="byteorder.h"/>
+    <src path="cpu.h"/>
+    <src path="hash.h"/>
+    <src path="hashtable.h"/>
+    <src path="strbuf.h"/>
+    <src path="thread.h"/>
+    <src path="util.h"/>
+  </group>
+  <group path="lib">
+    <src path="cpu.c"/>
+    <src path="hash.c"/>
+    <src path="hashtable.c"/>
+    <src path="strbuf.c"/>
+    <switch value="$os">
+      <case value="linux|osx">
+	<src path="thread_pthread.c"/>
+      </case>
+      <case value="windows">
+	<src path="thread_windows.c"/>
+      </case>
+    </switch>
+  </group>
+</module>

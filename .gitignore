@@ -1,55 +1,5 @@
 # Objects and products
-*.a
-*.o
 *.pyc
-*.tar.gz
-*.tar.bz2
-*.tar.xz
-*.zip
-.deps
-/run.sh
-/Game-gtk
-/Game-sdl
-/version.c
-
-# CMake
-/CMakeLists.txt
-/CMakeCache.txt
-/CMakeFiles
-/Win32
-/*.dir
-/cmake_install.cmake
-
-# Apple's Xcode
-*.xcodeproj
-
-# Autoconf
-/aclocal.m4
-/autom4te.cache
-/config.h
-/config.h.in
-/config.log
-/config.mak
-/config.status
-/configure
-/configure.ac
-/config.mak.in
-/Makefile
-
-# Microsoft Visual Studio
-/*.vcxproj
-/*.vcxproj.filters
-/*.vcxproj.user
-/*.sln
-/*.sdf
-/*.suo
-/*.opensdf
-/Debug
-/Release
-/ipch
-
-# Build directory, if used
-/build*
 
 # Doxygen
 /html

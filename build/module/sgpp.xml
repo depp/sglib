@@ -1,10 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<module path="..">
-  <name>SGLib++</name>
-  <public>
-    <require module="sg" global="true"/>
-    <header-path path="include"/>
-  </public>
+<module name="sglib++" path="../..">
+  <key name="name">SGLib++</key>
+
+  <require module="sglib" public="true"/>
 
   <group path="include/sgpp">
     <src path="audio.hpp"/>
