@@ -1,5 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <build path="../..">
+  <module type="config-header">
+    <key name="target"><path path="include/config.h"/></key>
+  </module>
+
+  <module type="version-info">
+    <key name="target"><path path="sg/core/version_const.c"/></key>
+  </module>
+
   <module name="sglib">
     <require module="keycode libpce" public="true"/>
     <header-path path="include" public="true"/>
@@ -32,7 +40,7 @@
       <src path="version.h"/>
     </group>
 
-    <src path="include/config.h" generator="config_header"/>
+    <src path="include/config.h"/>
 
     <group path="sg/audio">
       <src path="convert.c"/>
@@ -78,7 +86,7 @@
       <src path="sys.c"/>
       <src path="texture.c"/>
       <src path="version.c"/>
-      <src path="version_const.c" generator="version_info"/>
+      <src path="version_const.c"/>
     </group>
 
     <group path="sg/dispatch">

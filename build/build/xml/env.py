@@ -17,7 +17,7 @@ TAGS = {
     'key': 'name',
     'path': 'path',
     'require': 'module public',
-    'src': 'path generator',
+    'src': 'path type',
 }.items()}
 
 def get_path(base, attrib, required=False):
@@ -124,8 +124,8 @@ class GroupMixin(object):
 
     def add_src(self, attrib, loc):
         path = get_path(self.path, attrib, required=True)
-        generator = attrib.get('generator')
-        self.group.sources.append(data.Source(path, generator))
+        type = attrib.get('type')
+        self.group.sources.append(data.Source(path, type))
         return null_env
 
     def add_header_path(self, attrib, loc):

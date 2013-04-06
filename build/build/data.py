@@ -1,7 +1,7 @@
 import collections
 
 Href = collections.namedtuple('Href', 'path frag')
-Source = collections.namedtuple('Source', 'path generator')
+Source = collections.namedtuple('Source', 'path type')
 Requirement = collections.namedtuple('Requirement', 'module public')
 HeaderPath = collections.namedtuple('HeaderPath', 'path public')
 
