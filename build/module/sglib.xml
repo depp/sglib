@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<build path="../..">
+<build path="../.." default="sglib">
   <module type="config-header">
     <key name="target"><path path="include/config.h"/></key>
   </module>
@@ -8,7 +8,7 @@
     <key name="target"><path path="sg/core/version_const.c"/></key>
   </module>
 
-  <module name="sglib">
+  <module id="sglib">
     <require module="keycode libpce" public="true"/>
     <header-path path="include" public="true"/>
 
@@ -62,7 +62,7 @@
 	    <src path="alsa.c"/>
 	  </case>
 	  <case value="coreaudio">
-	    <require module="osx/coreaudio osx/audiounit"/>
+	    <require module="osx#CoreAudio osx#AudioUnit"/>
 	    <src path="coreaudio.c"/>
 	  </case>
 	  <case value="directsound">
@@ -120,7 +120,7 @@
       <group>
 	<switch value="$flag.jpeg">
 	  <case value="coregraphics">
-	    <require module="osx/applicationservices"/>
+	    <require module="osx#ApplicationServices"/>
 	    <src path="coregraphics.c"/>
 	  </case>
 	  <case value="libjpeg">
@@ -136,7 +136,7 @@
       <group>
 	<switch value="$flag.png">
 	  <case value="coregraphics">
-	    <require module="osx/applicationservices"/>
+	    <require module="osx#ApplicationServices"/>
 	    <src path="coregraphics.c"/>
 	  </case>
 	  <case value="libpng">
@@ -157,7 +157,7 @@
     <group path="sg/record">
       <src path="record.c"/>
       <src path="shot.c"/>
-      <if value="$flag.video-recording">
+      <if value="$flag.video-recording == yes">
 	<src path="vidproc.c"/>
 	<src path="yuv.c"/>
       </if>
@@ -167,7 +167,7 @@
       <group>
 	<switch value="$flag.type">
 	  <case value="coretext">
-	    <require module="osx/applicationservices"/>
+	    <require module="osx#ApplicationServices"/>
 	    <src path="coretext.c"/>
 	  </case>
 	  <case value="pango">
@@ -195,49 +195,6 @@
 	  <src path="windows.c"/>
 	</case>
       </switch>
-    </group>
-  </module>
-
-  <module name="sglib-gtk">
-    <key name="name">SGLib Gtk Frontend</key>
-    <require module="sglib gtk gtkglext"/>
-    <group path="sg/gtk">
-      <src path="gtk.c"/>
-    </group>
-  </module>
-
-  <module name="sglib-cocoa">
-    <key name="name">SGLib Cocoa Frontend</key>
-    <require module="sglib osx/appkit osx/foundation"/>
-    <group path="sg/osx">
-      <src path="GApplication.h"/>
-      <src path="GApplication.m"/>
-      <src path="GController.h"/>
-      <src path="GController.m"/>
-      <src path="GDisplay.h"/>
-      <src path="GDisplay.m"/>
-      <src path="GMain.m"/>
-      <src path="GPrefix.h"/>
-      <src path="GView.h"/>
-      <src path="GView.m"/>
-      <src path="GWindow.h"/>
-      <src path="GWindow.m"/>
-    </group>
-  </module>
-
-  <module name="sglib-sdl">
-    <key name="name">SGLib SDL Frontend</key>
-    <require module="sglib sdl"/>
-    <group path="sg/sdl">
-      <src path="sdl.c"/>
-    </group>
-  </module>
-
-  <module name="sglib-windows">
-    <key name="name">SGLib Windows Frontend</key>
-    <require module="sglib"/>
-    <group path="sg/windows">
-      <src path="windows.c"/>
     </group>
   </module>
 </build>

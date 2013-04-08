@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module type="sdl-config">
+  <key name="desc">LibSDL</key>
+
+  <key name="pkg-deb">libsdl1.2-dev</key>
+  <key name="pkg-rpm">SDL-devel</key>
+  <key name="pkg-gentoo">media-libs/libsdl</key>
+  <key name="pkg-arch">sdl</key>
+
+  <!--
+    From the changelog: "SDL 1.2.10 is a major release, featuring a
+    revamp of the build system and many API improvements and bug
+    fixes."
+  -->
+  <key name="min-version">1.2.10</key>
+</module>

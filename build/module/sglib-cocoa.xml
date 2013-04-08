@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module path="../..">
+  <key name="desc">SGLib Cocoa Frontend</key>
+  <require module="sglib osx#AppKit osx#Foundation"/>
+  <group path="sg/osx">
+    <src path="GApplication.h"/>
+    <src path="GApplication.m"/>
+    <src path="GController.h"/>
+    <src path="GController.m"/>
+    <src path="GDisplay.h"/>
+    <src path="GDisplay.m"/>
+    <src path="GMain.m"/>
+    <src path="GPrefix.h"/>
+    <src path="GView.h"/>
+    <src path="GView.m"/>
+    <src path="GWindow.h"/>
+    <src path="GWindow.m"/>
+  </group>
+</module>

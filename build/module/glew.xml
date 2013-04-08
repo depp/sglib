@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module type="multi">
+  <key name="desc">The OpenGL Extension Wrangler Library</key>
+
+  <key name="pkg-deb">libglew-dev</key>
+  <key name="pkg-rpm">glew-devel</key>
+  <key name="pkg-gentoo">media-libs/glew</key>
+  <key name="pkg-arch">glew</key>
+
+  <module type="bundled-library">
+    <key name="pattern">glew</key>
+    <header-path path="include" public="true"/>
+    <src path="src/glew.c"/>
+    <group path="include/GL">
+      <src path="glew.h"/>
+      <src path="glxew.h"/>
+      <src path="wglew.h"/>
+    </group>
+  </module>
+  <module type="pkg-config">
+    <key name="spec">glew</key>
+  </module>
+</module>

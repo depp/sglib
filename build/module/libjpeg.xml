@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module type="multi">
+  <key name="desc">LibJPEG</key>
+
+  <key name="pkg-deb">libjpeg-dev</key>
+  <key name="pkg-rpm">libjpeg-turbo</key>
+  <key name="pkg-gentoo">media-libs/libjpeg-turbo</key>
+  <key name="pkg-arch">libjpeg-turbo</key>
+
+  <module type="library-search">
+    <key name="source.language">c</key>
+    <key name="source.prologue">
+#include &lt;stdio.h&gt;
+#include "jpeglib.h"
+    </key>
+    <key name="source.body">
+	int version;
+	struct jpeg_decompress_struct cinfo;
+	version = JPEG_LIB_VERSION;
+	jpeg_create_decompress(&amp;cinfo);
+    </key>
+    <key name="flags.1.LIBS">-ljpeg</key>
+  </module>
+</module>

@@ -1,5 +1,4 @@
 import re
-from build.path import Path
 
 class EvalError(ValueError):
     pass
@@ -7,8 +6,6 @@ class EvalError(ValueError):
 def to_string(environ, value):
     if isinstance(value, str):
         return value
-    if isinstance(value, path.Path):
-        return value.to_string(environ['os'])
     raise EvalError('cannot convert type to string: {}'
                     .format(type(value).__name__))
 

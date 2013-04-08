@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<module name="sglib++" path="../..">
-  <key name="name">SGLib++</key>
+<module path="../..">
+  <key name="desc">SGLib++</key>
 
   <require module="sglib" public="true"/>
 

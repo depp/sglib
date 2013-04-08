@@ -2,6 +2,8 @@ import collections
 import argparse
 import sys
 import platform
+import build.project
+import os
 
 TARGETS = {}
 def target(*names):
@@ -77,6 +79,8 @@ class Config(object):
             '-v', dest='verbosity', default=1,
             action='store_const', const=0,
             help='verbose messages')
+        self.parser.add_argument(
+            '--dump-project', action='store_true')
 
         buildgroup.add_argument(
             '--debug', dest='config', default='release',
@@ -153,9 +157,16 @@ class Config(object):
             self.defaults.setdefault(k, {}).update(v)
 
     def dump_flags(self, flags):
-        print('Configuration:')
+        print('Configuration:', file=sys.stderr)
         for k, v in sorted(flags.items()):
-            print('  {}: {}'.format(k, v))
+            print('  {}: {}'.format(k, v), file=sys.stderr)
+
+    def dump_project(self, proj):
+        import sys
+        import io
+        fp = io.BytesIO()
+        proj.dump_xml(fp)
+        sys.stdout.write(fp.getvalue().decode('utf-8'))
 
     def run(self):
         if len(sys.argv) < 2:
@@ -175,9 +186,9 @@ class Config(object):
             val = getattr(args, 'flag:' + flag)
             if val is None:
                 val = 'no'
-                for os in (target.os, None):
+                for target_os in (target.os, None):
                     try:
-                        val = self.defaults[os][flag]
+                        val = self.defaults[target_os][flag]
                         break
                     except KeyError:
                         pass
@@ -185,3 +196,14 @@ class Config(object):
 
         if args.verbosity >= 1:
             self.dump_flags(flags)
+
+        environ = {
+            'os':target.os,
+            'flag':flags,
+        }
+        srcdir = os.path.dirname(projfile) or os.path.curdir
+        proj = build.project.Project(srcdir, srcdir, environ)
+        proj.load_xml(projfile)
+        if args.dump_project:
+            self.dump_project(proj)
+            sys.exit(0)

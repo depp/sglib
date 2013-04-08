@@ -1,4 +1,26 @@
 import build.config
+import build.data as data
+from build.path import Href
+import os
+
+REQS = {
+    'sglib': ['sglib'],
+    'sglib++':  ['sglib++'],
+}
+
+@data.template('sglib', 'sglib++')
+def template_sglib(module, proj):
+    moddir = proj.path(os.path.join(os.path.dirname(__file__), 'module'))
+
+    src = data.Module(proj.gen_name(), 'source')
+    src.group = module.group
+    src.group.requirements.extend(
+        data.Requirement(Href(moddir.join(req), None), False)
+        for req in REQS[module.type])
+    src.info = module.info
+    src.modules = module.modules
+
+    yield src
 
 cfg = build.config.Config()
 val = build.config.Value

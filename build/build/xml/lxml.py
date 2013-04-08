@@ -1,4 +1,5 @@
 from lxml import etree
+from build.path import Href, Path
 
 def parse_file(path, rootenv):
     xml_parser = etree.XMLParser(remove_comments=True)
@@ -36,3 +37,61 @@ def parse_file(path, rootenv):
             except ValueError as ex:
                 raise ValueError('{}:{}: <{}>: {}'
                                  .format(path, node.sourceline, node.tag, ex))
+
+def dump_info(parent, info):
+    for key, value in sorted(info.items()):
+        elt = etree.SubElement(parent, 'key')
+        elt.attrib['name'] = key
+        last = None
+        for item in value:
+            if isinstance(item, str):
+                if last is None:
+                    nc = item if elt.text is None else elt.text + item
+                    elt.text = nc or None
+                else:
+                    nc = item if last.tail is None else last.tail + item
+                    last.tail = nc or None
+            elif isinstance(item, Path):
+                last = etree.SubElement(elt, 'path')
+                last.attrib['path'] = item.path
+            else:
+                raise TypeError('invalid info type: {}'
+                                .format(type(item).__name__))
+
+def dump_group(parent, group):
+    for req in group.requirements:
+        elt = etree.SubElement(parent, 'require')
+        elt.attrib['module'] = str(Href(None, str(req.module)))
+        if req.public:
+            elt.attrib['public'] = 'true'
+    for ipath in group.header_paths:
+        elt = etree.SubElement(parent, 'header-path')
+        elt.attrib['path'] = ipath.path.path
+        if ipath.public:
+            elt.attrib['public'] = 'true'
+    for src in group.sources:
+        elt = etree.SubElement(parent, 'src')
+        elt.attrib['path'] = src.path.path
+        if src.type is not None:
+            elt.attrib['type'] = src.type
+    for subgroup in group.groups:
+        elt = etree.SubElement(parent, 'group')
+        dump_group(elt, subgroup)
+
+def dump_module(parent, module):
+    elt = etree.SubElement(parent, 'module')
+    elt.attrib['type'] = module.type
+    if module.name is not None:
+        elt.attrib['name'] = str(module.name)
+    dump_info(elt, module.info)
+    dump_group(elt, module.group)
+    for mod in module.modules:
+        dump_module(elt, mod)
+
+def dump(modules, info, fp):
+    build = etree.Element('build')
+    dump_info(build, info)
+    for mod in modules:
+        dump_module(build, mod)
+    tree = etree.ElementTree(build)
+    tree.write(fp, pretty_print=True, encoding='UTF-8')

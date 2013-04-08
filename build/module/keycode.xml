@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<module name="keycode" path="../../keycode">
+<module path="../../keycode">
   <header-path path="include" public="true"/>
   <group path="include/keycode">
     <src path="keycode.h"/>

@@ -1,4 +1,4 @@
-from build.path import Path
+from build.path import Href
 import build.data as data
 from build.expr import evaluate, evaluate_many, to_bool, compare
 
@@ -9,9 +9,9 @@ TAGS = {
     'if': 'value',
     'switch': 'value',
 
-    'build': 'path',
+    'build': 'path default',
     'group': 'path',
-    'module': 'path name type',
+    'module': 'path id type',
 
     'header-path': 'path public',
     'key': 'name',
@@ -28,11 +28,11 @@ def get_path(base, attrib, required=False):
     attribute dictionary.
     """
     try:
-        path = attrib['path']
+        pathattr = attrib['path']
     except KeyError:
         pass
     else:
-        return Path(base, path)
+        return base.join(pathattr)
     if required:
         raise ValueError('missing attribute: path')
     return base
@@ -138,6 +138,7 @@ class GroupMixin(object):
         module = get_attrib(attrib, 'module')
         public = get_bool(attrib, 'public')
         for m in module.split():
+            m = Href.parse(m, self.vars.base)
             self.group.requirements.append(data.Requirement(m, public))
         return null_env
 
@@ -152,13 +153,21 @@ class InfoMixin(object):
         name = get_attrib(attrib, 'name')
         return KeyEnv(self.vars, self.path, self.info, name)
 
+root_module = object()
 class ModuleMixin(object):
     """Mixin for environments containing modules."""
     __slots__ = []
     def add_module(self, attrib, loc):
         path = get_path(self.path, attrib)
-        name = attrib.get('name')
-        type = attrib.get('type', 'module')
+        name = attrib.get('id')
+        if name is not None:
+            if name is root_module:
+                name = Href(self.vars.base, None)
+            elif not name:
+                raise ValueError('empty module id')
+            else:
+                name = Href(self.vars.base, name)
+        type = attrib.get('type', 'source')
         module = data.Module(name, type)
         self.modules.append(module)
         return ModuleEnv(self.vars, path, module)
@@ -208,12 +217,30 @@ class RootEnv(Env, ModuleMixin):
         self.buildfile = buildfile
 
     def add_build(self, attrib, loc):
+        try:
+            default = attrib['default']
+        except KeyError:
+            pass
+        else:
+            self.buildfile.default = Href(self.vars.base, default)
         return BuildEnv(self.vars, get_path(self.path, attrib),
                         self.buildfile)
 
     @property
     def modules(self):
         return self.buildfile.modules
+
+    def add_module(self, attrib, loc):
+        try:
+            name = attrib['id']
+        except KeyError:
+            attrib = dict(attrib)
+            attrib['id'] = root_module
+            name = Href(self.vars.base, None)
+        else:
+            name = Href(self.vars.base, name)
+        self.buildfile.default = name
+        return super(RootEnv, self).add_module(attrib, loc)
 
 class BuildEnv(Env, ConditionalMixin, InfoMixin, ModuleMixin):
     """Environment for build tags."""
@@ -232,7 +259,7 @@ class BuildEnv(Env, ConditionalMixin, InfoMixin, ModuleMixin):
     def modules(self):
         return self.buildfile.modules
 
-class ModuleEnv(Env, ConditionalMixin, GroupMixin, InfoMixin):
+class ModuleEnv(Env, ConditionalMixin, GroupMixin, InfoMixin, ModuleMixin):
     """Environment for module tags."""
     __slots__ = ['vars', 'path', 'module']
 
@@ -248,6 +275,10 @@ class ModuleEnv(Env, ConditionalMixin, GroupMixin, InfoMixin):
     @property
     def info(self):
         return self.module.info
+
+    @property
+    def modules(self):
+        return self.module.modules
 
 class GroupEnv(Env, ConditionalMixin, GroupMixin):
     """Environment for group tags."""
@@ -276,3 +307,6 @@ class KeyEnv(Env, ConditionalMixin):
         path = get_path(self.path, attrib, required=True)
         self.val.append(path)
         return null_env
+
+    def finish(self):
+        self.info[self.name] = self.val

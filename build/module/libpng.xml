@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module type="multi">
+  <key name="desc">LibPNG</key>
+
+  <key name="pkg-deb">libpng-dev</key>
+  <key name="pkg-rpm">libpng-devel</key>
+  <key name="pkg-gentoo">media-libs/libpng</key>
+  <key name="pkg-arch">libpng</key>
+
+  <module type="pkg-config">
+    <key name="spec">libpng12</key>
+  </module>
+</module>

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module type="multi">
+  <key name="desc">ALSA</key>
+
+  <key name="pkg-deb">libasound2-dev</key>
+  <key name="pkg-rpm">alsa-lib-devel</key>
+  <key name="pkg-gentoo">media-libs/alsa-lib</key>
+  <key name="pkg-arch">alsa-lib</key>
+
+  <module type="pkg-config">
+    <key name="spec">alsa</key>
+  </module>
+</module>
