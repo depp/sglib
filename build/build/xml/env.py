@@ -118,7 +118,7 @@ class GroupMixin(object):
 
     def add_group(self, attrib, loc):
         path = get_path(self.path, attrib)
-        group = data.Group()
+        group = data.Group(loc)
         self.group.groups.append(group)
         return GroupEnv(self.vars, path, group)
 
@@ -151,7 +151,7 @@ class InfoMixin(object):
 
     def add_key(self, attrib, loc):
         name = get_attrib(attrib, 'name')
-        return KeyEnv(self.vars, self.path, self.info, name)
+        return KeyEnv(self.vars, self.path, self.info, name, loc)
 
 root_module = object()
 class ModuleMixin(object):
@@ -168,7 +168,7 @@ class ModuleMixin(object):
             else:
                 name = Href(self.vars.base, name)
         type = attrib.get('type', 'source')
-        module = data.Module(name, type)
+        module = data.Module(name, type, loc)
         self.modules.append(module)
         return ModuleEnv(self.vars, path, module)
 
@@ -291,14 +291,15 @@ class GroupEnv(Env, ConditionalMixin, GroupMixin):
 
 class KeyEnv(Env, ConditionalMixin):
     """Environment for key tags."""
-    __slots__ = ['vars', 'path', 'info', 'name', 'val']
+    __slots__ = ['vars', 'path', 'info', 'name', 'val', 'loc']
 
-    def __init__(self, vars, path, info, name):
+    def __init__(self, vars, path, info, name, loc):
         self.vars = vars
         self.path = path
         self.info = info
         self.name = name
         self.val = []
+        self.loc = loc
 
     def add_str(self, val):
         self.val.append(val)
@@ -309,4 +310,4 @@ class KeyEnv(Env, ConditionalMixin):
         return null_env
 
     def finish(self):
-        self.info[self.name] = self.val
+        self.info.set_key(self.name, self.val, self.loc)

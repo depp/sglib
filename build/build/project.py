@@ -10,7 +10,7 @@ class Project(object):
         self.base_path = {'srcdir': srcdir, 'builddir': builddir}
         self.environ = environ
         self.modules = []
-        self.info = {}
+        self.info = None
         self.counter = 0
 
     def path(self, path, base='srcdir'):

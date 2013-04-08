@@ -4,6 +4,7 @@ import sys
 import platform
 import build.project
 import os
+from build.error import ConfigError
 
 TARGETS = {}
 def target(*names):
@@ -168,7 +169,7 @@ class Config(object):
         proj.dump_xml(fp)
         sys.stdout.write(fp.getvalue().decode('utf-8'))
 
-    def run(self):
+    def _run(self):
         if len(sys.argv) < 2:
             print('invalid usage', file=sys.stderr)
             sys.exit(1)
@@ -207,3 +208,10 @@ class Config(object):
         if args.dump_project:
             self.dump_project(proj)
             sys.exit(0)
+
+    def run(self):
+        try:
+            self._run()
+        except ConfigError as ex:
+            ex.write(sys.stderr)
+            sys.exit(1)

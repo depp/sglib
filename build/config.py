@@ -30,21 +30,17 @@ def template_sglib(module, buildinfo, proj):
 
     target_os = proj.environ['os']
 
-    info = dict(module.info)
+    info = data.InfoDict()
     info.update(buildinfo)
+    info.update(module.info)
 
-    name = module.info.get('name')
+    name = module.info.get_string('name', None)
     if name is None:
-        name = buildinfo.get('name')
+        name = buildinfo.get_string('name', None)
     if name is None:
         raise Exception('cannot determine application name')
-    name = data.to_string(name)
 
-    filename = module.info.get('filename')
-    if filename is None:
-        filename = name
-    else:
-        filename = data.to_string(filename)
+    filename = module.info.get_string('filename', name)
 
     cvars = {k[5:]: v for k, v in info.items() if k.startswith('cvar.')}
 
@@ -57,14 +53,14 @@ def template_sglib(module, buildinfo, proj):
         amod.group.requirements = [
             data.Requirement(x, False) for x in
             [src.name, Href(moddir.join('sglib-' + app), None)]]
-        amod.info['name'] = '{} ({})'.format(name, APPS[app])
+        amod.info['name'] = ('{} ({})'.format(name, APPS[app]),)
 
     if target_os == 'linux':
         filename = re.sub(r'[^-A-Za-z0-9]+', '_', filename).strip('_')
         if not filename:
             raise Exception('default filename is empty')
         args = {'default-args.{}'.format(n+1):
-                ['-d' + k + '='] + v
+                ('-d' + k + '=',) + v
                 for n, (k, v) in enumerate(cvars.items())}
         for app, amod in apps:
             amod.info.update(args)
