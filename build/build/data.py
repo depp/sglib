@@ -1,5 +1,6 @@
 import collections
 import urllib.parse
+from build.path import Path
 
 Source = collections.namedtuple('Source', 'path type')
 Requirement = collections.namedtuple('Requirement', 'module public')
@@ -82,7 +83,7 @@ def expand_templates(modules, info, proj):
         except KeyError:
             expanded_modules.append(module)
         else:
-            expansion = list(func(module, proj))
+            expansion = list(func(module, info, proj))
             q.extend(reversed(expansion))
     return expanded_modules
 
@@ -94,3 +95,16 @@ def template(*names):
             TEMPLATES[name] = x
         return x
     return func
+
+def to_string(key):
+    """Convert an info dict item to a string."""
+    for item in key:
+        if not isinstance(item, str):
+            raise ValueError('key contains non-strings')
+    return ''.join(key)
+
+def to_path(key):
+    """Convert an info dict item into a path."""
+    if len(key) != 1 or not isinstance(key[0], Path):
+        raise ValueError('key is not a path')
+    return key[0]

@@ -58,6 +58,7 @@ class Project(object):
             for m in buildfile.modules:
                 npaths.update(ref.path for ref in m.module_refs())
                 self.modules.append(m)
+            npaths.discard(None)
             npaths.difference_update(paths)
             q.extend(npaths)
             paths.update(npaths)
