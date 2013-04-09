@@ -185,7 +185,7 @@ class Config(object):
             'flag':flags,
         }
         srcdir = os.path.dirname(projfile) or os.path.curdir
-        proj = build.project.Project(srcdir, srcdir, environ)
+        proj = build.project.Project(srcdir, environ)
         proj.load_xml(projfile)
         if args.dump_project:
             self.dump_project(proj)

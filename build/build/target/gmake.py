@@ -20,9 +20,9 @@ class Target(nix.Target):
         source = build.modules[module.source]
         filename = module.filename
 
-        objdir = Path('/build/obj', 'srcdir')
-        exedir = Path('/build/exe', 'srcdir')
-        proddir = Path('/build/products', 'srcdir')
+        objdir = Path('/build/obj', 'builddir')
+        exedir = Path('/build/exe', 'builddir')
+        proddir = Path('/build/products', 'builddir')
 
         objs = []
         src_types = set()
@@ -65,7 +65,7 @@ class Target(nix.Target):
         makefile.add_default(prodpath, debugpath)
 
     def build_sources(self, makefile, build):
-        objdir = Path('/build/obj', 'srcdir')
+        objdir = Path('/build/obj', 'builddir')
         for src in build.sources.values():
             if src.type in ('c', 'c++'):
                 opath = objdir.join(src.path.to_posix()).withext('.o')
@@ -84,7 +84,7 @@ class Target(nix.Target):
 
     def build(self, proj):
         build = self.gen_build(proj)
-        makefile = Makefile()
+        makefile = Makefile(proj)
 
         self.build_sources(makefile, build)
         for target in build.targets:
@@ -112,15 +112,16 @@ class Makefile(object):
     """GMake Makefile generator."""
 
     __slots__ = ['_rulefp', '_all', '_phony', '_opt_include',
-                 '_qnames', '_qctr']
+                 '_qnames', '_qctr', '_proj']
 
-    def __init__(self):
+    def __init__(self, proj):
         self._rulefp = StringIO()
         self._all = set()
         self._phony = set(['all', 'clean'])
         self._opt_include = set()
         self._qnames = {}
         self._qctr = 0
+        self._proj = proj
 
     def _get_qctr(self, name):
         try:
@@ -141,10 +142,11 @@ class Makefile(object):
         and paths.  This handles escaping of all of the sources,
         targets, and commands.
         """
+        convert_path = self._proj.posix
         write = self._rulefp.write
         if isinstance(target, Path):
-            write(mk_escape(target.to_posix()))
-            dirs = [target.dirname().to_posix()]
+            write(mk_escape(convert_path(target)))
+            dirs = [convert_path(target.dirname())]
         else:
             write(mk_escape(target))
             dirs = []
@@ -152,7 +154,7 @@ class Makefile(object):
         write(':')
         for s in sources:
             if isinstance(s, Path):
-                s = s.to_posix()
+                s = convert_path(s)
             write(' ' + mk_escape(s))
         write('\n')
         dirs = [x for x in dirs if x]
@@ -171,14 +173,14 @@ class Makefile(object):
                 if isinstance(arg, str):
                     pass
                 elif isinstance(arg, Path):
-                    arg = arg.to_posix()
+                    arg = convert_path(arg)
                 elif isinstance(arg, tuple):
                     parts = []
                     for part in arg:
                         if isinstance(part, str):
                             parts.append(part)
                         elif isinstance(part, Path):
-                            parts.append(part.to_posix())
+                            parts.append(convert_path(part))
                         else:
                             raise TypeError('invalid command type')
                     arg = ''.join(parts)
@@ -191,7 +193,7 @@ class Makefile(object):
         """Make targets default targets."""
         for target in targets:
             if isinstance(target, Path):
-                self._all.add(target.to_posix())
+                self._all.add(self._proj.posix(target))
             else:
                 self._all.add(target)
 
@@ -220,4 +222,4 @@ class Makefile(object):
 
     def opt_include(self, *paths):
         for path in paths:
-            self._opt_include.add(path.to_posix())
+            self._opt_include.add(self._proj.posix(path))

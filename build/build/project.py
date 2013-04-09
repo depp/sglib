@@ -2,20 +2,29 @@ from build.path import Path, Href
 import build.path
 import collections
 import os
+import posixpath
 
 class Project(object):
-    __slots__ = ['base_path', 'environ', 'modules', 'info', 'counter']
+    __slots__ = ['srcdir', 'environ', 'modules', 'info', 'counter']
 
-    def __init__(self, srcdir, builddir, environ):
-        self.base_path = {'srcdir': srcdir, 'builddir': builddir}
+    def __init__(self, srcdir, environ):
+        self.srcdir = srcdir
         self.environ = environ
         self.modules = []
         self.info = None
         self.counter = 0
 
+    def base_path(self, base):
+        if base == 'srcdir':
+            return self.srcdir
+        elif base == 'builddir':
+            return os.path.curdir
+        else:
+            assert ValueError('invalid base')
+
     def path(self, path, base='srcdir'):
         """Convert a native path to a path object."""
-        rel_path = os.path.relpath(path, self.base_path[base])
+        rel_path = os.path.relpath(path, self.base_path(base))
         drive, dpath = os.path.splitdrive(rel_path)
         try:
             if drive or os.path.isabs(dpath):
@@ -28,9 +37,24 @@ class Project(object):
     def native(self, path):
         """Convert a path object to a native path."""
         p = path.path
-        assert p.startswith('/')
-        return os.path.join(self.base_path[path.base],
+        return os.path.join(self.base_path(path.base),
                             p[1:].replace('/', os.path.sep))
+
+    def posix(self, path, base='builddir'):
+        """Convert a path object to a POSIX path relative to base."""
+        pbase = path.base
+        ppath = path.path[1:]
+        if base == pbase:
+            return ppath or '.'
+        elif pbase == 'srcdir' and base == 'builddir':
+            bpath = self.srcdir
+            if bpath == '.':
+                return ppath or '.'
+            if ppath:
+                return posixpath.join(bpath, ppath)
+            return bpath
+        else:
+            raise ValueError('cannot convert path bases')
 
     def load_xml(self, path):
         """Load a project from the given path."""
