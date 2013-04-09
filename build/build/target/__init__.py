@@ -129,4 +129,10 @@ class Target(object):
         return [ConfigHeader(name, target, proj.environ['flag'])]
 
     def mod_version_info(self, proj, mod, name):
-        return ()
+        from .versioninfo import VersionInfo
+        target = mod.info.get_path('target')
+        repos = {}
+        for k in mod.info:
+            if k.startswith('repo.'):
+                repos[k[5:]] = proj.native(mod.info.get_path(k))
+        return [VersionInfo(name, target, repos, 'git')]

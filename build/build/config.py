@@ -6,6 +6,7 @@ import os
 import importlib
 from build.error import ConfigError
 import pickle
+import io
 
 TARGETS = {'make', 'msvc', 'xcode'}
 OS = {'osx', 'linux', 'windows'}
@@ -189,10 +190,29 @@ class Config(object):
 
         return ConfigResult(projfile, environ, target), args
 
-    def get_cached_args(self):
+    def get_cache(self):
         with open('config.dat', 'rb') as fp:
-            cache_obj = pickle.load(fp)
-        return pickle.loads(cache_obj[0]), None
+            return pickle.load(fp)
+
+    def get_cached_args(self):
+        return pickle.loads(self.get_cache()[0]), None
+
+    def build(self, targetpath, target):
+        fp = io.StringIO()
+        target.write(fp)
+        text = fp.getvalue()
+        if target.deps == True:
+            del fp
+            try:
+                with open(targetpath, 'r') as fp:
+                    curtext = fp.read()
+            except OSError:
+                pass
+            else:
+                if curtext == text:
+                    return
+        with open(targetpath, 'w') as fp:
+            fp.write(text)
 
     def run_config(self, cfg, args):
         import build.project
@@ -211,7 +231,7 @@ class Config(object):
             if not isinstance(target, GeneratedSource):
                 continue
             if target.deps:
-                cache_gen_sources[target.target] = target
+                cache_gen_sources[proj.native(target.target)] = target
             all_gen_sources.append(target)
 
         cache_obj = (
@@ -226,14 +246,15 @@ class Config(object):
             targetpath = proj.native(target.target)
             if (not args) or args.verbosity >= 1:
                 print('Writing {}'.format(targetpath), file=sys.stderr)
-            with open(targetpath, 'w') as fp:
-                target.write(fp)
+            self.build(targetpath, target)
 
     def run_regen(self):
         if len(sys.argv) < 3:
             print('invalid usage', file=sys.stderr)
             sys.exit(1)
-        assert False # unimplemented
+        cache_gen_sources = pickle.loads(self.get_cache()[1])
+        targetpath = sys.argv[2]
+        self.build(targetpath, cache_gen_sources[targetpath])
 
     def _run(self):
         if len(sys.argv) < 2:

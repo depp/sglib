@@ -65,6 +65,20 @@ class Target(nix.Target):
 
         makefile.add_default(prodpath, debugpath)
 
+    def build_gensource(self, makefile, build, module):
+        deps = module.deps
+        if not deps:
+            return
+        if deps == True:
+            deps = ()
+            phony = True
+        else:
+            phony = None
+        makefile.add_rule(
+            module.target, deps,
+            [[sys.executable, sys.argv[0], 'regen', module.target]],
+            qname='Regen', phony=phony)
+
     def build_sources(self, makefile, build):
         objdir = Path('/build/obj', 'builddir')
         for src in build.sources.values():
@@ -97,6 +111,11 @@ class Target(nix.Target):
         for target in build.targets:
             if isinstance(target, nix.ExeModule):
                 self.build_exe(makefile, build, target)
+            elif isinstance(target, gensource.GeneratedSource):
+                self.build_gensource(makefile, build, target)
+            else:
+                print('warning: unknown target type: {}'
+                      .format(type(target).__name__))
 
         build.add(GenMakefile(None, makepath, makefile))
         return build
@@ -154,7 +173,7 @@ class Makefile(object):
             self._qnames[name] = n
             return n
 
-    def add_rule(self, target, sources, cmds, qname=None):
+    def add_rule(self, target, sources, cmds, qname=None, phony=None):
         """Add a rule to the makefile.
 
         The target should be a string or path, and the sources should
@@ -170,12 +189,15 @@ class Makefile(object):
         else:
             write = self._rulefp.write
         if isinstance(target, Path):
-            write(mk_escape(convert_path(target)))
             dirs = [convert_path(target.dirname())]
+            target = convert_path(target)
+            default_phony = False
         else:
-            write(mk_escape(target))
             dirs = []
+            default_phony = True
+        if (default_phony if phony is None else phony):
             self._phony.add(target)
+        write(mk_escape(target))
         write(':')
         for s in sources:
             if isinstance(s, Path):
@@ -239,7 +261,8 @@ class Makefile(object):
             else:
                 fp.write("QUIET{} = @\n".format(v))
         fp.write('endif\n')
-        fp.write('.PHONY: {}'.format(' '.join(sorted(self._phony))) + '\n')
+        fp.write('.PHONY: {}'.format(
+            ' '.join(mk_escape(x) for x in sorted(self._phony))) + '\n')
         fp.write(
             'clean:\n'
             '\trm -rf build\n'
