@@ -49,6 +49,9 @@ class Path(object):
     def dirname(self):
         return self.split()[0]
 
+    def basename(self):
+        return self.split()[1]
+
     def splitext(self):
         """Split a path into base and extension."""
         path = self.path
@@ -64,6 +67,12 @@ class Path(object):
         if base.endswith('/'):
             raise ValueError('cannot replace extension on directory')
         return Path(base + ext, self.base)
+
+    def addext(self, ext):
+        """Add an extension to this path."""
+        if self.path.endswith('/'):
+            raise ValueError('cannot add extension to directory')
+        return Path(self.path + ext, self.base)
 
     def join(self, *paths):
         """Create a path by joining strings onto a path."""

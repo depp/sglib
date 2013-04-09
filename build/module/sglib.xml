@@ -6,6 +6,9 @@
 
   <module type="version-info">
     <key name="target"><path path="sg/core/version_const.c"/></key>
+
+    <key name="repo.SG_SG"><path path="."/></key>
+    <key name="repo.SG_APP"><path path="/"/></key>
   </module>
 
   <module id="sglib">

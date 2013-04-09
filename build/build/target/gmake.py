@@ -1,5 +1,6 @@
 from . import nix
 from . import env
+from . import gensource
 from build.shell import escape
 from build.path import Path
 import re
@@ -82,17 +83,23 @@ class Target(nix.Target):
                     BUILD_NAMES.get(src.type))
                 makefile.opt_include(dpath)
 
-    def build(self, proj):
-        build = self.gen_build(proj)
+    def gen_build(self, proj):
+        build = super().gen_build(proj)
         makefile = Makefile(proj)
+        makepath = Path('/Makefile', 'builddir')
+
+        makefile.add_rule(
+            makepath, proj.files,
+            [[sys.executable, sys.argv[0], 'reconfig']])
+            
 
         self.build_sources(makefile, build)
         for target in build.targets:
             if isinstance(target, nix.ExeModule):
                 self.build_exe(makefile, build, target)
 
-        with open('Makefile', 'w') as fp:
-            makefile.write(fp)
+        build.add(GenMakefile(None, makepath, makefile))
+        return build
 
 MK_SPECIAL = re.compile('[^-_.+/A-Za-z0-9]')
 def mk_escape1(x):
@@ -108,14 +115,29 @@ def mk_escape(x):
     except ValueError:
         raise ValueError('invalid character in {!r}'.format(x))
 
+class GenMakefile(gensource.GeneratedSource):
+    __slots__ = ['makefile']
+
+    def __init__(self, name, target, makefile):
+        super(GenMakefile, self).__init__(name, target)
+        self.makefile = makefile
+
+    @property
+    def deps(self):
+        return ()
+
+    def write(self, fp):
+        self.makefile.write(fp)
+
 class Makefile(object):
     """GMake Makefile generator."""
 
-    __slots__ = ['_rulefp', '_all', '_phony', '_opt_include',
+    __slots__ = ['_rulefp', '_mrulefp', '_all', '_phony', '_opt_include',
                  '_qnames', '_qctr', '_proj']
 
     def __init__(self, proj):
         self._rulefp = StringIO()
+        self._mrulefp = StringIO()
         self._all = set()
         self._phony = set(['all', 'clean'])
         self._opt_include = set()
@@ -143,7 +165,10 @@ class Makefile(object):
         targets, and commands.
         """
         convert_path = self._proj.posix
-        write = self._rulefp.write
+        if target.basename() == 'Makefile':
+            write = self._mrulefp.write
+        else:
+            write = self._rulefp.write
         if isinstance(target, Path):
             write(mk_escape(convert_path(target)))
             dirs = [convert_path(target.dirname())]
@@ -157,7 +182,7 @@ class Makefile(object):
                 s = convert_path(s)
             write(' ' + mk_escape(s))
         write('\n')
-        dirs = [x for x in dirs if x]
+        dirs = [x for x in dirs if x != '.']
         if dirs:
             write('\t@mkdir -p {}\n'.format(
                   ' '.join(escape(d) for d in dirs)))
@@ -202,6 +227,7 @@ class Makefile(object):
         for target in sorted(self._all):
             fp.write(' ' + target)
         fp.write('\n')
+        fp.write(self._mrulefp.getvalue())
         if self._opt_include:
             fp.write('-include {}\n'.format(
                      ' '.join(mk_escape(x)

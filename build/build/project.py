@@ -5,7 +5,8 @@ import os
 import posixpath
 
 class Project(object):
-    __slots__ = ['srcdir', 'environ', 'modules', 'info', 'counter']
+    __slots__ = ['srcdir', 'environ', 'modules', 'info', 'counter',
+                 'files']
 
     def __init__(self, srcdir, environ):
         self.srcdir = srcdir
@@ -13,6 +14,7 @@ class Project(object):
         self.modules = []
         self.info = None
         self.counter = 0
+        self.files = []
 
     def base_path(self, base):
         if base == 'srcdir':
@@ -71,6 +73,7 @@ class Project(object):
         refmap = {}
         while q:
             xmlpath = q.pop()
+            self.files.append(xmlpath.addext('.xml'))
             buildfile = xml.parse_file(self, xmlpath)
             ref = Href(xmlpath, None)
             if buildfile.default is not None and buildfile.default != ref:

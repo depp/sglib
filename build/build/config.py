@@ -2,10 +2,10 @@ import collections
 import argparse
 import sys
 import platform
-import build.project
 import os
 import importlib
 from build.error import ConfigError
+import pickle
 
 TARGETS = {'make', 'msvc', 'xcode'}
 OS = {'osx', 'linux', 'windows'}
@@ -16,6 +16,9 @@ PLATFORMS = {
 }
 
 Value = collections.namedtuple('Value', 'name help')
+
+ConfigResult = collections.namedtuple(
+    'ConfigResult', 'projfile environ target')
 
 class Config(object):
     __slots__ = ['parser', 'flaginfo', 'optgroup', 'defaults']
@@ -155,13 +158,12 @@ class Config(object):
         mod = importlib.import_module('build.target.' + target)
         return mod.Target(subtarget, osname, args)
 
-    def _run(self):
-        if len(sys.argv) < 2:
+    def parse_args(self):
+        if len(sys.argv) < 3:
             print('invalid usage', file=sys.stderr)
             sys.exit(1)
-        projfile = sys.argv[1]
-        args = self.parser.parse_args(sys.argv[2:])
-
+        projfile = sys.argv[2]
+        args = self.parser.parse_args(sys.argv[3:])
         target = self.get_target(args)
 
         flags = {}
@@ -184,13 +186,70 @@ class Config(object):
             'os':target.os,
             'flag':flags,
         }
-        srcdir = os.path.dirname(projfile) or os.path.curdir
-        proj = build.project.Project(srcdir, environ)
-        proj.load_xml(projfile)
-        if args.dump_project:
+
+        return ConfigResult(projfile, environ, target), args
+
+    def get_cached_args(self):
+        with open('config.dat', 'rb') as fp:
+            cache_obj = pickle.load(fp)
+        return pickle.loads(cache_obj[0]), None
+
+    def run_config(self, cfg, args):
+        import build.project
+        srcdir = os.path.dirname(cfg.projfile) or os.path.curdir
+        proj = build.project.Project(srcdir, cfg.environ)
+        proj.load_xml(cfg.projfile)
+        if args and args.dump_project:
             self.dump_project(proj)
             sys.exit(0)
-        target.build(proj)
+        buildobj = cfg.target.gen_build(proj)
+
+        from build.target.gensource import GeneratedSource
+        cache_gen_sources = {}
+        all_gen_sources = []
+        for target in buildobj.targets:
+            if not isinstance(target, GeneratedSource):
+                continue
+            if target.deps:
+                cache_gen_sources[target.target] = target
+            all_gen_sources.append(target)
+
+        cache_obj = (
+            pickle.dumps(cfg, protocol=pickle.HIGHEST_PROTOCOL),
+            pickle.dumps(cache_gen_sources,
+                         protocol=pickle.HIGHEST_PROTOCOL),
+        )
+        with open('config.dat', 'wb') as fp:
+            pickle.dump(cache_obj, fp, protocol=pickle.HIGHEST_PROTOCOL)
+
+        for target in all_gen_sources:
+            targetpath = proj.native(target.target)
+            if (not args) or args.verbosity >= 1:
+                print('Writing {}'.format(targetpath), file=sys.stderr)
+            with open(targetpath, 'w') as fp:
+                target.write(fp)
+
+    def run_regen(self):
+        if len(sys.argv) < 3:
+            print('invalid usage', file=sys.stderr)
+            sys.exit(1)
+        assert False # unimplemented
+
+    def _run(self):
+        if len(sys.argv) < 2:
+            print('invalid usage', file=sys.stderr)
+            sys.exit(1)
+        action = sys.argv[1]
+
+        if action == 'config':
+            self.run_config(*self.parse_args())
+        elif action == 'reconfig':
+            self.run_config(*self.get_cached_args())
+        elif action == 'regen':
+            self.run_regen()
+        else:
+            print('unknown action: {}'.format(action), file=sys.stderr)
+            sys.exit(1)
 
     def run(self):
         try:

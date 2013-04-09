@@ -124,7 +124,9 @@ class Target(object):
                               suberrors=errs)
 
     def mod_config_header(self, proj, mod, name):
-        return ()
+        from .configheader import ConfigHeader
+        target = mod.info.get_path('target')
+        return [ConfigHeader(name, target, proj.environ['flag'])]
 
     def mod_version_info(self, proj, mod, name):
         return ()
