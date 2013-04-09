@@ -4,53 +4,15 @@ import sys
 import platform
 import build.project
 import os
+import importlib
 from build.error import ConfigError
 
-TARGETS = {}
-def target(*names):
-    def func(x):
-        for name in names:
-            TARGETS[name] = x
-        return x
-    return func
-
-@target('make')
-class MakeTarget(object):
-    def __init__(self, args):
-        system = platform.system()
-        try:
-            self.os = PLATFORMS[system]
-        except KeyError:
-            print('unsupported platform for makefile targets: {}'
-                  .format(system), file=sys.stderr)
-            sys.exit(1)
-
-@target('xcode')
-class XcodeTarget(object):
-    def __init__(self, args):
-        pass
-
-    os = 'osx'
-
-@target('msvc')
-class MSVCTarget(object):
-    def __init__(self, args):
-        pass
-
-    os = 'windows'
-
+TARGETS = {'make', 'msvc', 'xcode'}
 OS = {'osx', 'linux', 'windows'}
-
 PLATFORMS = {
-    'Darwin': 'osx',
-    'Linux': 'linux',
-    'Windows': 'windows',
-}
-
-DEFAULT_TARGET = {
-    'Darwin': 'xcode',
-    'Linux': 'make',
-    'Windows': 'msvc',
+    'Darwin': ('osx', 'xcode'),
+    'Linux': ('linux', 'make'),
+    'Windows': ('windows', 'msvc'),
 }
 
 Value = collections.namedtuple('Value', 'name help')
@@ -60,8 +22,6 @@ class Config(object):
 
     def __init__(self, prog='config.sh',
                  description='Configure the build system'):
-        default_target = DEFAULT_TARGET.get(platform.system())
-
         self.parser = argparse.ArgumentParser(
             prog=prog,
             description=description)
@@ -117,8 +77,7 @@ class Config(object):
             help_neg='do not treat warnings as errors')
 
         buildgroup.add_argument(
-            '--target', default=default_target,
-            choices=list(sorted(TARGETS)),
+            '--target',
             help='select a build target')
 
     def add_enable(self, name, help, values=None):
@@ -169,6 +128,25 @@ class Config(object):
         proj.dump_xml(fp)
         sys.stdout.write(fp.getvalue().decode('utf-8'))
 
+    def get_target(self, args):
+        osname, default_target = PLATFORMS.get(platform.system(), (None, None))
+        target = args.target
+        if target is None:
+            target = default_target
+        if target is None:
+            raise ConfigError('unknown platform, no default target: {}'
+                              .format(platform.system()))
+        i = target.find(':')
+        if i >= 0:
+            subtarget = target[i+1:]
+            target = target[:i]
+        else:
+            subtarget = None
+        if target not in TARGETS:
+            raise ConfigError('invalid target: {!r}'.format(target))
+        mod = importlib.import_module('build.target.' + target)
+        return mod.Target(subtarget, osname, args)
+
     def _run(self):
         if len(sys.argv) < 2:
             print('invalid usage', file=sys.stderr)
@@ -176,11 +154,7 @@ class Config(object):
         projfile = sys.argv[1]
         args = self.parser.parse_args(sys.argv[2:])
 
-        if args.target is None:
-            print('error: no default target for platform: {}'
-                  .format(platform.system()), file=sys.stderr)
-            sys.exit(1)
-        target = TARGETS[args.target](args)
+        target = self.get_target(args)
 
         flags = {}
         for flag in self.flaginfo:
@@ -208,6 +182,7 @@ class Config(object):
         if args.dump_project:
             self.dump_project(proj)
             sys.exit(0)
+        target.build(proj)
 
     def run(self):
         try:

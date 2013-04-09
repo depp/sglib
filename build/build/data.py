@@ -3,6 +3,14 @@ import urllib.parse
 from build.path import Path
 from build.error import ConfigError
 
+EXT_SRCTYPE = {'.' + ext: type for type, exts in {
+    'c': 'c',
+    'c++': 'cp cpp cxx',
+    'header': 'h hpp hxx',
+    'objc': 'm',
+    'objc++': 'mm',
+}.items() for ext in exts.split()}
+
 Source = collections.namedtuple('Source', 'path type')
 Requirement = collections.namedtuple('Requirement', 'module public')
 HeaderPath = collections.namedtuple('HeaderPath', 'path public')

@@ -18,7 +18,7 @@ def splitext(path):
     sep = path.rfind('/') + 1
     dot = path.rfind('.', sep)
     if dot >= 0 and any(path[i] != '.' for i in range(sep, dot)):
-        return Path(path[:dot], self.base), path[dot:]
+        return path[:dot], path[dot:]
     return path, ''
 
 class Path(object):
@@ -46,6 +46,9 @@ class Path(object):
             dirn = dirn.rstrip('/')
         return Path(dirn, self.base), basen
 
+    def dirname(self):
+        return self.split()[0]
+
     def splitext(self):
         """Split a path into base and extension."""
         path = self.path
@@ -54,6 +57,13 @@ class Path(object):
         if dot >= 0 and any(path[i] != '.' for i in range(sep, dot)):
             return Path(path[:dot], self.base), path[dot:]
         return self, ''
+
+    def withext(self, ext):
+        """Replace the path's extension with a different one."""
+        base, oldext = splitext(self.path)
+        if base.endswith('/'):
+            raise ValueError('cannot replace extension on directory')
+        return Path(base + ext, self.base)
 
     def join(self, *paths):
         """Create a path by joining strings onto a path."""
@@ -99,6 +109,12 @@ class Path(object):
         parts.insert(0, '')
         return Path('/'.join(parts), self.base)
 
+    def to_posix(self):
+        return self.path[1:]
+
+    def to_windows(self):
+        return self.path[1:].replace('/', '\\')
+
     def __str__(self):
         return '${{{}}}{}'.format(self.base, self.path)
 
@@ -117,6 +133,26 @@ class Path(object):
 
     def __hash__(self):
         return hash((self.base, self.path))
+
+    def __lt__(self, other):
+        if not isinstance(other, Path):
+            return NotImplemented
+        return (self.base, self.path) < (other.base, other.path)
+
+    def __le__(self, other):
+        if not isinstance(other, Path):
+            return NotImplemented
+        return (self.base, self.path) <= (other.base, other.path)
+
+    def __gt__(self, other):
+        if not isinstance(other, Path):
+            return NotImplemented
+        return (self.base, self.path) > (other.base, other.path)
+
+    def __ge__(self, other):
+        if not isinstance(other, Path):
+            return NotImplemented
+        return (self.base, self.path) >= (other.base, other.path)
 
 class Href(object):
     __slots__ = ['path', 'frag']
@@ -166,3 +202,31 @@ class Href(object):
 
     def __hash__(self):
         return hash((self.path, self.frag))
+
+    def __lt__(self, other):
+        if not isinstance(other, Href):
+            return NotImplemented
+        if self.path is None:
+            if other.path is not None:
+                return True
+        else:
+            if other.path is None:
+                return False
+            else:
+                if self.path < other.path:
+                    return True
+                elif self.path > other.path:
+                    return False
+        if self.frag is None:
+            if other.frag is not None:
+                return True
+        else:
+            if other.frag is None:
+                return False
+            else:
+                if self.frag < other.frag:
+                    return True
+                elif self.frag > other.frag:
+                    return False
+        return False
+

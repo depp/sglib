@@ -125,6 +125,11 @@ class GroupMixin(object):
     def add_src(self, attrib, loc):
         path = get_path(self.path, attrib, required=True)
         type = attrib.get('type')
+        if type is None:
+            type = data.EXT_SRCTYPE.get(path.splitext()[1])
+            if type is None:
+                raise ValueError('cannot determine type for file: {}'
+                                 .format(path))
         self.group.sources.append(data.Source(path, type))
         return null_env
 
