@@ -9,7 +9,7 @@
   </module>
 
   <module id="sglib">
-    <require module="keycode libpce" public="true"/>
+    <require module="keycode libpce glew" public="true"/>
     <header-path path="include" public="true"/>
 
     <group path="include/sg">
