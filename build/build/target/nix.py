@@ -46,7 +46,7 @@ def mod_info_only(mod):
         raise ConfigError('module must be empty: {}'.format(mod.type))
     return mod.info
 
-def cc_cmd(env, output, source, sourcetype, depfile=None):
+def cc_cmd(env, output, source, sourcetype, *, depfile=None, external=False):
     """Get the command to compile the given source."""
     if sourcetype in ('c', 'objc'):
         try:
@@ -71,7 +71,7 @@ def cc_cmd(env, output, source, sourcetype, depfile=None):
     cmd.extend(('-F', p) for p in env.get('FPATH', ()))
     cmd.extend(mkdef(k, v) for k, v in env.get('DEFS', ()))
     cmd.extend(env.get('CPPFLAGS', ()))
-    if not env.get('external', False):
+    if not external:
         cmd.extend(warn)
     cmd.extend(cflags)
     return cmd
@@ -273,7 +273,6 @@ class Target(target.Target):
             proj, 'C', '', '', [{'LIBS': ('-framework', filename)}], name)
 
     def mod_executable(self, proj, mod, name):
-        smod = generic.SourceModule.from_module(mod)
-        smod.name = proj.gen_name()
+        smod = generic.SourceModule.from_module(mod, proj.gen_name())
         filename = mod.info.get_string('filename')
         return (smod, ExeModule(name, smod.name, filename))

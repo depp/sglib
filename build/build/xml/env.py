@@ -1,4 +1,4 @@
-from build.path import Href
+from build.path import Href, Path
 import build.data as data
 from build.expr import evaluate, evaluate_many, to_bool, compare
 
@@ -173,6 +173,8 @@ class ModuleMixin(object):
             else:
                 name = Href(self.vars.base, name)
         type = attrib.get('type', 'source')
+        if type == 'bundled-library':
+            path = Path('/', 'srcdir')
         module = data.Module(name, type, loc)
         self.modules.append(module)
         return ModuleEnv(self.vars, path, module)

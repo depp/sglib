@@ -109,6 +109,10 @@ class Path(object):
         parts.insert(0, '')
         return Path('/'.join(parts), self.base)
 
+    def prefix(self, path):
+        """Add a prefix to this path."""
+        return path.join(self.to_posix())
+
     def to_posix(self):
         return self.path[1:]
 

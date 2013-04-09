@@ -77,7 +77,8 @@ class Target(nix.Target):
                 build_env = env.merge_env(build_env)
                 makefile.add_rule(
                     opath, [src.path],
-                    [nix.cc_cmd(build_env, opath, src.path, src.type, dpath)],
+                    [nix.cc_cmd(build_env, opath, src.path, src.type,
+                                depfile=dpath, external=src.external)],
                     BUILD_NAMES.get(src.type))
                 makefile.opt_include(dpath)
 

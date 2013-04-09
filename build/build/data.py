@@ -89,6 +89,18 @@ class InfoDict(collections.MutableMapping):
                 raise TypeError('key value not a string or path: {}'
                                 .format(type(val).__name__))
         self._items[index] = (loc, val)
+    def prefix_path(self, path):
+        """Return a copy with the paths prefixed."""
+        obj = InfoDict(self.loc)
+        for k, (loc, items) in self._items.items():
+            nitems = []
+            for item in items:
+                if isinstance(item, Path):
+                    item = item.prefix(path)
+                nitems.append(item)
+            nitems = tuple(nitems)
+            obj._items[k] = (loc, nitems)
+        return obj
 
 class Module(object):
     __slots__ = ['name', 'type', 'group', 'info', 'modules', 'loc']
@@ -129,6 +141,13 @@ class Module(object):
                     req = Requirement(nref, req.public)
                 nreqs.append(req)
             g.requirements = nreqs
+    def prefix_path(self, path):
+        """Return a copy with the paths prefixed."""
+        obj = Module(self.name, self.type, self.loc)
+        obj.group = self.group.prefix_path(path)
+        obj.info = self.info.prefix_path(path)
+        obj.modules = [mod.prefix_path(path) for mod in self.modules]
+        return obj
 
 class Group(object):
     __slots__ = ['sources', 'requirements', 'header_paths', 'groups', 'loc']
@@ -148,6 +167,18 @@ class Group(object):
     def __bool__(self):
         return bool(self.sources or self.requirements or
                     self.header_paths or self.groups)
+    def prefix_path(self, path):
+        """Return a copy with the paths prefixed."""
+        obj = Group(self.loc)
+        obj.sources = [
+            Source(src.path.prefix(path), src.type)
+            for src in self.sources]
+        obj.requirements = list(self.requirements)
+        obj.header_paths = [
+            HeaderPath(ipath.path.prefix(path), ipath.public)
+            for ipath in self.header_paths]
+        obj.groups = [group.prefix_path(path) for group in self.groups]
+        return obj
 
 class BuildFile(object):
     __slots__ = ['modules', 'info', 'default']

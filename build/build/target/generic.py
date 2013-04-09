@@ -1,7 +1,7 @@
 import collections
 
 Source = collections.namedtuple(
-    'Source', 'path type header_paths modules')
+    'Source', 'path type header_paths modules external')
 class SourceModule(object):
     __slots__ = ['name', 'sources', 'public_modules', 'private_modules',
                  'header_paths']
@@ -15,8 +15,8 @@ class SourceModule(object):
         self.header_paths = set()
 
     @classmethod
-    def from_module(class_, mod):
-        smod = class_(mod.name)
+    def from_module(class_, mod, name, external=False):
+        smod = class_(name)
         public_ipath = set()
         public_req = set()
         private_req = set()
@@ -29,7 +29,7 @@ class SourceModule(object):
             public_req.update(m.module for m in group.requirements
                               if m.public)
             smod.sources.extend(
-                Source(src.path, src.type, ipaths, reqs)
+                Source(src.path, src.type, ipaths, reqs, external)
                 for src in group.sources)
             for subgroup in group.groups:
                 add_group(subgroup, ipaths, reqs)
@@ -112,7 +112,7 @@ def resolve_sources(build):
             ipaths = intern_ipaths.setdefault(ipaths, ipaths)
             srcmods = tuple(sorted(srcmods))
             srcmods = intern_srcmods.setdefault(srcmods, srcmods)
-            src2 = Source(src.path, src.type, ipaths, srcmods)
+            src2 = Source(src.path, src.type, ipaths, srcmods, src.external)
             try:
                 src3 = sources[src.path]
             except KeyError:

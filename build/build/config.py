@@ -51,6 +51,14 @@ class Config(object):
             '--release', dest='config', default='release',
             action='store_const', const='release',
             help='use release configuration')
+        buildgroup.add_argument(
+            '--with-bundled-libs', dest='bundled_libs', default='auto',
+            action='store_const', const='yes',
+            help='always use bundled libraries')
+        buildgroup.add_argument(
+            '--without-bundled-libs', dest='bundled_libs', default='auto',
+            action='store_const', const='no',
+            help='never use bundled libraries')
 
         def parse_yesno(name, *, dest=None, default=None, help=None,
                         help_neg=None):

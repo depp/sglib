@@ -152,9 +152,6 @@ VAR = {
     'LDFLAGS':  VarFlags,
     'LIBS':     VarFlags,
     'FPATH':    VarAbsPathList,
-
-    # external: if true, disable warnings
-    'external': VarBool,
 }
 
 def parse_env(d):
