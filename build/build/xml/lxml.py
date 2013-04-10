@@ -1,17 +1,22 @@
-from lxml import etree
+try:
+    from lxml import etree
+    is_lxml = True
+except ImportError:
+    from xml.etree import ElementTree as etree
+    is_lxml = False
+
 from build.path import Href, Path
 
 def parse_file(path, rootenv):
-    xml_parser = etree.XMLParser(remove_comments=True)
     with open(path, 'rb') as fp:
-        doc = etree.parse(fp, xml_parser)
+        doc = etree.parse(fp)
     q = [(0, rootenv, doc.getroot())]
     while q:
         state, env, node = q.pop()
         if state == 0:
             if node.tail:
                 q.append((1, env, (node.tail, 'tail', node)))
-            loc = '{}:{}'.format(path, node.sourceline)
+            loc = '{}:{}'.format(path, node.sourceline) if is_lxml else path
             try:
                 subenv = env.add_node(node.tag, node.attrib, loc)
             except ValueError as ex:
@@ -29,14 +34,18 @@ def parse_file(path, rootenv):
                 tag = node[2].tag
                 if node[1] == 'tail':
                     tag = '/' + tag
-                raise ValueError('{}: after {}, line {}: {}'
-                                 .format(path, tag, node[2].sourceline, ex))
+                loc = ('{}:{}'.format(path, node[2].sourceline)
+                       if is_lxml else path)
+                raise ValueError('{}: after {}: {}'
+                                 .format(loc, tag, ex))
         else:
             try:
                 env.finish()
             except ValueError as ex:
-                raise ValueError('{}:{}: <{}>: {}'
-                                 .format(path, node.sourceline, node.tag, ex))
+                loc = ('{}:{}'.format(path, node.sourceline)
+                       if is_lxml else path)
+                raise ValueError('{}: <{}>: {}'
+                                 .format(loc, node.tag, ex))
 
 def dump_info(parent, info):
     for key, value in sorted(info.items()):
