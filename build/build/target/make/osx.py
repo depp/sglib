@@ -53,16 +53,37 @@ class Target(gmake.Target):
                 'LD')
             exes.append(exepath)
 
+        appdeps = []
+        proddir = Path('/build/products', 'builddir')
+        apppath = proddir.join(filename + '.app')
+
+        rsrcpath = apppath.join('Contents/Resources')
+        for src in source.sources:
+            if src.type == 'xib':
+                xibsrc = src.path
+                nibdest = rsrcpath.join(xibsrc.basename()).withext('.nib')
+                makefile.add_rule(
+                    nibdest, [xibsrc],
+                    [['/Developer/usr/bin/ibtool',
+                      '--errors', '--warnings', '--notices',
+                      '--output-format', 'human-readable-text',
+                      '--compile', nibdest, xibsrc]],
+                    qname='IBTool')
+                appdeps.append(nibdest)
+            elif src.type == 'resource':
+                srcpath = src.path
+                destpath = rsrcpath.join(srcpath.basename())
+                makefile.add_rule(
+                    destpath, [srcpath], [['cp', srcpath, destpath]],
+                    qname='Copy')
+                appdeps.append(destpath)
+
         exe1path = Path('/build/exe', 'builddir').join(filename)
         makefile.add_rule(
             exe1path, exes,
             [['lipo'] + exes + ['-create', '-output', exe1path]],
             qname='Lipo')
 
-        appdeps = []
-        proddir = Path('/build/products', 'builddir')
-
-        apppath = proddir.join(filename + '.app')
         exe2path = apppath.join('Contents/MacOS', filename)
         makefile.add_rule(
             exe2path, [exe1path],
@@ -76,6 +97,19 @@ class Target(gmake.Target):
             [['dsymutil', exe1path, '-o', debugpath]],
             qname='DSym')
         appdeps.append(debugpath)
+
+        srcplist = module.info_plist
+        destplist = apppath.join('Contents/Info.plist')
+        pcmds = ['Set :CFBundleExecutable {}'.format(filename)]
+        pcmdline = ['/usr/libexec/PlistBuddy', '-x']
+        for pcmd in pcmds:
+            pcmdline.extend(('-c', pcmd))
+        pcmdline.append(destplist)
+        makefile.add_rule(
+            destplist, [srcplist],
+            [['cp', srcplist, destplist], pcmdline],
+            qname='PList')
+        appdeps.append(destplist)
 
         makefile.add_rule(
             apppath, appdeps,

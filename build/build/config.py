@@ -211,6 +211,8 @@ class Config(object):
             else:
                 if curtext == text:
                     return
+        if os.path.dirname(targetpath):
+            os.makedirs(os.path.dirname(targetpath), exist_ok=True)
         with open(targetpath, 'w') as fp:
             fp.write(text)
 

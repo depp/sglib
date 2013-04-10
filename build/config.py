@@ -1,6 +1,7 @@
 import build.config
 import build.data as data
-from build.path import Href
+from build.path import Href, splitext
+from build.error import ConfigError
 import os
 import re
 
@@ -16,9 +17,45 @@ APPS = {
     'windows': 'Windows',
 }
 
+def gen_info_plist(info, main_nib, icon):
+    version = info.get_string('version', '0.0')
+
+    if 'copyright' in info:
+        getinfo = '{}, {}'.format(version, info.get_string('copyright'))
+    else:
+        getinfo = version
+
+    plist = {
+        'CFBundleDevelopmentRegion': 'English',
+        'CFBundleExecutable': '${EXECUTABLE_NAME}',
+        'CFBundleGetInfoString': getinfo,
+        # CFBundleName
+        'CFBundleIconFile': icon,
+        'CFBundleIdentifier': info.get_string('identifier'),
+        'CFBundleInfoDictionaryVersion': '6.0',
+        'CFBundlePackageType': 'APPL',
+        'CFBundleShortVersionString': version,
+        'CFBundleSignature': '????',
+        'CFBundleVersion': version,
+        'LSApplicationCategoryType':
+            info.get_string('apple-category', 'public.app-category.games'),
+        # LSArchicecturePriority
+        # LSFileQuarantineEnabled
+        'LSMinimumSystemVersion': '10.5.0',
+        'NSMainNibFile': main_nib,
+        'NSPrincipalClass': 'GApplication',
+        # NSSupportsAutomaticTermination
+        # NSSupportsSuddenTermination
+    }
+    import build.plist.xml as xml
+    data = xml.dump({k:v for k, v in plist.items() if v is not None})
+    return data.decode('UTF-8')
+
 @data.template('sglib', 'sglib++')
 def template_sglib(module, buildinfo, proj):
-    moddir = proj.path(os.path.join(os.path.dirname(__file__), 'module'))
+    sgroot = proj.path(os.path.dirname(os.path.dirname(__file__)))
+    moddir = sgroot.join('build/module')
+    rsrcdir = sgroot.join('build/resource')
 
     src = data.Module(proj.gen_name(), 'source')
     src.group = module.group
@@ -45,6 +82,7 @@ def template_sglib(module, buildinfo, proj):
     cvars = {k[5:]: v for k, v in info.items() if k.startswith('cvar.')}
 
     apps = []
+    extras = []
     for app in APPS:
         if proj.environ['flag']['app-' + app] != 'yes':
             continue
@@ -66,12 +104,41 @@ def template_sglib(module, buildinfo, proj):
             amod.info.update(args)
             amod.info['filename'] = ['{}-{}'.format(filename, app)]
     elif target_os == 'osx':
+        # Find icon file
+        icon = info.get_path('icon.osx', info.get_path('icon', None))
+        if icon is not None:
+            icon_name = icon.basename()
+            icon_name, icon_ext = splitext(icon_name)
+            if not icon_name or icon_ext != '.icns':
+                raise ConfigError('invalid icon for OS X: {}'.format(icon))
+            src.group.sources.append(data.Source(icon, 'resource'))
+        else:
+            icon_name = None
+
+        # Generate property list
+        plistpath = rsrcdir.join(filename + '.plist')
+        plist = data.Module(None, 'literal-file')
+        plist.info['target'] = [plistpath]
+        plist.info['contents'] = [gen_info_plist(info, filename, icon_name)]
+        yield plist
+
+        # Generate XIB file
+        xibpath = rsrcdir.join(filename + '.xib')
+        xib = data.Module(None, 'template-file')
+        xib.info['target'] = [xibpath]
+        xib.info['source'] = [sgroot.join('sg/osx/MainMenu.xib')]
+        xib.info['var.EXE_NAME'] = [filename]
+        yield xib
+        src.group.sources.append(data.Source(xibpath, 'xib'))
+
+        # Generate application module
         args = []
         for k, v in cvars.items():
             args.extend((('-' + k,), v))
         args = {'default-args.{}'.format(n+1): v for n, v in enumerate(args)}
         for app, amod in apps:
             amod.info.update(args)
+            amod.info['info-plist'] = [plistpath]
             amod.type = 'application-bundle'
             if app != 'cocoa':
                 amod.info['filename'] = [

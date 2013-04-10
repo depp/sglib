@@ -9,6 +9,7 @@ MODULES = {
     'source', 'executable', 'application-bundle',
     'multi', 'pkg-config', 'library-search', 'framework',
     'config-header', 'version-info',
+    'literal-file', 'template-file',
 }
 
 def parse_exe_args(info):
@@ -36,7 +37,11 @@ class ExeModule(ExeCommon):
     __slots__ = []
 
 class ApplicationBundleModule(ExeCommon):
-    __slots__ = []
+    __slots__ = ['info_plist']
+    def __init__(self, name, source, filename, args, info_plist):
+        super(ApplicationBundleModule, self).__init__(
+            name, source, filename, args)
+        self.info_plist = info_plist
 
 class Build(object):
     __slots__ = ['targets', 'modules', 'sources', 'proj']
@@ -175,5 +180,23 @@ class Target(object):
         smod = generic.SourceModule.from_module(mod, proj.gen_name())
         filename = mod.info.get_string('filename')
         args = parse_exe_args(mod.info)
-        amod = ApplicationBundleModule(name, smod.name, filename, args)
+        info_plist = mod.info.get_path('info-plist')
+        amod = ApplicationBundleModule(
+            name, smod.name, filename, args, info_plist)
         return (smod, amod)
+
+    def mod_template_file(self, proj, mod, name):
+        from .templatefile import TemplateFile
+        source = mod.info.get_path('source')
+        target = mod.info.get_path('target')
+        tvars = {}
+        for k in mod.info:
+            if k.startswith('var.'):
+                tvars[k[4:]] = mod.info.get_string(k)
+        return [TemplateFile(name, target, source, tvars)]
+
+    def mod_literal_file(self, proj, mod, name):
+        from .literalfile import LiteralFile
+        contents = mod.info.get_string('contents')
+        target = mod.info.get_path('target')
+        return [LiteralFile(name, target, contents)]
