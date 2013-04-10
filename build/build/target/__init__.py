@@ -11,12 +11,23 @@ MODULES = {
     'config-header', 'version-info',
 }
 
+class ExeModule(object):
+    __slots__ = ['name', 'source', 'filename', 'args']
+    is_target = True
+
+    def __init__(self, name, source, filename, args):
+        self.name = name
+        self.source = source
+        self.filename = filename
+        self.args = args
+
 class Build(object):
-    __slots__ = ['targets', 'modules', 'sources']
-    def __init__(self):
+    __slots__ = ['targets', 'modules', 'sources', 'proj']
+    def __init__(self, proj):
         self.targets = []
         self.modules = {}
         self.sources = None
+        self.proj = proj
     def add(self, mod):
         if mod.is_target:
             self.targets.append(mod)
@@ -57,7 +68,7 @@ class Target(object):
                 except ValueError:
                     continue
                 self._bundles.append((fname, bdir))
-        build = Build()
+        build = Build(proj)
         for mod in proj.modules:
             for rmod in self.build_module(proj, mod):
                 build.add(rmod)
@@ -136,3 +147,17 @@ class Target(object):
             if k.startswith('repo.'):
                 repos[k[5:]] = proj.native(mod.info.get_path(k))
         return [VersionInfo(name, target, repos, 'git')]
+
+    def mod_executable(self, proj, mod, name):
+        smod = generic.SourceModule.from_module(mod, proj.gen_name())
+        filename = mod.info.get_string('filename')
+        args = []
+        pfx = 'default-args.'
+        for k, v in mod.info.items():
+            if not k.startswith(pfx):
+                continue
+            k = int(k[len(pfx):])
+            args.append((k, v))
+        args.sort(key=lambda x: x[0])
+        args = [arg[1] for arg in args]
+        return (smod, ExeModule(name, smod.name, filename, args))

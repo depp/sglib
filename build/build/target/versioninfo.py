@@ -13,15 +13,12 @@ def escape(s):
 
 class VersionInfo(GeneratedSource):
     __slots__ = ['repos', 'git']
+    is_phony = True
 
     def __init__(self, name, target, repos, git):
         super(VersionInfo, self).__init__(name, target)
         self.repos = repos
         self.git = git
-
-    @property
-    def deps(self):
-        return True
 
     def write(self, fp):
         fp.write('/* {}  */\n'.format(HEADER))

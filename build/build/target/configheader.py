@@ -2,14 +2,11 @@ from .gensource import GeneratedSource, HEADER
 
 class ConfigHeader(GeneratedSource):
     __slots__ = ['flags']
+    is_regenerated = False
 
     def __init__(self, name, target, flags):
         super(ConfigHeader, self).__init__(name, target)
         self.flags = flags
-
-    @property
-    def deps(self):
-        return ()
 
     def write(self, fp):
         fp.write(

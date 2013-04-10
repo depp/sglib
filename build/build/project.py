@@ -38,9 +38,16 @@ class Project(object):
 
     def native(self, path):
         """Convert a path object to a native path."""
-        p = path.path
-        return os.path.join(self.base_path(path.base),
-                            p[1:].replace('/', os.path.sep))
+        ppath = path.path[1:] or os.path.curdir
+        if path.base == 'srcdir':
+            bpath = self.srcdir
+        else:
+            bpath = os.path.curdir
+        if bpath == os.path.curdir:
+            return ppath
+        if ppath == os.path.curdir:
+            return bpath
+        return os.path.join(bpath, ppath)
 
     def posix(self, path, base='builddir'):
         """Convert a path object to a POSIX path relative to base."""

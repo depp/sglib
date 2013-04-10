@@ -2,7 +2,6 @@ import build.target as target
 import build.data as data
 import build.shell as shell
 from . import env
-from . import generic
 from build.error import ConfigError, format_block
 import tempfile
 import os
@@ -15,15 +14,6 @@ class EnvModule(object):
     def __init__(self, name, env):
         self.name = name
         self.env = env
-
-class ExeModule(object):
-    __slots__ = ['name', 'source', 'filename']
-    is_target = True
-
-    def __init__(self, name, source, filename):
-        self.name = name
-        self.source = source
-        self.filename = filename
 
 def gen_source(prologue, body):
     fp = io.StringIO()
@@ -271,8 +261,3 @@ class Target(target.Target):
         filename = info.get_string('filename')
         return self.library_search(
             proj, 'C', '', '', [{'LIBS': ('-framework', filename)}], name)
-
-    def mod_executable(self, proj, mod, name):
-        smod = generic.SourceModule.from_module(mod, proj.gen_name())
-        filename = mod.info.get_string('filename')
-        return (smod, ExeModule(name, smod.name, filename))

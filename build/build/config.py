@@ -201,7 +201,7 @@ class Config(object):
         fp = io.StringIO()
         target.write(fp)
         text = fp.getvalue()
-        if target.deps == True:
+        if target.is_phony:
             del fp
             try:
                 with open(targetpath, 'r') as fp:
@@ -230,9 +230,10 @@ class Config(object):
         for target in buildobj.targets:
             if not isinstance(target, GeneratedSource):
                 continue
-            if target.deps:
+            if target.is_regenerated:
                 cache_gen_sources[proj.native(target.target)] = target
-            all_gen_sources.append(target)
+            if not target.is_regenerated_only:
+                all_gen_sources.append(target)
 
         cache_obj = (
             pickle.dumps(cfg, protocol=pickle.HIGHEST_PROTOCOL),

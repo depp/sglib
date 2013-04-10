@@ -1,11 +1,15 @@
 from . import nix
 from . import env
 from . import gensource
+from . import ExeModule
 from build.shell import escape
 from build.path import Path
 import re
 from io import StringIO
 import sys
+import collections
+
+Raw = collections.namedtuple('Raw', 'value')
 
 BUILD_NAMES = {
     'c': 'C',
@@ -13,6 +17,73 @@ BUILD_NAMES = {
     'objc': 'ObjC',
     'objc++': 'ObjC++',
 }
+
+RUN_SCRIPT = '''\
+#!/bin/sh
+exe={exe}
+name={name}
+if test ! -x "$exe" ; then
+  cat 1>&2 <<EOF
+error: $exe does not exist
+Did you remember to run 'make'?
+EOF
+  exit 1
+fi
+case "$1" in
+  --gdb)
+    shift
+    exec gdb --args "$exe" {args} "$@"
+    ;;
+  --valgrind)
+    shift
+    exec valgrind -- "$exe" {args} "$@"
+    ;;
+  --help)
+    cat <<EOF
+Usage: $name [--help | --gdb | --valgrind] [options...]
+EOF
+    exit 0
+    ;;
+  *)
+    exec "$exe" {args} "$@"
+    ;;
+esac
+'''
+
+def arg_to_string(proj, arg):
+    if isinstance(arg, str):
+        return arg
+    elif isinstance(arg, Path):
+        return proj.posix(arg)
+    elif isinstance(arg, tuple):
+        parts = []
+        for part in arg:
+            if isinstance(part, str):
+                parts.append(part)
+            elif isinstance(part, Path):
+                parts.append(proj.posix(part))
+            else:
+                raise TypeError()
+        return ''.join(parts)
+    else:
+        raise TypeError()
+
+class RunScript(gensource.GeneratedSource):
+    __slots__ = ['exe_path', 'exe_name', 'args']
+    is_regenerated_only = True
+
+    def __init__(self, name, target, exe_path, exe_name, args):
+        super(RunScript, self).__init__(name, target)
+        self.exe_path = exe_path
+        self.exe_name = exe_name
+        self.args = args
+
+    def write(self, fp):
+        fp.write(RUN_SCRIPT.format(
+            exe=escape(self.exe_path),
+            name=escape(self.exe_name),
+            args=' '.join(escape(arg) for arg in self.args),
+        ))
 
 class Target(nix.Target):
     __slots__ = []
@@ -63,21 +134,30 @@ class Target(nix.Target):
               exepath, prodpath]],
             'ObjCopy')
 
-        makefile.add_default(prodpath, debugpath)
+        scriptpath = Path('/', 'builddir').join(filename)
+        script = RunScript(
+            None, scriptpath, build.proj.posix(exepath), filename,
+            [arg_to_string(build.proj, arg) for arg in module.args])
+        build.add(script)
+        makefile.add_rule(
+            scriptpath, [prodpath],
+            [Raw('@if test -x {script} ; then '
+                 'touch {script} ; else '
+                 '{python} {config} regen {script} && '
+                 'chmod +x {script} ; fi'
+                 .format(script=build.proj.posix(scriptpath),
+                         python=sys.executable,
+                         config=sys.argv[0]))])
+        makefile.add_clean(scriptpath)
+        makefile.add_default(scriptpath)
 
     def build_gensource(self, makefile, build, module):
-        deps = module.deps
-        if not deps:
+        if not module.is_regenerated:
             return
-        if deps == True:
-            deps = ()
-            phony = True
-        else:
-            phony = None
         makefile.add_rule(
-            module.target, deps,
+            module.target, module.deps,
             [[sys.executable, sys.argv[0], 'regen', module.target]],
-            qname='Regen', phony=phony)
+            qname='Regen', phony=module.is_phony)
 
     def build_sources(self, makefile, build):
         objdir = Path('/build/obj', 'builddir')
@@ -102,14 +182,15 @@ class Target(nix.Target):
         makefile = Makefile(proj)
         makepath = Path('/Makefile', 'builddir')
 
+        makefile.add_clean(Path('/build', 'builddir'))
+
         makefile.add_rule(
             makepath, proj.files,
             [[sys.executable, sys.argv[0], 'reconfig']])
-            
 
         self.build_sources(makefile, build)
-        for target in build.targets:
-            if isinstance(target, nix.ExeModule):
+        for target in list(build.targets):
+            if isinstance(target, ExeModule):
                 self.build_exe(makefile, build, target)
             elif isinstance(target, gensource.GeneratedSource):
                 self.build_gensource(makefile, build, target)
@@ -136,14 +217,11 @@ def mk_escape(x):
 
 class GenMakefile(gensource.GeneratedSource):
     __slots__ = ['makefile']
+    is_regenerated = False
 
     def __init__(self, name, target, makefile):
         super(GenMakefile, self).__init__(name, target)
         self.makefile = makefile
-
-    @property
-    def deps(self):
-        return ()
 
     def write(self, fp):
         self.makefile.write(fp)
@@ -152,7 +230,7 @@ class Makefile(object):
     """GMake Makefile generator."""
 
     __slots__ = ['_rulefp', '_mrulefp', '_all', '_phony', '_opt_include',
-                 '_qnames', '_qctr', '_proj']
+                 '_qnames', '_qctr', '_proj', '_clean']
 
     def __init__(self, proj):
         self._rulefp = StringIO()
@@ -163,6 +241,7 @@ class Makefile(object):
         self._qnames = {}
         self._qctr = 0
         self._proj = proj
+        self._clean = set()
 
     def _get_qctr(self, name):
         try:
@@ -211,6 +290,10 @@ class Makefile(object):
         first = True
         for cmd in cmds:
             write('\t')
+            if isinstance(cmd, Raw):
+                write(cmd.value)
+                write('\n')
+                continue
             if qname is not None:
                 write('$(QUIET{})'.format(self._get_qctr(
                     qname if first else '')))
@@ -244,6 +327,16 @@ class Makefile(object):
             else:
                 self._all.add(target)
 
+    def add_clean(self, *targets):
+        """Add files to remove when cleaning."""
+        for target in targets:
+            if not isinstance(target, Path):
+                raise TypeError('expected path')
+            if target.base == 'builddir':
+                self._clean.add(self._proj.posix(target))
+            else:
+                print('warning: not cleaning {}'.format(target))
+
     def write(self, fp):
         fp.write('all:')
         for target in sorted(self._all):
@@ -265,7 +358,7 @@ class Makefile(object):
             ' '.join(mk_escape(x) for x in sorted(self._phony))) + '\n')
         fp.write(
             'clean:\n'
-            '\trm -rf build\n'
+            '\trm -rf {}\n'.format(' '.join(sorted(self._clean)))
         )
         fp.write(self._rulefp.getvalue())
 
