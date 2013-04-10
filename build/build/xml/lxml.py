@@ -17,6 +17,8 @@ def parse_file(path, rootenv):
             if node.tail:
                 q.append((1, env, (node.tail, 'tail', node)))
             loc = '{}:{}'.format(path, node.sourceline) if is_lxml else path
+            if node.tag is etree.Comment:
+                continue
             try:
                 subenv = env.add_node(node.tag, node.attrib, loc)
             except ValueError as ex:
