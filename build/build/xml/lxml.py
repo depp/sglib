@@ -105,4 +105,7 @@ def dump(modules, info, fp):
     for mod in modules:
         dump_module(build, mod)
     tree = etree.ElementTree(build)
-    tree.write(fp, pretty_print=True, encoding='UTF-8')
+    if is_lxml:
+        tree.write(fp, pretty_print=True, encoding='UTF-8')
+    else:
+        tree.write(fp, encoding='UTF-8')
