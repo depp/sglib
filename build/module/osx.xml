@@ -34,4 +34,9 @@
     <key name="desc">Foundation framework</key>
     <key name="filename">Foundation</key>
   </module>
+
+  <module id="OpenGL" type="framework">
+    <key name="desc">OpenGL framework</key>
+    <key name="filename">OpenGL</key>
+  </module>
 </build>

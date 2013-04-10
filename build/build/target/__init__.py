@@ -6,12 +6,23 @@ import sys
 import os
 
 MODULES = {
-    'source', 'executable',
+    'source', 'executable', 'application-bundle',
     'multi', 'pkg-config', 'library-search', 'framework',
     'config-header', 'version-info',
 }
 
-class ExeModule(object):
+def parse_exe_args(info):
+    args = []
+    pfx = 'default-args.'
+    for k, v in info.items():
+        if not k.startswith(pfx):
+            continue
+        k = int(k[len(pfx):])
+        args.append((k, v))
+    args.sort(key=lambda x: x[0])
+    return [arg[1] for arg in args]
+
+class ExeCommon(object):
     __slots__ = ['name', 'source', 'filename', 'args']
     is_target = True
 
@@ -20,6 +31,12 @@ class ExeModule(object):
         self.source = source
         self.filename = filename
         self.args = args
+
+class ExeModule(ExeCommon):
+    __slots__ = []
+
+class ApplicationBundleModule(ExeCommon):
+    __slots__ = []
 
 class Build(object):
     __slots__ = ['targets', 'modules', 'sources', 'proj']
@@ -151,13 +168,12 @@ class Target(object):
     def mod_executable(self, proj, mod, name):
         smod = generic.SourceModule.from_module(mod, proj.gen_name())
         filename = mod.info.get_string('filename')
-        args = []
-        pfx = 'default-args.'
-        for k, v in mod.info.items():
-            if not k.startswith(pfx):
-                continue
-            k = int(k[len(pfx):])
-            args.append((k, v))
-        args.sort(key=lambda x: x[0])
-        args = [arg[1] for arg in args]
+        args = parse_exe_args(mod.info)
         return (smod, ExeModule(name, smod.name, filename, args))
+
+    def mod_application_bundle(self, proj, mod, name):
+        smod = generic.SourceModule.from_module(mod, proj.gen_name())
+        filename = mod.info.get_string('filename')
+        args = parse_exe_args(mod.info)
+        amod = ApplicationBundleModule(name, smod.name, filename, args)
+        return (smod, amod)

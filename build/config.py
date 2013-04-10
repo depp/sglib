@@ -65,6 +65,19 @@ def template_sglib(module, buildinfo, proj):
         for app, amod in apps:
             amod.info.update(args)
             amod.info['filename'] = ['{}-{}'.format(filename, app)]
+    elif target_os == 'osx':
+        args = []
+        for k, v in cvars.items():
+            args.extend((('-' + k,), v))
+        args = {'default-args.{}'.format(n+1): v for n, v in enumerate(args)}
+        for app, amod in apps:
+            amod.info.update(args)
+            amod.type = 'application-bundle'
+            if app != 'cocoa':
+                amod.info['filename'] = [
+                    '{} ({})'.format(filename, APPS[app])]
+            else:
+                amod.info['filename'] = [filename]
     else:
         raise Exception('unsupported os: {}'.format(target_os))
 

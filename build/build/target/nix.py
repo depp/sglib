@@ -260,4 +260,4 @@ class Target(target.Target):
         info = mod_info_only(mod)
         filename = info.get_string('filename')
         return self.library_search(
-            proj, 'C', '', '', [{'LIBS': ('-framework', filename)}], name)
+            proj, 'c', '', '', [{'LIBS': ('-framework', filename)}], name)
