@@ -1,9 +1,27 @@
 import build.shell as shell
 from . import env
 from build.error import ConfigError, format_block
+from build.path import Path
 import tempfile
 import os
 import io
+
+class MakefileTarget(object):
+    __slots__ = ['base_env', 'os']
+
+    def __init__(self, subtarget, args):
+        self.base_env = default_env(args, subtarget)
+        self.os = subtarget
+
+    def gen_build(self, cfg, proj):
+        from . import gmake
+        from build.object.build import Build
+        build = Build(cfg, proj, BUILDERS)
+        makefile = gmake.Makefile(cfg)
+        makepath = Path('/Makefile', 'builddir')
+        makefile.add_build(build, makepath)
+        makefile.add_clean(Path('/build', 'builddir'))
+        return build
 
 class EnvModule(object):
     __slots__ = ['env']

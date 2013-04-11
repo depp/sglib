@@ -1,24 +1,13 @@
 from . import nix
 from . import env
-from . import gmake
 from build.path import Path
-from build.object.build import Build
 
-class Target(object):
+class Target(nix.MakefileTarget):
     __slots__ = ['base_env', 'os', 'archs']
 
     def __init__(self, subtarget, args):
-        self.base_env = nix.default_env(args, subtarget)
-        self.os = subtarget
+        super(Target, self).__init__(subtarget, args)
         self.archs = ['ppc', 'i386', 'x86_64']
-
-    def gen_build(self, cfg, proj):
-        build = Build(cfg, proj, nix.BUILDERS)
-        makefile = gmake.Makefile(cfg)
-        makepath = Path('/Makefile', 'builddir')
-        makefile.add_build(build, makepath)
-        makefile.add_clean(Path('/build', 'builddir'))
-        return build
 
     def get_dirs(self, name):
         builddir = Path('/build', 'builddir')
@@ -60,7 +49,7 @@ class Target(object):
             makefile.add_rule(
                 exepath, objs,
                 [nix.ld_cmd(arch_env, exepath, objs, src_types)],
-                'LD')
+                qname='LD')
             exes.append(exepath)
 
         appdeps = []
@@ -144,7 +133,7 @@ class Target(object):
                         opath, [src.path],
                         [nix.cc_cmd(arch_env, opath, src.path, src.type,
                                     depfile=dpath, external=src.external)],
-                        gmake.BUILD_NAMES.get(src.type))
+                        srctype=src.type)
                     makefile.opt_include(dpath)
             elif src.type in ('header', 'xib'):
                 pass

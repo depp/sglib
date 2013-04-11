@@ -92,7 +92,8 @@ class Makefile(object):
             self._qnames[name] = n
             return n
 
-    def add_rule(self, target, sources, cmds, qname=None, phony=None):
+    def add_rule(self, target, sources, cmds, *,
+                 qname=None, phony=None, srctype=None):
         """Add a rule to the makefile.
 
         The target should be a string or path, and the sources should
@@ -102,6 +103,8 @@ class Makefile(object):
         and paths.  This handles escaping of all of the sources,
         targets, and commands.
         """
+        if qname is None:
+            qname = BUILD_NAMES.get(srctype)
         convert_path = self._cfg.target_path
         if target.basename() == 'Makefile':
             write = self._mrulefp.write

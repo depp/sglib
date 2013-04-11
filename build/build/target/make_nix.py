@@ -1,8 +1,6 @@
 from . import nix
 from . import env
-from . import gmake
 from build.object import GeneratedSource
-from build.object.build import Build
 from build.path import Path
 from build.shell import escape
 import sys
@@ -62,6 +60,7 @@ class RunScript(GeneratedSource):
     is_regenerated_only = True
 
     def make_self(self, makefile, build):
+        from . import gmake
         cmd = ('@if test -x {script} ; then touch {script} ; else '
                '{python} {config} regen {script} && chmod +x {script} ; fi'
                .format(script=build.cfg.target_path(self.target),
@@ -77,20 +76,8 @@ class RunScript(GeneratedSource):
                           for arg in self.args),
         ))
 
-class Target(object):
-    __slots__ = ['base_env', 'os']
-
-    def __init__(self, subtarget, args):
-        self.base_env = nix.default_env(args, subtarget)
-        self.os = subtarget
-
-    def gen_build(self, cfg, proj):
-        build = Build(cfg, proj, nix.BUILDERS)
-        makefile = gmake.Makefile(cfg)
-        makepath = Path('/Makefile', 'builddir')
-        makefile.add_build(build, makepath)
-        makefile.add_clean(Path('/build', 'builddir'))
-        return build
+class Target(nix.MakefileTarget):
+    __slots__ = []
 
     def make_executable(self, makefile, build, module):
         source = build.sourcemodules[module.source]
@@ -125,18 +112,18 @@ class Target(object):
         makefile.add_rule(
             exepath, objs,
             [nix.ld_cmd(build_env, exepath, objs, src_types)],
-            'LD')
+            qname='LD')
         makefile.add_rule(
             debugpath, [exepath],
             [['objcopy', '--only-keep-debug', exepath, debugpath],
              ['chmod', '-x', debugpath]],
-            'ObjCopy')
+            qname='ObjCopy')
         makefile.add_rule(
             prodpath, [exepath, debugpath],
             [['objcopy', '--strip-unneeded',
               ('--add-gnu-debuglink=', debugpath),
               exepath, prodpath]],
-            'ObjCopy')
+            qname='ObjCopy')
 
         scriptpath = Path('/', 'builddir').join(filename)
         script = RunScript(
@@ -164,7 +151,7 @@ class Target(object):
                     opath, [src.path],
                     [nix.cc_cmd(build_env, opath, src.path, src.type,
                                 depfile=dpath, external=src.external)],
-                    gmake.BUILD_NAMES.get(src.type))
+                    srctype=src.type)
                 makefile.opt_include(dpath)
             elif src.type in ('header',):
                 pass
