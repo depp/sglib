@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <module path="../../libpce">
   <header-path path="include" public="true"/>
-  <group path="include">
+  <group path="include/libpce">
     <src path="arch.h"/>
     <src path="atomic.h"/>
     <src path="attribute.h"/>

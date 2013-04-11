@@ -11,10 +11,8 @@
     <src path="color.hpp"/>
     <src path="error.hpp"/>
     <src path="file.hpp"/>
-    <src path="keycode.hpp"/>
     <src path="letterbox.hpp"/>
     <src path="model.hpp"/>
-    <src path="opengl.hpp"/>
     <src path="rand.hpp"/>
     <src path="scene/group.hpp"/>
     <src path="scene/leafobject.hpp"/>
