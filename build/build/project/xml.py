@@ -1,3 +1,6 @@
+from . import xml_env
+from . import data
+from build.path import Href, Path
 try:
     from lxml import etree
     is_lxml = True
@@ -5,9 +8,7 @@ except ImportError:
     from xml.etree import ElementTree as etree
     is_lxml = False
 
-from build.path import Href, Path
-
-def parse_file(path, rootenv):
+def _parse_file(path, rootenv):
     with open(path, 'rb') as fp:
         doc = etree.parse(fp)
     q = [(0, rootenv, doc.getroot())]
@@ -109,3 +110,26 @@ def dump(modules, info, fp):
         tree.write(fp, pretty_print=True, encoding='UTF-8')
     else:
         tree.write(fp, encoding='UTF-8')
+
+class Info(object):
+    __slots__ = ['cfg', 'base', 'environ']
+    def __init__(self, cfg, base):
+        self.cfg = cfg
+        self.base = base
+        self.environ = {
+            'os': cfg.target.os,
+            'flag': cfg.flags,
+        }
+    def __getitem__(self, index):
+        return self.environ[index]
+
+def parse_file(cfg, path):
+    if path.base != 'srcdir':
+        raise ValueError('wrong base')
+    dirname, basename = path.split()
+    if not basename:
+        raise ValueError('expected file, not directory name')
+    buildfile = data.BuildFile()
+    _parse_file(cfg.native_path(dirname.join(basename + '.xml')),
+                xml_env.RootEnv(Info(cfg, path), dirname, buildfile))
+    return buildfile

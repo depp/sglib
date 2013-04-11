@@ -1,6 +1,5 @@
-from .. import nix
-from .. import gensource
-from .. import ExeModule, ApplicationBundleModule
+from build.error import ConfigError
+from build.object import GeneratedSource
 from build.shell import escape
 from build.path import Path
 import re
@@ -17,43 +16,6 @@ BUILD_NAMES = {
     'objc++': 'ObjC++',
 }
 
-class Target(nix.Target):
-    __slots__ = []
-
-    def build_gensource(self, makefile, build, module):
-        if not module.is_regenerated:
-            return
-        makefile.add_rule(
-            module.target, module.deps,
-            [[sys.executable, sys.argv[0], 'regen', module.target]],
-            qname='Regen', phony=module.is_phony)
-
-    def gen_build(self, proj):
-        build = super().gen_build(proj)
-        makefile = Makefile(proj)
-        makepath = Path('/Makefile', 'builddir')
-
-        makefile.add_clean(Path('/build', 'builddir'))
-
-        makefile.add_rule(
-            makepath, proj.files,
-            [[sys.executable, sys.argv[0], 'reconfig']])
-
-        self.build_sources(makefile, build)
-        for target in list(build.targets):
-            if isinstance(target, ExeModule):
-                self.build_exe(makefile, build, target)
-            elif isinstance(target, ApplicationBundleModule):
-                self.build_application_bundle(makefile, build, target)
-            elif isinstance(target, gensource.GeneratedSource):
-                self.build_gensource(makefile, build, target)
-            else:
-                print('warning: unknown target type: {}'
-                      .format(type(target).__name__))
-
-        build.add(GenMakefile(None, makepath, makefile))
-        return build
-
 MK_SPECIAL = re.compile('[^-_.+/A-Za-z0-9]')
 def mk_escape1(x):
     c = x.group(0)
@@ -68,24 +30,20 @@ def mk_escape(x):
     except ValueError:
         raise ValueError('invalid character in {!r}'.format(x))
 
-class GenMakefile(gensource.GeneratedSource):
+class GenMakefile(GeneratedSource):
     __slots__ = ['makefile']
     is_regenerated = False
 
-    def __init__(self, name, target, makefile):
-        super(GenMakefile, self).__init__(name, target)
-        self.makefile = makefile
-
-    def write(self, fp):
+    def write(self, fp, cfg):
         self.makefile.write(fp)
 
 class Makefile(object):
     """GMake Makefile generator."""
 
     __slots__ = ['_rulefp', '_mrulefp', '_all', '_phony', '_opt_include',
-                 '_qnames', '_qctr', '_proj', '_clean']
+                 '_qnames', '_qctr', '_cfg', '_clean']
 
-    def __init__(self, proj):
+    def __init__(self, cfg):
         self._rulefp = StringIO()
         self._mrulefp = StringIO()
         self._all = set()
@@ -93,8 +51,37 @@ class Makefile(object):
         self._opt_include = set()
         self._qnames = {}
         self._qctr = 0
-        self._proj = proj
+        self._cfg = cfg
         self._clean = set()
+
+    def add_build(self, build, makepath):
+        target = self._cfg.target
+        for btarget in build.targets:
+            target_type = btarget.target_type
+            try:
+                func = getattr(target, 'make_' + target_type)
+            except AttributeError:
+                raise ConfigError('unsupported target type: {}'
+                                  .format(target_type))
+            func(self, build, btarget)
+        target.make_sources(self, build)
+        for gensrc in build.generated_sources.values():
+            if not gensrc.is_regenerated:
+                continue
+            try:
+                func = gensrc.make_self
+            except AttributeError:
+                self.add_rule(
+                    gensrc.target, gensrc.deps,
+                    [[sys.executable, sys.argv[0], 'regen', gensrc.target]],
+                    qname='Regen', phony=gensrc.is_regenerated_always)
+            else:
+                func(self, build)
+        self.add_rule(
+            makepath, build.proj.files,
+            [[sys.executable, sys.argv[0], 'reconfig']])
+        build.add_generated_source(GenMakefile(
+            target=makepath, makefile=self))
 
     def _get_qctr(self, name):
         try:
@@ -115,7 +102,7 @@ class Makefile(object):
         and paths.  This handles escaping of all of the sources,
         targets, and commands.
         """
-        convert_path = self._proj.posix
+        convert_path = self._cfg.target_path
         if target.basename() == 'Makefile':
             write = self._mrulefp.write
         else:
@@ -176,7 +163,7 @@ class Makefile(object):
         """Make targets default targets."""
         for target in targets:
             if isinstance(target, Path):
-                self._all.add(self._proj.posix(target))
+                self._all.add(self._cfg.target_path(target))
             else:
                 self._all.add(target)
 
@@ -186,9 +173,9 @@ class Makefile(object):
             if not isinstance(target, Path):
                 raise TypeError('expected path')
             if target.base == 'builddir':
-                self._clean.add(self._proj.posix(target))
+                self._clean.add(self._cfg.target_path(target))
             else:
-                print('warning: not cleaning {}'.format(target))
+                self._cfg.warn('not cleaning non-path: {!r}'.format(target))
 
     def write(self, fp):
         fp.write('all: {}\n'.format(' '.join(
@@ -215,4 +202,4 @@ class Makefile(object):
 
     def opt_include(self, *paths):
         for path in paths:
-            self._opt_include.add(self._proj.posix(path))
+            self._opt_include.add(self._cfg.target_path(path))

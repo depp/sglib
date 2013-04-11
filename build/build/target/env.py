@@ -1,7 +1,6 @@
 from build.shell import escape
 from build.error import ConfigError
 from io import StringIO
-import sys
 
 class MakefileVar(object):
     """A makefile variable."""

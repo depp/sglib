@@ -1,10 +1,10 @@
-from .. import nix
-from .. import env
-from .. import gensource
-from .. import ExeModule
+from . import nix
+from . import env
 from . import gmake
-from build.shell import escape
+from build.object import GeneratedSource
+from build.object.build import Build
 from build.path import Path
+from build.shell import escape
 import sys
 
 RUN_SCRIPT = '''\
@@ -39,46 +39,61 @@ EOF
 esac
 '''
 
-def arg_to_string(proj, arg):
+def arg_to_string(cfg, arg):
     if isinstance(arg, str):
         return arg
     elif isinstance(arg, Path):
-        return proj.posix(arg)
+        return cfg.target_path(arg)
     elif isinstance(arg, tuple):
         parts = []
         for part in arg:
             if isinstance(part, str):
                 parts.append(part)
             elif isinstance(part, Path):
-                parts.append(proj.posix(part))
+                parts.append(cfg.target_path(part))
             else:
                 raise TypeError()
         return ''.join(parts)
     else:
         raise TypeError()
 
-class RunScript(gensource.GeneratedSource):
+class RunScript(GeneratedSource):
     __slots__ = ['exe_path', 'exe_name', 'args']
     is_regenerated_only = True
 
-    def __init__(self, name, target, exe_path, exe_name, args):
-        super(RunScript, self).__init__(name, target)
-        self.exe_path = exe_path
-        self.exe_name = exe_name
-        self.args = args
+    def make_self(self, makefile, build):
+        cmd = ('@if test -x {script} ; then touch {script} ; else '
+               '{python} {config} regen {script} && chmod +x {script} ; fi'
+               .format(script=build.cfg.target_path(self.target),
+                       python=sys.executable,
+                       config=sys.argv[0]))
+        makefile.add_rule(self.target, [self.exe_path], [gmake.Raw(cmd)])
 
-    def write(self, fp):
+    def write(self, fp, cfg):
         fp.write(RUN_SCRIPT.format(
-            exe=escape(self.exe_path),
+            exe=escape(cfg.target_path(self.exe_path)),
             name=escape(self.exe_name),
-            args=' '.join(escape(arg) for arg in self.args),
+            args=' '.join(escape(arg_to_string(cfg, arg))
+                          for arg in self.args),
         ))
 
-class Target(gmake.Target):
-    __slots__ = []
+class Target(object):
+    __slots__ = ['base_env', 'os']
 
-    def build_exe(self, makefile, build, module):
-        source = build.modules[module.source]
+    def __init__(self, subtarget, args):
+        self.base_env = nix.default_env(args, subtarget)
+        self.os = subtarget
+
+    def gen_build(self, cfg, proj):
+        build = Build(cfg, proj, nix.BUILDERS)
+        makefile = gmake.Makefile(cfg)
+        makepath = Path('/Makefile', 'builddir')
+        makefile.add_build(build, makepath)
+        makefile.add_clean(Path('/build', 'builddir'))
+        return build
+
+    def make_executable(self, makefile, build, module):
+        source = build.sourcemodules[module.source]
         filename = module.filename
 
         objdir = Path('/build/obj', 'builddir')
@@ -95,10 +110,10 @@ class Target(gmake.Target):
             elif src.type in ('header',):
                 pass
             else:
-                print('warning: ignored source file: {}'
-                      .format(src.path), file=sys.stderr)
+                build.cfg.warn(
+                    'cannot add file to executable: {}'.format(src.path))
 
-        build_env = [self.env]
+        build_env = [self.base_env]
         for req in source.deps:
             build_env.append(build.modules[req].env)
         build_env = env.merge_env(build_env)
@@ -125,25 +140,22 @@ class Target(gmake.Target):
 
         scriptpath = Path('/', 'builddir').join(filename)
         script = RunScript(
-            None, scriptpath, build.proj.posix(exepath), filename,
-            [arg_to_string(build.proj, arg) for arg in module.args])
-        build.add(script)
-        cmd = ('@if test -x {script} ; then touch {script} ; else '
-               '{python} {config} regen {script} && chmod +x {script} ; fi'
-               .format(script=build.proj.posix(scriptpath),
-                       python=sys.executable,
-                       config=sys.argv[0]))
-        makefile.add_rule(scriptpath, [prodpath], [gmake.Raw(cmd)])
+            target=scriptpath,
+            exe_name=filename,
+            exe_path=prodpath,
+            args=module.args,
+        )
         makefile.add_clean(scriptpath)
         makefile.add_default(scriptpath)
+        build.add_generated_source(script)
 
-    def build_sources(self, makefile, build):
+    def make_sources(self, makefile, build):
         objdir = Path('/build/obj', 'builddir')
         for src in build.sources.values():
             if src.type in ('c', 'c++'):
                 opath = objdir.join(src.path.to_posix()).withext('.o')
                 dpath = opath.withext('.d')
-                build_env = [self.env]
+                build_env = [self.base_env]
                 for req in src.modules:
                     build_env.append(build.modules[req].env)
                 build_env.append({'CPPPATH': src.header_paths})
@@ -154,3 +166,8 @@ class Target(gmake.Target):
                                 depfile=dpath, external=src.external)],
                     gmake.BUILD_NAMES.get(src.type))
                 makefile.opt_include(dpath)
+            elif src.type in ('header',):
+                pass
+            else:
+                build.cfg.warn(
+                    'file has unhandled type: {}'.format(src.path))

@@ -1,5 +1,5 @@
 import build.config
-import build.data as data
+import build.project.data as data
 from build.path import Href, splitext
 from build.error import ConfigError
 import os
@@ -52,8 +52,8 @@ def gen_info_plist(info, main_nib, icon):
     return data.decode('UTF-8')
 
 @data.template('sglib', 'sglib++')
-def template_sglib(module, buildinfo, proj):
-    sgroot = proj.path(os.path.dirname(os.path.dirname(__file__)))
+def template_sglib(module, buildinfo, cfg, proj):
+    sgroot = cfg.path(os.path.dirname(os.path.dirname(__file__)))
     moddir = sgroot.join('build/module')
     rsrcdir = sgroot.join('build/resource')
 
@@ -65,7 +65,7 @@ def template_sglib(module, buildinfo, proj):
     src.modules = module.modules
     yield src
 
-    target_os = proj.environ['os']
+    target_os = cfg.target.os
 
     info = data.InfoDict()
     info.update(buildinfo)
@@ -84,9 +84,9 @@ def template_sglib(module, buildinfo, proj):
     apps = []
     extras = []
     for app in APPS:
-        if proj.environ['flag']['app-' + app] != 'yes':
+        if cfg.flags['app-' + app] != 'yes':
             continue
-        amod = data.Module(proj.gen_name(), 'executable')
+        amod = data.Module(None, 'executable')
         apps.append((app, amod))
         amod.group.requirements = [
             data.Requirement(x, False) for x in
@@ -151,7 +151,7 @@ def template_sglib(module, buildinfo, proj):
     for app, amod in apps:
         yield amod
 
-cfg = build.config.Config()
+cfg = build.config.ConfigTool()
 val = build.config.Value
 
 cfg.add_enable(

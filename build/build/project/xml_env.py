@@ -1,5 +1,5 @@
 from build.path import Href, Path
-import build.data as data
+from . import data
 from build.expr import evaluate, evaluate_many, to_bool, compare
 
 # Tags and the attributes that can appear on them

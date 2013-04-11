@@ -1,22 +1,17 @@
-from .gensource import GeneratedSource, HEADER
+from . import GeneratedSource
 
 class ConfigHeader(GeneratedSource):
-    __slots__ = ['flags']
-    is_regenerated = False
+    __slots__ = []
 
-    def __init__(self, name, target, flags):
-        super(ConfigHeader, self).__init__(name, target)
-        self.flags = flags
-
-    def write(self, fp):
+    def write(self, fp, cfg):
         fp.write(
             '/* {}  */\n'
             '#ifndef CONFIG_H\n'
             '#define CONFIG_H\n'
             '\n'
             '/* Enabled / disabled features */\n'
-            .format(HEADER))
-        for k, v in sorted(self.flags.items()):
+            .format(self.HEADER))
+        for k, v in sorted(cfg.flags.items()):
             k = k.replace('-', '_').upper()
             if v != 'no':
                 print('#define ENABLE_{} 1'.format(k), file=fp)
@@ -25,7 +20,7 @@ class ConfigHeader(GeneratedSource):
         fp.write(
             '\n'
             '/* Enabled feature implementations */\n')
-        for k, v in sorted(self.flags.items()):
+        for k, v in sorted(cfg.flags.items()):
             if v == 'no' or v == 'yes':
                 continue
             k = k.replace('-', '_').upper()
@@ -34,3 +29,9 @@ class ConfigHeader(GeneratedSource):
         fp.write(
             '\n'
             '#endif\n')
+
+    @classmethod
+    def parse(class_, build, mod):
+        return class_(
+            target=mod.info.get_path('target'),
+        )

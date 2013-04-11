@@ -82,4 +82,4 @@ def describe_proc(cmd, output, retcode):
         'status: {}\n'
         'output:\n'
         '{}'
-    ).format(escape_cmd(cmd), retcode, output)
+    ).format(escape_cmd(cmd), retcode, format_block(output))

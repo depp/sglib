@@ -21,6 +21,44 @@ def splitext(path):
         return path[:dot], path[dot:]
     return path, ''
 
+def split_native(path):
+    """Split a native path into components.
+
+    Components are converted to POSIX convention.  Raises an error if
+    the path contains illegal components, or if the path is not
+    relative.
+    """
+    drive, dpath = os.path.splitdrive(path)
+    if drive or os.path.isabs(dpath):
+        raise ValueError('not a relative path')
+    parts = []
+    while dpath:
+        dpath, part = os.path.split(dpath)
+        if not part:
+            continue
+        if part == os.path.pardir:
+            parts.append('..')
+            continue
+        if part == os.path.curdir:
+            parts.append('.')
+            continue
+        m = PATH_SPECIAL.search(part)
+        if m:
+            raise ValueError(
+                'path contains special character: {!r}'
+                .format(m.group(0), part))
+        if part.endswith('.') or part.endswith(' '):
+            raise ValueError(
+                'invalid path component: {!r}'.format(part))
+        i = part.find('.')
+        base = part[:i] if i >= 0 else part
+        if base.upper() in PATH_SPECIAL_NAME:
+            raise ValueError(
+                'invalid path component: {!r}'.format(part))
+        parts.append(part)
+    parts.reverse()
+    return parts
+
 class Path(object):
     """A sanitized path, relative to a specific root directory."""
     __slots__ = ['path', 'base']

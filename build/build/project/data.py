@@ -1,3 +1,11 @@
+"""Project data.
+
+These structures correspond to the project description on disk.  They
+can be read from XML files, and they can be dumped to XML files
+(although conditionals are lost).  The project data can also be
+converted into build objects, which can be emitted using one of the
+build system backends.
+"""
 import collections
 import urllib.parse
 from build.path import Path
@@ -186,15 +194,15 @@ class BuildFile(object):
         self.modules = []
         self.info = InfoDict()
         self.default = None
-    def expand_templates(self, proj):
-        self.modules = expand_templates(self.modules, self.info, proj)
+    def expand_templates(self, cfg, proj):
+        self.modules = expand_templates(self.modules, self.info, cfg, proj)
 
-def expand_templates(modules, info, proj):
+def expand_templates(modules, info, cfg, proj):
     """Expand templates in the given modules."""
     expanded_modules = []
     q = list(modules)
     for module in q:
-        module.modules = expand_templates(module.modules, info, proj)
+        module.modules = expand_templates(module.modules, info, cfg, proj)
     q.reverse()
     while q:
         module = q.pop()
@@ -203,7 +211,7 @@ def expand_templates(modules, info, proj):
         except KeyError:
             expanded_modules.append(module)
         else:
-            expansion = list(func(module, info, proj))
+            expansion = list(func(module, info, cfg, proj))
             q.extend(reversed(expansion))
     return expanded_modules
 

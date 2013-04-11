@@ -1,12 +1,15 @@
+from build.error import ConfigError
+from build.path import Path
 import collections
 import argparse
 import sys
 import platform
 import os
 import importlib
-from build.error import ConfigError
 import pickle
 import io
+import ntpath
+import posixpath
 
 TARGETS = {'make', 'msvc', 'xcode'}
 OS = {'osx', 'linux', 'windows'}
@@ -16,12 +19,90 @@ PLATFORMS = {
     'Windows': ('windows', 'msvc'),
 }
 
+class Config(object):
+    """Result from reading user configuration options."""
+    __slots__ = ['srcdir', 'projfile', 'target', 'flags', 'bundled_libs',
+                 '_srcdir_target', '_sep_target', 'verbosity']
+
+    def __init__(self, srcdir, projfile, target, flags, bundled_libs,
+                 verbosity):
+        self.srcdir = srcdir
+        self.projfile = projfile
+        self.target = target
+        self.flags = flags
+        self.bundled_libs = bundled_libs
+        self.verbosity = verbosity
+
+        if target.os == 'windows':
+            import ntpath as path
+        else:
+            import posixpath as path
+
+        if os.path is path:
+            self._srcdir_target = srcdir
+        else:
+            parts = split_native(srcdir)
+            self._srcdir_target = path.sep.join(parts)
+
+        self._sep_target = path.sep
+
+    def path(self, path, base='srcdir'):
+        """Convert a native path to a path object."""
+        if base == 'srcdir':
+            bpath = self.srcdir
+        elif base == 'builddir':
+            bpath = os.path.curdir
+        else:
+            raise ValueError('invalid base: {}'.format(base))
+        rel_path = os.path.relpath(path, bpath)
+        drive, dpath = os.path.splitdrive(rel_path)
+        try:
+            if drive or os.path.isabs(dpath):
+                raise ValueError(
+                    'path not contained in ${{{}}}' .format(base))
+            return Path('/', base).join(dpath.replace(os.path.sep, '/'))
+        except ValueError as ex:
+            raise ValueError('{}: {!r}'.format(ex, path))
+
+    def native_path(self, path):
+        """Convert a path to a native path."""
+        ppath = path.path[1:].replace('/', os.path.sep) or os.path.curdir
+        if path.base == 'srcdir':
+            bpath = self.srcdir
+        else:
+            bpath = os.path.curdir
+        if bpath == os.path.curdir:
+            return ppath
+        if ppath == os.path.curdir:
+            return bpath
+        return os.path.join(bpath, ppath)
+
+    def target_path(self, path):
+        """Convert a path to a target path."""
+        sep = self._sep_target
+        ppath = path.path[1:].replace('/', sep) or '.'
+        if path.base == 'builddir':
+            return ppath
+        base = self._srcdir_target
+        if base == '.':
+            return ppath
+        if ppath == '.':
+            return base
+        if base.endswith(sep):
+            return base + ppath
+        return base + sep + ppath
+
+    def warn(self, msg, extra=None):
+        if self.verbosity >= 1:
+            sys.stderr.write('warning: {}\n'.format(msg))
+            if extra is not None:
+                sys.stderr.write(extra)
+                if not extra.endswith('\n'):
+                    sys.stderr.write('\n')
+
 Value = collections.namedtuple('Value', 'name help')
 
-ConfigResult = collections.namedtuple(
-    'ConfigResult', 'projfile environ target')
-
-class Config(object):
+class ConfigTool(object):
     __slots__ = ['parser', 'flaginfo', 'optgroup', 'defaults']
 
     def __init__(self, prog='config.sh',
@@ -42,7 +123,7 @@ class Config(object):
             help='suppress messages')
         self.parser.add_argument(
             '-v', dest='verbosity', default=1,
-            action='store_const', const=0,
+            action='store_const', const=2,
             help='verbose messages')
         self.parser.add_argument(
             '--dump-project', action='store_true')
@@ -157,13 +238,22 @@ class Config(object):
         if target not in TARGETS:
             raise ConfigError('invalid target: {!r}'.format(target))
         mod = importlib.import_module('build.target.' + target)
-        return mod.Target(subtarget, osname, args)
+        return mod.target(subtarget, osname, args)
 
     def parse_args(self):
         if len(sys.argv) < 3:
             print('invalid usage', file=sys.stderr)
             sys.exit(1)
+        __slots__ = ['flags', 'target']
+
         projfile = sys.argv[2]
+        srcdir = os.path.dirname(projfile) or os.path.curdir
+        projfile = os.path.basename(projfile)
+        if not projfile:
+            raise ConfigError('not a project file: {!r}'
+                              .format(sys.argv[2]))
+        projfile = Path('/', 'srcdir').join(projfile)
+
         args = self.parser.parse_args(sys.argv[3:])
         target = self.get_target(args)
 
@@ -183,12 +273,9 @@ class Config(object):
         if args.verbosity >= 1:
             self.dump_flags(flags)
 
-        environ = {
-            'os':target.os,
-            'flag':flags,
-        }
-
-        return ConfigResult(projfile, environ, target), args
+        cfg = Config(srcdir, projfile, target, flags,
+                     args.bundled_libs, args.verbosity)
+        return cfg, args
 
     def get_cache(self):
         with open('config.dat', 'rb') as fp:
@@ -197,11 +284,11 @@ class Config(object):
     def get_cached_args(self):
         return pickle.loads(self.get_cache()[0]), None
 
-    def build(self, targetpath, target):
+    def build(self, targetpath, target, cfg):
         fp = io.StringIO()
-        target.write(fp)
+        target.write(fp, cfg)
         text = fp.getvalue()
-        if target.is_phony:
+        if target.is_regenerated_always:
             del fp
             try:
                 with open(targetpath, 'r') as fp:
@@ -217,23 +304,18 @@ class Config(object):
             fp.write(text)
 
     def run_config(self, cfg, args):
-        import build.project
-        srcdir = os.path.dirname(cfg.projfile) or os.path.curdir
-        proj = build.project.Project(srcdir, cfg.environ)
-        proj.load_xml(cfg.projfile)
+        from . import project
+        proj = project.Project.load_xml(cfg)
         if args and args.dump_project:
             self.dump_project(proj)
             sys.exit(0)
-        buildobj = cfg.target.gen_build(proj)
+        build = cfg.target.gen_build(cfg, proj)
 
-        from build.target.gensource import GeneratedSource
         cache_gen_sources = {}
         all_gen_sources = []
-        for target in buildobj.targets:
-            if not isinstance(target, GeneratedSource):
-                continue
+        for target in build.generated_sources.values():
             if target.is_regenerated:
-                cache_gen_sources[proj.native(target.target)] = target
+                cache_gen_sources[cfg.native_path(target.target)] = target
             if not target.is_regenerated_only:
                 all_gen_sources.append(target)
 
@@ -246,18 +328,20 @@ class Config(object):
             pickle.dump(cache_obj, fp, protocol=pickle.HIGHEST_PROTOCOL)
 
         for target in all_gen_sources:
-            targetpath = proj.native(target.target)
+            targetpath = cfg.native_path(target.target)
             if (not args) or args.verbosity >= 1:
                 print('Writing {}'.format(targetpath), file=sys.stderr)
-            self.build(targetpath, target)
+            self.build(targetpath, target, cfg)
 
     def run_regen(self):
         if len(sys.argv) < 3:
             print('invalid usage', file=sys.stderr)
             sys.exit(1)
-        cache_gen_sources = pickle.loads(self.get_cache()[1])
+        cache = self.get_cache()
+        cfg = pickle.loads(cache[0])
+        cache_gen_sources = pickle.loads(cache[1])
         targetpath = sys.argv[2]
-        self.build(targetpath, cache_gen_sources[targetpath])
+        self.build(targetpath, cache_gen_sources[targetpath], cfg)
 
     def _run(self):
         if len(sys.argv) < 2:

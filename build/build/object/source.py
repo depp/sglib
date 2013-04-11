@@ -1,22 +1,22 @@
+from build.error import ConfigError
 import collections
 
 Source = collections.namedtuple(
     'Source', 'path type header_paths modules external')
-class SourceModule(object):
-    __slots__ = ['name', 'sources', 'public_modules', 'private_modules',
-                 'header_paths']
-    is_target = False
 
-    def __init__(self, name):
-        self.name = name
+class SourceModule(object):
+    __slots__ = ['sources', 'public_modules', 'private_modules',
+                 'header_paths']
+
+    def __init__(self):
         self.sources = []
         self.public_modules = set()
         self.private_modules = set()
         self.header_paths = set()
 
     @classmethod
-    def from_module(class_, mod, name, external=False):
-        smod = class_(name)
+    def parse(class_, mod, *, external=False):
+        smod = class_()
         public_ipath = set()
         public_req = set()
         private_req = set()
@@ -40,7 +40,7 @@ class SourceModule(object):
         return smod
 
     def dump(self):
-        print('Source module {}'.format(self.name))
+        print('Source module')
         print('  Public header paths:')
         for ipath in self.header_paths:
             print('    {}'.format(ipath))
@@ -56,29 +56,25 @@ class SourceModule(object):
 
 class FlatSourceModule(object):
     """A flat source module has dependencies only on non-source modules."""
-    __slots__ = ['name', 'sources', 'deps']
-    is_target = False
-    def __init__(self, name, sources, deps):
-        self.name = name
+    __slots__ = ['sources', 'deps']
+
+    def __init__(self, sources, deps):
         self.sources = sources
         self.deps = deps
 
-def resolve_sources(build):
+def resolve_sources(modules):
     """Resolve all dependencies among source modules.
 
-    This replaces all source modules with flat source modules.  It
-    also creates a list of all source files in the build.
+    This generates flat source modules and a list of sources.
     """
     dep_private = {}
     dep_public = {}
-    modules = {}
-    for mod in build.modules.values():
-        if isinstance(mod, SourceModule):
-            modules[mod.name] = mod
-            dep_public[mod.name] = set(mod.public_modules)
-            dep_private[mod.name] = set(mod.private_modules)
-            dep_public[mod.name].add(mod.name)
-            dep_private[mod.name].add(mod.name)
+    for modname, mod in modules.items():
+        modules[modname] = mod
+        dep_public[modname] = set(mod.public_modules)
+        dep_private[modname] = set(mod.private_modules)
+        dep_public[modname].add(modname)
+        dep_private[modname].add(modname)
     for k in modules:
         for i in modules:
             for j in modules:
@@ -138,7 +134,6 @@ def resolve_sources(build):
         mdeps.difference_update(modules)
         mdeps = list(mdeps)
         mdeps.sort()
-        nmod = FlatSourceModule(mname, msrc, mdeps)
+        nmod = FlatSourceModule(msrc, mdeps)
         nmods[mname] = nmod
-    build.modules.update(nmods)
-    build.sources = sources
+    return nmods, sources

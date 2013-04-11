@@ -2,16 +2,16 @@ from build.error import ConfigError
 import importlib
 
 MODNAME = {
-    'linux': 'nix',
-    'osx': 'osx',
+    'linux': 'make_nix',
+    'osx': 'make_osx',
 }
 
-def Target(subtarget, os, args):
+def target(subtarget, os, args):
     if subtarget is None:
         subtarget = os
     try:
         modname = MODNAME[subtarget]
     except KeyError:
         raise ConfigError('invalid make subtarget: {!r}'.format(subtarget))
-    mod = importlib.import_module('build.target.make.' + modname)
-    return mod.Target(subtarget, os, args)
+    mod = importlib.import_module('build.target.' + modname)
+    return mod.Target(subtarget, args)

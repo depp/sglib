@@ -1,27 +1,36 @@
-from .. import nix
-from .. import env
+from . import nix
+from . import env
 from . import gmake
 from build.path import Path
-import sys
+from build.object.build import Build
 
-class Target(gmake.Target):
-    __slots__ = ['archs']
+class Target(object):
+    __slots__ = ['base_env', 'os', 'archs']
+
+    def __init__(self, subtarget, args):
+        self.base_env = nix.default_env(args, subtarget)
+        self.os = subtarget
+        self.archs = ['ppc', 'i386', 'x86_64']
+
+    def gen_build(self, cfg, proj):
+        build = Build(cfg, proj, nix.BUILDERS)
+        makefile = gmake.Makefile(cfg)
+        makepath = Path('/Makefile', 'builddir')
+        makefile.add_build(build, makepath)
+        makefile.add_clean(Path('/build', 'builddir'))
+        return build
 
     def get_dirs(self, name):
         builddir = Path('/build', 'builddir')
         return {arch: builddir.join('{}-{}'.format(name, arch))
                 for arch in self.archs}
 
-    def __init__(self, subtarget, osname, args):
-        super(Target, self).__init__(subtarget, osname, args)
-        self.archs = ['ppc', 'i386', 'x86_64']
-
-    def build_application_bundle(self, makefile, build, module):
-        source = build.modules[module.source]
+    def make_application_bundle(self, makefile, build, module):
+        source = build.sourcemodules[module.source]
         filename = module.filename
 
         build_env = env.merge_env(
-            [self.env] +
+            [self.base_env] +
             [build.modules[req].env for req in source.deps])
 
         objdirs = self.get_dirs('obj')
@@ -40,8 +49,9 @@ class Target(gmake.Target):
                 elif src.type in ('header',):
                     pass
                 else:
-                    print('warning: ignored source file: {}'
-                          .format(src.path), file=sys.stderr)
+                    build.cfg.warn(
+                        'cannot add file to executable: {}'
+                        .format(src.path))
 
             arch_env = env.merge_env(
                 [build_env, {'LDFLAGS': ('-arch', arch)}])
@@ -116,12 +126,12 @@ class Target(gmake.Target):
             [['touch', apppath]])
         makefile.add_default(apppath)
 
-    def build_sources(self, makefile, build):
+    def make_sources(self, makefile, build):
         objdirs = self.get_dirs('obj')
         for src in build.sources.values():
             if src.type in ('c', 'c++', 'objc', 'objc++'):
                 build_env = env.merge_env(
-                    [self.env] +
+                    [self.base_env] +
                     [build.modules[req].env for req in src.modules] +
                     [{'CPPPATH': src.header_paths}])
                 for arch, objdir in objdirs.items():
@@ -136,3 +146,8 @@ class Target(gmake.Target):
                                     depfile=dpath, external=src.external)],
                         gmake.BUILD_NAMES.get(src.type))
                     makefile.opt_include(dpath)
+            elif src.type in ('header', 'xib'):
+                pass
+            else:
+                build.cfg.warn(
+                    'file has unhandled type: {}'.format(src.path))

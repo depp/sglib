@@ -1,4 +1,4 @@
-from .gensource import GeneratedSource, HEADER
+from . import GeneratedSource
 import build.git as git
 import re
 
@@ -12,19 +12,25 @@ def escape(s):
     return ESCAPE_CHAR.sub(lambda x: '\\' + x.group(0), s)
 
 class VersionInfo(GeneratedSource):
-    __slots__ = ['repos', 'git']
-    is_phony = True
+    __slots__ = ['repos']
+    is_regenerated_always = True
 
-    def __init__(self, name, target, repos, git):
-        super(VersionInfo, self).__init__(name, target)
-        self.repos = repos
-        self.git = git
-
-    def write(self, fp):
-        fp.write('/* {}  */\n'.format(HEADER))
+    def write(self, fp, cfg):
+        fp.write('/* {}  */\n'.format(self.HEADER))
         for k, v in sorted(self.repos.items()):
-            sha1, version = git.get_info(v, git=self.git)
+            sha1, version = git.get_info(cfg, v)
             fp.write(
                 'const char {}_VERSION[] = "{}";\n'
                 'const char {}_COMMIT[] = "{}";\n'
                 .format(k, escape(version), k, escape(sha1)))
+
+    @classmethod
+    def parse(class_, build, mod):
+        repos = {}
+        for k in mod.info:
+            if k.startswith('repo.'):
+                repos[k[5:]] = mod.info.get_path(k)
+        return class_(
+            target=mod.info.get_path('target'),
+            repos=repos,
+        )

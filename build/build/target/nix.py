@@ -1,5 +1,3 @@
-import build.target as target
-import build.data as data
 import build.shell as shell
 from . import env
 from build.error import ConfigError, format_block
@@ -8,11 +6,8 @@ import os
 import io
 
 class EnvModule(object):
-    __slots__ = ['name', 'env']
-    is_target = False
-
-    def __init__(self, name, env):
-        self.name = name
+    __slots__ = ['env']
+    def __init__(self, env):
         self.env = env
 
 def gen_source(prologue, body):
@@ -30,11 +25,6 @@ def gen_source(prologue, body):
         '    return 0;\n'
         '}\n')
     return fp.getvalue()
-
-def mod_info_only(mod):
-    if mod.group:
-        raise ConfigError('module must be empty: {}'.format(mod.type))
-    return mod.info
 
 def cc_cmd(env, output, source, sourcetype, *, depfile=None, external=False):
     """Get the command to compile the given source."""
@@ -129,7 +119,7 @@ def default_env(args, osname):
         })
     return env.merge_env(envs)
 
-def getmachine(env):
+def getmachine(cfg, env):
     """Get the name of the target machine."""
     cc = env['CC']
     cmd = [cc, '-dumpmachine']
@@ -152,112 +142,106 @@ def getmachine(env):
                 return 'x86'
             if m == 'powerpc':
                 return 'ppc'
-            sys.stderr.write(
-                'warning: unknown machine name: {}'.format(m))
+            cfg.warn('unknown machine name: {}'.format(m))
     raise ConfigError(
         'unable to parse machine name',
         shell.describe_proc(cmd, stdout + stderr, retcode))
 
-class Target(target.Target):
-    __slots__ = ['env']
+def build_pkg_config(build, mod, name):
+    spec = mod.info.get_string('spec')
+    cmdname = 'pkg-config'
+    flags = {}
+    for varname, arg in (('LIBS', '--libs'), ('CFLAGS', '--cflags')):
+        stdout, stderr, retcode = shell.get_output(
+            [cmdname, '--silence-errors', arg, spec])
+        if retcode:
+            stdout, retcode = shell.get_output(
+                [cmdname, '--print-errors', '--exists', arg, spec],
+                combine_output=True)
+            raise ConfigError('{} failed'.format(cmdname), stdout)
+        flags[varname] = tuple(stdout.split())
+    build.add_module(name, EnvModule(flags))
 
-    def __init__(self, subtarget, osname, args):
-        super(Target, self).__init__(subtarget, osname, args)
-        self.env = default_env(args, osname)
+def build_sdl_config(build, mod, name):
+    min_version = mod.info.get_string('min-version')
+    cmdname = 'sdl-config'
+    flags = {}
+    for varname, arg in (('LIBS', '--libs'), ('CFLAGS', '--cflags')):
+        stdout, stderr, retcode = get_output([cmdname, arg])
+        if retcode:
+            raise ConfigError('{} failed'.format(cmdname), stderr)
+        flags[varname] = tuple(stdout.split())
+    build.add_module(name, EnvModule(flags))
+    return [EnvModule(name, flags)]
 
-    @property
-    def os(self):
-        return self.subtarget
+def library_search(build, src_lang, src_prologue, src_body,
+                   flagsets, name):
+    log = io.StringIO()
+    srctext = gen_source(src_prologue, src_body)
+    print('Test file:', file=log)
+    log.write(format_block(srctext))
+    if src_lang == 'c':
+        filename = 'config.c'
+    elif src_lang == 'c++':
+        filename = 'config.cpp'
+    else:
+        raise ConfigError('unknown language: {!r}'.format(src_lang))
 
-    def mod_pkg_config(self, proj, mod, name):
-        info = mod_info_only(mod)
-        spec = info.get_string('spec')
-        cmdname = 'pkg-config'
-        flags = {}
-        for varname, arg in (('LIBS', '--libs'), ('CFLAGS', '--cflags')):
-            stdout, stderr, retcode = shell.get_output(
-                [cmdname, '--silence-errors', arg, spec])
-            if retcode:
+    base_env = build.cfg.target.base_env
+    with tempfile.TemporaryDirectory() as tempdir:
+        src = os.path.join(tempdir, filename)
+        obj = os.path.join(tempdir, 'config.o')
+        out = os.path.join(tempdir, 'config.out')
+        with open(src, 'w') as fp:
+            fp.write(srctext)
+        for flags in flagsets:
+            test_env = env.merge_env([base_env, flags])
+            cmds = [cc_cmd(test_env, obj, src, src_lang),
+                    ld_cmd(test_env, out, [obj], [src_lang])]
+            for cmd in cmds:
                 stdout, retcode = shell.get_output(
-                    [cmdname, '--print-errors', '--exists', arg, spec],
-                    combine_output = True)
-                raise ConfigError('{} failed'.format(cmdname), stdout)
-            flags[varname] = tuple(stdout.split())
-        return [EnvModule(name, flags)]
+                    cmd, combine_output=True)
+                log.write(shell.describe_proc(cmd, stdout, retcode))
+                if retcode:
+                    break
+            else:
+                build.add_module(name, EnvModule(flags))
+                return
+    raise ConfigError('could not link test file', log.getvalue())
 
-    def mod_sdl_config(self, proj, mod, name):
-        info = mod_info_only(mod)
-        min_version = info.get_string('min-version')
-        cmdname = 'sdl-config'
-        flags = {}
-        for varname, arg in (('LIBS', '--libs'), ('CFLAGS', '--cflags')):
-            stdout, stderr, retcode = get_output([cmdname, arg])
-            if retcode:
-                raise ConfigError('{} failed'.format(cmdname), stderr)
-            flags[varname] = tuple(stdout.split())
-        return [EnvModule(name, flags)]
+def build_library_search(build, mod, name):
+    src_lang = mod.info.get_string('source.language')
+    src_prologue = mod.info.get_string('source.prologue', '')
+    src_body = mod.info.get_string('source.body', '')
+    flagsets = {}
+    for k, v in mod.info.items():
+        if not k.startswith('flags.'):
+            continue
+        try:
+            flagnum, flagname = k.split('.', 2)[1:]
+            flagnum = int(flagnum)
+        except ValueError:
+            raise ConfigError('invalid flag name: {!r}'
+                              .format(k))
+        if flagname not in ('CFLAGS', 'LIBS'):
+            raise ConfigError('unknown flag name: {!r}'
+                              .format(flagname))
+        flagsets.setdefault(flagnum, {})[flagname] = v
+    flagsets = [{}] + [v for k, v in sorted(flagsets.items())]
+    library_search(
+        build, src_lang, src_prologue, src_body, flagsets, name)
 
-    def library_search(self, proj, src_lang, src_prologue, src_body,
-                       flagsets, name):
-        log = io.StringIO()
-        srctext = gen_source(src_prologue, src_body)
-        print('Test file:', file=log)
-        log.write(format_block(srctext))
-        if src_lang == 'c':
-            filename = 'config.c'
-        elif src_lang == 'c++':
-            filename = 'config.cpp'
-        else:
-            raise ConfigError('unknown language: {!r}'.format(src_lang))
+def build_framework(build, mod, name):
+    if build.cfg.target.os not in ('osx',):
+        raise ConfigError(
+            'frameworks not available on this platform')
+    filename = mod.info.get_string('filename')
+    library_search(
+        build, 'c', '', '', [{'LIBS': ('-framework', filename)}], name)
 
-        with tempfile.TemporaryDirectory() as tempdir:
-            src = os.path.join(tempdir, filename)
-            obj = os.path.join(tempdir, 'config.o')
-            out = os.path.join(tempdir, 'config.out')
-            with open(src, 'w') as fp:
-                fp.write(srctext)
-            for flags in flagsets:
-                test_env = env.merge_env([self.env, flags])
-                cmds = [cc_cmd(test_env, obj, src, src_lang),
-                        ld_cmd(test_env, out, [obj], [src_lang])]
-                for cmd in cmds:
-                    stdout, retcode = shell.get_output(
-                        cmd, combine_output=True)
-                    log.write(shell.describe_proc(cmd, stdout, retcode))
-                    if retcode:
-                        break
-                else:
-                    return [EnvModule(name, flags)]
-        raise ConfigError('could not link test file', log.getvalue())
-
-    def mod_library_search(self, proj, mod, name):
-        info = mod_info_only(mod)
-        src_lang = info.get_string('source.language')
-        src_prologue = info.get_string('source.prologue', '')
-        src_body = info.get_string('source.body', '')
-        flagsets = {}
-        for k, v in info.items():
-            if not k.startswith('flags.'):
-                continue
-            try:
-                flagnum, flagname = k.split('.', 2)[1:]
-                flagnum = int(flagnum)
-            except ValueError:
-                raise ConfigError('invalid flag name: {!r}'
-                                  .format(k))
-            if flagname not in ('CFLAGS', 'LIBS'):
-                raise ConfigError('unknown flag name: {!r}'
-                                  .format(flagname))
-            flagsets.setdefault(flagnum, {})[flagname] = v
-        flagsets = [{}] + [v for k, v in sorted(flagsets.items())]
-        return self.library_search(
-            proj, src_lang, src_prologue, src_body, flagsets, name)
-
-    def mod_framework(self, proj, mod, name):
-        if self.subtarget not in ('osx',):
-            raise ConfigError(
-                'frameworks not available on this platform')
-        info = mod_info_only(mod)
-        filename = info.get_string('filename')
-        return self.library_search(
-            proj, 'c', '', '', [{'LIBS': ('-framework', filename)}], name)
+BUILDERS = {
+    'pkg-config': build_pkg_config,
+    'sdl-config': build_sdl_config,
+    'library-search': build_library_search,
+    'framework': build_framework,
+}

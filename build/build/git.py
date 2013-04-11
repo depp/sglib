@@ -1,36 +1,35 @@
 from build.shell import get_output
 from build.error import format_block
-import sys
 
-def get_info(path, *, git='git'):
+def get_info(cfg, path):
     """Get the version number and SHA-1 of the given Git repository.
 
     Returns (sha1, version).
     """
+    git = 'git' # FIXME
+    path = cfg.native_path(path)
     stdout, stderr, retcode = get_output(
         [git, 'rev-parse', 'HEAD'], cwd=path)
     if retcode:
-        sys.stderr.write(
-            'warning: could not get SHA-1 of {}\n'.format(path.native))
-        sys.stderr.write(format_block(stderr))
+        cfg.warn(
+            'could not get SHA-1 for repository: {}'.format(path),
+            format_block(stderr))
         return '<none>', '0.0'
     sha1 = stdout.strip()
 
     stdout, stderr, retcode = get_output(
         ['git', 'describe'], cwd=path)
     if retcode:
-        sys.stderr.write(
-            'warning: could not get version number in {}\n'
-            .format(path.native))
-        sys.stderr.write(format_block(stderr))
+        cfg.warn(
+            'could not get version number for repository: {}'.format(path),
+            format_block(stderr))
 
         stdout, stderr, retcode = get_output(
             ['git', 'rev-list', 'HEAD'], cwd=path)
         if retcode:
-            sys.stderr.write(
-                'warning: could not get list of git revisions in {}\n'
-                .format(path.native))
-            sys.stderr.write(format_block(stderr))
+            cfg.warn(
+                'could not get list of git revisions for repository: {}'
+                .format(path), format_block(stderr))
             version = '0.0'
         else:
             nrev = len(stdout.splitlines())

@@ -8,8 +8,9 @@ class Feedback(object):
     errors.  This can be overridden by using the 'write()' method
     first.
     """
-    __slots__ = ['msg', 'active']
-    def __init__(self, msg):
+    __slots__ = ['cfg', 'msg', 'active']
+    def __init__(self, cfg, msg):
+        self.cfg = cfg
         self.msg = msg
         self.active = False
     def __enter__(self):
@@ -18,8 +19,9 @@ class Feedback(object):
             return self
         self.active = True
         IN_FEEDBACK = True
-        sys.stdout.write(self.msg)
-        sys.stdout.flush()
+        if self.cfg.verbosity >= 1:
+            sys.stderr.write(self.msg)
+            sys.stderr.flush()
         return self
     def write(self, msg, success=True):
         global IN_FEEDBACK
@@ -27,7 +29,8 @@ class Feedback(object):
             return
         self.active = False
         IN_FEEDBACK = False
-        sys.stdout.write(' {}\n'.format(msg))
+        if self.cfg.verbosity >= 1:
+            sys.stderr.write(' {}\n'.format(msg))
     def __exit__(self, exc_type, exc_value, traceback):
         if not self.active:
             return
