@@ -25,7 +25,7 @@ class Config(object):
             'warnings', 'werror', 'config']
     __slots__ = ARGS + [
         'srcdir', 'projfile', 'target', 'flags',
-        '_srcdir_target', '_sep_target', 'verbosity']
+        'srcdir_target', '_sep_target', 'verbosity']
 
     def __init__(self, srcdir, projfile, args):
         self.srcdir = srcdir
@@ -43,10 +43,10 @@ class Config(object):
             import posixpath as path
 
         if os.path is path:
-            self._srcdir_target = self.srcdir
+            self.srcdir_target = self.srcdir
         else:
             parts = split_native(self.srcdir)
-            self._srcdir_target = path.sep.join(parts)
+            self.srcdir_target = path.sep.join(parts)
 
         self._sep_target = path.sep
 
@@ -87,7 +87,7 @@ class Config(object):
         ppath = path.path[1:].replace('/', sep) or '.'
         if path.base == 'builddir':
             return ppath
-        base = self._srcdir_target
+        base = self.srcdir_target
         if base == '.':
             return ppath
         if ppath == '.':

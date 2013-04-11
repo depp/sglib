@@ -14,7 +14,8 @@ from build.error import ConfigError
 EXT_SRCTYPE = {'.' + ext: type for type, exts in {
     'c': 'c',
     'c++': 'cp cpp cxx',
-    'header': 'h hpp hxx',
+    'h': 'h',
+    'h++': 'hpp hxx',
     'objc': 'm',
     'objc++': 'mm',
 }.items() for ext in exts.split()}

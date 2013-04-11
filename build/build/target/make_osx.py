@@ -35,7 +35,7 @@ class Target(nix.MakefileTarget):
                     src_types.add(src.type)
                     opath = objdir.join(src.path.to_posix()).withext('.o')
                     objs.append(opath)
-                elif src.type in ('header',):
+                elif src.type in ('h', 'h++'):
                     pass
                 else:
                     build.cfg.warn(
