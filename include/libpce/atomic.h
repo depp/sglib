@@ -1,8 +1,8 @@
 /* Copyright 2012 Dietrich Epp <depp@zdome.net> */
 #ifndef PCE_ATOMIC_H
 #define PCE_ATOMIC_H
-#include <libpce/arch.h>
-#include <libpce/attribute.h>
+#include "libpce/arch.h"
+#include "libpce/attribute.h"
 #ifdef __cplusplus
 extern "C" {
 #endif

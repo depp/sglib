@@ -1,8 +1,8 @@
 /* Copyright 2009-2012 Dietrich Epp <depp@zdome.net> */
 #ifndef PCE_BINARY_H
 #define PCE_BINARY_H
-#include <libpce/attribute.h>
 #include <stdint.h>
+#include "libpce/attribute.h"
 
 /**
  * @defgroup binary Binary serialization / deserialization

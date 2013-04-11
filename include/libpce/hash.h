@@ -2,7 +2,7 @@
 #ifndef PCE_HASH_H
 #define PCE_HASH_H
 #include <stddef.h>
-#include <libpce/attribute.h>
+#include "libpce/attribute.h"
 
 /**
  * Compute the hash of a byte string.  The hash is not guaranteed to

@@ -4,9 +4,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-#include <libpce/attribute.h>
-#include <libpce/byteorder.h>
 #include <stddef.h>
+#include "libpce/attribute.h"
+#include "libpce/byteorder.h"
 
 /**
  * @defgroup util Utility functions

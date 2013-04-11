@@ -12,7 +12,7 @@
 */
 #ifndef PCE_CPU_H
 #define PCE_CPU_H
-#include <libpce/arch.h>
+#include "libpce/arch.h"
 #ifdef __cplusplus
 extern "C" {
 #endif
