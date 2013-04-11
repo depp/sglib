@@ -9,8 +9,8 @@ import io
 class MakefileTarget(object):
     __slots__ = ['base_env', 'os']
 
-    def __init__(self, subtarget, args):
-        self.base_env = default_env(args, subtarget)
+    def __init__(self, subtarget, cfg, args):
+        self.base_env = default_env(cfg, args, subtarget)
         self.os = subtarget
 
     def gen_build(self, cfg, proj):
@@ -94,26 +94,27 @@ def ld_cmd(env, output, sources, sourcetypes):
     cmd.extend(env.get('LIBS', ()))
     return cmd
 
-def default_env(args, osname):
+def default_env(cfg, args, osname):
     """Get the default environment."""
     assert osname in ('linux', 'osx')
     config = 'debug' if args.config is None else args.config
     warnings = True if args.warnings is None else args.warnings
     werror = (config == 'debug') if args.werror is None else args.werror
     
-    envs = []
+    base_env = {}
+    envs = [base_env]
     if args.config == 'debug':
         cflags = ('-O0', '-g')
     else:
         cflags = ('-O2', '-g')
-    envs.append({
+    base_env.update({
         'CC': 'cc',
         'CXX': 'c++',
         'CFLAGS': cflags,
         'CXXFLAGS': cflags,
     })
     if warnings:
-        envs.append({
+        base_env.update({
             'CWARN': tuple(
                 '-Wall -Wextra -Wpointer-arith -Wno-sign-compare '
                 '-Wwrite-strings -Wmissing-prototypes '
@@ -135,6 +136,25 @@ def default_env(args, osname):
         envs.append({
             'LDFLAGS': ('-Wl,-dead_strip', '-Wl,-dead_strip_dylibs'),
         })
+
+    user_env = {}
+    for arg in args.var:
+        i = arg.find('=')
+        if i <= 0:
+            raise ConfigError('invalid variable definition: {!r}'
+                              .format(arg))
+        varname = arg[:i]
+        varval = arg[i+1:]
+        try:
+            varparse = env.VAR[varname].parse
+        except (KeyError, AttributeError):
+            cfg.warn('unknown variable: {!r}'.format(varname))
+            continue
+        varval = varparse(varval)
+        user_env[varname] = varval
+        del base_env[varname]
+    envs.append(user_env)
+
     return env.merge_env(envs)
 
 def getmachine(cfg, env):

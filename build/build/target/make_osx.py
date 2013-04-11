@@ -5,8 +5,8 @@ from build.path import Path
 class Target(nix.MakefileTarget):
     __slots__ = ['base_env', 'os', 'archs']
 
-    def __init__(self, subtarget, args):
-        super(Target, self).__init__(subtarget, args)
+    def __init__(self, subtarget, cfg, args):
+        super(Target, self).__init__(subtarget, cfg, args)
         self.archs = ['ppc', 'i386', 'x86_64']
 
     def get_dirs(self, name):

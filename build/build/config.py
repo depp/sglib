@@ -24,14 +24,16 @@ class Config(object):
     __slots__ = ['srcdir', 'projfile', 'target', 'flags', 'bundled_libs',
                  '_srcdir_target', '_sep_target', 'verbosity']
 
-    def __init__(self, srcdir, projfile, target, flags, bundled_libs,
+    def __init__(self, srcdir, projfile, bundled_libs,
                  verbosity):
         self.srcdir = srcdir
         self.projfile = projfile
-        self.target = target
-        self.flags = flags
         self.bundled_libs = bundled_libs
         self.verbosity = verbosity
+
+    def set_target(self, target, flags):
+        self.target = target
+        self.flags = flags
 
         if target.os == 'windows':
             import ntpath as path
@@ -39,9 +41,9 @@ class Config(object):
             import posixpath as path
 
         if os.path is path:
-            self._srcdir_target = srcdir
+            self._srcdir_target = self.srcdir
         else:
-            parts = split_native(srcdir)
+            parts = split_native(self.srcdir)
             self._srcdir_target = path.sep.join(parts)
 
         self._sep_target = path.sep
@@ -116,6 +118,9 @@ class ConfigTool(object):
         self.optgroup = self.parser.add_argument_group(
             'optional features')
         self.defaults = {}
+
+        self.parser.add_argument('var', nargs='*',
+                                 help='build variables, VAR=VALUE')
 
         self.parser.add_argument(
             '-q', dest='verbosity', default=1,
@@ -221,7 +226,7 @@ class ConfigTool(object):
         proj.dump_xml(fp)
         sys.stdout.write(fp.getvalue().decode('utf-8'))
 
-    def get_target(self, args):
+    def get_target(self, cfg, args):
         osname, default_target = PLATFORMS.get(platform.system(), (None, None))
         target = args.target
         if target is None:
@@ -238,7 +243,7 @@ class ConfigTool(object):
         if target not in TARGETS:
             raise ConfigError('invalid target: {!r}'.format(target))
         mod = importlib.import_module('build.target.' + target)
-        return mod.target(subtarget, osname, args)
+        return mod.target(subtarget, osname, cfg, args)
 
     def parse_args(self):
         if len(sys.argv) < 3:
@@ -255,7 +260,9 @@ class ConfigTool(object):
         projfile = Path('/', 'srcdir').join(projfile)
 
         args = self.parser.parse_args(sys.argv[3:])
-        target = self.get_target(args)
+        cfg = Config(srcdir, projfile, args.bundled_libs, args.verbosity)
+
+        target = self.get_target(cfg, args)
 
         flags = {}
         for flag in self.flaginfo:
@@ -270,11 +277,11 @@ class ConfigTool(object):
                         pass
             flags[flag] = val
 
+        cfg.set_target(target, flags)
+
         if args.verbosity >= 1:
             self.dump_flags(flags)
 
-        cfg = Config(srcdir, projfile, target, flags,
-                     args.bundled_libs, args.verbosity)
         return cfg, args
 
     def get_cache(self):
