@@ -97,13 +97,13 @@ def ld_cmd(env, output, sources, sourcetypes):
 def default_env(cfg, args, osname):
     """Get the default environment."""
     assert osname in ('linux', 'osx')
-    config = 'debug' if args.config is None else args.config
-    warnings = True if args.warnings is None else args.warnings
-    werror = (config == 'debug') if args.werror is None else args.werror
+    config = 'debug' if cfg.config is None else cfg.config
+    warnings = True if cfg.warnings is None else cfg.warnings
+    werror = (config == 'debug') if cfg.werror is None else cfg.werror
     
     base_env = {}
     envs = [base_env]
-    if args.config == 'debug':
+    if cfg.config == 'debug':
         cflags = ('-O0', '-g')
     else:
         cflags = ('-O2', '-g')
@@ -138,7 +138,7 @@ def default_env(cfg, args, osname):
         })
 
     user_env = {}
-    for arg in args.var:
+    for arg in args:
         i = arg.find('=')
         if i <= 0:
             raise ConfigError('invalid variable definition: {!r}'

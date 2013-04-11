@@ -21,15 +21,17 @@ PLATFORMS = {
 
 class Config(object):
     """Result from reading user configuration options."""
-    __slots__ = ['srcdir', 'projfile', 'target', 'flags', 'bundled_libs',
-                 '_srcdir_target', '_sep_target', 'verbosity']
+    ARGS = ['bundled_libs', 'verbosity',
+            'warnings', 'werror', 'config']
+    __slots__ = ARGS + [
+        'srcdir', 'projfile', 'target', 'flags',
+        '_srcdir_target', '_sep_target', 'verbosity']
 
-    def __init__(self, srcdir, projfile, bundled_libs,
-                 verbosity):
+    def __init__(self, srcdir, projfile, args):
         self.srcdir = srcdir
         self.projfile = projfile
-        self.bundled_libs = bundled_libs
-        self.verbosity = verbosity
+        for arg in self.ARGS:
+            setattr(self, arg, getattr(args, arg))
 
     def set_target(self, target, flags):
         self.target = target
@@ -243,7 +245,7 @@ class ConfigTool(object):
         if target not in TARGETS:
             raise ConfigError('invalid target: {!r}'.format(target))
         mod = importlib.import_module('build.target.' + target)
-        return mod.target(subtarget, osname, cfg, args)
+        return mod.target(subtarget, osname, cfg, args.var)
 
     def parse_args(self):
         if len(sys.argv) < 3:
@@ -260,7 +262,7 @@ class ConfigTool(object):
         projfile = Path('/', 'srcdir').join(projfile)
 
         args = self.parser.parse_args(sys.argv[3:])
-        cfg = Config(srcdir, projfile, args.bundled_libs, args.verbosity)
+        cfg = Config(srcdir, projfile, args)
 
         target = self.get_target(cfg, args)
 
@@ -279,7 +281,7 @@ class ConfigTool(object):
 
         cfg.set_target(target, flags)
 
-        if args.verbosity >= 1:
+        if cfg.verbosity >= 1:
             self.dump_flags(flags)
 
         return cfg, args
@@ -336,7 +338,7 @@ class ConfigTool(object):
 
         for target in all_gen_sources:
             targetpath = cfg.native_path(target.target)
-            if (not args) or args.verbosity >= 1:
+            if cfg.verbosity >= 1:
                 print('Writing {}'.format(targetpath), file=sys.stderr)
             self.build(targetpath, target, cfg)
 
