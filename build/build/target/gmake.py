@@ -47,7 +47,7 @@ class Makefile(object):
         self._rulefp = StringIO()
         self._mrulefp = StringIO()
         self._all = set()
-        self._phony = set(['all', 'clean'])
+        self._phony = set(['all', 'clean', 'FORCE'])
         self._opt_include = set()
         self._qnames = {}
         self._qctr = 0
@@ -71,10 +71,13 @@ class Makefile(object):
             try:
                 func = gensrc.make_self
             except AttributeError:
+                deps = tuple(gensrc.deps)
+                if gensrc.is_regenerated_always:
+                    deps = deps + ('FORCE',)
                 self.add_rule(
-                    gensrc.target, gensrc.deps,
+                    gensrc.target, deps,
                     [[sys.executable, sys.argv[0], 'regen', gensrc.target]],
-                    qname='Regen', phony=gensrc.is_regenerated_always)
+                    qname='Regen')
             else:
                 func(self, build)
         self.add_rule(
@@ -201,6 +204,7 @@ class Makefile(object):
             'clean:\n'
             '\trm -rf {}\n'.format(' '.join(sorted(self._clean)))
         )
+        fp.write('FORCE:\n')
         fp.write(self._rulefp.getvalue())
 
     def opt_include(self, *paths):
