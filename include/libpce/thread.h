@@ -44,6 +44,10 @@ struct pce_lock {
 /* FIXME: Windows Vista has a RW lock
    (and condition variables, and everything else that is good...) */
 
+struct pce_evt {
+    HANDLE e;
+};
+
 #else
 # error "No threading implementation"
 #endif
