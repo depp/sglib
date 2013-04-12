@@ -221,12 +221,6 @@ class Project(object):
         filename = module.filename
         source = build.sourcemodules[module.source]
 
-        ipaths = set()
-        for src in source.sources:
-            ipaths.update(src.header_paths)
-        ipaths = list(ipaths)
-        ipaths.sort()
-
         appfile = obj.FileRef(
             path=filename + '.app',
             sourceTree='BUILT_PRODUCTS_DIR',
@@ -247,7 +241,7 @@ class Project(object):
             'PRODUCT_NAME': filename,
             'USER_HEADER_SEARCH_PATHS':
                 ['$(HEADER_SEARCH_PATHS)'] +
-                [self._cfg.native_path(p) for p in ipaths],
+                [self._cfg.native_path(p) for p in source.header_paths],
         }
         cfg_debug = {
             'COPY_PHASE_STRIP': False,

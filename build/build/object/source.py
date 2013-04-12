@@ -56,11 +56,15 @@ class SourceModule(object):
 
 class FlatSourceModule(object):
     """A flat source module has dependencies only on non-source modules."""
-    __slots__ = ['sources', 'deps']
+    __slots__ = ['sources', 'deps', 'header_paths']
 
     def __init__(self, sources, deps):
         self.sources = sources
         self.deps = deps
+        ipaths = set()
+        for src in self.sources:
+            ipaths.update(src.header_paths)
+        self.header_paths = tuple(sorted(ipaths))
 
 def resolve_sources(modules):
     """Resolve all dependencies among source modules.
