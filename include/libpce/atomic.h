@@ -459,6 +459,7 @@ pce_atomic_fetch_add_acq_rel(pce_atomic_t *p, int x)
 
 #if !defined(PCE_HAS_ATOMIC) && defined(_MSC_VER)
 #define PCE_HAS_ATOMIC 1
+#include <intrin.h>
 
 struct pce_atomic_s {
     volatile long v;
