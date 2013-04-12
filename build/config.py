@@ -145,6 +145,16 @@ def template_sglib(module, buildinfo, cfg, proj):
                     '{} ({})'.format(filename, APPS[app])]
             else:
                 amod.info['filename'] = [filename]
+    elif target_os == 'windows':
+        args = {'default-args.{}'.format(n+1):
+                ('/D' + k + '=',) + v
+                for n, (k, v) in enumerate(cvars.items())}
+        for app, amod in apps:
+            amod.info.update(args)
+            if app != 'windows':
+                amod.info['filename'] = ['{} {}'.format(filename, APPS[app])]
+            else:
+                amod.info['filename'] = [filename]
     else:
         raise Exception('unsupported os: {}'.format(target_os))
 
