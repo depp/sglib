@@ -3,8 +3,6 @@ import os
 import re
 from build.error import ConfigError, format_block
 
-__all__ = ['getproc', 'getoutput', 'run', 'escape']
-
 PROC_CACHE = {}
 def find_exe(name):
     """Find the given executable, or return None if not found."""
@@ -13,16 +11,25 @@ def find_exe(name):
         return PROC_CACHE[name]
     except KeyError:
         pass
+    pathext = os.getenv('PATHEXT')
+    if pathext:
+        pathexts = pathext.split(os.path.pathsep)
+    else:
+        pathexts = []
     for path in os.getenv('PATH').split(os.path.pathsep):
         if not path:
             continue
         fullpath = os.path.join(path, name)
         if os.access(fullpath, os.R_OK | os.X_OK):
-            break
-    else:
-        return None
-    PROC_CACHE[name] = fullpath
-    return fullpath
+            PROC_CACHE[name] = fullpath
+            return fullpath
+        for pathext in pathexts:
+            if not pathext:
+                continue
+            extpath = fullpath + pathext
+            if os.access(extpath, os.R_OK | os.X_OK):
+                PROC_CACHE[name] = extpath
+                return extpath
 
 # POSIX: special are |&;<>()$\\\"' *?[#~=%
 #        non-special are !+,-./:@]^_`{}
