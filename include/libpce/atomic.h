@@ -520,14 +520,22 @@ PCE_INLINE
 int
 pce_atomic_fetch_add_acquire(pce_atomic_t *p, int x)
 {
+#ifdef _M_IX86
+    return (int) _InterlockedExchangeAdd(&p->v, x);
+#else
     return (int) _InterlockedExchangeAdd_acq(&p->v, x);
+#endif
 }
 
 PCE_INLINE
 int
 pce_atomic_fetch_add_release(pce_atomic_t *p, int x)
 {
+#ifdef _M_IX86
+    return (int) _InterlockedExchangeAdd(&p->v, x);
+#else
     return (int) _InterlockedExchangeAdd_rel(&p->v, x);
+#endif
 }
 
 /*
