@@ -81,6 +81,13 @@ def dump_group(parent, group):
         elt.attrib['path'] = ipath.path.path
         if ipath.public:
             elt.attrib['public'] = 'true'
+    for def_ in group.defs:
+        elt = etree.SubElement(parent, 'define')
+        elt.attrib['name'] = def_.name
+        if def_.value is not None:
+            elt.attrib['value'] = def_.value
+        if def_.public:
+            elt.attrib['public'] = 'true'
     for src in group.sources:
         elt = etree.SubElement(parent, 'src')
         elt.attrib['path'] = src.path.path

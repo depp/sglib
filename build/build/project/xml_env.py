@@ -14,6 +14,7 @@ TAGS = {
     'module': 'path id type',
 
     'header-path': 'path public',
+    'define': 'name value public',
     'key': 'name',
     'path': 'path',
     'require': 'module public',
@@ -137,6 +138,13 @@ class GroupMixin(object):
         path = get_path(self.path, attrib, required=True)
         public = get_bool(attrib, 'public')
         self.group.header_paths.append(data.HeaderPath(path, public))
+        return null_env
+
+    def add_define(self, attrib, loc):
+        name = get_attrib(attrib, 'name')
+        value = attrib.get('value')
+        public = get_bool(attrib, 'public')
+        self.group.defs.append(data.Def(name, value, public))
         return null_env
 
     def add_require(self, attrib, loc):

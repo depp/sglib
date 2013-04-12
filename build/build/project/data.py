@@ -23,6 +23,7 @@ EXT_SRCTYPE = {'.' + ext: type for type, exts in {
 Source = collections.namedtuple('Source', 'path type')
 Requirement = collections.namedtuple('Requirement', 'module public')
 HeaderPath = collections.namedtuple('HeaderPath', 'path public')
+Def = collections.namedtuple('Def', 'name value public')
 
 dummy = object()
 def info_getter(func):
@@ -159,11 +160,13 @@ class Module(object):
         return obj
 
 class Group(object):
-    __slots__ = ['sources', 'requirements', 'header_paths', 'groups', 'loc']
+    __slots__ = ['sources', 'requirements', 'header_paths', 'defs',
+                 'groups', 'loc']
     def __init__(self, loc=None):
         self.sources = []
         self.requirements = []
         self.header_paths = []
+        self.defs = []
         self.groups = []
         self.loc = loc
     def all_groups(self):
@@ -187,6 +190,7 @@ class Group(object):
             HeaderPath(ipath.path.prefix(path), ipath.public)
             for ipath in self.header_paths]
         obj.groups = [group.prefix_path(path) for group in self.groups]
+        obj.defs = list(self.defs)
         return obj
 
 class BuildFile(object):

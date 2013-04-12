@@ -2,41 +2,47 @@ from build.error import ConfigError
 import collections
 
 Source = collections.namedtuple(
-    'Source', 'path type header_paths modules external')
+    'Source', 'path type header_paths modules defs external')
 
 class SourceModule(object):
     __slots__ = ['sources', 'public_modules', 'private_modules',
-                 'header_paths']
+                 'header_paths', 'defs']
 
     def __init__(self):
         self.sources = []
         self.public_modules = set()
         self.private_modules = set()
         self.header_paths = set()
+        self.defs = {}
 
     @classmethod
     def parse(class_, mod, *, external=False):
         smod = class_()
-        public_ipath = set()
-        public_req = set()
-        private_req = set()
-        def add_group(group, ipaths, reqs):
+        def add_group(group, ipaths, reqs, defs):
             ipaths = ipaths.union(p.path for p in group.header_paths)
-            public_ipath.update(p.path for p in group.header_paths
-                                if p.public)
+            smod.header_paths.update(p.path for p in group.header_paths
+                                     if p.public)
             reqs = reqs.union(m.module for m in group.requirements)
-            private_req.update(m.module for m in group.requirements)
-            public_req.update(m.module for m in group.requirements
-                              if m.public)
+            smod.private_modules.update(m.module for m in group.requirements)
+            smod.public_modules.update(m.module for m in group.requirements
+                                       if m.public)
+            if group.defs:
+                defs = dict(defs)
+                for def_ in group.defs:
+                    if def_.public:
+                        if (def_.name in smod.defs and
+                            smod.defs[def_.name] != def_.value):
+                            raise ConfigError(
+                                'conflicting preprocessor definiton: {!r}'
+                                .format(def_.name))
+                        smod.defs[def_.name] = def_.value
+                    defs[def_.name] = def_.value
             smod.sources.extend(
-                Source(src.path, src.type, ipaths, reqs, external)
+                Source(src.path, src.type, ipaths, reqs, defs, external)
                 for src in group.sources)
             for subgroup in group.groups:
-                add_group(subgroup, ipaths, reqs)
-        add_group(mod.group, frozenset(), frozenset())
-        smod.public_modules.update(public_req)
-        smod.private_modules.update(private_req)
-        smod.header_paths.update(public_ipath)
+                add_group(subgroup, ipaths, reqs, defs)
+        add_group(mod.group, frozenset(), frozenset(), {})
         return smod
 
     def dump(self):
@@ -56,15 +62,23 @@ class SourceModule(object):
 
 class FlatSourceModule(object):
     """A flat source module has dependencies only on non-source modules."""
-    __slots__ = ['sources', 'deps', 'header_paths']
+    __slots__ = ['sources', 'deps', 'header_paths', 'defs']
 
     def __init__(self, sources, deps):
         self.sources = sources
         self.deps = deps
         ipaths = set()
+        defs = {}
         for src in self.sources:
             ipaths.update(src.header_paths)
+            for k, v in src.defs.items():
+                if k in defs and defs[k] != v:
+                    raise ConfigError(
+                        'conflicting preprocessor definiton: {!r}'
+                        .format(def_.name))
+                defs[k] = v
         self.header_paths = tuple(sorted(ipaths))
+        self.defs = defs
 
 def resolve_sources(modules):
     """Resolve all dependencies among source modules.
@@ -88,6 +102,7 @@ def resolve_sources(modules):
                     dep_public[i].add(j)
     intern_srcmods = {}
     intern_ipaths = {}
+    intern_defs = {}
     sources = {}
     msources = {}
     for mname in modules:
@@ -100,6 +115,7 @@ def resolve_sources(modules):
                 except KeyError:
                     pass
             ipaths = set(src.header_paths)
+            defs = dict(src.defs)
             for srcmod in srcmods:
                 try:
                     m = modules[srcmod]
@@ -107,12 +123,20 @@ def resolve_sources(modules):
                     pass
                 else:
                     ipaths.update(m.header_paths)
+                    for k, v in m.defs.items():
+                        if k in defs and defs[k] != v:
+                            raise ConfigError(
+                                'conflicting preprocessor definiton: {!r}'
+                                .format(k))
+                        defs[k] = v
             srcmods.difference_update(modules)
             ipaths = tuple(sorted(ipaths))
             ipaths = intern_ipaths.setdefault(ipaths, ipaths)
             srcmods = tuple(sorted(srcmods))
             srcmods = intern_srcmods.setdefault(srcmods, srcmods)
-            src2 = Source(src.path, src.type, ipaths, srcmods, src.external)
+            defs = intern_defs.setdefault(tuple(sorted(defs.items())), defs)
+            src2 = Source(src.path, src.type, ipaths, srcmods,
+                          defs, src.external)
             try:
                 src3 = sources[src.path]
             except KeyError:
