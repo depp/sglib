@@ -38,11 +38,10 @@ sg_workqueue_run(void *ptr)
     void *task;
     int timedout = 0;
     DWORD dw;
-    BOOL r;
     HRESULT hr;
 
     task = malloc(q->tasksize);
-    if (!task) goto error;
+    if (!task) goto err;
 
     hr = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
     if (FAILED(hr)) goto err;
@@ -60,7 +59,7 @@ sg_workqueue_run(void *ptr)
             LeaveCriticalSection(&q->impl.cs);
             dw = WaitForSingleObject(q->impl.evt, 1000);
             EnterCriticalSection(&q->impl.cs);
-            p->thread_idle -= 1;
+            q->thread_idle -= 1;
             switch (dw) {
             case WAIT_OBJECT_0:
                 timedout = 0;

@@ -138,7 +138,7 @@ sg_audio_ofile_write(struct sg_audio_ofile *afp,
     size_t nlen, len, pos;
     int i, r;
 
-    if (BYTE_ORDER == BIG_ENDIAN) {
+    if (PCE_BYTE_ORDER == PCE_BIG_ENDIAN) {
         if (afp->tmplen < nframe) {
             free(afp->tmp);
             afp->tmp = NULL;

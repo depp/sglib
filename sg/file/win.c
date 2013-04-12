@@ -1,8 +1,8 @@
 /* Copyright 2012 Dietrich Epp <depp@zdome.net> */
 /* Windows file / path code.  */
-#include "error.h"
-#include "file_impl.h"
-#include "file.h"
+#include "sg/error.h"
+#include "sg/file.h"
+#include "impl.h"
 
 #include <Windows.h>
 #include <stdio.h>

@@ -36,7 +36,7 @@ sg_audio_pcm_copy_s16(short *dest, const void *src,
 
     sp = src;
     for (i = 0; i < count; ++i) {
-        if (BYTE_ORDER == LITTLE_ENDIAN)
+        if (PCE_BYTE_ORDER == PCE_LITTLE_ENDIAN)
             dest[i] = (sp[i*2] << 8) | sp[i*2+1];
         else
             dest[i] = sp[i*2] | (sp[i*2+1] << 8);
@@ -72,7 +72,7 @@ sg_audio_pcm_copy_f32(short *SG_RESTRICT dest, const void *SG_RESTRICT src,
     } x;
 
     sp = src;
-    if (littleendian == (BYTE_ORDER == LITTLE_ENDIAN)) {
+    if (littleendian == (PCE_BYTE_ORDER == PCE_LITTLE_ENDIAN)) {
         for (i = 0; i < count; ++i) {
             x.c[0] = sp[i*4+0];
             x.c[1] = sp[i*4+1];
