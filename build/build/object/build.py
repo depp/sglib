@@ -12,7 +12,7 @@ class Build(object):
     """
     __slots__ = ['_nestsrc', 'sourcemodules', 'sources', 'modules',
                  'targets', 'generated_sources', '_counter',
-                 '_names', '_bundles', 'cfg', 'proj',
+                 '_names', '_bundles', 'bundles', 'cfg', 'proj',
                  '_lib_dir', '_builders']
 
     def __init__(self, cfg, proj, builders):
@@ -25,6 +25,7 @@ class Build(object):
         self._counter = 0
         self._names = set()
         self._bundles = None
+        self.bundles = set()
         self.cfg = cfg
         self.proj = proj
         self._lib_dir = proj.info.get_path('lib-dir', None)
@@ -109,10 +110,12 @@ def build_source(build, mod, name):
     build.add_sources(name, mod)
 
 def build_bundled_library(build, mod, name):
-    path = build.find_bundled_library(mod.info.get_string('pattern'))
+    pattern = mod.info.get_string('pattern')
+    path = build.find_bundled_library(pattern)
     if path is None:
         raise ConfigError('library is not bundled: {}'.format(pattern))
     build.add_sources(name, mod.prefix_path(path), external=True)
+    build.bundles.add(pattern)
     return path
 
 def build_multi(build, mod, name):
