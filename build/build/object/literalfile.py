@@ -2,6 +2,7 @@ from . import GeneratedSource
 
 class LiteralFile(GeneratedSource):
     __slots__ = ['contents']
+    is_regenerated = False
 
     def write(self, fp, cfg):
         fp.write(self.contents)
