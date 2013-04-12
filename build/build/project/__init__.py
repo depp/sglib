@@ -70,3 +70,13 @@ class Project(object):
         """Generate a unique module name."""
         self._counter += 1
         return Href(None, 'proj-{}'.format(str(self._counter)))
+
+    @property
+    def filename(self):
+        """The filename to use for project files."""
+        info = self.info
+        if 'filename' in info:
+            return info.get_string('filename')
+        elif 'name' in info:
+            return info.get_string('name')
+        raise ConfigError('project lacks name or filename attribute')

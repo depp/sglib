@@ -11,13 +11,7 @@ class Target(object):
     def gen_build(self, cfg, proj):
         from . import project
         from build.object import build
-        if 'filename' in proj.info:
-            filename = proj.info.get_string('filename')
-        elif 'name' in proj.info:
-            filename = proj.info.get_string('name')
-        else:
-            raise ConfigError('project lacks name or filename attribute')
-        from build.object.build import Build
+        filename = proj.filename
         build = build.Build(cfg, proj, BUILDERS)
         xcproj = project.Project(cfg)
         xcpath = Path('/', 'builddir').join(filename + '.xcodeproj')
