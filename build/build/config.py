@@ -1,5 +1,5 @@
 from build.error import ConfigError
-from build.path import Path
+from build.path import Path, split_native
 import collections
 import argparse
 import sys
