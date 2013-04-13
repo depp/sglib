@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<external-library>
-  <name>OpenGL</name>
-  <framework>OpenGL</framework>
-  <pkg-config>gl</pkg-config>
-</external-library>

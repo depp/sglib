@@ -1,5 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<external-library>
-  <name>LibPNG</name>
-  <pkg-config>libpng12</pkg-config>
-</external-library>

@@ -1,5 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<external-library>
-  <name>GTK+ OpenGL Extension</name>
-  <pkg-config>gtkglext-1.0</pkg-config>
-</external-library>
