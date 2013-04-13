@@ -17,48 +17,31 @@ class Target(nix.MakefileTarget):
     def make_application_bundle(self, makefile, build, module):
         source = build.sourcemodules[module.source]
         filename = module.filename
-
-        build_env = env.merge_env(
-            [self.base_env] +
-            [build.modules[req].env for req in source.deps])
-
-        objdirs = self.get_dirs('obj')
-        exedirs = self.get_dirs('exe')
-        exes = []
-        for arch in self.archs:
-            objdir = objdirs[arch]
-            exedir = exedirs[arch]
-            objs = []
-            src_types = set()
-            for src in source.sources:
-                if src.type in ('c', 'c++', 'objc', 'objc++'):
-                    src_types.add(src.type)
-                    opath = objdir.join(src.path.to_posix()).withext('.o')
-                    objs.append(opath)
-                elif src.type in ('h', 'h++'):
-                    pass
-                else:
-                    build.cfg.warn(
-                        'cannot add file to executable: {}'
-                        .format(src.path))
-
-            arch_env = env.merge_env(
-                [build_env, {'LDFLAGS': ('-arch', arch)}])
-            exepath = exedir.join(filename)
-
-            makefile.add_rule(
-                exepath, objs,
-                [nix.ld_cmd(arch_env, exepath, objs, src_types)],
-                qname='LD')
-            exes.append(exepath)
+        archs = self.archs
 
         appdeps = []
         proddir = Path('/build/products', 'builddir')
         apppath = proddir.join(filename + '.app')
 
+        build_env = env.merge_env(
+            [self.base_env] +
+            [build.modules[req].env for req in source.deps])
+
         rsrcpath = apppath.join('Contents/Resources')
+        objdirs = self.get_dirs('obj')
+        exedirs = self.get_dirs('exe')
+        objs = {arch: [] for arch in archs}
+        exes = {arch: exedir.join(filename) for arch, exedir in exedirs.items()}
+        src_types = set()
         for src in source.sources:
-            if src.type == 'xib':
+            if src.type in ('c', 'c++', 'objc', 'objc++'):
+                src_types.add(src.type)
+                for arch, objdir in objdirs.items():
+                    opath = objdir.join(src.path.to_posix()).withext('.o')
+                    objs[arch].append(opath)
+            elif src.type in ('h', 'h++'):
+                pass
+            elif src.type == 'xib':
                 xibsrc = src.path
                 nibdest = rsrcpath.join(xibsrc.basename()).withext('.nib')
                 makefile.add_rule(
@@ -76,7 +59,20 @@ class Target(nix.MakefileTarget):
                     destpath, [srcpath], [['cp', srcpath, destpath]],
                     qname='Copy')
                 appdeps.append(destpath)
+            else:
+                build.cfg.warn(
+                    'cannot add file to executable: {}'
+                    .format(src.path))
 
+        for arch in archs:
+            arch_env = env.merge_env(
+                [build_env, {'LDFLAGS': ('-arch', arch)}])
+            makefile.add_rule(
+                exes[arch], objs[arch],
+                [nix.ld_cmd(arch_env, exes[arch], objs[arch], src_types)],
+                qname='LD')
+
+        exes = list(exes.values())
         exe1path = Path('/build/exe', 'builddir').join(filename)
         makefile.add_rule(
             exe1path, exes,
@@ -135,7 +131,7 @@ class Target(nix.MakefileTarget):
                                     depfile=dpath, external=src.external)],
                         srctype=src.type)
                     makefile.opt_include(dpath)
-            elif src.type in ('h', 'h++', 'xib'):
+            elif src.type in ('h', 'h++', 'xib', 'resource'):
                 pass
             else:
                 build.cfg.warn(
