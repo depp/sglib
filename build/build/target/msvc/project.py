@@ -15,6 +15,12 @@ def condition(config, plat):
     assert plat in PLATS
     return "'$(Configuration)|$(Platform)'=='%s|%s'" % (config, plat)
 
+SOURCE_TYPES = {kk: (n, v) for n, (k, v) in enumerate([
+    ('c c++', 'ClCompile'),
+    ('h h++', 'ClInclude'),
+    ('rc', 'ResourceCompile'),
+]) for kk in k.split()}
+
 def proj_import(root, path):
     SubElement(root, 'Import', {'Project': path})
 
@@ -177,15 +183,22 @@ def make_executable_project(build, target):
                 for aname, aval in group.items():
                     SubElement(gelt, aname).text = aval
 
-    cgroup = SubElement(root, 'ItemGroup')
-    hgroup = SubElement(root, 'ItemGroup')
-
+    groups = {}
     for src in source.sources:
-        attr = {'Include': build.cfg.target_path(src.path)}
-        if src.type in ('c', 'c++'):
-            SubElement(cgroup, 'ClCompile', attr)
-        elif src.type in ('h', 'h++'):
-            SubElement(hgroup, 'ClInclude', attr)
+        try:
+            index, tag = SOURCE_TYPES[src.type]
+        except KeyError:
+            build.cfg.warn(
+                'cannot add file to executable: {}'.format(src.path))
+            continue
+        try:
+            group = groups[index]
+        except KeyError:
+            group = Element('ItemGroup')
+            groups[index] = group
+        SubElement(group, tag, {'Include': build.cfg.target_path(src.path)})
+    for n, elt in sorted(groups.items()):
+        root.append(elt)
 
     proj_import(root, '$(VCTargetsPath)\\Microsoft.Cpp.targets')
 
@@ -200,19 +213,21 @@ def make_executable_filters(build, target):
         'xmlns': XMLNS,
         'ToolsVersion': '4.0',
     })
-    cgroup = SubElement(root, 'ItemGroup')
-    hgroup = SubElement(root, 'ItemGroup')
-    types = {kk: v for k, v in {
-        'c c++': (cgroup, 'ClCompile'),
-        'h h++': (hgroup, 'ClInclude'),
-    }.items() for kk in k.split()}
+    groups = {}
     for src in source.sources:
+        try:
+            index, tag = SOURCE_TYPES[src.type]
+        except KeyError:
+            build.cfg.warn(
+                'cannot add file to executable: {}'.format(src.path))
+            continue
+        try:
+            group = groups[index]
+        except KeyError:
+            group = Element('ItemGroup')
+            groups[index] = group
         basename, filename = src.path.split()
         filter = basename.path[1:].replace('/', '\\') or 'Other Sources'
-        try:
-            group, tag = types[src.type]
-        except KeyError:
-            continue
         elt = SubElement(group, tag, {
             'Include': build.cfg.target_path(src.path)})
         SubElement(elt, 'Filter').text = filter
@@ -223,6 +238,8 @@ def make_executable_filters(build, target):
                 break
             filter = filter[:i]
         filters.add(filter)
+    for n, elt in sorted(groups.items()):
+        root.append(elt)
     fgroup = SubElement(root, 'ItemGroup')
     for filter in sorted(filters):
         elt = SubElement(fgroup, 'Filter', {'Include': filter})

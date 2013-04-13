@@ -149,6 +149,17 @@ def template_sglib(module, buildinfo, cfg, proj):
         args = {'default-args.{}'.format(n+1):
                 ('/D' + k + '=',) + v
                 for n, (k, v) in enumerate(cvars.items())}
+
+        icon = info.get_path('icon.windows', None)
+        if icon is not None:
+            rcpath = rsrcdir.join(filename + '.rc')
+            rcmod = data.Module(None, 'literal-file')
+            rcmod.info['target'] = [rcpath]
+            rcmod.info['contents'] = [
+                '1 ICON "{}"\n'.format(cfg.target_path(icon))]
+            yield rcmod
+            src.group.sources.append(data.Source(rcpath, 'rc'))
+
         for app, amod in apps:
             amod.info.update(args)
             if app != 'windows':
