@@ -90,7 +90,7 @@ def template_sglib(module, buildinfo, cfg, proj):
         apps.append((app, amod))
         amod.group.requirements = [
             data.Requirement(x, False) for x in
-            [src.name, Href(moddir.join('sglib-' + app), None)]]
+            [src.name, Href(moddir.join1('sglib-' + app), None)]]
         amod.info['name'] = ('{} ({})'.format(name, APPS[app]),)
 
     if target_os == 'linux':
@@ -116,14 +116,14 @@ def template_sglib(module, buildinfo, cfg, proj):
             icon_name = None
 
         # Generate property list
-        plistpath = rsrcdir.join(filename + '.plist')
+        plistpath = rsrcdir.join1(filename, '.plist')
         plist = data.Module(None, 'literal-file')
         plist.info['target'] = [plistpath]
         plist.info['contents'] = [gen_info_plist(info, filename, icon_name)]
         yield plist
 
         # Generate XIB file
-        xibpath = rsrcdir.join(filename + '.xib')
+        xibpath = rsrcdir.join1(filename, '.xib')
         xib = data.Module(None, 'template-file')
         xib.info['target'] = [xibpath]
         xib.info['source'] = [sgroot.join('sg/osx/MainMenu.xib')]
@@ -152,7 +152,7 @@ def template_sglib(module, buildinfo, cfg, proj):
 
         icon = info.get_path('icon.windows', None)
         if icon is not None:
-            rcpath = rsrcdir.join(filename + '.rc')
+            rcpath = rsrcdir.join1(filename, '.rc')
             rcmod = data.Module(None, 'literal-file')
             rcmod.info['target'] = [rcpath]
             rcmod.info['contents'] = [

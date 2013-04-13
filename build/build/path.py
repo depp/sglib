@@ -141,7 +141,7 @@ class Path(object):
                 if m:
                     raise ValueError(
                         'path contains special character: {!r}'
-                        .format(m.group(0), part))
+                        .format(m.group(0)))
                 if part.endswith('.') or part.endswith(' '):
                     raise ValueError(
                         'invalid path component: {!r}'.format(part))
@@ -155,6 +155,28 @@ class Path(object):
             parts.append('')
         parts.insert(0, '')
         return Path('/'.join(parts), self.base)
+
+    def join1(self, filename, ext=''):
+        """Create a path by appending a single filename."""
+        if not filename:
+            raise ValueError('empty filename')
+        if filename.startswith('.'):
+            raise ValueError('filename starts with period')
+        m = PATH_SPECIAL.search(filename)
+        if m:
+            raise ValueError(
+                'filename contains special character: {!r}'
+                .format(m.group(0)))
+        if filename.endswith('.') or filename.endswith(' '):
+            raise ValueError('invalid filename: {!r}'.format(filename))
+        i = filename.find('.')
+        base = filename[:i] if i >= 0 else filename
+        if base.upper() in PATH_SPECIAL_NAME:
+            raise ValueError(
+                'invalid filename: {!r}'.format(filename))
+        if self.path.endswith('/'):
+            return Path('{}{}{}'.format(self.path, filename, ext), self.base)
+        return Path('{}/{}{}'.format(self.path, filename, ext), self.base)
 
     def prefix(self, path):
         """Add a prefix to this path."""

@@ -97,7 +97,7 @@ class Build(object):
                 if fname.startswith('.'):
                     continue
                 try:
-                    bdir = self._lib_dir.join(fname)
+                    bdir = self._lib_dir.join1(fname)
                 except ValueError:
                     continue
                 if os.path.isdir(self.cfg.native_path(bdir)):

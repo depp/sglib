@@ -105,9 +105,9 @@ class Target(nix.MakefileTarget):
             build_env.append(build.modules[req].env)
         build_env = env.merge_env(build_env)
 
-        exepath = exedir.join(filename)
-        debugpath = proddir.join(filename + '.dbg')
-        prodpath = proddir.join(filename)
+        exepath = exedir.join1(filename)
+        debugpath = proddir.join1(filename, '.dbg')
+        prodpath = proddir.join1(filename)
 
         makefile.add_rule(
             exepath, objs,
@@ -125,7 +125,7 @@ class Target(nix.MakefileTarget):
               exepath, prodpath]],
             qname='ObjCopy')
 
-        scriptpath = Path('/', 'builddir').join(filename)
+        scriptpath = Path('/', 'builddir').join1(filename)
         script = RunScript(
             target=scriptpath,
             exe_name=filename,

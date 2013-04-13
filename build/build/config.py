@@ -275,7 +275,7 @@ class ConfigTool(object):
         if not projfile:
             raise ConfigError('not a project file: {!r}'
                               .format(sys.argv[2]))
-        projfile = Path('/', 'srcdir').join(projfile)
+        projfile = Path('/', 'srcdir').join1(projfile)
 
         args = self.parser.parse_args(sys.argv[3:])
         cfg = Config(srcdir, projfile, args)
@@ -300,7 +300,8 @@ class ConfigTool(object):
         if cfg.verbosity >= 1:
             self.dump_flags(flags)
             if target.archs is not None:
-                print('Build architectures: {}'.format(', '.join(target.archs)),
+                print('Build architectures: {}'
+                      .format(', '.join(target.archs)),
                       file=sys.stderr)
 
         return cfg, args

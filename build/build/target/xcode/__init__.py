@@ -20,7 +20,7 @@ class Target(object):
         filename = proj.filename
         build = build.Build(cfg, proj, BUILDERS)
         xcproj = project.Project(cfg)
-        xcpath = Path('/', 'builddir').join(filename + '.xcodeproj')
+        xcpath = Path('/', 'builddir').join1(filename, '.xcodeproj')
         xcproj.add_build(build, xcpath)
         return build
 

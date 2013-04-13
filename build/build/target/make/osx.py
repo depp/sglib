@@ -18,7 +18,7 @@ class Target(nix.MakefileTarget):
 
     def get_dirs(self, name):
         builddir = Path('/build', 'builddir')
-        return {arch: builddir.join('{}-{}'.format(name, arch))
+        return {arch: builddir.join1('{}-{}'.format(name, arch))
                 for arch in self.archs}
 
     def make_application_bundle(self, makefile, build, module):
@@ -28,7 +28,7 @@ class Target(nix.MakefileTarget):
 
         appdeps = []
         proddir = Path('/build/products', 'builddir')
-        apppath = proddir.join(filename + '.app')
+        apppath = proddir.join1(filename, '.app')
 
         build_env = env.merge_env(
             [self.base_env] +
@@ -38,7 +38,8 @@ class Target(nix.MakefileTarget):
         objdirs = self.get_dirs('obj')
         exedirs = self.get_dirs('exe')
         objs = {arch: [] for arch in archs}
-        exes = {arch: exedir.join(filename) for arch, exedir in exedirs.items()}
+        exes = {arch: exedir.join1(filename)
+                for arch, exedir in exedirs.items()}
         src_types = set()
         for src in source.sources:
             if src.type in ('c', 'c++', 'objc', 'objc++'):
@@ -50,7 +51,7 @@ class Target(nix.MakefileTarget):
                 pass
             elif src.type == 'xib':
                 xibsrc = src.path
-                nibdest = rsrcpath.join(xibsrc.basename()).withext('.nib')
+                nibdest = rsrcpath.join1(xibsrc.basename(), '.nib')
                 makefile.add_rule(
                     nibdest, [xibsrc],
                     [['/Developer/usr/bin/ibtool',
@@ -61,7 +62,7 @@ class Target(nix.MakefileTarget):
                 appdeps.append(nibdest)
             elif src.type == 'resource':
                 srcpath = src.path
-                destpath = rsrcpath.join(srcpath.basename())
+                destpath = rsrcpath.join1(srcpath.basename())
                 makefile.add_rule(
                     destpath, [srcpath], [['cp', srcpath, destpath]],
                     qname='Copy')
@@ -80,20 +81,20 @@ class Target(nix.MakefileTarget):
                 qname='LD')
 
         exes = list(exes.values())
-        exe1path = Path('/build/exe', 'builddir').join(filename)
+        exe1path = Path('/build/exe', 'builddir').join1(filename)
         makefile.add_rule(
             exe1path, exes,
             [['lipo'] + exes + ['-create', '-output', exe1path]],
             qname='Lipo')
 
-        exe2path = apppath.join('Contents/MacOS', filename)
+        exe2path = apppath.join('Contents/MacOS').join1(filename)
         makefile.add_rule(
             exe2path, [exe1path],
             [['strip', '-u', '-r', '-o', exe2path, exe1path]],
             qname='Strip')
         appdeps.append(exe2path)
 
-        debugpath = proddir.join(filename + '.app.dSYM')
+        debugpath = proddir.join1(filename, '.app.dSYM')
         makefile.add_rule(
             debugpath, [exe1path],
             [['dsymutil', exe1path, '-o', debugpath]],

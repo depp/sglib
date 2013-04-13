@@ -286,7 +286,7 @@ EXECUTABLE_FILES = [
 ]
 
 def make_executable(build, target):
-    path = Path('/', 'builddir').join(target.filename)
+    path = Path('/', 'builddir').join1(target.filename)
     for ext, func in EXECUTABLE_FILES:
         build.add_generated_source(LiteralFile(
             target=path.addext(ext),

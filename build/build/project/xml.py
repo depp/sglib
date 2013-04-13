@@ -137,6 +137,6 @@ def parse_file(cfg, path):
     if not basename:
         raise ValueError('expected file, not directory name')
     buildfile = data.BuildFile()
-    _parse_file(cfg.native_path(dirname.join(basename + '.xml')),
+    _parse_file(cfg.native_path(dirname.join1(basename, '.xml')),
                 xml_env.RootEnv(Info(cfg, path), dirname, buildfile))
     return buildfile
