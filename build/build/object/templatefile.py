@@ -9,7 +9,7 @@ class TemplateFile(GeneratedSource):
 
     def write(self, fp, cfg):
         from build import template
-        with open(cfg.native_path(self.source)) as infp:
+        with open(cfg.native_path(self.source), encoding='UTF-8') as infp:
             srcdata = infp.read()
         fp.write(template.expand(srcdata, self.tvars))
 

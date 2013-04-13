@@ -230,7 +230,7 @@ def library_search(build, src_lang, src_prologue, src_body,
         src = os.path.join(tempdir, filename)
         obj = os.path.join(tempdir, 'config.o')
         out = os.path.join(tempdir, 'config.out')
-        with open(src, 'w') as fp:
+        with open(src, 'w', encoding='UTF-8') as fp:
             fp.write(srctext)
         for flags in flagsets:
             test_env = env.merge_env([base_env, flags])

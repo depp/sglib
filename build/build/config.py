@@ -300,7 +300,7 @@ class ConfigTool(object):
         if target.is_regenerated_always:
             del fp
             try:
-                with open(targetpath, 'r') as fp:
+                with open(targetpath, 'r', encoding='UTF-8') as fp:
                     curtext = fp.read()
             except OSError:
                 pass
@@ -309,7 +309,7 @@ class ConfigTool(object):
                     return
         if os.path.dirname(targetpath):
             os.makedirs(os.path.dirname(targetpath), exist_ok=True)
-        with open(targetpath, 'w') as fp:
+        with open(targetpath, 'w', encoding='UTF-8') as fp:
             fp.write(text)
 
     def run_config(self, cfg, args):
