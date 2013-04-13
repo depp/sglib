@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module type="multi">
+  <key name="desc">Pango</key>
+
+  <key name="pkg-deb">libpango1.0-dev</key>
+  <key name="pkg-rpm">pango-devel</key>
+  <key name="pkg-gentoo">x11-libs/pango</key>
+  <key name="pkg-arch">pango</key>
+
+  <module type="pkg-config">
+    <key name="spec">pangocairo</key>
+  </module>
+</module>

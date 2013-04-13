@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<build>
+  <module id="AppKit" type="framework">
+    <key name="desc">Application Kit framework</key>
+    <key name="filename">AppKit</key>
+  </module>
+
+  <module id="ApplicationServices" type="framework">
+    <key name="desc">Application Services framework</key>
+    <key name="filename">ApplicationServices</key>
+  </module>
+
+  <module id="AudioUnit" type="framework">
+    <key name="desc">Audio Unit framework</key>
+    <key name="filename">AudioUnit</key>
+  </module>
+
+  <module id="Carbon" type="framework">
+    <key name="desc">Carbon framework</key>
+    <key name="filename">Carbon</key>
+  </module>
+
+  <module id="CoreAudio" type="framework">
+    <key name="desc">Core Audio framework</key>
+    <key name="filename">CoreAudio</key>
+  </module>
+
+  <module id="CoreVideo" type="framework">
+    <key name="desc">Core Video framework</key>
+    <key name="filename">CoreVideo</key>
+  </module>
+
+  <module id="Foundation" type="framework">
+    <key name="desc">Foundation framework</key>
+    <key name="filename">Foundation</key>
+  </module>
+
+  <module id="OpenGL" type="framework">
+    <key name="desc">OpenGL framework</key>
+    <key name="filename">OpenGL</key>
+  </module>
+</build>

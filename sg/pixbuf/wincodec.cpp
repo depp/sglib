@@ -1,9 +1,9 @@
 /* Copyright 2012 Dietrich Epp <depp@zdome.net> */
-#include "defs.h"
+#include "sg/defs.h"
 
-#include "error.h"
-#include "log.h"
-#include "pixbuf.h"
+#include "sg/error.h"
+#include "sg/log.h"
+#include "sg/pixbuf.h"
 #include <wincodec.h>
 
 #pragma comment(lib, "WindowsCodecs.lib")
@@ -135,10 +135,18 @@ failed:
 }
 
 int
-sg_pixbuf_loadpng(struct sg_pixbuf *pbuf, const void *data, size_t len,
-                  struct sg_error **err)
+sg_pixbuf_loadpng(struct sg_pixbuf *pbuf, const void *data,
+                  size_t len, struct sg_error **err)
 {
     return sg_pixbuf_loadwincodec(pbuf, data, len, err);
+}
+
+int
+sg_pixbuf_writepng(struct sg_pixbuf *pbuf, struct sg_file *fp,
+                   struct sg_error **err)
+{
+    abort();
+    return -1;
 }
 
 int

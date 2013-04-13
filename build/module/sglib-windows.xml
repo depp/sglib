@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module path="../..">
+  <key name="desc">SGLib Windows Frontend</key>
+  <require module="sglib"/>
+  <group path="sg/windows">
+    <src path="windows.c"/>
+  </group>
+</module>

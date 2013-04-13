@@ -1,8 +1,13 @@
 /* Copyright 2012 Dietrich Epp <depp@zdome.net> */
 #ifndef SG_OPENGL_H
 #define SG_OPENGL_H
+#include "config.h"
 
-#include <GL/glew.h>
+#if defined USE_BUNDLED_GLEW
+# include "GL/glew.h"
+#else
+# include <GL/glew.h>
+#endif
 
 #ifdef __cplusplus
 extern "C" {

@@ -63,7 +63,7 @@ sg_log_console_init(void)
 #include <Windows.h>
 #include <io.h>
 #include <fcntl.h>
-#include "cvar.h"
+#include "sg/cvar.h"
 
 #define BUFFER_SIZE BUFSIZ
 

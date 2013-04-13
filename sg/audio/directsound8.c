@@ -1,11 +1,11 @@
 /* Copyright 2012 Dietrich Epp <depp@zdome.net> */
-#include "audio_mixdown.h"
-#include "audio_system.h"
-#include "audio_sysprivate.h"
-#include "clock.h"
-#include "clock_impl.h"
-#include "error.h"
-#include "log.h"
+#include "sg/audio_mixdown.h"
+#include "sg/audio_system.h"
+#include "sg/clock.h"
+#include "sg/error.h"
+#include "sg/log.h"
+#include "sysprivate.h"
+#include "../core/clock_impl.h"
 #include <assert.h>
 #include <string.h>
 

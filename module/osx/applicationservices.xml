@@ -1,5 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<external-library modid="osx/applicationservices">
-  <name>Application Services framework</name>
-  <framework>ApplicationServices</framework>
-</external-library>

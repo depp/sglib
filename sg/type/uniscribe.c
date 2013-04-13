@@ -1,8 +1,8 @@
 /* Copyright 2012 Dietrich Epp <depp@zdome.net> */
-#include "defs.h"
+#include "sg/defs.h"
 
-#include "pixbuf.h"
-#include "type_impl.h"
+#include "sg/pixbuf.h"
+#include "impl.h"
 #include "libpce/util.h"
 #include <Windows.h>
 #include <usp10.h>

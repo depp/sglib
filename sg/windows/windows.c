@@ -1,15 +1,13 @@
 /* Copyright 2012 Dietrich Epp <depp@zdome.net> */
-#include "base/audio_system.h"
-#include "base/cvar.h"
-#include "base/entry.h"
-#include "base/event.h"
-#include "base/keycode/keytable.h"
+#include "sg/audio_system.h"
+#include "sg/cvar.h"
+#include "sg/entry.h"
+#include "sg/event.h"
+#include "keycode/keytable.h"
 #include <Windows.h>
-#include <gl\gl.h>
-#include <gl\glu.h>
 #include <string.h>
-#include "base/opengl.h"
-#include "base/version.h"
+#include "sg/opengl.h"
+#include "sg/version.h"
 
 #pragma comment(lib, "opengl32.lib")
 #pragma comment(lib, "glu32.lib")
