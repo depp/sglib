@@ -135,7 +135,7 @@ class Target(nix.MakefileTarget):
                                     depfile=dpath, external=src.external)],
                         srctype=src.type)
                     makefile.opt_include(dpath)
-            elif src.type in ('header', 'xib'):
+            elif src.type in ('h', 'h++', 'xib'):
                 pass
             else:
                 build.cfg.warn(
