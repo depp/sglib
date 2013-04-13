@@ -2,8 +2,8 @@ from build.error import ConfigError
 import importlib
 
 MODNAME = {
-    'linux': 'make_nix',
-    'osx': 'make_osx',
+    'linux': 'nix',
+    'osx': 'osx',
 }
 
 def target(subtarget, os, cfg, args):
@@ -13,5 +13,5 @@ def target(subtarget, os, cfg, args):
         modname = MODNAME[subtarget]
     except KeyError:
         raise ConfigError('invalid make subtarget: {!r}'.format(subtarget))
-    mod = importlib.import_module('build.target.' + modname)
+    mod = importlib.import_module('build.target.make.' + modname)
     return mod.Target(subtarget, cfg, args)

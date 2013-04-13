@@ -1,5 +1,5 @@
-from . import nix
-from . import env
+from .. import nix
+from .. import env
 from build.object import GeneratedSource
 from build.path import Path
 from build.shell import escape

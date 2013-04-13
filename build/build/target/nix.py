@@ -14,7 +14,7 @@ class MakefileTarget(object):
         self.os = subtarget
 
     def gen_build(self, cfg, proj):
-        from . import gmake
+        from .make import gmake
         from build.object.build import Build
         build = Build(cfg, proj, BUILDERS)
         makefile = gmake.Makefile(cfg)

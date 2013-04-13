@@ -1,5 +1,5 @@
-from . import nix
-from . import env
+from .. import nix
+from .. import env
 from build.path import Path
 
 class Target(nix.MakefileTarget):
