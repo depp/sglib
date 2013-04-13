@@ -4,6 +4,56 @@ from build.path import Href
 from . import source
 import os
 import importlib
+import sys
+
+class MissingLibrary(ConfigError):
+    __slots__ = ['mod']
+    def __init__(self, *args, mod, **kw):
+        super(MissingLibrary, self).__init__(*args, **kw)
+        self.mod = mod
+
+# There is a certain amount of guessing here...
+LIBRARY_HELP = [
+    ('linux:debian linux:ubuntu linux:mint',
+     'pkg-deb', 'sudo apt-get install {}'),
+
+    ('linux:fedora linux:redhat linux:centos',
+     'pkg-rpm', 'sudo yum install {}'),
+
+    ('linux:gentoo',
+     'pkg-gentoo', 'sudo emerge {}'),
+
+    ('linux:arch',
+     'pkg-arch', 'sudo pacman -S {}'),
+]
+
+def format_missinglibs(libs):
+    import io, platform
+    info = io.StringIO()
+    print(file=info)
+    print('Development files for the following libraries could not be found:',
+          file=info)
+    for lib in libs:
+        desc = lib.info.get_string('desc', '<unknown library>')
+        print('  * {}'.format(desc), file=info)
+    if platform.system() == 'Linux':
+        distro = platform.linux_distribution(
+            full_distribution_name=False)[0]
+        plat = 'linux:' + distro.lower()
+    else:
+        plat = None
+    for plats, key, cmd in LIBRARY_HELP:
+        if plat not in plats.split():
+            continue
+        pkgs = [lib.info.get_string(key) for lib in libs if key in lib.info]
+        print(file=info)
+        print('To install the missing libraries, run the following command:',
+              file=info)
+        print(file=info)
+        print('  {}'.format(cmd.format(' '.join(pkgs))), file=info)
+        print(file=info)
+        break
+    return info.getvalue()
 
 class Build(object):
     """A build object contains all objects required to build a project.
@@ -40,12 +90,28 @@ class Build(object):
                                  .format(k))
             self._builders[k] = v
 
+        errors = 0
+        missinglibs = []
         for mod in proj.modules:
-            builder = self.get_builder(mod.type)
-            builder(self, mod, mod.name)
+            try:
+                builder = self.get_builder(mod.type)
+                builder(self, mod, mod.name)
+            except ConfigError as ex:
+                if isinstance(ex, MissingLibrary):
+                    missinglibs.append(ex.mod)
+                errors += 1
+                ex.write(sys.stderr)
+                sys.stderr.write('\n')
 
         self.sourcemodules, self.sources = \
             source.resolve_sources(self._nestsrc)
+
+        if errors > 0:
+            if missinglibs:
+                details = format_missinglibs(missinglibs)
+            else:
+                details = None
+            raise ConfigError('configuration failed', details)
 
     def get_builder(self, mtype):
         try:
@@ -164,9 +230,10 @@ def build_multi(build, mod, name):
         if any(func() for func in order):
             return
         if not errs:
-            raise ConfigError('could not configure empty module')
-        raise ConfigError('could not configure module',
-                          suberrors=errs)
+            raise MissingLibrary('could not configure empty module',
+                                 mod=mod)
+        raise MissingLibrary('could not configure module',
+                             suberrors=errs, mod=mod)
 
 def build_unsupported(build, mod, name):
     raise ConfigError(
