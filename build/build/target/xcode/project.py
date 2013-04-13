@@ -1,6 +1,6 @@
 from . import obj
 from build.path import Path
-from build.object import GeneratedSource
+from build.object.literalfile import LiteralFile
 from build.error import ConfigError
 import posixpath
 
@@ -111,32 +111,61 @@ TARGET_TYPES = {
     'application_bundle',
 }
 
-class GenProject(GeneratedSource):
-    __slots__ = ['data']
-    is_regenerated = False
-    def write(self, fp, cfg):
-        fp.write(self.data)
-
 class Project(object):
     """Object for creating an Xcode project."""
     __slots__ = ['_groups', '_sources', 'project',
-                 '_frameworks', '_fwk_group', '_cfg']
+                 '_frameworks', '_fwk_group', '_cfg',
+                 '_objectVersion']
 
     def __init__(self, cfg):
+        self._groups = {}
+        self._sources = {}
+        self._frameworks = {}
+        self._cfg = cfg
+
         cfg_base = {
-            'GCC_VERSION': '4.2',
             'WARNING_CFLAGS': ['-Wall', '-Wextra'],
         }
         cfg_debug = {
-            'COPY_PHASE_STRIP': False,
+            'GCC_OPTIMIZATION_LEVEL': 0,
         }
         cfg_release = {
-            'COPY_PHASE_STRIP': True,
+            'ARCHS': ' '.join(self._cfg.target.archs),
+            'GCC_OPTIMIZATION_LEVEL': 's',
         }
+        if self._version <= (10, 6):
+            cfg_base.update({
+                'GCC_VERSION': '4.2',
+            })
+            cfg_debug.update({
+                'ARCHS': '$(NATIVE_ARCH)',
+            })
+            compatibilityVersion = 'Xcode 2.4'
+            self._objectVersion = 42
+        else:
+            cfg_base.update({
+                'GCC_VERSION': 'com.apple.compilers.llvm.clang.1_0',
+            })
+            flags = (
+                'CLANG_WARN_CONSTANT_CONVERSION',
+                'CLANG_WARN_ENUM_CONVERSION',
+                'CLANG_WARN_INT_CONVERSION',
+                'CLANG_WARN__DUPLICATE_METHOD_MATCH',
+                'GCC_WARN_ABOUT_RETURN_TYPE',
+                'GCC_WARN_UNINITIALIZED_AUTOS',
+                'GCC_WARN_UNUSED_VARIABLE',
+            )
+            for flag in flags:
+                cfg_base[flag] = True
+            cfg_debug.update({
+                'ARCHS': '$(NATIVE_ARCH_ACTUAL)',
+            })
+            compatibilityVersion = 'Xcode 3.2'
+            self._objectVersion = 46
 
         products = obj.Group(name='Products', sourceTree='<group>')
         self.project = obj.Project(
-            compatibilityVersion='Xcode 2.4',
+            compatibilityVersion=compatibilityVersion,
             hasScannedForEncodings=0,
             projectDirPath='',
             projectRoot='',
@@ -145,10 +174,10 @@ class Project(object):
                 config_list(cfg_base, cfg_debug, cfg_release),
             productRefGroup=products,
         )
-        self._groups = {}
-        self._sources = {}
-        self._frameworks = {}
-        self._cfg = cfg
+
+    @property
+    def _version(self):
+        return self._cfg.target.version
 
     def add_build(self, build, xcpath):
         self.add_sources(build)
@@ -167,13 +196,13 @@ class Project(object):
         import io
         pf = io.StringIO()
         uf = io.StringIO()
-        self.project.write(pf, uf)
+        self.project.write(pf, uf, objectVersion=self._objectVersion)
         build.add_generated_source(
-            GenProject(target=xcpath.join('project.pbxproj'),
-                       data=pf.getvalue()))
+            LiteralFile(target=xcpath.join('project.pbxproj'),
+                        contents=pf.getvalue()))
         build.add_generated_source(
-            GenProject(target=xcpath.join('default.pbxuser'),
-                       data=uf.getvalue()))
+            LiteralFile(target=xcpath.join('default.pbxuser'),
+                        contents=uf.getvalue()))
 
     def add_sources(self, build):
         srcgroup = obj.Group(name='Sources', sourceTree='<group>')
@@ -229,31 +258,28 @@ class Project(object):
         )
         self.project.productRefGroup.children.append(appfile)
         cfg_base = {
-            'USE_HEADERMAP': False,
-            'ALWAYS_SEARCH_USER_PATHS': False,
-            'GCC_DYNAMIC_NO_PIC': False,
-            'GCC_ENABLE_FIX_AND_CONTINUE': True,
-            'GCC_MODEL_TUNING': 'G5',
-            'GCC_OPTIMIZATION_LEVEL': 0,
+            'ALWAYS_SEARCH_USER_PATHS': True,
             'INFOPLIST_FILE': self._cfg.target_path(module.info_plist),
             'INSTALL_PATH': '$(HOME)/Applications',
-            'PREBINDING': False,
             'PRODUCT_NAME': filename,
             'USER_HEADER_SEARCH_PATHS':
                 ['$(HEADER_SEARCH_PATHS)'] +
                 [self._cfg.native_path(p) for p in source.header_paths],
         }
-        cfg_debug = {
-            'COPY_PHASE_STRIP': False,
-            'GCC_ENABLE_FIX_AND_CONTINUE': False,
-            'GCC_OPTIMIZATION_LEVEL': 0,
-        }
-        cfg_release = {
-            'ARCHS': ' '.join(self._cfg.target.archs),
-            'COPY_PHASE_STRIP': True,
-            'DEBUG_INFORMATION_FORMAT': 'dwarf-with-dsym',
-            'GCC_ENABLE_FIX_AND_CONTINUE': True,
-        }
+        if self._version <= (10, 6):
+            cfg_base.update({
+                'USE_HEADERMAP': False,
+                'GCC_DYNAMIC_NO_PIC': False,
+                # 'GCC_ENABLE_FIX_AND_CONTINUE': True,
+                'GCC_MODEL_TUNING': 'G5',
+                'PREBINDING': False,
+            })
+        else:
+            cfg_base.update({
+                'COMBINE_HIDPI_IMAGES': True,
+            })
+        cfg_debug = {}
+        cfg_release = {}
 
         target = obj.NativeTarget(
             productType='com.apple.product-type.application',

@@ -1,18 +1,28 @@
 from build.error import ConfigError
 from build.path import Path
 
+def version(x):
+    i = x.index('.')
+    return int(x[:i]), int(x[i+1:])
+
 def target(subtarget, os, cfg, args, archs):
+    from .. import darwin
+    from build.param import ParamParser
+    osx_version = darwin.osx_version() or (10, 5)
+    p = ParamParser()
+    p.add_param('version', type=version, default=osx_version)
+    params = p.parse(subtarget)
     if archs is None:
-        from .. import darwin
-        archs = darwin.default_release_archs()
-    return Target(archs)
+        archs = darwin.default_release_archs(params['version'])
+    return Target(archs, params['version'])
 
 class Target(object):
-    __slots__ = ['archs']
+    __slots__ = ['archs', 'version']
     os = 'osx'
 
-    def __init__(self, archs):
+    def __init__(self, archs, version):
         self.archs = tuple(archs)
+        self.version = version
 
     def gen_build(self, cfg, proj):
         from . import project

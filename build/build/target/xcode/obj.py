@@ -457,7 +457,7 @@ class Project(XcodeObject):
             optional('executables'),
         ))
 
-    def write(self, pf, uf):
+    def write(self, pf, uf, *, objectVersion):
         """Write this project to the given files.
 
         The first file is the project file, the second file is the user
@@ -508,7 +508,7 @@ class Project(XcodeObject):
         w.start_dict()
         w.write_pair('archiveVersion', 1)
         w.write_pair('classes', {})
-        w.write_pair('objectVersion', 42)
+        w.write_pair('objectVersion', objectVersion)
         w.write_key('objects')
         w.start_dict()
         for groupname, groupobjs in groups:

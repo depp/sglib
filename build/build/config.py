@@ -322,7 +322,7 @@ class ConfigTool(object):
             try:
                 with open(targetpath, 'r', encoding='UTF-8') as fp:
                     curtext = fp.read()
-            except OSError:
+            except EnvironmentError:
                 pass
             else:
                 if curtext == text:
