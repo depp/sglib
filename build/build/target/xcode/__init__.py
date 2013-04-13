@@ -1,12 +1,18 @@
 from build.error import ConfigError
 from build.path import Path
 
-def target(subtarget, os, cfg, args):
-    return Target()
+def target(subtarget, os, cfg, args, archs):
+    if archs is None:
+        from .. import darwin
+        archs = darwin.default_release_archs()
+    return Target(archs)
 
 class Target(object):
-    __slots__ = []
+    __slots__ = ['archs']
     os = 'osx'
+
+    def __init__(self, archs):
+        self.archs = tuple(archs)
 
     def gen_build(self, cfg, proj):
         from . import project

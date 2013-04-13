@@ -249,7 +249,7 @@ class Project(object):
             'GCC_OPTIMIZATION_LEVEL': 0,
         }
         cfg_release = {
-            'ARCHS': 'ppc i386',
+            'ARCHS': ' '.join(self._cfg.target.archs),
             'COPY_PHASE_STRIP': True,
             'DEBUG_INFORMATION_FORMAT': 'dwarf-with-dsym',
             'GCC_ENABLE_FIX_AND_CONTINUE': True,

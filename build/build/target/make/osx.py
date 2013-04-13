@@ -1,13 +1,20 @@
 from .. import nix
 from .. import env
 from build.path import Path
+from build.error import ConfigError
 
 class Target(nix.MakefileTarget):
-    __slots__ = ['base_env', 'os', 'archs']
+    __slots__ = ['archs']
 
-    def __init__(self, subtarget, cfg, args):
-        super(Target, self).__init__(subtarget, cfg, args)
-        self.archs = ['ppc', 'i386', 'x86_64']
+    def __init__(self, subtarget, cfg, args, archs):
+        super(Target, self).__init__(subtarget, cfg, args, None)
+        if archs is None:
+            from .. import darwin
+            if cfg.config == 'debug':
+                archs = darwin.default_debug_archs()
+            else:
+                archs = darwin.default_release_archs()
+        self.archs = tuple(archs)
 
     def get_dirs(self, name):
         builddir = Path('/build', 'builddir')

@@ -8,8 +8,12 @@ import io
 
 class MakefileTarget(object):
     __slots__ = ['base_env', 'os']
+    archs = None
 
-    def __init__(self, subtarget, cfg, args):
+    def __init__(self, subtarget, cfg, args, archs):
+        if archs is not None:
+            raise ConfigError(
+                'architecture cannot be specified for this target')
         self.base_env = default_env(cfg, args, subtarget)
         self.os = subtarget
 

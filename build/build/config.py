@@ -8,8 +8,7 @@ import os
 import importlib
 import pickle
 import io
-import ntpath
-import posixpath
+import re
 
 TARGETS = {'make', 'msvc', 'xcode'}
 OS = {'osx', 'linux', 'windows'}
@@ -18,6 +17,20 @@ PLATFORMS = {
     'Linux': ('linux', 'make'),
     'Windows': ('windows', 'msvc'),
 }
+
+def parse_archs(x):
+    archs = x.split()
+    if not archs:
+        raise ValueError('empty architecture list')
+    arch_re = re.compile(r'^\w+$', re.ASCII)
+    aset = set()
+    for arch in archs:
+        if arch in aset:
+            raise ValueError('duplicat architecture: {}'.format(arch))
+        if not arch_re.match(arch):
+            raise ValueError('invalid architecture: {!r}'.format(arch))
+        aset.add(arch)
+    return tuple(archs)
 
 class Config(object):
     """Result from reading user configuration options."""
@@ -151,6 +164,9 @@ class ConfigTool(object):
             '--without-bundled-libs', dest='bundled_libs', default='auto',
             action='store_const', const='no',
             help='never use bundled libraries')
+        buildgroup.add_argument(
+            '--archs', dest='archs', default=None, type=parse_archs,
+            help='specify build architectures')
 
         def parse_yesno(name, *, dest=None, default=None, help=None,
                         help_neg=None):
@@ -245,7 +261,7 @@ class ConfigTool(object):
         if target not in TARGETS:
             raise ConfigError('invalid target: {!r}'.format(target))
         mod = importlib.import_module('build.target.' + target)
-        return mod.target(subtarget, osname, cfg, args.var)
+        return mod.target(subtarget, osname, cfg, args.var, args.archs)
 
     def parse_args(self):
         if len(sys.argv) < 3:
@@ -283,6 +299,9 @@ class ConfigTool(object):
 
         if cfg.verbosity >= 1:
             self.dump_flags(flags)
+            if target.archs is not None:
+                print('Build architectures: {}'.format(', '.join(target.archs)),
+                      file=sys.stderr)
 
         return cfg, args
 
