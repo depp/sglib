@@ -156,7 +156,10 @@ def default_env(cfg, args, osname):
             continue
         varval = varparse(varval)
         user_env[varname] = varval
-        del base_env[varname]
+        try:
+            del base_env[varname]
+        except KeyError:
+            pass
     envs.append(user_env)
 
     return env.merge_env(envs)
