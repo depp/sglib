@@ -1,32 +1,32 @@
-#include "base/audio_file.h"
-#include "base/audio_source.h"
-#include "base/entry.h"
-#include "base/event.h"
-#include "base/keycode/keycode.h"
-#include "base/opengl.h"
+#include "sg/audio_sample.h"
+#include "sg/audio_source.h"
+#include "sg/entry.h"
+#include "sg/event.h"
+#include "sg/opengl.h"
+#include "keycode/keycode.h"
 #include <assert.h>
 // #include <math.h>
 // #include <stddef.h>
 // #include <stdio.h>
 #include <string.h>
 
-static struct sg_audio_file *g_snd_clank;
-static struct sg_audio_file *g_snd_donk;
-static struct sg_audio_file *g_snd_tink;
-static struct sg_audio_file *g_snd_stereo;
-static struct sg_audio_file *g_snd_left;
-static struct sg_audio_file *g_snd_right;
+static struct sg_audio_sample *g_snd_clank;
+static struct sg_audio_sample *g_snd_donk;
+static struct sg_audio_sample *g_snd_tink;
+static struct sg_audio_sample *g_snd_stereo;
+static struct sg_audio_sample *g_snd_left;
+static struct sg_audio_sample *g_snd_right;
 
 static unsigned g_cmd;
 
-static struct sg_audio_file *
+static struct sg_audio_sample *
 xloadaudio(const char *name)
 {
-    struct sg_audio_file *fp;
+    struct sg_audio_sample *fp;
     char buf[16];
     strcpy(buf, "fx/");
     strcat(buf, name);
-    fp = sg_audio_file_new(buf, NULL);
+    fp = sg_audio_sample_file(buf, strlen(buf), NULL);
     assert(fp);
     return fp;
 }
@@ -130,7 +130,7 @@ func1(unsigned msec)
 {
     static int g_chan = -1, g_state, g_mod;
     int state = get_state(0);
-    struct sg_audio_file *fp;
+    struct sg_audio_sample *fp;
 
     if (state && !g_state) {
         if (g_chan < 0)
@@ -154,7 +154,7 @@ func2(unsigned msec)
 {
     static int g_chan = -1, g_state, g_mod;
     int state = get_state(1);
-    struct sg_audio_file *fp;
+    struct sg_audio_sample *fp;
     float pan = 0.0f;
 
     if (state && !g_state) {
@@ -185,7 +185,7 @@ func3(unsigned msec)
 {
     static int g_chan = -1, g_state, g_mod;
     int state = get_state(2);
-    struct sg_audio_file *fp;
+    struct sg_audio_sample *fp;
     float pan;
 
     if (state && !g_state) {

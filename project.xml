@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<build>
+  <key name="name">SGLib Tests</key>
+  <key name="email">depp@zdome.net</key>
+  <key name="url">http://moria.us/</key>
+  <key name="copyright">Copyright © 2011-2012 Dietrich Epp</key>
+  <key name="version">0.1</key>
+  <key name="identifier">us.moria.sglib-test</key>
+
+  <key name="cvar.log.level.root">debug</key>
+  <if value="$os == windows">
+    <key name="cvar.log.winconsole">yes</key>
+  </if>
+  <key name="cvar.path.data"><path path="data"/></key>
+  <key name="cvar.path.user"><path path="user"/></key>
+
+  <key name="lib-dir"><path path="lib"/></key>
+
+  <module type="sglib">
+    <key name="name">Image Test</key>
+    <src path="src/image.c"/>
+  </module>
+
+  <module type="sglib">
+    <key name="name">Type Test</key>
+    <src path="src/type.c"/>
+  </module>
+
+  <module type="sglib">
+    <key name="name">Audio Test</key>
+    <src path="src/audio.c"/>
+  </module>
+
+  <module type="sglib">
+    <key name="name">Audio Test 2</key>
+    <src path="src/audio2.c"/>
+  </module>
+</build>

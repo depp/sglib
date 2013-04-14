@@ -1,7 +1,8 @@
-#include "base/audio.h"
-#include "base/entry.h"
-#include "base/opengl.h"
-#include "base/rand.h"
+#include "sg/audio_sample.h"
+#include "sg/audio_source.h"
+#include "sg/entry.h"
+#include "sg/opengl.h"
+#include "sg/rand.h"
 #include <assert.h>
 #include <math.h>
 // #include <stddef.h>
@@ -10,9 +11,10 @@
 
 #define NUMOBJS 10
 
-static struct sg_audio_file *g_snd_clank[3];
-static struct sg_audio_file *g_snd_donk[3];
-static struct sg_audio_file *g_snd_tink[3];
+static struct sg_audio_sample *g_snd_clank[3];
+static struct sg_audio_sample *g_snd_donk[3];
+static struct sg_audio_sample *g_snd_tink[3];
+static int g_snd_source;
 
 struct obj {
     float x, y;
@@ -25,14 +27,14 @@ static int g_initted;
 static unsigned g_tick;
 static struct obj g_objs[NUMOBJS];
 
-static struct sg_audio_file *
+static struct sg_audio_sample *
 xloadaudio(const char *name)
 {
-    struct sg_audio_file *fp;
+    struct sg_audio_sample *fp;
     char buf[16];
     strcpy(buf, "fx/");
     strcat(buf, name);
-    fp = sg_audio_file_new(buf, NULL);
+    fp = sg_audio_sample_file(buf, strlen(buf), NULL);
     assert(fp);
     return fp;
 }
@@ -49,6 +51,8 @@ sg_game_init(void)
     g_snd_tink[0] = xloadaudio("tink1");
     g_snd_tink[1] = xloadaudio("tink2");
     g_snd_tink[2] = xloadaudio("tink3");
+    g_snd_source = sg_audio_source_open();
+    assert(g_snd_source >= 0);
 }
 
 void
@@ -68,7 +72,7 @@ sg_game_draw(int x, int y, int width, int height, unsigned msec)
 {
     int i, j, sidx;
     float r, a, px, py, dx, dy;
-    struct sg_audio_file *snd;
+    struct sg_audio_sample *snd;
 
     glClear(GL_COLOR_BUFFER_BIT);
     glViewport(x, y, width, height);
@@ -160,7 +164,7 @@ sg_game_draw(int x, int y, int width, int height, unsigned msec)
             case 1: snd = g_snd_clank[sidx]; break;
             case 2: snd = g_snd_donk[sidx]; break;
             }
-            sg_audio_file_play(snd, g_tick, NULL);
+            sg_audio_source_play(g_snd_source, g_tick, snd, 0);
         }
         g_tick += 10;
     }

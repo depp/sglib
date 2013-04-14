@@ -1,6 +1,6 @@
-#include "base/opengl.h"
-#include "base/entry.h"
-#include "base/texture.h"
+#include "sg/opengl.h"
+#include "sg/entry.h"
+#include "sg/texture.h"
 #include <assert.h>
 #include <math.h>
 #include <stddef.h>
@@ -59,8 +59,8 @@ enum {
 
 static const char TEX_NAMES[NUM_TEX][12] = { "brick", "ivy", "roughstone" };
 
-static struct sg_texture_image *g_images[NUM_IMG];
-static struct sg_texture_image *g_tex[NUM_TEX];
+static struct sg_texture *g_images[NUM_IMG];
+static struct sg_texture *g_tex[NUM_TEX];
 
 void
 sg_game_init(void)
@@ -71,13 +71,13 @@ sg_game_init(void)
     for (i = 0; i < NUM_IMG; ++i) {
         strcpy(buf, "imgtest/");
         strcat(buf, IMAGE_NAMES[i]);
-        g_images[i] = sg_texture_image_new(buf, &err);
+        g_images[i] = sg_texture_file(buf, strlen(buf), &err);
         assert(g_images[i]);
     }
     for (i = 0; i < NUM_TEX; ++i) {
         strcpy(buf, "tex/");
         strcat(buf, TEX_NAMES[i]);
-        g_tex[i] = sg_texture_image_new(buf, &err);
+        g_tex[i] = sg_texture_file(buf, strlen(buf), &err);
         assert(g_tex[i]);
     }
 }

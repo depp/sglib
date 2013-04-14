@@ -1,8 +1,8 @@
-#include "base/opengl.h"
-#include "base/entry.h"
-#include "base/event.h"
-#include "base/keycode/keycode.h"
-#include "base/type.h"
+#include "sg/opengl.h"
+#include "sg/entry.h"
+#include "sg/event.h"
+#include "sg/type.h"
+#include "keycode/keycode.h"
 #include <assert.h>
 #include <math.h>
 #include <stddef.h>

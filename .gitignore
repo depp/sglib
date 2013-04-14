@@ -4,23 +4,10 @@
 # Build directory (OS X / Linux)
 /build
 
-# Autotools
+# Build system
 /Makefile
-/aclocal.m4
-/autom4te.cache
-/config.h
-/config.h.in
-/config.log
-/config.mak
-/config.mak.in
-/config.status
-/configure
-/configure.ac
-/run.sh
-
-# Built sources
-/resources
-/version.c
+/config.dat
+/*Test*
 
 # Visual Studio
 /Debug
