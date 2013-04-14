@@ -2,15 +2,15 @@
 #import "GView.h"
 #import "GDisplay.h"
 
-static void handleMouse(GView *v, NSEvent *e, pce_event_type_t t, int button)
+static void handleMouse(GView *v, NSEvent *e, sg_event_type_t t, int button)
 {
     NSPoint pt = [v convertPoint:[e locationInWindow] fromView:nil];
-    struct pce_event_mouse evt;
+    struct sg_event_mouse evt;
     evt.type = t;
     evt.button = button;
     evt.x = pt.x;
     evt.y = pt.y;
-    [v->display_ handleUIEvent:(union pce_event *) &evt];
+    [v->display_ handleUIEvent:(union sg_event *) &evt];
 }
 
 @implementation GView

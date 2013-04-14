@@ -51,11 +51,11 @@ typedef enum {
 - (IBAction)showFullScreen:(id)sender;
 - (IBAction)toggleGFullScreen:(id)sender;
 
-- (void)handleUIEvent:(union pce_event *)event;
+- (void)handleUIEvent:(union sg_event *)event;
 
 // Safe to call from any thread (all other methods must be called from main thread)
 - (void)update;
 
 @end
 
-void GDisplayKeyEvent(GDisplay *w, NSEvent *e, pce_event_type_t t);
+void GDisplayKeyEvent(GDisplay *w, NSEvent *e, sg_event_type_t t);

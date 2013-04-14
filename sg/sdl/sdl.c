@@ -81,7 +81,7 @@ static SDL_Surface *sdl_surface;
 static void
 init(int argc, char *argv[])
 {
-    struct pce_event_resize rsz;
+    struct sg_event_resize rsz;
     struct sg_game_info gameinfo;
     int opt;
 
@@ -112,24 +112,24 @@ init(int argc, char *argv[])
     rsz.type = SG_EVENT_RESIZE;
     rsz.width = sdl_surface->w;
     rsz.height = sdl_surface->h;
-    sg_sys_event((union pce_event *) &rsz);
+    sg_sys_event((union sg_event *) &rsz);
 }
 
 static void
 sdl_event_mousemove(SDL_MouseMotionEvent *e)
 {
-    struct pce_event_mouse ee;
+    struct sg_event_mouse ee;
     ee.type = SG_EVENT_MMOVE;
     ee.button = -1;
     ee.x = e->x;
     ee.y = sg_window_height - 1 - e->y;
-    sg_sys_event((union pce_event *) &ee);
+    sg_sys_event((union sg_event *) &ee);
 }
 
 static void
 sdl_event_mousebutton(SDL_MouseButtonEvent *e)
 {
-    struct pce_event_mouse ee;
+    struct sg_event_mouse ee;
     ee.type = e->type == SDL_MOUSEBUTTONDOWN ?
         SG_EVENT_MDOWN : SG_EVENT_MUP;
     switch (e->button) {
@@ -142,29 +142,29 @@ sdl_event_mousebutton(SDL_MouseButtonEvent *e)
     }
     ee.x = e->x;
     ee.y = sg_window_height - 1 - e->y;
-    sg_sys_event((union pce_event *) &ee);
+    sg_sys_event((union sg_event *) &ee);
 }
 
 static void
 sdl_event_key(SDL_KeyboardEvent *e)
 {
-    struct pce_event_key ee;
+    struct sg_event_key ee;
     ee.type = e->type == SDL_KEYDOWN ?
         SG_EVENT_KDOWN : SG_EVENT_KUP;
     ee.key = -1;
-    sg_sys_event((union pce_event *) &ee);
+    sg_sys_event((union sg_event *) &ee);
 }
 
 static void
 sdl_event_resize(SDL_ResizeEvent *e)
 {
-    struct pce_event_resize ee;
+    struct sg_event_resize ee;
     sg_window_width = e->w;
     sg_window_height = e->h;
     ee.type = SG_EVENT_RESIZE;
     ee.width = e->w;
     ee.height = e->h;
-    sg_sys_event((union pce_event *) &ee);
+    sg_sys_event((union sg_event *) &ee);
 }
 
 static void

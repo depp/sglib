@@ -59,21 +59,21 @@ void sg_game_getinfo(struct sg_game_info *info)
     (void) info;
 }
 
-static void mouse_event(union pce_event *evt, EventType t)
+static void mouse_event(union sg_event *evt, EventType t)
 {
-    struct pce_event_mouse &me = evt->mouse;
+    struct sg_event_mouse &me = evt->mouse;
     MouseEvent ue(t, me.button, me.x, me.y);
     current_screen->handleEvent(ue);
 }
 
-static void key_event(union pce_event *evt, EventType t)
+static void key_event(union sg_event *evt, EventType t)
 {
-    struct pce_event_key &ke = evt->key;
+    struct sg_event_key &ke = evt->key;
     KeyEvent ue(t, ke.key);
     current_screen->handleEvent(ue);
 }
 
-void sg_game_event(union pce_event *evt)
+void sg_game_event(union sg_event *evt)
 {
     if (!current_screen) {
         handle_nullscreen();

@@ -8,7 +8,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-union pce_event;
+union sg_event;
 struct sg_error;
 struct sg_logger;
 
@@ -44,7 +44,7 @@ sg_game_getinfo(struct sg_game_info *info);
 /* Called for every event.  The OpenGL context may not be valid, you
    should not attempt to draw to the screen, load textures, etc.  */
 void
-sg_game_event(union pce_event *evt);
+sg_game_event(union sg_event *evt);
 
 /* Draw the scene.  The OpenGL context will be valid.  The x, y,
    width, and height parameters specify the current viewport, the game
@@ -91,7 +91,7 @@ sg_sys_getinfo(struct sg_game_info *info);
 
 /* Called for every event.  */
 void
-sg_sys_event(union pce_event *evt);
+sg_sys_event(union sg_event *evt);
 
 /* Draw the scene.  The OpenGL context must be valid.  */
 void

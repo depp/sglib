@@ -82,7 +82,7 @@ sg_sys_getinfo(struct sg_game_info *info)
 }
 
 void
-sg_sys_event(union pce_event *evt)
+sg_sys_event(union sg_event *evt)
 {
     const char *status;
     switch (evt->type) {

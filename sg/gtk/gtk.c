@@ -118,7 +118,7 @@ handle_destroy(GtkWidget *widget, GdkEvent *event, void *user_data)
 static gboolean
 handle_expose(GtkWidget *area)
 {
-    struct pce_event_resize rsz;
+    struct sg_event_resize rsz;
     GtkAllocation a;
     GdkGLContext *context = gtk_widget_get_gl_context(area);
     GdkGLDrawable *drawable = gtk_widget_get_gl_drawable(area);
@@ -147,7 +147,7 @@ handle_expose(GtkWidget *area)
             rsz.type = SG_EVENT_RESIZE;
             rsz.width = a.width;
             rsz.height = a.height;
-            sg_sys_event((union pce_event *) &rsz);
+            sg_sys_event((union sg_event *) &rsz);
         }
     }
     sg_sys_draw();
@@ -177,10 +177,10 @@ update(void *obj)
 }
 
 static gboolean
-handle_key(GdkEventKey *e, pce_event_type_t t)
+handle_key(GdkEventKey *e, sg_event_type_t t)
 {
     int code = e->hardware_keycode, hcode;
-    struct pce_event_key evt;
+    struct sg_event_key evt;
     if (e->keyval == GDK_F11) {
         if (e->type == GDK_KEY_PRESS)
             toggle_fullscreen();
@@ -193,26 +193,26 @@ handle_key(GdkEventKey *e, pce_event_type_t t)
         return TRUE;
     evt.type = t;
     evt.key = hcode;
-    sg_sys_event((union pce_event *) &evt);
+    sg_sys_event((union sg_event *) &evt);
     return TRUE;
 }
 
 static gboolean
 handle_motion(GdkEventMotion *e)
 {
-    struct pce_event_mouse evt;
+    struct sg_event_mouse evt;
     evt.type = SG_EVENT_MMOVE;
     evt.button = -1;
     evt.x = e->x;
     evt.y = sg_window_height - 1 - e->y;
-    sg_sys_event((union pce_event *) &evt);
+    sg_sys_event((union sg_event *) &evt);
     return TRUE;
 }
 
 static gboolean
-handle_button(GdkEventButton *e, pce_event_type_t t)
+handle_button(GdkEventButton *e, sg_event_type_t t)
 {
-    struct pce_event_mouse evt;
+    struct sg_event_mouse evt;
     evt.type = t;
     switch (e->button) {
     case 1:  evt.button = SG_BUTTON_LEFT; break;
@@ -222,7 +222,7 @@ handle_button(GdkEventButton *e, pce_event_type_t t)
     }
     evt.x = e->x;
     evt.y = sg_window_height - 1 - e->y;
-    sg_sys_event((union pce_event *) &evt);
+    sg_sys_event((union sg_event *) &evt);
     return TRUE;
 }
 
@@ -270,7 +270,7 @@ handle_window_state(GtkWidget *widget, GdkEvent *event, gpointer user_data)
     GdkWindowState st = event->window_state.new_window_state;
     int fullscreen, shown;
     unsigned status;
-    struct pce_event_status evt;
+    struct sg_event_status evt;
     (void) user_data;
     (void) widget;
     print_wstate_flags(st, event->window_state.changed_mask);
@@ -285,7 +285,7 @@ handle_window_state(GtkWidget *widget, GdkEvent *event, gpointer user_data)
     }
     evt.type = SG_EVENT_STATUS;
     evt.status = status;
-    sg_sys_event((union pce_event *) &evt);
+    sg_sys_event((union sg_event *) &evt);
     sg_gtk_status = status;
     return TRUE;
 }
