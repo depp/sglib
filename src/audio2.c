@@ -16,6 +16,8 @@ static struct sg_audio_sample *g_snd_tink;
 static struct sg_audio_sample *g_snd_stereo;
 static struct sg_audio_sample *g_snd_left;
 static struct sg_audio_sample *g_snd_right;
+static struct sg_audio_sample *g_snd_music;
+static struct sg_audio_sample *g_snd_alien;
 
 static unsigned g_cmd;
 
@@ -40,6 +42,8 @@ sg_game_init(void)
     g_snd_stereo = xloadaudio("stereo");
     g_snd_left = xloadaudio("left");
     g_snd_right = xloadaudio("right");
+    g_snd_music = xloadaudio("looptrack");
+    g_snd_alien = xloadaudio("alien");
 }
 
 void
@@ -207,6 +211,42 @@ func3(unsigned msec)
     g_state = state;
 }
 
+static void
+func4(unsigned msec)
+{
+    static int g_chan = -1, g_state;
+    int state = get_state(3);
+
+    if (g_chan < 0)
+        g_chan = sg_audio_source_open();
+
+    switch (g_state & 3) {
+    case 0:
+        if (state) {
+            sg_audio_source_play(
+                g_chan, msec,
+                (g_state & 4) ? g_snd_alien : g_snd_music, 0);
+            g_state++;
+        }
+        break;
+
+    case 2:
+        if (state) {
+            sg_audio_source_stop(g_chan, msec);
+            g_state++;
+        }
+        break;
+
+    default:
+        if (!state)
+            g_state++;
+        break;
+    }
+    g_state &= 7;
+
+    draw_key(3, state);
+}
+
 void
 sg_game_draw(int x, int y, int width, int height, unsigned msec)
 {
@@ -222,6 +262,7 @@ sg_game_draw(int x, int y, int width, int height, unsigned msec)
     func1(msec);
     func2(msec);
     func3(msec);
+    func4(msec);
 
     sg_audio_source_commit(msec, msec);
 }
