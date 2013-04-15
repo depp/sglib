@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module type="multi">
+  <key name="desc">Vorbis codec library</key>
+
+  <key name="pkg-deb">libvorbis-dev</key>
+  <key name="pkg-rpm">libvorbis-devel</key>
+  <key name="pkg-gentoo">media-libs/libvorbis</key>
+  <key name="pkg-arch">libvorbis</key>
+
+  <module type="pkg-config">
+    <key name="spec">vorbis</key>
+  </module>
+</module>

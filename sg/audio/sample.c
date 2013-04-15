@@ -105,13 +105,12 @@ sg_audio_sample_decodecb(void *cxt)
     struct sg_audio_sample_load *lp = cxt;
     struct sg_audio_sample_global *gp = &sg_audio_sample_global;
     struct sg_buffer *buf = NULL;
-    struct sg_audio_pcm pcm;
+    struct sg_audio_pcm *pcm = NULL;
     struct sg_error *err = NULL;
     short *data;
     unsigned flags;
     int r, rate;
-
-    sg_audio_pcm_init(&pcm);
+    size_t pcmcount = 0, pcmi;
 
     pce_lock_acquire(&gp->lock);
     if (!lp->sample) {
@@ -124,11 +123,17 @@ sg_audio_sample_decodecb(void *cxt)
     rate = gp->rate;
     pce_lock_release(&gp->lock);
 
-    r = sg_audio_pcm_load(&pcm, buf->data, buf->length, &err);
+    r = sg_audio_pcm_load(&pcm, &pcmcount, buf->data, buf->length, &err);
     if (r)
         goto finish;
 
-    switch (pcm.nchan) {
+    if (pcmcount != 1) {
+        sg_logf(sg_logger_get("rsrc"), LOG_ERROR,
+                "%s: concatenated streams not supported");
+        goto finish;
+    }
+
+    switch (pcm->nchan) {
     case 1:
         flags = 0;
         break;
@@ -144,19 +149,19 @@ sg_audio_sample_decodecb(void *cxt)
         goto finish;
     }
 
-    r = sg_audio_pcm_convert(&pcm, SG_AUDIO_S16NE, &err);
+    r = sg_audio_pcm_convert(pcm, SG_AUDIO_S16NE, &err);
     if (r)
         goto finish;
 
-    if (rate && pcm.rate != rate) {
-        r = sg_audio_pcm_resample(&pcm, rate, &err);
+    if (rate && pcm->rate != rate) {
+        r = sg_audio_pcm_resample(pcm, rate, &err);
         if (r)
             goto finish;
         flags |= SG_AUDIO_SAMPLE_RESAMPLED;
     }
 
-    data = sg_audio_pcm_detach(&pcm, &err);
-    if (pcm.nframe && !data)
+    data = sg_audio_pcm_detach(pcm, &err);
+    if (pcm->nframe && !data)
         goto finish;
 
     sg_buffer_decref(buf);
@@ -166,10 +171,10 @@ sg_audio_sample_decodecb(void *cxt)
     sp = lp->sample;
     if (sp) {
         sp->flags = flags;
-        sp->nframe = pcm.nframe;
+        sp->nframe = pcm->nframe;
         sp->playtime = (int)
-            (((long long) pcm.nframe * 1000 + pcm.rate - 1) / pcm.rate);
-        sp->rate = pcm.rate;
+            (((long long) pcm->nframe * 1000 + pcm->rate - 1) / pcm->rate);
+        sp->rate = pcm->rate;
         sp->data = data;
         pce_atomic_set_release(&sp->loaded, 1);
     } else {
@@ -177,12 +182,21 @@ sg_audio_sample_decodecb(void *cxt)
     }
     sg_audio_sample_finish(lp, NULL);
     pce_lock_release(&gp->lock);
+    if (pcm) {
+        for (pcmi = 0; pcmi < pcmcount; pcmi++)
+            sg_audio_pcm_destroy(&pcm[pcmi]);
+        free(pcm);
+    }
     return;
 
 finish:
     if (buf)
         sg_buffer_decref(buf);
-    sg_audio_pcm_destroy(&pcm);
+    if (pcm) {
+        for (pcmi = 0; pcmi < pcmcount; pcmi++)
+            sg_audio_pcm_destroy(&pcm[pcmi]);
+        free(pcm);
+    }
 
     pce_lock_acquire(&gp->lock);
     sg_audio_sample_finish(lp, err);

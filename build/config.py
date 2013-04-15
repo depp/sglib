@@ -197,6 +197,12 @@ cfg.add_enable(
      val('uniscribe', 'Uniscribe')])
 cfg.add_enable(
     'video-recording', 'enable video recording support')
+cfg.add_enable(
+    'ogg', 'enable Ogg decoding')
+cfg.add_enable(
+    'vorbis', 'enable Vorbis decoding (requires Ogg)')
+cfg.add_enable(
+    'opus', 'enable Opus decoding (requires Ogg)')
 
 cfg.add_enable(
     'app-cocoa', 'enable Cocoa frontend')
@@ -208,6 +214,11 @@ cfg.add_enable(
     'app-windows', 'enable Windows frontend')
 
 cfg.add_defaults({
+    None: {
+        'ogg': 'yes',
+        'vorbis': 'yes',
+        'opus': 'yes',
+    },
     'linux': {
         'audio': 'alsa',
         'jpeg': 'libjpeg',

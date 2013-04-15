@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module type="multi">
+  <key name="desc">Ogg bitstream library</key>
+
+  <key name="pkg-deb">libogg-dev</key>
+  <key name="pkg-rpm">libogg-devel</key>
+  <key name="pkg-gentoo">media-libs/libogg</key>
+  <key name="pkg-arch">libogg</key>
+
+  <module type="pkg-config">
+    <key name="spec">ogg</key>
+  </module>
+</module>

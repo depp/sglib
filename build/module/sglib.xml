@@ -73,6 +73,26 @@
 	  </case>
 	</switch>
       </group>
+
+      <if value="$flag.ogg == yes">
+	<group>
+	  <require module="ogg"/>
+	  <src path="ogg.c"/>
+	  <src path="ogg.h"/>
+	</group>
+	<if value="$flag.vorbis == yes">
+	  <group>
+	    <require module="ogg vorbis"/>
+	    <src path="vorbis.c"/>
+	  </group>
+	</if>
+	<if value="$flag.opus == yes">
+	  <group>
+	    <require module="ogg opus"/>
+	    <src path="opus.c"/>
+	  </group>
+	</if>
+      </if>
     </group>
 
     <group path="sg/core">

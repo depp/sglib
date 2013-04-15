@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-const char SG_AUDIO_PCM_EXTENSIONS[] = "wav";
+const char SG_AUDIO_PCM_EXTENSIONS[] = "wav:ogg:opus:oga";
 
 const unsigned char SG_AUDIO_FORMAT_SIZE[SG_AUDIO_NFMT] = {
     1, 2, 2, 3, 3, 4, 4

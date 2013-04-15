@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module type="multi">
+  <key name="desc">Opus codec library</key>
+
+  <key name="pkg-deb">libopus-dev</key>
+  <key name="pkg-rpm">opus</key>
+  <key name="pkg-gentoo">media-libs/opus</key>
+  <key name="pkg-arch">opus</key>
+
+  <module type="pkg-config">
+    <key name="spec">opus</key>
+  </module>
+</module>

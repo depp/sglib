@@ -212,7 +212,6 @@ sg_audio_pcm_loadwav(struct sg_audio_pcm *buf, const void *data, size_t len,
 
     sg_riff_destroy(&riff);
 
-    free(buf->alloc);
     buf->alloc = NULL;
     buf->data = p;
     buf->format = format;

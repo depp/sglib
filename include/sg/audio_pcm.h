@@ -201,22 +201,43 @@ void *
 sg_audio_pcm_detach(struct sg_audio_pcm *buf, struct sg_error **err);
 
 /**
- * @brief Load an audio file into the given buffer.
+ * @brief Load an audio file.
  *
- * The audio file format is automatically detected.  The buffer may
- * alias the file data.
+ * The audio file format is automatically detected.
+ *
+ * This can return multiple buffers of audio with different settings
+ * (sample rate, number of channels, etc.) because this can happen
+ * with concatenated audio streams in Ogg files.  The resulting
+ * buffers may alias the input data if it is flat PCM.
+ *
+ * @param buf On success, a pointer to an array of audio buffers.  The
+ * array must be freed with free().
+ * @param bufcount On success, the number of audio buffers.
+ * @param data The data to load.
+ * @param len The length of the data to load.
+ * @param err On failure, the error.
  */
 int
-sg_audio_pcm_load(struct sg_audio_pcm *buf, const void *data, size_t len,
+sg_audio_pcm_load(struct sg_audio_pcm **buf, size_t *bufcount,
+                  const void *data, size_t len,
                   struct sg_error **err);
 
 /**
  * @brief Load a WAV file into the given buffer.
  *
- * The buffer may alias the file data.
+ * The buffer may alias the file data.  The buffer should not be
+ * initialized, and it will remain uninitialized on failure.
  */
 int
 sg_audio_pcm_loadwav(struct sg_audio_pcm *buf, const void *data, size_t len,
+                     struct sg_error **err);
+
+/**
+ * @brief Load an Ogg file into an array of buffers.
+ */
+int
+sg_audio_pcm_loadogg(struct sg_audio_pcm **buf, size_t *bufcount,
+                     const void *data, size_t len,
                      struct sg_error **err);
 
 /**
