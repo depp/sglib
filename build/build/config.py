@@ -278,7 +278,12 @@ class ConfigTool(object):
         if target not in TARGETS:
             raise ConfigError('invalid target: {!r}'.format(target))
         mod = importlib.import_module('build.target.' + target)
-        return mod.target(subtarget, osname, cfg, args.var, args.archs)
+        from . import varlist
+        vars = varlist.VarList.parse(args.var)
+        target = mod.target(subtarget, osname, cfg, vars, args.archs)
+        for varname in vars.unused():
+            cfg.warn('unknown variable: {!r}'.format(varname))
+        return target
 
     def parse_args(self):
         if len(sys.argv) < 3:

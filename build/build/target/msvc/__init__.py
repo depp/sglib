@@ -1,6 +1,6 @@
 from build.error import ConfigError
 
-def target(subtarget, os, cfg, args, archs):
+def target(subtarget, os, cfg, vars, archs):
     if archs is not None:
         raise ConfigError(
             'architecture cannot be specified for this target')

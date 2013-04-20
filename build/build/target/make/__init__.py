@@ -6,7 +6,7 @@ MODNAME = {
     'osx': 'osx',
 }
 
-def target(subtarget, os, cfg, args, archs):
+def target(subtarget, os, cfg, vars, archs):
     if subtarget is None:
         subtarget = os
     try:
@@ -14,4 +14,4 @@ def target(subtarget, os, cfg, args, archs):
     except KeyError:
         raise ConfigError('invalid make subtarget: {!r}'.format(subtarget))
     mod = importlib.import_module('build.target.make.' + modname)
-    return mod.Target(subtarget, cfg, args, archs)
+    return mod.Target(subtarget, cfg, vars, archs)

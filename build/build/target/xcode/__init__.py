@@ -5,7 +5,7 @@ def version(x):
     i = x.index('.')
     return int(x[:i]), int(x[i+1:])
 
-def target(subtarget, os, cfg, args, archs):
+def target(subtarget, os, cfg, vars, archs):
     from .. import darwin
     from build.param import ParamParser
     osx_version = darwin.osx_version() or (10, 5)

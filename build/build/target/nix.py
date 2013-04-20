@@ -10,11 +10,11 @@ class MakefileTarget(object):
     __slots__ = ['base_env', 'os']
     archs = None
 
-    def __init__(self, subtarget, cfg, args, archs):
+    def __init__(self, subtarget, cfg, vars, archs):
         if archs is not None:
             raise ConfigError(
                 'architecture cannot be specified for this target')
-        self.base_env = default_env(cfg, args, subtarget)
+        self.base_env = default_env(cfg, vars, subtarget)
         self.os = subtarget
 
     def gen_build(self, cfg, proj):
@@ -98,7 +98,7 @@ def ld_cmd(env, output, sources, sourcetypes):
     cmd.extend(env.get('LIBS', ()))
     return cmd
 
-def default_env(cfg, args, osname):
+def default_env(cfg, vars, osname):
     """Get the default environment."""
     assert osname in ('linux', 'osx')
     config = 'debug' if cfg.config is None else cfg.config
@@ -142,20 +142,12 @@ def default_env(cfg, args, osname):
         })
 
     user_env = {}
-    for arg in args:
-        i = arg.find('=')
-        if i <= 0:
-            raise ConfigError('invalid variable definition: {!r}'
-                              .format(arg))
-        varname = arg[:i]
-        varval = arg[i+1:]
+    for varname in vars.items():
         try:
             varparse = env.VAR[varname].parse
         except (KeyError, AttributeError):
-            cfg.warn('unknown variable: {!r}'.format(varname))
             continue
-        varval = varparse(varval)
-        user_env[varname] = varval
+        user_env[varname] = varparse(vars[varname])
         try:
             del base_env[varname]
         except KeyError:
