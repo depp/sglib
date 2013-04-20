@@ -119,22 +119,26 @@ class Build(object):
         except KeyError:
             raise ConfigError('unknown module type: {!r}'.format(mtype))
 
-    def add_sources(self, name, mod, **kw):
-        """Add sources from the given module to the build."""
-        if name is None:
-            self.cfg.warn('source module has no name')
-            return
-        if name in self._names:
-            raise ConfigError('duplicate name: {}'.format(name))
-        self._nestsrc[name] = source.SourceModule.parse(mod, **kw)
-        self._names.add(name)
-
-    def add_module(self, name, obj):
-        """Add a module to the build."""
+    def _add_name(self, name):
         if name is None:
             self.cfg.warn('module has no name')
             return
+        if name in self._names:
+            raise ConfigError('duplicate name: {}'.format(name))
         self._names.add(name)
+
+    def add_srcmodule(self, name, obj):
+        """Add a source module to the build."""
+        self._add_name(name)
+        self._nestsrc[name] = obj
+
+    def add_sources(self, name, mod):
+        """Add sources from the given module to the build."""
+        self.add_srcmodule(name, source.SourceModule.parse(mod))
+
+    def add_module(self, name, obj):
+        """Add a module to the build."""
+        self._add_name(name)
         self.modules[name] = obj
 
     def add_target(self, obj):
@@ -173,14 +177,18 @@ class Build(object):
                 return path
 
 def build_source(build, mod, name):
-    build.add_sources(name, mod)
+    build.add_srcmodule(name, source.SourceModule.parse(mod))
+
+def build_null(build, mod, name):
+    build.add_srcmodule(name, source.SourceModule())
 
 def build_bundled_library(build, mod, name):
     pattern = mod.info.get_string('pattern')
     path = build.find_bundled_library(pattern)
     if path is None:
         raise ConfigError('library is not bundled: {}'.format(pattern))
-    build.add_sources(name, mod.prefix_path(path), external=True)
+    obj = source.SourceModule.parse(mod.prefix_path(path), external=True)
+    build.add_srcmodule(name, obj)
     build.bundles.add(pattern)
     return path
 
@@ -214,6 +222,8 @@ def build_multi(build, mod, name):
             builder = build.get_builder(submod.type)
             try:
                 builder(build, submod, name)
+                if submod.type == 'null':
+                    fb.write('not needed')
                 return True
             except ConfigError as ex:
                 errs.append(ex)
@@ -254,6 +264,7 @@ def generic(class_name):
 
 MODULE_TYPES = {
     'source': build_source,
+    'null': build_null,
     'bundled-library': build_bundled_library,
     'executable': generic('executable.Executable'),
     'application-bundle': generic('executable.ApplicationBundle'),
