@@ -18,6 +18,8 @@ PLATFORMS = {
     'Windows': ('windows', 'msvc'),
 }
 
+EXISTS_CACHE = {}
+
 def parse_archs(x):
     archs = x.split()
     if not archs:
@@ -117,10 +119,21 @@ class Config(object):
                 if not extra.endswith('\n'):
                     sys.stderr.write('\n')
 
+    def exists(self, path):
+        ec = EXISTS_CACHE
+        try:
+            return ec[path]
+        except KeyError:
+            pass
+        result = os.path.exists(self.native_path(path))
+        ec[path] = result
+        return result
+
 Value = collections.namedtuple('Value', 'name help')
 
 class ConfigTool(object):
-    __slots__ = ['parser', 'flaginfo', 'optgroup', 'defaults']
+    __slots__ = ['parser', 'flaginfo', 'optgroup', 'defaults',
+                 'paths']
 
     def __init__(self, prog='config.sh',
                  description='Configure the build system'):
@@ -133,6 +146,7 @@ class ConfigTool(object):
         self.optgroup = self.parser.add_argument_group(
             'optional features')
         self.defaults = {}
+        self.paths = []
 
         self.parser.add_argument('var', nargs='*',
                                  help='build variables, VAR=VALUE')
@@ -231,6 +245,9 @@ class ConfigTool(object):
                 if vv not in values:
                     raise ValueError('invalid value: {!r}'.format(vv))
             self.defaults.setdefault(k, {}).update(v)
+
+    def add_path(self, path):
+        self.paths.append(path)
 
     def dump_flags(self, flags):
         print('Configuration:', file=sys.stderr)
@@ -334,7 +351,8 @@ class ConfigTool(object):
 
     def run_config(self, cfg, args):
         from . import project
-        proj = project.Project.load_xml(cfg)
+        paths = [cfg.path(p) for p in self.paths]
+        proj = project.Project.load_xml(cfg, paths)
         if args and args.dump_project:
             self.dump_project(proj)
             sys.exit(0)

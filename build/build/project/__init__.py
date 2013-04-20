@@ -10,7 +10,7 @@ class Project(object):
         self.files = []
 
     @classmethod
-    def load_xml(class_, cfg):
+    def load_xml(class_, cfg, ipaths):
         """Load a project for the given configuration."""
         proj = class_()
         from . import xml
@@ -26,7 +26,7 @@ class Project(object):
         while q:
             xmlpath = q.pop()
             proj.files.append(xmlpath.addext('.xml'))
-            buildfile = xml.parse_file(cfg, xmlpath)
+            buildfile = xml.parse_file(cfg, xmlpath, ipaths)
             ref = Href(xmlpath, None)
             if buildfile.default is not None and buildfile.default != ref:
                 refmap[ref] = buildfile.default

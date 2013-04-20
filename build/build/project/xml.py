@@ -119,18 +119,38 @@ def dump(modules, info, fp):
         tree.write(fp, encoding='UTF-8')
 
 class Info(object):
-    __slots__ = ['cfg', 'base', 'environ']
-    def __init__(self, cfg, base):
+    __slots__ = ['cfg', 'base', 'environ', 'ipaths', 'pcache']
+    def __init__(self, cfg, base, ipaths):
         self.cfg = cfg
         self.base = base
         self.environ = {
             'os': cfg.target.os,
             'flag': cfg.flags,
         }
+        basedir, basefile = base.split()
+        basedir = basedir if basefile else base
+        self.ipaths = (basedir,) + tuple(ipaths)
+        self.pcache = {}
     def __getitem__(self, index):
         return self.environ[index]
+    def search(self, path):
+        try:
+            return self.pcache[path]
+        except KeyError:
+            pass
+        for ipath in self.ipaths:
+            try:
+                p = ipath.join(path)
+                xp = p.addext('.xml')
+            except ValueError:
+                continue
+            if self.cfg.exists(xp):
+                self.pcache[path] = p
+                return p
+        self.pcache[path] = None
+        return None
 
-def parse_file(cfg, path):
+def parse_file(cfg, path, paths):
     if path.base != 'srcdir':
         raise ValueError('wrong base')
     dirname, basename = path.split()
@@ -138,5 +158,5 @@ def parse_file(cfg, path):
         raise ValueError('expected file, not directory name')
     buildfile = data.BuildFile()
     _parse_file(cfg.native_path(dirname.join1(basename, '.xml')),
-                xml_env.RootEnv(Info(cfg, path), dirname, buildfile))
+                xml_env.RootEnv(Info(cfg, path, paths), dirname, buildfile))
     return buildfile

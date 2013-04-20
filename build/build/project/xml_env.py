@@ -151,7 +151,7 @@ class GroupMixin(object):
         module = get_attrib(attrib, 'module')
         public = get_bool(attrib, 'public')
         for m in module.split():
-            m = Href.parse(m, self.vars.base)
+            m = Href.parse(m, self.vars.base, search=self.vars.search)
             self.group.requirements.append(data.Requirement(m, public))
         return null_env
 

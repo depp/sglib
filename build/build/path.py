@@ -235,21 +235,37 @@ class Href(object):
         self.frag = frag
 
     @classmethod
-    def parse(class_, text, base):
-        """Parse an href, normalizing the path."""
+    def parse(class_, text, base, *, search=None):
+        """Parse an href, normalizing the path.
+
+        If a search function is specified, it is used to resolve paths
+        that are relative but do not start with '.' or '..'.  The
+        function should take the path string to resolve as an argument
+        and return the resolved Path object.
+        """
         url = urllib.parse.urlsplit(text)
         if url.scheme or url.netloc or url.query:
             raise ValueError('invalid reference')
         path = url.path
         if path:
-            basedir, basef = base.split()
-            if basef:
-                base = basedir
-            path = base.join(urllib.parse.unquote(path))
+            hpath = None
+            if search is not None:
+                i = path.find('/')
+                if i >= 0:
+                    firstpart = path[:i]
+                else:
+                    firstpart = path
+                if firstpart not in ('', '.', '..'):
+                    hpath = search(path)
+            if hpath is None:
+                basedir, basef = base.split()
+                if basef:
+                    base = basedir
+                hpath = base.join(urllib.parse.unquote(path))
         else:
-            path = base
+            hpath = base
         frag = url.fragment or None
-        return class_(path, frag)
+        return class_(hpath, frag)
 
     def __str__(self):
         path = (urllib.parse.quote(self.path.path)
