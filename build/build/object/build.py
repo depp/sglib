@@ -155,7 +155,7 @@ class Build(object):
 
     def find_bundled_library(self, pattern):
         """Find the path for a bundle with the given pattern."""
-        if self._lib_dir is None:
+        if self._lib_dir is None or not self.cfg.exists(self._lib_dir):
             return None
         if self._bundles is None:
             self._bundles = []
