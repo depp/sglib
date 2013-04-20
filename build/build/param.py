@@ -3,6 +3,18 @@ from build.error import ConfigError
 
 Param = collections.namedtuple('Param', 'type default')
 
+def parse_bool(x):
+    y = x.lower()
+    if y in ('yes', 'true', 'on', '1'):
+        return True
+    if y in ('no', 'false', 'off', '0'):
+        return False
+    raise ValueError('invalid boolean')
+
+TYPES = {
+    'bool': parse_bool,
+}
+
 class ParamParser(object):
     """Parser for parameter strings.
 
@@ -13,6 +25,11 @@ class ParamParser(object):
     def __init__(self):
         self._params = {}
     def add_param(self, name, *, type=None, default=None):
+        if isinstance(type, str):
+            try:
+                type = TYPES[type]
+            except KeyError:
+                raise ValueError('unknown type: {!r}'.format(type))
         if name in self._params:
             raise Exception('duplicate parameter')
         self._params[name] = Param(type, default)
