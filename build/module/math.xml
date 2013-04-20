@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module type="multi">
+  <key name="desc">Math library</key>
+
+  <module type="library-search">
+    <key name="source.language">c</key>
+    <key name="source.prologue">
+#include &lt;math.h&gt;
+    </key>
+    <key name="source.body">
+    double x = strtod(argv[1], 0);
+    printf("sin(%g) = %g\n", sin(x));
+    </key>
+    <key name="flags.1.LIBS">-lm</key>
+  </module>
+</module>
