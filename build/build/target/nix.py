@@ -201,6 +201,7 @@ def build_pkg_config(build, mod, name):
                 combine_output=True)
             raise ConfigError('{} failed'.format(cmdname), stdout)
         flags[varname] = tuple(stdout.split())
+    flags['CXXFLAGS'] = flags['CFLAGS']
     build.add_module(name, EnvModule(flags))
 
 def build_sdl_config(build, mod, name):
@@ -212,8 +213,8 @@ def build_sdl_config(build, mod, name):
         if retcode:
             raise ConfigError('{} failed'.format(cmdname), stderr)
         flags[varname] = tuple(stdout.split())
+    flags['CXXFLAGS'] = flags['CFLAGS']
     build.add_module(name, EnvModule(flags))
-    return [EnvModule(name, flags)]
 
 def library_search(build, src_lang, src_prologue, src_body,
                    flagsets, name):
@@ -264,7 +265,7 @@ def build_library_search(build, mod, name):
         except ValueError:
             raise ConfigError('invalid flag name: {!r}'
                               .format(k))
-        if flagname not in ('CFLAGS', 'LIBS'):
+        if flagname not in ('CFLAGS', 'CXXFLAGS', 'LIBS'):
             raise ConfigError('unknown flag name: {!r}'
                               .format(flagname))
         flagsets.setdefault(flagnum, {})[flagname] = v
