@@ -51,7 +51,7 @@ class Target(nix.MakefileTarget):
                 pass
             elif src.type == 'xib':
                 xibsrc = src.path
-                nibdest = rsrcpath.join1(xibsrc.basename(), '.nib')
+                nibdest = rsrcpath.join1(xibsrc.withext('.nib').basename())
                 makefile.add_rule(
                     nibdest, [xibsrc],
                     [['/Developer/usr/bin/ibtool',
