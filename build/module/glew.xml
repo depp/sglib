@@ -13,12 +13,14 @@
     <if value="$os == windows">
       <define name="GLEW_STATIC" public="true"/>
     </if>
-    <src path="src/glew.c"/>
-    <group path="include/GL">
-      <src path="glew.h"/>
-      <src path="glxew.h"/>
-      <src path="wglew.h"/>
-    </group>
+    <module>
+      <src path="src/glew.c"/>
+      <group path="include/GL">
+        <src path="glew.h"/>
+        <src path="glxew.h"/>
+        <src path="wglew.h"/>
+      </group>
+    </module>
   </module>
   <module type="pkg-config">
     <key name="spec">glew</key>

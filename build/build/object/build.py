@@ -1,6 +1,7 @@
 from build.error import ConfigError
 from build.feedback import Feedback
 from build.path import Href
+import build.project.data as data
 from . import source
 import os
 import importlib
@@ -187,10 +188,25 @@ def build_bundled_library(build, mod, name):
     path = build.find_bundled_library(pattern)
     if path is None:
         raise ConfigError('library is not bundled: {}'.format(pattern))
-    obj = source.SourceModule.parse(mod.prefix_path(path), external=True)
-    build.add_srcmodule(name, obj)
-    build.bundles.add(pattern)
-    return path
+    errs = []
+    gen_subname = build.gen_name()
+    for submod in mod.modules:
+        subname = gen_subname if submod.name is None else submod.name
+        builder = build.get_builder(submod.type)
+        try:
+            builder(build, submod, subname)
+            break
+        except ConfigError as ex:
+            errs.append(ex)
+    else:
+        if not errs:
+            raise ConfigError('could not configure empty bundled library')
+        raise ConfigError('could not configure bundled library',
+                          suberrors=errs)
+    lmod = source.SourceModule.parse(mod, sources='error')
+    lmod.private_modules.add(subname)
+    build.add_srcmodule(name, lmod)
+    return '{} {}'.format(submod.type, path.to_posix())
 
 def build_multi(build, mod, name):
     desc = mod.info.get_string('desc', '<unknown library>')
@@ -209,11 +225,11 @@ def build_multi(build, mod, name):
     def check_bundles():
         for submod in bundles:
             try:
-                path = build_bundled_library(build, submod, name)
+                ident = build_bundled_library(build, submod, name)
             except ConfigError as ex:
                 pass
             else:
-                fb.write('bundled ({})'.format(path.to_posix()))
+                fb.write('bundled ({})'.format(ident))
                 return True
         return False
 

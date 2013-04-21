@@ -1,6 +1,8 @@
 from build.error import ConfigError
 import collections
 
+ACTIONS = ('include', 'exclude', 'error')
+
 Source = collections.namedtuple(
     'Source', 'path type header_paths modules defs external')
 
@@ -16,7 +18,8 @@ class SourceModule(object):
         self.defs = {}
 
     @classmethod
-    def parse(class_, mod, *, external=False):
+    def parse(class_, mod, *, external=False, sources='include'):
+        assert sources in ACTIONS
         smod = class_()
         def add_group(group, ipaths, reqs, defs):
             ipaths = ipaths.union(p.path for p in group.header_paths)
@@ -37,9 +40,13 @@ class SourceModule(object):
                                 .format(def_.name))
                         smod.defs[def_.name] = def_.value
                     defs[def_.name] = def_.value
-            smod.sources.extend(
-                Source(src.path, src.type, ipaths, reqs, defs, external)
-                for src in group.sources)
+            if sources == 'include':
+                smod.sources.extend(
+                    Source(src.path, src.type, ipaths, reqs, defs, external)
+                    for src in group.sources)
+            elif sources == 'error':
+                if group.sources:
+                    raise ConfigError('unexpected source files in module')
             for subgroup in group.groups:
                 add_group(subgroup, ipaths, reqs, defs)
         add_group(mod.group, frozenset(), frozenset(), {})
