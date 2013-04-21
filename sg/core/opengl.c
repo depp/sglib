@@ -1,11 +1,12 @@
 /* Copyright 2012 Dietrich Epp <depp@zdome.net> */
 #include "sg/error.h"
 #include "sg/opengl.h"
+#include <stdio.h>
 
 const struct sg_error_domain SG_ERROR_OPENGL = { "opengl" };
 
 static const struct {
-    int code;
+    GLenum code;
     const char *name;
 } SG_ERROR_OPENGL_NAMES[] = {
     { 0x0500, "INVALID_ENUM​" },
@@ -31,4 +32,15 @@ sg_error_opengl(struct sg_error **err, GLenum code)
         }
     }
     sg_error_sets(err, &SG_ERROR_OPENGL, code, name);
+}
+
+const char *
+sg_error_openglname(char buf[12], GLenum code)
+{
+    int i;
+    for (i = 0; SG_ERROR_OPENGL_NAMES[i].code; i++)
+        if (SG_ERROR_OPENGL_NAMES[i].code == code)
+            return SG_ERROR_OPENGL_NAMES[i].name;
+    snprintf(buf, 12, "%#04x", (unsigned) code);
+    return buf;
 }

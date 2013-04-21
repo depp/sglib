@@ -158,6 +158,7 @@ sg_texture_uploadcb(void *cxt)
     GLint twidth;
     GLuint texnum;
     GLenum glerr;
+    char errbuf[12];
 
     if (!lp->tex) {
         sg_texture_finish(lp, NULL);
@@ -177,9 +178,10 @@ sg_texture_uploadcb(void *cxt)
 
     glerr = glGetError();
     if (glerr) {
-        /* FIXME: handle this error */
-        sg_logs(sg_logger_get("rsrc"), LOG_ERROR,
-                "failed to upload texture");
+        /* FIXME: do we want to do more? */
+        sg_logf(sg_logger_get("rsrc"), LOG_ERROR,
+                "failed to upload texture: %s",
+                sg_error_openglname(errbuf, glerr));
     }
 
     tex = lp->tex;

@@ -20,6 +20,14 @@ extern const struct sg_error_domain SG_ERROR_OPENGL;
 void
 sg_error_opengl(struct sg_error **err, GLenum code);
 
+/**
+ * @brief Get the name for an OpenGL error code.
+ *
+ * The return value may or may not alias the buffer passed in.
+ */
+const char *
+sg_error_openglname(char buf[12], GLenum code);
+
 #ifdef __cplusplus
 }
 #endif
