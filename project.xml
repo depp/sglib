@@ -18,21 +18,25 @@
 
   <module type="sglib">
     <key name="name">Image Test</key>
+    <require module="math"/>
     <src path="src/image.c"/>
   </module>
 
   <module type="sglib">
     <key name="name">Type Test</key>
+    <require module="math"/>
     <src path="src/type.c"/>
   </module>
 
   <module type="sglib">
     <key name="name">Audio Test</key>
+    <require module="math"/>
     <src path="src/audio.c"/>
   </module>
 
   <module type="sglib">
     <key name="name">Audio Test 2</key>
+    <require module="math"/>
     <src path="src/audio2.c"/>
   </module>
 </build>
