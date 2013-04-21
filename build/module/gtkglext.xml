@@ -9,5 +9,6 @@
 
   <module type="pkg-config">
     <key name="spec">gtkglext-1.0</key>
+    <key name="ignore.LIBS">-Wl,--export-dynamic</key>
   </module>
 </module>
