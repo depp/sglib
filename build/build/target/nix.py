@@ -188,6 +188,10 @@ def getmachine(cfg, env):
         'unable to parse machine name',
         shell.describe_proc(cmd, stdout + stderr, retcode))
 
+def parse_flags(mod, flag, value):
+    ignored = frozenset(mod.info.get_string('ignore.' + flag, '').split())
+    return tuple(f for f in value.split() if f not in ignored)
+
 def build_pkg_config(build, mod, name):
     spec = mod.info.get_string('spec')
     cmdname = 'pkg-config'
@@ -200,7 +204,7 @@ def build_pkg_config(build, mod, name):
                 [cmdname, '--print-errors', '--exists', arg, spec],
                 combine_output=True)
             raise ConfigError('{} failed'.format(cmdname), stdout)
-        flags[varname] = tuple(stdout.split())
+        flags[varname] = parse_flags(mod, varname, stdout)
     flags['CXXFLAGS'] = flags['CFLAGS']
     build.add_module(name, EnvModule(flags))
 
@@ -212,7 +216,7 @@ def build_sdl_config(build, mod, name):
         stdout, stderr, retcode = get_output([cmdname, arg])
         if retcode:
             raise ConfigError('{} failed'.format(cmdname), stderr)
-        flags[varname] = tuple(stdout.split())
+        flags[varname] = parse_flags(mod, varname, stdout)
     flags['CXXFLAGS'] = flags['CFLAGS']
     build.add_module(name, EnvModule(flags))
 
@@ -220,7 +224,6 @@ def library_search(build, src_lang, src_prologue, src_body,
                    flagsets, name):
     log = io.StringIO()
     srctext = gen_source(src_prologue, src_body)
-    print('Test file:', file=log)
     log.write(format_block(srctext))
     if src_lang == 'c':
         filename = 'config.c'
