@@ -65,7 +65,7 @@ class Path(object):
 
     def __init__(self, path, base):
         if base not in ('srcdir', 'builddir'):
-            raise ValueError('base must be srcdir or buliddir')
+            raise ValueError('base must be srcdir or builddir')
         self.path = path
         self.base = base
 
