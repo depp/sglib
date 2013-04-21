@@ -1,5 +1,8 @@
 from build.error import ConfigError
 
+CONFIGS = ('Debug', 'Release')
+PLATS = ('Win32', 'x64')
+
 def target(subtarget, os, cfg, vars, archs):
     if archs is not None:
         raise ConfigError(
@@ -13,9 +16,10 @@ class Target(object):
 
     def gen_build(self, cfg, proj):
         from build.object import build
-        from . import project
+        from . import project, solution
         filename = proj.filename
         build = build.Build(cfg, proj, {})
         for target in build.targets:
             project.make_target(build, target)
+        solution.make_solution(build, proj)
         return build

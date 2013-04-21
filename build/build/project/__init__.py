@@ -1,13 +1,21 @@
 from build.path import Href
+import uuid
 
 class Project(object):
-    __slots__ = ['modules', 'info', '_counter', 'files']
+    __slots__ = ['modules', 'info', '_counter', 'files', 'uuid']
 
     def __init__(self):
         self.modules = []
         self.info = None
         self._counter = 0
         self.files = []
+        self.uuid = None
+
+    def get_uuid(self, cfg):
+        if self.uuid is None:
+            self.uuid = uuid.uuid4()
+            cfg.warn('project has no UUID, generated: {}'.format(self.uuid))
+        return self.uuid
 
     @classmethod
     def load_xml(class_, cfg, ipaths):
@@ -58,6 +66,8 @@ class Project(object):
                 if ref not in modnames:
                     raise ValueError('undefined module ref: {}'
                                      .format(ref))
+
+        proj.uuid = proj.info.get_uuid('uuid', None)
 
         return proj
 

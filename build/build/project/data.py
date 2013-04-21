@@ -10,6 +10,7 @@ import collections
 import urllib.parse
 from build.path import Path
 from build.error import ConfigError
+import uuid
 
 EXT_SRCTYPE = {'.' + ext: type for type, exts in {
     'c': 'c',
@@ -88,6 +89,13 @@ class InfoDict(collections.MutableMapping):
         if len(items) != 1 or not isinstance(items[0], Path):
             raise ValueError('expected single path')
         return items[0]
+    @info_getter
+    def get_uuid(items):
+        """Convert an info dict item into a UUID."""
+        for item in items:
+            if not isinstance(item, str):
+                raise ValueError('expected string')
+        return uuid.UUID(''.join(items))
     def set_key(self, index, val, loc):
         if not isinstance(index, str):
             raise TypeError('index must be string')

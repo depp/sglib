@@ -4,6 +4,7 @@ from build.path import Href, splitext
 from build.error import ConfigError
 import os
 import re
+import uuid
 
 REQS = {
     'sglib': ['sglib'],
@@ -161,6 +162,10 @@ def template_sglib(module, buildinfo, cfg, proj):
             src.group.sources.append(data.Source(rcpath, 'rc'))
 
         for app, amod in apps:
+            if (len(apps) == 1 or app == 'windows') and 'uuid' in module.info:
+                amod.info['uuid'] = module.info['uuid']
+            else:
+                amod.info['uuid'] = uuid.uuid4()
             amod.info.update(args)
             if app != 'windows':
                 amod.info['filename'] = ['{} {}'.format(filename, APPS[app])]

@@ -1,3 +1,4 @@
+from . import CONFIGS, PLATS
 from build.error import ConfigError
 from build.path import Path
 from build.object.literalfile import LiteralFile
@@ -7,8 +8,6 @@ Element = etree.Element
 SubElement = etree.SubElement
 
 XMLNS = 'http://schemas.microsoft.com/developer/msbuild/2003'
-CONFIGS = ('Debug', 'Release')
-PLATS = ('Win32', 'x64')
 
 def condition(config, plat):
     assert config in CONFIGS
@@ -114,6 +113,8 @@ def make_executable_project(build, target):
 
     pg = SubElement(root, 'PropertyGroup', {'Label': 'Globals'})
     SubElement(pg, 'Keywords').text = 'Win32Proj'
+    SubElement(pg, 'ProjectGuid').text = \
+        '{{{}}}'.format(str(target.get_uuid(build.cfg)).upper())
     del pg
 
     proj_import(root, '$(VCTargetsPath)\\Microsoft.Cpp.Default.props')

@@ -5,6 +5,7 @@ converted into specific build objects, which are then emitted by the
 backend.
 """
 import inspect
+import uuid
 
 class Object(object):
     """Abstract base class for targets, modules, and generated sources."""
@@ -25,7 +26,13 @@ class Object(object):
                 setattr(self, slot, val)
 
 class Target(Object):
-    __slots__ = []
+    __slots__ = ['uuid']
+
+    def get_uuid(self, cfg):
+        if self.uuid is None:
+            self.uuid = uuid.uuid4()
+            cfg.warn('target has no UUID, generated: {}'.format(self.uuid))
+        return self.uuid
 
     @classmethod
     def build(class_, build, mod, name):

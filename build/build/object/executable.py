@@ -22,6 +22,7 @@ class Executable(Target):
         source = build.gen_name()
         build.add_sources(source, mod)
         return class_(
+            uuid=mod.info.get_uuid('uuid', None),
             source=source,
             filename=mod.info.get_string('filename'),
             args=parse_args(mod.info),
@@ -36,6 +37,7 @@ class ApplicationBundle(Target):
         source = build.gen_name()
         build.add_sources(source, mod)
         return class_(
+            uuid=mod.info.get_uuid('uuid', None),
             source=source,
             filename=mod.info.get_string('filename'),
             args=parse_args(mod.info),
