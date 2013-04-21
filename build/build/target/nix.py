@@ -27,6 +27,10 @@ class MakefileTarget(object):
         makefile.add_clean(Path('/build', 'builddir'))
         return build
 
+    @property
+    def config_env(self):
+        return self.base_env
+
 class EnvModule(object):
     __slots__ = ['env']
     def __init__(self, env):
@@ -224,7 +228,7 @@ def library_search(build, src_lang, src_prologue, src_body,
     else:
         raise ConfigError('unknown language: {!r}'.format(src_lang))
 
-    base_env = build.cfg.target.base_env
+    base_env = build.cfg.target.config_env
     with tempfile.TemporaryDirectory() as tempdir:
         src = os.path.join(tempdir, filename)
         obj = os.path.join(tempdir, 'config.o')

@@ -1,4 +1,6 @@
 from . import obj
+from . import Framework
+from .. import env
 from build.path import Path
 from build.object.literalfile import LiteralFile
 from build.error import ConfigError
@@ -33,6 +35,19 @@ EXT_MAP = {
 }
 EXT_MAP.update({ext: 'image' + ext for ext in
                 '.png .jpeg .pdf .git .bmp .pict .ico .icns .tiff'.split()})
+
+def add_flags(name):
+    def func(cfg, val):
+        cfg[name] = cfg.get(name, []) + list(val)
+    return func
+
+# Functions which add environment flags to the Xcode environment
+ENV_MAP = {
+    'LIBS': add_flags('OTHER_LDFLAGS'),
+    'LDFLAGS': add_flags('OTHER_LDFLAGS'),
+    'CFLAGS': add_flags('OTHER_CFLAGS'),
+    'CXXFLAGS': add_flags('OTHER_CPLUSPLUSFLAGS'),
+}
 
 class SourceGroup(object):
     """Object for creating an Xcode group of source files."""
@@ -236,8 +251,10 @@ class Project(object):
             sourceTree='<absolute>',
         )
         self.project.mainGroup.children.append(fwkgroup)
-        for framework in build.modules.values():
-            framework = framework.framework_name
+        for mod in build.modules.values():
+            if not isinstance(mod, Framework):
+                continue
+            framework = mod.framework_name
             fileref = obj.FileRef(
                 path=framework + '.framework',
                 lastKnownFileType='wrapper.framework',
@@ -249,6 +266,16 @@ class Project(object):
     def add_application_bundle(self, build, module):
         filename = module.filename
         source = build.sourcemodules[module.source]
+
+        frameworks = set()
+        target_env = []
+        for dep in source.deps:
+            mod = build.modules[dep]
+            if isinstance(mod, Framework):
+                frameworks.add(mod.framework_name)
+            else:
+                target_env.append(mod.env)
+        target_env = env.merge_env(target_env)
 
         appfile = obj.FileRef(
             path=filename + '.app',
@@ -266,6 +293,8 @@ class Project(object):
                 ['$(HEADER_SEARCH_PATHS)'] +
                 [self._cfg.native_path(p) for p in source.header_paths],
         }
+        for flagname in target_env:
+            ENV_MAP[flagname](cfg_base, target_env[flagname])
         if self._version <= (10, 6):
             cfg_base.update({
                 'USE_HEADERMAP': False,
@@ -297,8 +326,6 @@ class Project(object):
         tobj.add_phase('framework', obj.FrameworksBuildPhase())
         for src in source.sources:
             tobj.add_source(self._sources[src.path])
-        frameworks = {build.modules[dep].framework_name
-                      for dep in source.deps}
         for framework in frameworks:
             tobj.add_source(self._frameworks[framework])
 
