@@ -12,8 +12,6 @@
 
 #include <stdio.h>
 
-#define ALIGN(x) (((x) + sizeof(void *) - 1) & -sizeof(void *))
-
 /* Maximum size of message queue */
 #define SG_AUDIO_MIXMAXBUF 4096
 
@@ -648,11 +646,11 @@ sg_audio_mixdown_srcparam(struct sg_audio_mixdown *SG_RESTRICT mp,
 
 static const unsigned
 SG_AUDIO_MIXDOWN_MSGLEN[SG_AUDIO_MSG_COUNT] = {
-    ALIGN(sizeof(struct sg_audio_msgplay)),
+    sizeof(struct sg_audio_msgplay),
     0,
     0,
     0,
-    ALIGN(sizeof(struct sg_audio_msgparam))
+    sizeof(struct sg_audio_msgparam)
 };
 
 /*
@@ -665,7 +663,7 @@ sg_audio_mixdown_dispatch(struct sg_audio_mixdown *SG_RESTRICT mp)
 {
     unsigned char *mbuf;
     unsigned pos, end, type, wpos;
-    unsigned hsz = ALIGN(sizeof(struct sg_audio_msghdr)), msz;
+    unsigned hsz = pce_align(sizeof(struct sg_audio_msghdr)), msz;
     int sample;
     const struct sg_audio_msghdr *SG_RESTRICT mh;
     const void *mdat;
@@ -677,7 +675,7 @@ sg_audio_mixdown_dispatch(struct sg_audio_mixdown *SG_RESTRICT mp)
         mh = (void *) (mbuf + pos);
         type = mh->type;
         assert(type < SG_AUDIO_MSG_COUNT);
-        msz = hsz + SG_AUDIO_MIXDOWN_MSGLEN[type];
+        msz = hsz + pce_align(SG_AUDIO_MIXDOWN_MSGLEN[type]);
         assert(msz <= end - pos);
         sample = sg_audio_mixdown_t2s(mp, mh->time);
         if (sample >= mp->abufsize) {
