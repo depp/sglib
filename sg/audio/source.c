@@ -368,7 +368,7 @@ sg_audio_source_papply(struct sg_audio_param *SG_RESTRICT pp,
         break;
 
     case SG_AUDIO_PSLOPE:
-        dt = fabs((v2 - v1) / (pe->d.pslope * 0.001f));
+        dt = fabsf((v2 - v1) / (pe->d.pslope * 0.001f));
         if (!(dt >= 0.0f))
             endt = pe->time;
         else if (!(dt <= SG_AUDIO_MAXPTIME))

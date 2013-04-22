@@ -222,7 +222,7 @@ sg_audio_mixdown_updatetime(struct sg_audio_mixdown *SG_RESTRICT mp,
     if (mp->tm_n <= 0) {
         if (mp->tm_n < 0) {
             mp->timeref = curtime + SG_AUDIO_MIXDT;
-            dsi = (SG_AUDIO_MIXDT * 0.001) * mp->samplerate;
+            dsi = (int) ((SG_AUDIO_MIXDT * 0.001) * mp->samplerate);
             for (i = 0; i < NTIMESAMP; ++i)
                 mp->timesamp[i] = dsi * (1 - i) +
                     mp->abufsize * 2 + mp->mixahead;
@@ -632,7 +632,7 @@ sg_audio_mixdown_srcparam(struct sg_audio_mixdown *SG_RESTRICT mp,
     case SG_AUDIO_PSLOPE:
         dtf = fabs((pe->val - pp->val[0]) / (pe->d.pslope * 0.001));
         if (!(dtf >= 0.0f)) {
-            dt = 0.0f;
+            dt = 0;
         } else {
             if (!(dtf <= SG_AUDIO_MAXPTIME))
                 dtf = SG_AUDIO_MAXPTIME;
@@ -999,7 +999,7 @@ sg_audio_mixdown_render(struct sg_audio_mixdown *SG_RESTRICT mp,
                 }
             } else {
                 for (; (int) i < end; ++i) {
-                    x = (1.0/32768) * (float) sdat[i-pos];
+                    x = (1.0f/32768.0f) * (float) sdat[i-pos];
                     bufsamp[i*2+0] = x;
                     bufsamp[i*2+1] = x;
                 }

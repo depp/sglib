@@ -73,10 +73,11 @@ sg_audio_ofile_close(struct sg_audio_ofile *afp,
 {
     struct sg_file *fp = afp->fp;
     int r, sz, pos, ret;
+    int64_t rr;
     char header[WAV_HEADER_SIZE];
 
-    r = fp->seek(fp, 0, SEEK_SET);
-    if (r < 0) goto error;
+    rr = fp->seek(fp, 0, SEEK_SET);
+    if (rr < 0) goto error;
 
     sz = afp->len;
     memcpy(header, "RIFF", 4);
@@ -139,7 +140,7 @@ sg_audio_ofile_write(struct sg_audio_ofile *afp,
     int i, r;
 
     if (PCE_BYTE_ORDER == PCE_BIG_ENDIAN) {
-        if (afp->tmplen < nframe) {
+        if (afp->tmplen < (unsigned) nframe) {
             free(afp->tmp);
             afp->tmp = NULL;
             nlen = pce_round_up_pow2(nframe);

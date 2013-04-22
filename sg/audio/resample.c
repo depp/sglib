@@ -50,7 +50,8 @@ int
 sg_audio_pcm_resample(struct sg_audio_pcm *buf, int rate,
                       struct sg_error **err)
 {
-    void (*func)(short *, int, int, const short *, int, int);
+    void (*func)(short *SG_RESTRICT, int, int,
+                 const short *SG_RESTRICT, int, int);
     size_t nlensz;
     int nlen, nchan;
     double fnlen;
