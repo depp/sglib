@@ -517,33 +517,10 @@ pce_atomic_fetch_add_acq_rel(pce_atomic_t *p, int x)
     return (int) _InterlockedExchangeAdd(&p->v, x);
 }
 
-PCE_INLINE
-int
-pce_atomic_fetch_add_acquire(pce_atomic_t *p, int x)
-{
-#ifdef _M_IX86
-    return (int) _InterlockedExchangeAdd(&p->v, x);
-#else
-    return (int) _InterlockedExchangeAdd_acq(&p->v, x);
-#endif
-}
-
-PCE_INLINE
-int
-pce_atomic_fetch_add_release(pce_atomic_t *p, int x)
-{
-#ifdef _M_IX86
-    return (int) _InterlockedExchangeAdd(&p->v, x);
-#else
-    return (int) _InterlockedExchangeAdd_rel(&p->v, x);
-#endif
-}
-
-/*
-  This is a rather arbitrary choice, since there isn't a "no barrier"
-  version provided by MSC.
-*/
-#define pce_atomic_fetch_add pce_atomic_fetch_add_acquire
+/* Other intrinsics not available on x86 or x64.  */
+#define pce_atomic_fetch_add_acquire pce_atomic_fetch_add_acq_rel
+#define pce_atomic_fetch_add_release pce_atomic_fetch_add_acq_rel
+#define pce_atomic_fetch_add pce_atomic_fetch_add_acq_rel
 
 #endif
 
