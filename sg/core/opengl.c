@@ -41,6 +41,10 @@ sg_error_openglname(char buf[12], GLenum code)
     for (i = 0; SG_ERROR_OPENGL_NAMES[i].code; i++)
         if (SG_ERROR_OPENGL_NAMES[i].code == code)
             return SG_ERROR_OPENGL_NAMES[i].name;
+#ifdef _MSC_VER
+    sprintf(buf, "%#04x", (unsigned) code);
+#else
     snprintf(buf, 12, "%#04x", (unsigned) code);
+#endif
     return buf;
 }
