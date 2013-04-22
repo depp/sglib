@@ -165,7 +165,7 @@ def template_sglib(module, buildinfo, cfg, proj):
             if (len(apps) == 1 or app == 'windows') and 'uuid' in module.info:
                 amod.info['uuid'] = module.info['uuid']
             else:
-                amod.info['uuid'] = uuid.uuid4()
+                amod.info['uuid'] = [str(uuid.uuid4())]
             amod.info.update(args)
             if app != 'windows':
                 amod.info['filename'] = ['{} {}'.format(filename, APPS[app])]
