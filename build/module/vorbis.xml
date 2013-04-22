@@ -7,6 +7,13 @@
   <key name="pkg-gentoo">media-libs/libvorbis</key>
   <key name="pkg-arch">libvorbis</key>
 
+  <module type="bundled-library">
+    <key name="pattern">libvorbis</key>
+    <header-path path="include" public="true"/>
+    <module type="msvc">
+      <src path="win32/VS2010/libvorbis/libvorbis_static.vcxproj"/>
+    </module>
+  </module>
   <module type="pkg-config">
     <key name="spec">vorbis</key>
   </module>

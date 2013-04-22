@@ -7,6 +7,17 @@
   <key name="pkg-gentoo">media-libs/opus</key>
   <key name="pkg-arch">opus</key>
 
+  <module type="bundled-library">
+    <key name="pattern">opus</key>
+    <header-path path="include" public="true"/>
+    <module type="msvc">
+      <src path="src/opus.vcxproj"/>
+      <src path="celt/celt.vcxproj"/>
+      <src path="silk/fixed/silk_fixed.vcxproj"/>
+      <src path="silk/float/silk_float.vcxproj"/>
+      <src path="silk/silk_common.vcxproj"/>
+    </module>
+  </module>
   <module type="pkg-config">
     <key name="spec">opus</key>
   </module>

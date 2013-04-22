@@ -13,6 +13,9 @@
     <if value="$os == windows">
       <define name="GLEW_STATIC" public="true"/>
     </if>
+    <module type="msvc">
+      <src path="build/vc10/glew_static.vcxproj"/>
+    </module>
     <module>
       <src path="src/glew.c"/>
       <group path="include/GL">
