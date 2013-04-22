@@ -516,7 +516,7 @@ sg_audio_mixdown_srcplay(struct sg_audio_mixdown *SG_RESTRICT mp,
     for (param = 0; param < SG_AUDIO_PARAMCOUNT; ++param) {
         pp = &chanp->params[param];
         pp->pos[0] = pp->pos[1] = 0;
-        pp->pos[0] = pp->val[1] = mp->srcs[src].params[param];
+        pp->val[0] = pp->val[1] = mp->srcs[src].params[param];
     }
 }
 
