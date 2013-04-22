@@ -188,6 +188,7 @@ def build_bundled_library(build, mod, name):
     path = build.find_bundled_library(pattern)
     if path is None:
         raise ConfigError('library is not bundled: {}'.format(pattern))
+    mod = mod.prefix_path(path)
     errs = []
     gen_subname = build.gen_name()
     for submod in mod.modules:
