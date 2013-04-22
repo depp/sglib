@@ -1,3 +1,4 @@
+#include "defs.h"
 #include "sg/audio_sample.h"
 #include "sg/audio_source.h"
 #include "sg/entry.h"
@@ -5,8 +6,6 @@
 #include "sg/rand.h"
 #include <assert.h>
 #include <math.h>
-// #include <stddef.h>
-// #include <stdio.h>
 #include <string.h>
 
 #define NUMOBJS 10
@@ -39,8 +38,8 @@ xloadaudio(const char *name)
     return fp;
 }
 
-void
-sg_game_init(void)
+static void
+st_audio_init(void)
 {
     g_snd_clank[0] = xloadaudio("clank1");
     g_snd_clank[1] = xloadaudio("clank2");
@@ -55,20 +54,18 @@ sg_game_init(void)
     assert(g_snd_source >= 0);
 }
 
-void
-sg_game_getinfo(struct sg_game_info *info)
-{
-    (void) info;
-}
+static void
+st_audio_destroy(void)
+{ }
 
-void
-sg_game_event(union sg_event *evt)
+static void
+st_audio_event(union sg_event *evt)
 {
     (void) evt;
 }
 
-void
-sg_game_draw(int x, int y, int width, int height, unsigned msec)
+static void
+st_audio_draw(int x, int y, int width, int height, unsigned msec)
 {
     int i, j, sidx;
     float r, a, px, py, dx, dy;
@@ -189,6 +186,10 @@ sg_game_draw(int x, int y, int width, int height, unsigned msec)
     }
 }
 
-void
-sg_game_destroy(void)
-{ }
+const struct st_iface ST_AUDIO = {
+    "Audio 1",
+    st_audio_init,
+    st_audio_destroy,
+    st_audio_event,
+    st_audio_draw
+};

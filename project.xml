@@ -6,7 +6,6 @@
   <key name="copyright">Copyright © 2011-2012 Dietrich Epp</key>
   <key name="version">0.1</key>
   <key name="identifier">us.moria.sglib-test</key>
-  <key name="uuid">8d7f256e-ed27-443c-b350-c375d25a9e54</key>
 
   <key name="cvar.log.level.root">debug</key>
   <if value="$os == windows">
@@ -18,30 +17,17 @@
   <key name="lib-dir"><path path="lib"/></key>
 
   <module type="sglib">
-    <key name="name">Image Test</key>
-    <key name="uuid">9128103a-3f5d-4389-88cc-33abd44b76d6</key>
+    <key name="name">SGLib Test</key>
+    <key name="uuid">8d7f256e-ed27-443c-b350-c375d25a9e54</key>
     <require module="math"/>
-    <src path="src/image.c"/>
-  </module>
-
-  <module type="sglib">
-    <key name="name">Type Test</key>
-    <key name="uuid">c601e455-6385-4015-b997-e2cb879c7e3e</key>
-    <require module="math"/>
-    <src path="src/type.c"/>
-  </module>
-
-  <module type="sglib">
-    <key name="name">Audio Test</key>
-    <key name="uuid">0d9816b5-d40c-4598-9d1c-1903552ec49b</key>
-    <require module="math"/>
-    <src path="src/audio.c"/>
-  </module>
-
-  <module type="sglib">
-    <key name="name">Audio Test 2</key>
-    <key name="uuid">94a13834-5d1a-49a1-89fb-f959013816d2</key>
-    <require module="math"/>
-    <src path="src/audio2.c"/>
+    <group path="src">
+      <src path="audio.c"/>
+      <src path="audio2.c"/>
+      <src path="defs.h"/>
+      <src path="image.c"/>
+      <src path="main.c"/>
+      <src path="menu.c"/>
+      <src path="type.c"/>  
+    </group>
   </module>
 </build>

@@ -1,3 +1,4 @@
+#include "defs.h"
 #include "sg/opengl.h"
 #include "sg/entry.h"
 #include "sg/event.h"
@@ -30,8 +31,8 @@ static struct sg_layout *g_text1, *g_text2, *g_text3, *g_text4;
 
 static int g_dark, g_boxes;
 
-void
-sg_game_init(void)
+static void
+st_type_init(void)
 {
     int a = SG_VALIGN_TOP | SG_HALIGN_LEFT;
     struct sg_style *sp;
@@ -69,14 +70,12 @@ sg_game_init(void)
     sg_style_decref(sp);
 }
 
-void
-sg_game_getinfo(struct sg_game_info *info)
-{
-    (void) info;
-}
+static void
+st_type_destroy(void)
+{ }
 
-void
-sg_game_event(union sg_event *evt)
+static void
+st_type_event(union sg_event *evt)
 {
     switch (evt->type) {
     case SG_EVENT_KDOWN:
@@ -95,8 +94,8 @@ sg_game_event(union sg_event *evt)
     }
 }
 
-void
-sg_game_draw(int x, int y, int width, int height, unsigned msec)
+static void
+st_type_draw(int x, int y, int width, int height, unsigned msec)
 {
     float x0, x1, y0, y1;
     float mod;
@@ -194,6 +193,10 @@ sg_game_draw(int x, int y, int width, int height, unsigned msec)
     (void) msec;
 }
 
-void
-sg_game_destroy(void)
-{ }
+const struct st_iface ST_TYPE = {
+    "Type",
+    st_type_init,
+    st_type_destroy,
+    st_type_event,
+    st_type_draw
+};

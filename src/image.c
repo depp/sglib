@@ -1,3 +1,4 @@
+#include "defs.h"
 #include "sg/opengl.h"
 #include "sg/entry.h"
 #include "sg/texture.h"
@@ -62,8 +63,8 @@ static const char TEX_NAMES[NUM_TEX][12] = { "brick", "ivy", "roughstone" };
 static struct sg_texture *g_images[NUM_IMG];
 static struct sg_texture *g_tex[NUM_TEX];
 
-void
-sg_game_init(void)
+static void
+st_image_init(void)
 {
     int i;
     struct sg_error *err = NULL;
@@ -82,20 +83,18 @@ sg_game_init(void)
     }
 }
 
-void
-sg_game_getinfo(struct sg_game_info *info)
-{
-    (void) info;
-}
+static void
+st_image_destroy(void)
+{ }
 
-void
-sg_game_event(union sg_event *evt)
+static void
+st_image_event(union sg_event *evt)
 {
     (void) evt;
 }
 
-void
-sg_game_draw(int x, int y, int width, int height, unsigned msec)
+static void
+st_image_draw(int x, int y, int width, int height, unsigned msec)
 {
     int ix, iy, t;
     float x0, x1, y0, y1, u0, u1, v0, v1, s;
@@ -163,6 +162,10 @@ sg_game_draw(int x, int y, int width, int height, unsigned msec)
     (void) msec;
 }
 
-void
-sg_game_destroy(void)
-{ }
+const struct st_iface ST_IMAGE = {
+    "Image",
+    st_image_init,
+    st_image_destroy,
+    st_image_event,
+    st_image_draw
+};

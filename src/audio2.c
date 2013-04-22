@@ -1,3 +1,4 @@
+#include "defs.h"
 #include "sg/audio_sample.h"
 #include "sg/audio_source.h"
 #include "sg/entry.h"
@@ -5,9 +6,6 @@
 #include "sg/opengl.h"
 #include "keycode/keycode.h"
 #include <assert.h>
-// #include <math.h>
-// #include <stddef.h>
-// #include <stdio.h>
 #include <string.h>
 
 static struct sg_audio_sample *g_snd_clank;
@@ -33,8 +31,8 @@ xloadaudio(const char *name)
     return fp;
 }
 
-void
-sg_game_init(void)
+static void
+st_audio2_init(void)
 {
     g_snd_clank = xloadaudio("clank1");
     g_snd_donk = xloadaudio("donk1");
@@ -46,14 +44,12 @@ sg_game_init(void)
     g_snd_alien = xloadaudio("alien");
 }
 
-void
-sg_game_getinfo(struct sg_game_info *info)
-{
-    (void) info;
-}
+static void
+st_audio2_destroy(void)
+{ }
 
-void
-sg_game_event(union sg_event *evt)
+static void
+st_audio2_event(union sg_event *evt)
 {
     int cmd;
     switch (evt->type) {
@@ -247,8 +243,8 @@ func4(unsigned msec)
     draw_key(3, state);
 }
 
-void
-sg_game_draw(int x, int y, int width, int height, unsigned msec)
+static void
+st_audio2_draw(int x, int y, int width, int height, unsigned msec)
 {
     glClearColor(0.08, 0.05, 0.16, 0.0);
     glViewport(x, y, width, height);
@@ -267,6 +263,10 @@ sg_game_draw(int x, int y, int width, int height, unsigned msec)
     sg_audio_source_commit(msec, msec);
 }
 
-void
-sg_game_destroy(void)
-{ }
+const struct st_iface ST_AUDIO2 = {
+    "Audio 2",
+    st_audio2_init,
+    st_audio2_destroy,
+    st_audio2_event,
+    st_audio2_draw
+};
