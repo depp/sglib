@@ -4,7 +4,7 @@
 #include "sg/audio_pcm.h"
 #include "sg/error.h"
 #include "sg/log.h"
-#include <opus/opus.h>
+#include <opus.h>
 #include <stdlib.h>
 #include <string.h>
 
