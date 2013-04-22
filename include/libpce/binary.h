@@ -150,8 +150,8 @@ PCE_INLINE void
 pce_write_bu16(void *ptr, unsigned short v)
 {
     unsigned char *p = (unsigned char *) ptr;
-    p[0] = v >> 8;
-    p[1] = v;
+    p[0] = (unsigned char) (v >> 8);
+    p[1] = (unsigned char) v;
 }
 
 /* Write a little endian unsigned 16 bit integer.  */
@@ -159,8 +159,8 @@ PCE_INLINE void
 pce_write_lu16(void *ptr, unsigned short v)
 {
     unsigned char *p = (unsigned char *) ptr;
-    p[0] = v;
-    p[1] = v >> 8;
+    p[0] = (unsigned char) v;
+    p[1] = (unsigned char) (v >> 8);
 }
 
 /* Write a big endian signed 16 bit integer.  */
@@ -218,8 +218,8 @@ PCE_INLINE void
 pce_write_bu64(void *ptr, unsigned long long v)
 {
     unsigned char *p = (unsigned char *) ptr;
-    pce_write_bu32(p, v >> 32);
-    pce_write_bu32(p + 4, v);
+    pce_write_bu32(p, (unsigned) (v >> 32));
+    pce_write_bu32(p + 4, (unsigned) v);
 }
 
 /* Write a little endian unsigned 64 bit integer.  */
@@ -227,8 +227,8 @@ PCE_INLINE void
 pce_write_lu64(void *ptr, unsigned long long v)
 {
     unsigned char *p = (unsigned char *) ptr;
-    pce_write_lu32(p, v);
-    pce_write_lu32(p + 4, v >> 32);
+    pce_write_lu32(p, (unsigned) v);
+    pce_write_lu32(p + 4, (unsigned) (v >> 32));
 }
 
 /* Write a big endian signed 64 bit integer.  */
