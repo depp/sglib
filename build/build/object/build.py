@@ -291,6 +291,7 @@ MODULE_TYPES = {
     'sdl-config': build_unsupported,
     'library-search': build_unsupported,
     'framework': build_unsupported,
+    'msvc': build_unsupported,
 
     'config-header': generic('configheader.ConfigHeader'),
     'version-info': generic('versioninfo.VersionInfo'),

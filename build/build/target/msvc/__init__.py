@@ -1,5 +1,6 @@
 from build.error import ConfigError
 
+XMLNS = 'http://schemas.microsoft.com/developer/msbuild/2003'
 CONFIGS = ('Debug', 'Release')
 PLATS = ('Win32', 'x64')
 
@@ -16,9 +17,9 @@ class Target(object):
 
     def gen_build(self, cfg, proj):
         from build.object import build
-        from . import project, solution
+        from . import project, solution, module
         filename = proj.filename
-        build = build.Build(cfg, proj, {})
+        build = build.Build(cfg, proj, module.BUILDERS)
         for target in build.targets:
             project.make_target(build, target)
         solution.make_solution(build, proj)

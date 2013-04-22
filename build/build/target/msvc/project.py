@@ -1,4 +1,4 @@
-from . import CONFIGS, PLATS
+from . import CONFIGS, PLATS, XMLNS
 from build.error import ConfigError
 from build.path import Path
 from build.object.literalfile import LiteralFile
@@ -6,8 +6,6 @@ import xml.etree.ElementTree as etree
 import uuid
 Element = etree.Element
 SubElement = etree.SubElement
-
-XMLNS = 'http://schemas.microsoft.com/developer/msbuild/2003'
 
 def condition(config, plat):
     assert config in CONFIGS
@@ -200,6 +198,16 @@ def make_executable_project(build, target):
         SubElement(group, tag, {'Include': build.cfg.target_path(src.path)})
     for n, elt in sorted(groups.items()):
         root.append(elt)
+
+    group = None
+    for dep in source.deps:
+        mod = build.modules[dep]
+        if group is None:
+            group = SubElement(root, 'ItemGroup')
+        pref = SubElement(group, 'ProjectReference', {
+            'Include': build.cfg.target_path(mod.project)})
+        SubElement(pref, 'Project').text = \
+            '{{{}}}'.format(mod.get_uuid(build.cfg))
 
     proj_import(root, '$(VCTargetsPath)\\Microsoft.Cpp.targets')
 

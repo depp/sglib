@@ -19,6 +19,7 @@ EXT_SRCTYPE = {'.' + ext: type for type, exts in {
     'h++': 'hpp hxx',
     'objc': 'm',
     'objc++': 'mm',
+    'vcxproj': 'vcxproj',
 }.items() for ext in exts.split()}
 
 Source = collections.namedtuple('Source', 'path type')
