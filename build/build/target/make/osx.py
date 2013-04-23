@@ -1,7 +1,6 @@
 from .. import nix
 from .. import env
 from build.path import Path
-from build.error import ConfigError
 
 class Target(nix.MakefileTarget):
     __slots__ = ['archs']

@@ -1,4 +1,4 @@
-from build.error import ConfigError
+from build.error import Error, ConfigError
 from build.path import Path, split_native
 import collections
 import argparse
@@ -414,6 +414,6 @@ class ConfigTool(object):
     def run(self):
         try:
             self._run()
-        except ConfigError as ex:
+        except Error as ex:
             ex.write(sys.stderr)
             sys.exit(1)

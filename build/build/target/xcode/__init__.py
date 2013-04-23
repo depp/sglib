@@ -1,4 +1,3 @@
-from build.error import ConfigError
 from build.path import Path
 
 def version(x):

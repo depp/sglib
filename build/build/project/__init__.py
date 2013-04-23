@@ -1,3 +1,4 @@
+from build.error import ProjectError
 from build.path import Href
 import uuid
 
@@ -89,4 +90,4 @@ class Project(object):
             return info.get_string('filename')
         elif 'name' in info:
             return info.get_string('name')
-        raise ConfigError('project lacks name or filename attribute')
+        raise ProjectError('project lacks name or filename attribute')

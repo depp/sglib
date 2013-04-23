@@ -1,4 +1,4 @@
-from build.error import ConfigError
+from build.error import ProjectError
 import collections
 
 ACTIONS = ('include', 'exclude', 'error')
@@ -35,7 +35,7 @@ class SourceModule(object):
                     if def_.public:
                         if (def_.name in smod.defs and
                             smod.defs[def_.name] != def_.value):
-                            raise ConfigError(
+                            raise ProjectError(
                                 'conflicting preprocessor definiton: {!r}'
                                 .format(def_.name))
                         smod.defs[def_.name] = def_.value
@@ -46,7 +46,7 @@ class SourceModule(object):
                     for src in group.sources)
             elif sources == 'error':
                 if group.sources:
-                    raise ConfigError('unexpected source files in module')
+                    raise ProjectError('unexpected source files in module')
             for subgroup in group.groups:
                 add_group(subgroup, ipaths, reqs, defs)
         add_group(mod.group, frozenset(), frozenset(), {})
@@ -80,7 +80,7 @@ class FlatSourceModule(object):
             ipaths.update(src.header_paths)
             for k, v in src.defs.items():
                 if k in defs and defs[k] != v:
-                    raise ConfigError(
+                    raise ProjectError(
                         'conflicting preprocessor definiton: {!r}'
                         .format(def_.name))
                 defs[k] = v
@@ -132,7 +132,7 @@ def resolve_sources(modules):
                     ipaths.update(m.header_paths)
                     for k, v in m.defs.items():
                         if k in defs and defs[k] != v:
-                            raise ConfigError(
+                            raise ProjectError(
                                 'conflicting preprocessor definiton: {!r}'
                                 .format(k))
                         defs[k] = v
@@ -150,7 +150,7 @@ def resolve_sources(modules):
                 sources[src.path] = src2
             else:
                 if src2 != src3:
-                    raise ConfigError(
+                    raise ProjectError(
                         'conflicting entries for source file: {}'
                         .format(src2.path))
                 src2 = src3

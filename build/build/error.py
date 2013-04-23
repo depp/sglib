@@ -1,4 +1,4 @@
-class ConfigError(Exception):
+class Error(Exception):
     """Project configuration failed."""
 
     __slots__ = ['reason', 'details', 'suberrors', 'loc']
@@ -25,6 +25,14 @@ class ConfigError(Exception):
             indent = indent + '  '
             for error in self.suberrors:
                 error.write(fp, indent)
+
+class ProjectError(Error):
+    """Error in project."""
+    __slots__ = []
+
+class ConfigError(Error):
+    """Error in build environment."""
+    __slots__ = []
 
 def format_block(text):
     """Format a block to separate it in error messages."""

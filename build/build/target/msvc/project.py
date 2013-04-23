@@ -311,5 +311,5 @@ def make_target(build, target):
     try:
         func = TARGET_TYPES[target_type]
     except KeyError:
-        raise ConfigError('unsupported target type: {}'.format(target_type))
+        raise ProjectError('unsupported target type: {}'.format(target_type))
     func(build, target)

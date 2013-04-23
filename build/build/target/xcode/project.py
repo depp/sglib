@@ -3,7 +3,7 @@ from . import Framework
 from .. import env
 from build.path import Path
 from build.object.literalfile import LiteralFile
-from build.error import ConfigError
+from build.error import ConfigError, ProjectError
 import posixpath
 
 # Map from file types to phases
@@ -80,7 +80,7 @@ class SourceGroup(object):
     def add_source(self, *, path, **kw):
         """Add a FileRef for a source file."""
         if path in self._paths:
-            raise ConfigError('duplicate path: {}'.format(path))
+            raise ProjectError('duplicate path: {}'.format(path))
         dirname, basename = posixpath.split(path)
         dirobj = self.get_dir(dirname)
         fileobj = obj.FileRef(path=basename, sourceTree='<group>', **kw)

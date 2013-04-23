@@ -9,7 +9,7 @@ build system backends.
 import collections
 import urllib.parse
 from build.path import Path
-from build.error import ConfigError
+from build.error import ProjectError
 import uuid
 
 EXT_SRCTYPE = {'.' + ext: type for type, exts in {
@@ -34,7 +34,7 @@ def info_getter(func):
             nonlocal loc
             if loc is None:
                 loc = self.loc
-            raise ConfigError(str(msg), loc=loc)
+            raise ProjectError(str(msg), loc=loc)
         loc = None
         if not isinstance(index, str):
             raise TypeError('index must be string')

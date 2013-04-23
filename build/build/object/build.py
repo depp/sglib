@@ -1,4 +1,4 @@
-from build.error import ConfigError
+from build.error import ProjectError, ConfigError
 from build.feedback import Feedback
 from build.path import Href
 import build.project.data as data
@@ -86,7 +86,7 @@ class Build(object):
             if k not in self._builders:
                 raise ValueError('cannot add builder for new tag: {!r}'
                                  .format(k))
-            if self._builders[k] is not build_unsupported:
+            if self._builders[k] is not None:
                 raise ValueError('cannot override builder for tag: {}'
                                  .format(k))
             self._builders[k] = v
@@ -115,17 +115,22 @@ class Build(object):
             raise ConfigError('configuration failed', details)
 
     def get_builder(self, mtype):
+        """Get the builder function for a given module type."""
         try:
-            return self._builders[mtype]
+            builder = self._builders[mtype]
         except KeyError:
-            raise ConfigError('unknown module type: {!r}'.format(mtype))
+            raise ProjectError('unknown module type: {!r}'.format(mtype))
+        if builder is None:
+            raise ConfigError('module type is unsupported on this target: {}'
+                              .format(mtype))
+        return builder
 
     def _add_name(self, name):
         if name is None:
             self.cfg.warn('module has no name')
             return
         if name in self._names:
-            raise ConfigError('duplicate name: {}'.format(name))
+            raise ProjectError('duplicate module name: {}'.format(name))
         self._names.add(name)
 
     def add_srcmodule(self, name, obj):
@@ -145,7 +150,7 @@ class Build(object):
     def add_generated_source(self, obj):
         """Add a generated source to the build."""
         if obj.target in self.generated_sources:
-            raise ConfigError(
+            raise ProjectError(
                 'multiple generated sources for path: {}'.format(obj.target))
         self.generated_sources[obj.target] = obj
 
@@ -190,8 +195,8 @@ def build_bundled_library(build, mod, name, external):
     gen_subname = build.gen_name()
     for submod in mod.modules:
         subname = gen_subname if submod.name is None else submod.name
-        builder = build.get_builder(submod.type)
         try:
+            builder = build.get_builder(submod.type)
             builder(build, submod, subname, True)
             break
         except ConfigError as ex:
@@ -233,8 +238,8 @@ def build_multi(build, mod, name, external):
 
     def check_nonbundles():
         for submod in nonbundles:
-            builder = build.get_builder(submod.type)
             try:
+                builder = build.get_builder(submod.type)
                 builder(build, submod, name, external)
                 if submod.type == 'null':
                     fb.write('not needed')
@@ -259,10 +264,6 @@ def build_multi(build, mod, name, external):
         raise MissingLibrary('could not configure module',
                              suberrors=errs, mod=mod)
 
-def build_unsupported(build, mod, name, external):
-    raise ConfigError(
-        'module type is unsupported on this target: {}'.format(name))
-
 def generic(class_name):
     func = None
     def wrapper(*args):
@@ -284,11 +285,11 @@ MODULE_TYPES = {
     'application-bundle': generic('executable.ApplicationBundle'),
 
     'multi': build_multi,
-    'pkg-config': build_unsupported,
-    'sdl-config': build_unsupported,
-    'library-search': build_unsupported,
-    'framework': build_unsupported,
-    'msvc': build_unsupported,
+    'pkg-config': None,
+    'sdl-config': None,
+    'library-search': None,
+    'framework': None,
+    'msvc': None,
 
     'config-header': generic('configheader.ConfigHeader'),
     'version-info': generic('versioninfo.VersionInfo'),

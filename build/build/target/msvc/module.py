@@ -1,5 +1,5 @@
 from . import XMLNS
-from build.error import ConfigError
+from build.error import ProjectError, ConfigError
 import build.object.source as source
 import xml.etree.ElementTree as etree
 import uuid
@@ -58,7 +58,7 @@ def build_msvc(build, mod, name, external):
         obj = MSVCModule()
         obj.project = src.path
         if obj.project.splitext()[1] != '.vcxproj':
-            raise ConfigError('expected .vcxproj source in MSVC module')
+            raise ProjectError('expected .vcxproj source in MSVC module')
         try:
             with open(build.cfg.native_path(obj.project), 'rb') as fp:
                 doc = etree.parse(fp)
