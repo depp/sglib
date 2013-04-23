@@ -25,7 +25,7 @@ class VersionInfo(GeneratedSource):
                 .format(k, escape(version), k, escape(sha1)))
 
     @classmethod
-    def parse(class_, build, mod):
+    def parse(class_, build, mod, external):
         repos = {}
         for k in mod.info:
             if k.startswith('repo.'):

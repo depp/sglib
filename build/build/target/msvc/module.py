@@ -48,7 +48,7 @@ class MSVCModule(object):
             self.uuid = uuid.uuid4()
         return self.uuid
 
-def build_msvc(build, mod, name):
+def build_msvc(build, mod, name, external):
     sources = []
     for group in mod.group.all_groups():
         sources.extend(group.sources)

@@ -52,7 +52,7 @@ class Framework(object):
     def __init__(self, framework_name):
         self.framework_name = framework_name
 
-def build_framework(build, mod, name):
+def build_framework(build, mod, name, external):
     build.add_module(name, Framework(mod.info.get_string('filename')))
 
 BUILDERS = {

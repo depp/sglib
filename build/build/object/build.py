@@ -96,7 +96,7 @@ class Build(object):
         for mod in proj.modules:
             try:
                 builder = self.get_builder(mod.type)
-                builder(self, mod, mod.name)
+                builder(self, mod, mod.name, False)
             except ConfigError as ex:
                 if isinstance(ex, MissingLibrary):
                     missinglibs.append(ex.mod)
@@ -132,10 +132,6 @@ class Build(object):
         """Add a source module to the build."""
         self._add_name(name)
         self._nestsrc[name] = obj
-
-    def add_sources(self, name, mod):
-        """Add sources from the given module to the build."""
-        self.add_srcmodule(name, source.SourceModule.parse(mod))
 
     def add_module(self, name, obj):
         """Add a module to the build."""
@@ -177,13 +173,14 @@ class Build(object):
             if fname == pattern or fname.startswith(pattern + '-'):
                 return path
 
-def build_source(build, mod, name):
-    build.add_srcmodule(name, source.SourceModule.parse(mod))
+def build_source(build, mod, name, external):
+    build.add_srcmodule(
+        name, source.SourceModule.parse(mod, external=external))
 
-def build_null(build, mod, name):
+def build_null(build, mod, name, external):
     build.add_srcmodule(name, source.SourceModule())
 
-def build_bundled_library(build, mod, name):
+def build_bundled_library(build, mod, name, external):
     pattern = mod.info.get_string('pattern')
     path = build.find_bundled_library(pattern)
     if path is None:
@@ -195,7 +192,7 @@ def build_bundled_library(build, mod, name):
         subname = gen_subname if submod.name is None else submod.name
         builder = build.get_builder(submod.type)
         try:
-            builder(build, submod, subname)
+            builder(build, submod, subname, True)
             break
         except ConfigError as ex:
             errs.append(ex)
@@ -209,7 +206,7 @@ def build_bundled_library(build, mod, name):
     build.add_srcmodule(name, lmod)
     return '{} {}'.format(submod.type, path.to_posix())
 
-def build_multi(build, mod, name):
+def build_multi(build, mod, name, external):
     desc = mod.info.get_string('desc', '<unknown library>')
     bundles = []
     nonbundles = []
@@ -226,7 +223,7 @@ def build_multi(build, mod, name):
     def check_bundles():
         for submod in bundles:
             try:
-                ident = build_bundled_library(build, submod, name)
+                ident = build_bundled_library(build, submod, name, external)
             except ConfigError as ex:
                 pass
             else:
@@ -238,7 +235,7 @@ def build_multi(build, mod, name):
         for submod in nonbundles:
             builder = build.get_builder(submod.type)
             try:
-                builder(build, submod, name)
+                builder(build, submod, name, external)
                 if submod.type == 'null':
                     fb.write('not needed')
                 return True
@@ -262,7 +259,7 @@ def build_multi(build, mod, name):
         raise MissingLibrary('could not configure module',
                              suberrors=errs, mod=mod)
 
-def build_unsupported(build, mod, name):
+def build_unsupported(build, mod, name, external):
     raise ConfigError(
         'module type is unsupported on this target: {}'.format(name))
 

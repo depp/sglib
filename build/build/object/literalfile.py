@@ -8,7 +8,7 @@ class LiteralFile(GeneratedSource):
         fp.write(self.contents)
 
     @classmethod
-    def parse(class_, build, mod):
+    def parse(class_, build, mod, external):
         return class_(
             target=mod.info.get_path('target'),
             contents=mod.info.get_string('contents'),

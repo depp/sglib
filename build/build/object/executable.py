@@ -1,4 +1,5 @@
 from . import Target
+from . import source
 
 EXE_SLOTS = ['source', 'filename', 'args']
 
@@ -18,12 +19,13 @@ class Executable(Target):
     target_type = 'executable'
 
     @classmethod
-    def parse(class_, build, mod):
-        source = build.gen_name()
-        build.add_sources(source, mod)
+    def parse(class_, build, mod, external):
+        srcname = build.gen_name()
+        build.add_srcmodule(
+            srcname, source.SourceModule.parse(mod, external=external))
         return class_(
             uuid=mod.info.get_uuid('uuid', None),
-            source=source,
+            source=srcname,
             filename=mod.info.get_string('filename'),
             args=parse_args(mod.info),
         )
@@ -33,12 +35,13 @@ class ApplicationBundle(Target):
     target_type = 'application_bundle'
 
     @classmethod
-    def parse(class_, build, mod):
-        source = build.gen_name()
-        build.add_sources(source, mod)
+    def parse(class_, build, mod, external):
+        srcname = build.gen_name()
+        build.add_srcmodule(
+            srcname, source.SourceModule.parse(mod, external=external))
         return class_(
             uuid=mod.info.get_uuid('uuid', None),
-            source=source,
+            source=srcname,
             filename=mod.info.get_string('filename'),
             args=parse_args(mod.info),
             info_plist=mod.info.get_path('info-plist'),

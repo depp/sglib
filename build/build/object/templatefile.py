@@ -14,7 +14,7 @@ class TemplateFile(GeneratedSource):
         fp.write(template.expand(srcdata, self.tvars))
 
     @classmethod
-    def parse(class_, build, mod):
+    def parse(class_, build, mod, external):
         tvars = {}
         for k in mod.info:
             if k.startswith('var.'):

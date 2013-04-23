@@ -36,7 +36,7 @@ class ConfigHeader(GeneratedSource):
             '#endif\n')
 
     @classmethod
-    def parse(class_, build, mod):
+    def parse(class_, build, mod, external):
         return class_(
             target=mod.info.get_path('target'),
             bundles=build.bundles,
