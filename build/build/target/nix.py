@@ -1,6 +1,6 @@
 import build.shell as shell
-from . import env
-from build.error import ConfigError, format_block
+from build.object import env
+from build.error import ProjectError, ConfigError, format_block
 from build.path import Path
 import tempfile
 import os
@@ -30,11 +30,6 @@ class MakefileTarget(object):
     @property
     def config_env(self):
         return self.base_env
-
-class EnvModule(object):
-    __slots__ = ['env']
-    def __init__(self, env):
-        self.env = env
 
 def gen_source(prologue, body):
     fp = io.StringIO()
@@ -100,6 +95,8 @@ def ld_cmd(env, output, sources, sourcetypes):
     cmd.extend(sources)
     cmd.extend('-F' + p for p in env.get('FPATH', ()))
     cmd.extend(env.get('LIBS', ()))
+    for framework in env.get('FRAMEWORKS', ()):
+        cmd.extend(('-framework', framework))
     return cmd
 
 def default_env(cfg, vars, osname):
@@ -206,7 +203,7 @@ def build_pkg_config(build, mod, name, external):
             raise ConfigError('{} failed'.format(cmdname), stdout)
         flags[varname] = parse_flags(mod, varname, stdout)
     flags['CXXFLAGS'] = flags['CFLAGS']
-    build.add_module(name, EnvModule(flags))
+    build.add(name, env.EnvModule(flags))
 
 def build_sdl_config(build, mod, name, external):
     min_version = mod.info.get_string('min-version')
@@ -218,7 +215,7 @@ def build_sdl_config(build, mod, name, external):
             raise ConfigError('{} failed'.format(cmdname), stderr)
         flags[varname] = parse_flags(mod, varname, stdout)
     flags['CXXFLAGS'] = flags['CFLAGS']
-    build.add_module(name, EnvModule(flags))
+    build.add(name, env.EnvModule(flags))
 
 def library_search(build, src_lang, src_prologue, src_body,
                    flagsets, name):
@@ -250,7 +247,7 @@ def library_search(build, src_lang, src_prologue, src_body,
                 if retcode:
                     break
             else:
-                build.add_module(name, EnvModule(flags))
+                build.add(name, env.EnvModule(flags))
                 return
     raise ConfigError('could not link test file', log.getvalue())
 
@@ -282,7 +279,7 @@ def build_framework(build, mod, name, external):
             'frameworks not available on this platform')
     filename = mod.info.get_string('filename')
     library_search(
-        build, 'c', '', '', [{'LIBS': ('-framework', filename)}], name)
+        build, 'c', '', '', [{'FRAMEWORKS': (filename,)}], name)
 
 BUILDERS = {
     'pkg-config': build_pkg_config,

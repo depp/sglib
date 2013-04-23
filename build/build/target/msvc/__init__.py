@@ -20,7 +20,7 @@ class Target(object):
         from . import project, solution, module
         filename = proj.filename
         build = build.Build(cfg, proj, module.BUILDERS)
-        for target in build.targets:
+        for target in build.targets():
             project.make_target(build, target)
         solution.make_solution(build, proj)
         return build

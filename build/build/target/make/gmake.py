@@ -56,7 +56,7 @@ class Makefile(object):
 
     def add_build(self, build, makepath):
         target = self._cfg.target
-        for btarget in build.targets:
+        for btarget in build.targets():
             target_type = btarget.target_type
             try:
                 func = getattr(target, 'make_' + target_type)
@@ -65,7 +65,7 @@ class Makefile(object):
                                   .format(target_type))
             func(self, build, btarget)
         target.make_sources(self, build)
-        for gensrc in build.generated_sources.values():
+        for gensrc in build.generated_sources():
             if not gensrc.is_regenerated:
                 continue
             try:
@@ -83,7 +83,7 @@ class Makefile(object):
         self.add_rule(
             makepath, build.proj.files,
             [[sys.executable, sys.argv[0], 'reconfig']])
-        build.add_generated_source(GenMakefile(
+        build.add(None, GenMakefile(
             target=makepath, makefile=self))
 
     def _get_qctr(self, name):

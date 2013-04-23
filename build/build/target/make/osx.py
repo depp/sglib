@@ -1,6 +1,7 @@
 from .. import nix
-from .. import env
+from build.object import env
 from build.path import Path
+from build.error import ProjectError
 
 class Target(nix.MakefileTarget):
     __slots__ = ['archs']
@@ -21,7 +22,7 @@ class Target(nix.MakefileTarget):
                 for arch in self.archs}
 
     def make_application_bundle(self, makefile, build, module):
-        source = build.sourcemodules[module.source]
+        source = build.modules[module.source]
         filename = module.filename
         archs = self.archs
 
@@ -29,9 +30,7 @@ class Target(nix.MakefileTarget):
         proddir = Path('/build/products', 'builddir')
         apppath = proddir.join1(filename, '.app')
 
-        build_env = env.merge_env(
-            [self.base_env] +
-            [build.modules[req].env for req in source.deps])
+        build_env = build.get_env(self.base_env, source.deps)
 
         rsrcpath = apppath.join('Contents/Resources')
         objdirs = self.get_dirs('obj')
@@ -122,10 +121,8 @@ class Target(nix.MakefileTarget):
         objdirs = self.get_dirs('obj')
         for src in build.sources.values():
             if src.type in ('c', 'c++', 'objc', 'objc++'):
-                build_env = env.merge_env(
-                    [self.base_env] +
-                    [build.modules[req].env for req in src.modules] +
-                    [{'CPPPATH': src.header_paths}])
+                build_env = build.get_env(self.base_env, src.modules,
+                                          CPPPATH=src.header_paths)
                 for arch, objdir in objdirs.items():
                     opath = objdir.join(src.path.to_posix()).withext('.o')
                     dpath = opath.withext('.d')

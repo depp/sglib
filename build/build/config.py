@@ -365,7 +365,13 @@ class ConfigTool(object):
 
         cache_gen_sources = {}
         all_gen_sources = []
-        for target in build.generated_sources.values():
+        gen_paths = set()
+        for target in build.generated_sources():
+            if target.target in gen_paths:
+                raise ProjectError(
+                    'multiple generated sources with same path: {}'
+                    .format(target.target))
+            gen_paths.add(target.target)
             if target.is_regenerated:
                 cache_gen_sources[cfg.native_path(target.target)] = target
             if not target.is_regenerated_only:

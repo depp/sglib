@@ -2,7 +2,7 @@ from build.error import ProjectError, ConfigError
 from build.feedback import Feedback
 from build.path import Href
 import build.project.data as data
-from . import source
+from . import source, target, env, GeneratedSource
 import os
 import importlib
 import sys
@@ -61,24 +61,17 @@ class Build(object):
 
     A build contains objects, sources, and modules.
     """
-    __slots__ = ['_nestsrc', 'sourcemodules', 'sources', 'modules',
-                 'targets', 'generated_sources', '_counter',
-                 '_names', '_bundles', 'bundles', 'cfg', 'proj',
-                 '_lib_dir', '_builders']
+    __slots__ = ['sources', 'modules', 'bundles', 'cfg', 'proj',
+                 '_counter', '_bundles', '_lib_dir', '_builders']
 
     def __init__(self, cfg, proj, builders):
-        self._nestsrc = {}
-        self.sourcemodules = None
-        self.sources = None
+        # self.sources
         self.modules = {}
-        self.targets = []
-        self.generated_sources = {}
-        self._counter = 0
-        self._names = set()
-        self._bundles = None
         self.bundles = set()
         self.cfg = cfg
         self.proj = proj
+        self._counter = 0
+        self._bundles = None
         self._lib_dir = proj.info.get_path('lib-dir', None)
         self._builders = dict(MODULE_TYPES)
 
@@ -104,8 +97,10 @@ class Build(object):
                 ex.write(sys.stderr)
                 sys.stderr.write('\n')
 
-        self.sourcemodules, self.sources = \
-            source.resolve_sources(self._nestsrc)
+        srcmodules = {k: v for k, v in self.modules.items()
+                      if isinstance(v, source.SourceModule)}
+        srcmodules, self.sources = source.resolve_sources(srcmodules)
+        self.modules.update(srcmodules)
 
         if errors > 0:
             if missinglibs:
@@ -125,34 +120,14 @@ class Build(object):
                               .format(mtype))
         return builder
 
-    def _add_name(self, name):
-        if name is None:
-            self.cfg.warn('module has no name')
-            return
-        if name in self._names:
-            raise ProjectError('duplicate module name: {}'.format(name))
-        self._names.add(name)
-
-    def add_srcmodule(self, name, obj):
-        """Add a source module to the build."""
-        self._add_name(name)
-        self._nestsrc[name] = obj
-
-    def add_module(self, name, obj):
+    def add(self, name, obj):
         """Add a module to the build."""
-        self._add_name(name)
-        self.modules[name] = obj
-
-    def add_target(self, obj):
-        """Add a target to the build."""
-        self.targets.append(obj)
-
-    def add_generated_source(self, obj):
-        """Add a generated source to the build."""
-        if obj.target in self.generated_sources:
+        if name is None:
+            name = self.gen_name()
+        if name in self.modules:
             raise ProjectError(
-                'multiple generated sources for path: {}'.format(obj.target))
-        self.generated_sources[obj.target] = obj
+                'duplicate module name: {}'.format(name))
+        self.modules[name] = obj
 
     def gen_name(self):
         """Generate a unique name."""
@@ -178,12 +153,41 @@ class Build(object):
             if fname == pattern or fname.startswith(pattern + '-'):
                 return path
 
+    def targets(self):
+        for module in list(self.modules.values()):
+            if isinstance(module, target.Target):
+                yield module
+
+    def generated_sources(self):
+        for module in list(self.modules.values()):
+            if isinstance(module, GeneratedSource):
+                yield module
+
+    def get_env(self, base_env, deps, **kw):
+        """Get a build environment, given a list of modules.
+
+        Raises an error if any module specified is not an EnvModule.
+        Extra environment variables can be specified as keyword
+        arguments.
+        """
+        build_env = []
+        if base_env is not None:
+            build_env.append(base_env)
+        for req in deps:
+            dep = self.modules[req]
+            if not isinstance(dep, env.EnvModule):
+                raise ProjectError(
+                    'cannot understand dependency on module: {}'
+                    .format(req))
+            build_env.append(dep.env)
+        build_env.append(kw)
+        return env.merge_env(build_env)
+
 def build_source(build, mod, name, external):
-    build.add_srcmodule(
-        name, source.SourceModule.parse(mod, external=external))
+    build.add(name, source.SourceModule.parse(mod, external=external))
 
 def build_null(build, mod, name, external):
-    build.add_srcmodule(name, source.SourceModule())
+    build.add(name, source.SourceModule())
 
 def build_bundled_library(build, mod, name, external):
     pattern = mod.info.get_string('pattern')
@@ -208,7 +212,7 @@ def build_bundled_library(build, mod, name, external):
                           suberrors=errs)
     lmod = source.SourceModule.parse(mod, sources='error')
     lmod.private_modules.add(subname)
-    build.add_srcmodule(name, lmod)
+    build.add(name, lmod)
     return '{} {}'.format(submod.type, path.to_posix())
 
 def build_multi(build, mod, name, external):
@@ -281,8 +285,8 @@ MODULE_TYPES = {
     'source': build_source,
     'null': build_null,
     'bundled-library': build_bundled_library,
-    'executable': generic('executable.Executable'),
-    'application-bundle': generic('executable.ApplicationBundle'),
+    'executable': generic('target.Executable'),
+    'application-bundle': generic('target.ApplicationBundle'),
 
     'multi': build_multi,
     'pkg-config': None,

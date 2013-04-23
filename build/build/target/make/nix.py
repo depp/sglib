@@ -1,8 +1,8 @@
 from .. import nix
-from .. import env
 from build.object import GeneratedSource
 from build.path import Path
 from build.shell import escape
+from build.error import ProjectError
 import sys
 
 RUN_SCRIPT = '''\
@@ -80,7 +80,7 @@ class Target(nix.MakefileTarget):
     __slots__ = []
 
     def make_executable(self, makefile, build, module):
-        source = build.sourcemodules[module.source]
+        source = build.modules[module.source]
         filename = module.filename
 
         objdir = Path('/build/obj', 'builddir')
@@ -100,10 +100,7 @@ class Target(nix.MakefileTarget):
                 build.cfg.warn(
                     'cannot add file to executable: {}'.format(src.path))
 
-        build_env = [self.base_env]
-        for req in source.deps:
-            build_env.append(build.modules[req].env)
-        build_env = env.merge_env(build_env)
+        build_env = build.get_env(self.base_env, source.deps)
 
         exepath = exedir.join1(filename)
         debugpath = proddir.join1(filename, '.dbg')
@@ -134,7 +131,7 @@ class Target(nix.MakefileTarget):
         )
         makefile.add_clean(scriptpath)
         makefile.add_default(scriptpath)
-        build.add_generated_source(script)
+        build.add(None, script)
 
     def make_sources(self, makefile, build):
         objdir = Path('/build/obj', 'builddir')
@@ -142,11 +139,8 @@ class Target(nix.MakefileTarget):
             if src.type in ('c', 'c++'):
                 opath = objdir.join(src.path.to_posix()).withext('.o')
                 dpath = opath.withext('.d')
-                build_env = [self.base_env]
-                for req in src.modules:
-                    build_env.append(build.modules[req].env)
-                build_env.append({'CPPPATH': src.header_paths})
-                build_env = env.merge_env(build_env)
+                build_env = build.get_env(self.base_env, src.modules,
+                                          CPPPATH=src.header_paths)
                 makefile.add_rule(
                     opath, [src.path],
                     [nix.cc_cmd(build_env, opath, src.path, src.type,

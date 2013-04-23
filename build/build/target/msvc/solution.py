@@ -1,4 +1,5 @@
 from . import CONFIGS, PLATS
+from .module import MSVCModule
 from build.object.literalfile import LiteralFile
 from build.path import Path
 from build.error import ConfigError
@@ -12,12 +13,14 @@ TYPE_UUID = uuid.UUID("8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942")
 def make_solution(build, proj):
     projects = []
     configs = [(c, p) for c in CONFIGS for p in PLATS]
-    for target in build.targets:
+    for target in build.targets():
         projects.append(Project(
             Path('/', 'builddir').join1(target.filename, '.vcxproj'),
             target.get_uuid(build.cfg),
             configs))
     for module in build.modules.values():
+        if not isinstance(module, MSVCModule):
+            continue
         projects.append(Project(
             module.project, module.get_uuid(build.cfg), module.configs))
 
@@ -85,6 +88,6 @@ def make_solution(build, proj):
 
     f.write('EndGlobal\n')
 
-    build.add_generated_source(LiteralFile(
+    build.add(None, LiteralFile(
         target= Path('/', 'builddir').join1(proj.filename, '.sln'),
         contents=f.getvalue()))

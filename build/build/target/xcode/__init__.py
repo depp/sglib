@@ -31,29 +31,15 @@ class Target(object):
         self.config_env = config_env
 
     def gen_build(self, cfg, proj):
-        from . import project
-        from build.object import build
+        from . import project, module
+        from build.object.build import Build
         filename = proj.filename
         if self.config_env is None:
-            builders = BUILDERS
+            builders = module.BUILDERS
         else:
-            from .. import nix
-            builders = dict(nix.BUILDERS)
-            builders.update(BUILDERS)
-        build = build.Build(cfg, proj, builders)
+            builders = module.CONFIG_BUILDERS
+        build = Build(cfg, proj, builders)
         xcproj = project.Project(cfg)
         xcpath = Path('/', 'builddir').join1(filename, '.xcodeproj')
         xcproj.add_build(build, xcpath)
         return build
-
-class Framework(object):
-    __slots__ = ['framework_name']
-    def __init__(self, framework_name):
-        self.framework_name = framework_name
-
-def build_framework(build, mod, name, external):
-    build.add_module(name, Framework(mod.info.get_string('filename')))
-
-BUILDERS = {
-    'framework': build_framework,
-}

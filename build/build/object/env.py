@@ -65,6 +65,20 @@ class VarFlags(object):
     def show(x):
         return ' '.join(escape(i) for i in x)
 
+class VarUniqueFlags(VarFlags):
+    """An environment variable for program flags with removed duplicates."""
+
+    @staticmethod
+    def combine(x):
+        s = set()
+        a = []
+        for i in x:
+            for j in i:
+                if j not in s:
+                    s.add(j)
+                    a.append(j)
+        return tuple(a)
+
 class VarPathList(object):
     """An environment variable for path lists."""
 
@@ -150,6 +164,7 @@ VAR = {
     'LDFLAGS':  VarFlags,
     'LIBS':     VarFlags,
     'FPATH':    VarAbsPathList,
+    'FRAMEWORKS': VarUniqueFlags,
 }
 
 def parse_env(d):
@@ -186,3 +201,15 @@ def merge_env(a):
                 x = x[0]
             e[varname] = x
     return e
+
+def dump_env(env, file):
+    for k, v in sorted(env.items()):
+        print('{}: {}'.format(k, VAR[k].show(v)), file=file)
+
+class EnvModule(object):
+    """Module which contains only a build environment."""
+    __slots__ = ['env']
+    def __init__(self, env):
+        if not isinstance(env, dict):
+            raise TypeError('environment must be dictionary')
+        self.env = env

@@ -1,7 +1,15 @@
-from . import Target
+from . import Object
 from . import source
+import uuid
 
-EXE_SLOTS = ['source', 'filename', 'args']
+class Target(Object):
+    __slots__ = ['uuid', 'filename']
+
+    def get_uuid(self, cfg):
+        if self.uuid is None:
+            self.uuid = uuid.uuid4()
+            cfg.warn('target has no UUID, generated: {}'.format(self.uuid))
+        return self.uuid
 
 def parse_args(info):
     args = []
@@ -14,6 +22,8 @@ def parse_args(info):
     args.sort(key=lambda x: x[0])
     return [arg[1] for arg in args]
 
+EXE_SLOTS = ['source', 'args']
+
 class Executable(Target):
     __slots__ = EXE_SLOTS
     target_type = 'executable'
@@ -21,7 +31,7 @@ class Executable(Target):
     @classmethod
     def parse(class_, build, mod, external):
         srcname = build.gen_name()
-        build.add_srcmodule(
+        build.add(
             srcname, source.SourceModule.parse(mod, external=external))
         return class_(
             uuid=mod.info.get_uuid('uuid', None),
@@ -37,7 +47,7 @@ class ApplicationBundle(Target):
     @classmethod
     def parse(class_, build, mod, external):
         srcname = build.gen_name()
-        build.add_srcmodule(
+        build.add(
             srcname, source.SourceModule.parse(mod, external=external))
         return class_(
             uuid=mod.info.get_uuid('uuid', None),

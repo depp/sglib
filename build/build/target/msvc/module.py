@@ -70,11 +70,11 @@ def build_msvc(build, mod, name, external):
         obj.configs = get_configs(doc)
         if not obj.configs:
             raise ConfigError('could not find project configurations')
-        build.add_module(pname, obj)
+        build.add(pname, obj)
         deps.append(pname)
     obj = source.SourceModule()
     obj.private_modules.update(deps)
-    build.add_srcmodule(name, obj)
+    build.add(name, obj)
 
 BUILDERS = {
     'msvc': build_msvc,

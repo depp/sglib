@@ -1,7 +1,6 @@
 from . import obj
-from . import Framework
-from .. import env
 from build.path import Path
+from build.object import env
 from build.object.literalfile import LiteralFile
 from build.error import ConfigError, ProjectError
 import posixpath
@@ -197,7 +196,7 @@ class Project(object):
     def add_build(self, build, xcpath):
         self.add_sources(build)
         self.add_frameworks(build)
-        for target in build.targets:
+        for target in build.targets():
             target_type = target.target_type
             if target_type not in TARGET_TYPES:
                 raise ConfigError(
@@ -212,10 +211,12 @@ class Project(object):
         pf = io.StringIO()
         uf = io.StringIO()
         self.project.write(pf, uf, objectVersion=self._objectVersion)
-        build.add_generated_source(
+        build.add(
+            None,
             LiteralFile(target=xcpath.join('project.pbxproj'),
                         contents=pf.getvalue()))
-        build.add_generated_source(
+        build.add(
+            None,
             LiteralFile(target=xcpath.join('default.pbxuser'),
                         contents=uf.getvalue()))
 
@@ -251,10 +252,11 @@ class Project(object):
             sourceTree='<absolute>',
         )
         self.project.mainGroup.children.append(fwkgroup)
+        frameworks = set()
         for mod in build.modules.values():
-            if not isinstance(mod, Framework):
-                continue
-            framework = mod.framework_name
+            if isinstance(mod, env.EnvModule):
+                frameworks.update(mod.env.get('FRAMEWORKS', ()))
+        for framework in frameworks:
             fileref = obj.FileRef(
                 path=framework + '.framework',
                 lastKnownFileType='wrapper.framework',
@@ -265,17 +267,14 @@ class Project(object):
 
     def add_application_bundle(self, build, module):
         filename = module.filename
-        source = build.sourcemodules[module.source]
+        source = build.modules[module.source]
 
-        frameworks = set()
-        target_env = []
-        for dep in source.deps:
-            mod = build.modules[dep]
-            if isinstance(mod, Framework):
-                frameworks.add(mod.framework_name)
-            else:
-                target_env.append(mod.env)
-        target_env = env.merge_env(target_env)
+        target_env = build.get_env(None, source.deps)
+        try:
+            frameworks = frozenset(target_env['FRAMEWORKS'])
+            del target_env['FRAMEWORKS']
+        except KeyError:
+            frameworks = ()
 
         appfile = obj.FileRef(
             path=filename + '.app',

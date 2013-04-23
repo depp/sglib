@@ -1,4 +1,5 @@
 from . import CONFIGS, PLATS, XMLNS
+from .module import MSVCModule
 from build.error import ConfigError
 from build.path import Path
 from build.object.literalfile import LiteralFile
@@ -91,7 +92,7 @@ PLATFORM_ATTR = {
 }
 
 def make_executable_project(build, target):
-    source = build.sourcemodules[target.source]
+    source = build.modules[target.source]
 
     root = Element('Project', {
         'xmlns': XMLNS,
@@ -202,6 +203,10 @@ def make_executable_project(build, target):
     group = None
     for dep in source.deps:
         mod = build.modules[dep]
+        if not isinstance(mod, MSVCModule):
+            raise ProjectError(
+                'cannot understand dependency on module: {}'
+                .format(req))
         if group is None:
             group = SubElement(root, 'ItemGroup')
         pref = SubElement(group, 'ProjectReference', {
@@ -216,7 +221,7 @@ def make_executable_project(build, target):
     return etree.tostring(root, encoding='unicode')
 
 def make_executable_filters(build, target):
-    source = build.sourcemodules[target.source]
+    source = build.modules[target.source]
     filters = set()
     root = Element('Project', {
         'xmlns': XMLNS,
@@ -297,7 +302,7 @@ EXECUTABLE_FILES = [
 def make_executable(build, target):
     path = Path('/', 'builddir').join1(target.filename)
     for ext, func in EXECUTABLE_FILES:
-        build.add_generated_source(LiteralFile(
+        build.add(None, LiteralFile(
             target=path.addext(ext),
             contents=func(build, target),
         ))
