@@ -80,7 +80,7 @@ sg_audio_pcm_resample(struct sg_audio_pcm *buf, int rate,
         goto invalid;
     }
 
-    fnlen = floor((double) rate / buf->rate + 0.5);
+    fnlen = floor(buf->nframe * (double) rate / buf->rate + 0.5);
     if (fnlen > INT_MAX)
         goto nomem;
     nlen = (int) fnlen;
