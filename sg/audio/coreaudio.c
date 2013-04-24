@@ -7,6 +7,10 @@
 #include <AudioUnit/AudioUnit.h>
 #include <CoreAudio/CoreAudio.h>
 #include <CoreServices/CoreServices.h>
+#include <math.h>
+
+#define SG_AUDIO_COREAUDIO_MINRATE 8000
+#define SG_AUDIO_COREAUDIO_MAXRATE 200000
 
 static struct sg_audio_mixdown *sg_audio_ca_mixdown;
 static struct sg_logger *sg_audio_ca_logger;
@@ -49,6 +53,7 @@ sg_audio_sys_pstart(void)
     OSStatus e = 0;
     Float64 sampleRate;
     UInt32 size, bufsize;
+    int isampleRate;
     const char *why, *ewhy;
     struct sg_error *err = NULL;
 
@@ -91,7 +96,24 @@ sg_audio_sys_pstart(void)
         goto error;
     }
 
-    sfmt.mSampleRate = 48000;
+    size = sizeof(sampleRate);
+    e = AudioUnitGetProperty(
+        output,
+        kAudioUnitProperty_SampleRate,
+        kAudioUnitScope_Output,
+        0,
+        &sampleRate, &size);
+    if (e) {
+        why = "could not get property";
+        goto error;
+    }
+    isampleRate = (int) floor(sampleRate + 0.5);
+    if (isampleRate < SG_AUDIO_COREAUDIO_MINRATE || isampleRate > SG_AUDIO_COREAUDIO_MAXRATE) {
+        why = "sample rate is too extreme";
+        goto error;
+    }
+
+    sfmt.mSampleRate = sampleRate;
     sfmt.mFormatID = kAudioFormatLinearPCM;
     sfmt.mFormatFlags =
         kAudioFormatFlagIsFloat |
@@ -114,31 +136,6 @@ sg_audio_sys_pstart(void)
         goto error;
     }
 
-    size = sizeof(sampleRate);
-    e = AudioUnitGetProperty(
-        output,
-        kAudioUnitProperty_SampleRate,
-        kAudioUnitScope_Output,
-        0,
-        &sampleRate, &size);
-    if (e) {
-        why = "could not get property";
-        goto error;
-    }
-
-    /*
-    bufsize = 32;
-    e = AudioUnitSetProperty(
-        output,
-        kAudioDevicePropertyBufferFrameSize,
-        kAudioUnitScope_Global,
-        0,
-        &bufsize, sizeof(bufsize));
-    if (e) {
-        sg_logs(sg_audio_ca_logger, LOG_INFO, "could not set bufsize");
-    }
-    */
-
     size = sizeof(bufsize);
     e = AudioUnitGetProperty(
         output,
@@ -158,7 +155,7 @@ sg_audio_sys_pstart(void)
             "audio sample rate: %g", sampleRate);
 
     sg_audio_ca_mixdown = sg_audio_mixdown_new(
-        (int) floor(sampleRate + 0.5), bufsize, &err);
+        isampleRate, bufsize, &err);
     if (!sg_audio_ca_mixdown) {
         why = "could not create audio system";
         goto error2;
