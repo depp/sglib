@@ -241,4 +241,17 @@ struct sg_audio_system {
 
 extern struct sg_audio_system sg_audio_system_global;
 
+/*
+  Set the global audio sample rate.  Specify 0 to disable audio
+  sample loading.  This should be called by the platform's audio
+  subsystem when it discovers the hardware's sampling rate.
+
+  This function should only be called if no audio mixdowns currently
+  exist, since it will unload all audio samples loaded with a
+  different sample rate, and that will cause any existing audio
+  mixdown to crash.
+*/
+void
+sg_audio_sample_setrate(int rate);
+
 #endif

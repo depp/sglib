@@ -58,10 +58,16 @@ struct sg_audio_sample {
     /**
      * @brief Audio sample name.
      *
-     * This is the only public field which is valid when the sample is
-     * not loaded.
+     * Always valid, never modified.
      */
     const char *name;
+
+    /**
+     * @brief Audio sample name length.
+     *
+     * Always valid, never modified.
+     */
+    size_t namelen;
 
     /**
      * @private @brief Flag which indicates whether the sample is
@@ -70,7 +76,8 @@ struct sg_audio_sample {
      * This flag is set with release memory ordering and should be
      * read with acquire memory ordering.  The flag may be set
      * asynchronously, but will only be cleared when no audio mixdowns
-     * exist.
+     * exist.  It will only be modified while the global audio sample
+     * lock is held, although this is an implementation detail.
      *
      * The remaining fields in this structure should only be read if
      * the sample is loaded.

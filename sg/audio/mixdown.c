@@ -812,6 +812,7 @@ sg_audio_mixdown_new1(sg_audio_mixdowntype_t type,
             pce_lock_release(&sp->slock);
             return NULL;
         }
+        sg_audio_sample_setrate(rate);
         sp->samplerate = rate;
     }
 
@@ -877,8 +878,10 @@ sg_audio_mixdown_free(struct sg_audio_mixdown *SG_RESTRICT mp)
 
     pce_lock_acquire(&sp->slock);
     sp->mixmask &= ~(1u << mp->index);
-    if (!sp->mixmask)
+    if (!sp->mixmask) {
+        sg_audio_sample_setrate(0);
         sp->samplerate = 0;
+    }
     if (mp->type == SG_AUDIO_OFFLINE) {
         pce_evt_destroy(&sp->mix[mp->index].evt);
     }
