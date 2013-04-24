@@ -4,6 +4,7 @@
 #include "sg/audio_pcm.h"
 #include "sg/error.h"
 #include "sg/log.h"
+#include <math.h>
 #include <opus.h>
 #include <stdlib.h>
 #include <string.h>
@@ -45,6 +46,7 @@ struct sg_opus_decoder {
     OpusDecoder *decoder;
     int preskip;
     int channels;
+    float gain;
 
     float *buf;
     size_t buflen;
@@ -82,17 +84,17 @@ sg_opus_decoder_free(void *obj)
 
 int
 sg_opus_decoder_packet(void *obj, ogg_packet *op,
-                         struct sg_error **err)
+                       struct sg_error **err)
 {
     struct sg_opus_decoder *st = obj;
     unsigned char *data = op->packet;
-    size_t len = op->bytes, nalloc;
+    size_t len = op->bytes;
     const char *msg;
-    int r, version, channels, preskip, chanmap;
-    float *nbuf;
+    int r;
 
     if (st->state < 2) {
         if (st->state == 0) {
+            int version, channels, preskip, chanmap, gain;
             version = data[9];
             if ((version >> 4) != 0) {
                 msg = "Unknown version";
@@ -109,6 +111,9 @@ sg_opus_decoder_packet(void *obj, ogg_packet *op,
                 msg = "Unsupported channel map";
                 goto custom_error;
             }
+            gain = (short) (data[32] | (data[33] << 8));
+            st->gain = expf((float) (log(10.0) / (20 * 256)) *
+                            (float) gain);
             st->state = 1;
             st->preskip = preskip;
             st->channels = channels;
@@ -121,6 +126,9 @@ sg_opus_decoder_packet(void *obj, ogg_packet *op,
             st->state = 2;
         }
     } else {
+        size_t nalloc;
+        int channels;
+        float *nbuf;
         channels = st->channels;
         if (SG_OPUS_MAXFRAME > st->bufalloc - st->buflen) {
             nalloc = pce_round_up_pow2(st->buflen + SG_OPUS_MAXFRAME);
@@ -167,7 +175,8 @@ sg_opus_decoder_read(void *obj, struct sg_audio_pcm *pcm,
                        struct sg_error **err)
 {
     struct sg_opus_decoder *st = obj;
-    void *buf;
+    float *buf, gain;
+    size_t i, len;
 
     if (st->state < 2) {
         sg_opus_log("Incomplete header");
@@ -181,6 +190,13 @@ sg_opus_decoder_read(void *obj, struct sg_audio_pcm *pcm,
             abort();
     } else {
         buf = st->buf;
+    }
+
+    if (st->gain != 1.0f) {
+        gain = st->gain;
+        len = st->buflen * st->channels;
+        for (i = 0; i < len; i++)
+            buf[i] *= gain;
     }
 
     pcm->alloc = buf;
