@@ -146,7 +146,7 @@ def default_env(cfg, vars, osname):
         })
 
     user_env = {}
-    for varname in vars.items():
+    for varname in vars:
         try:
             varparse = env.VAR[varname].parse
         except (KeyError, AttributeError):
