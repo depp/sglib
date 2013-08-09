@@ -7,6 +7,7 @@
 # Build system
 /Makefile
 /config.dat
+/config.log
 /*Test*
 
 # Visual Studio
