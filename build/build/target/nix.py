@@ -15,6 +15,9 @@ class MakefileTarget(object):
             raise ConfigError(
                 'architecture cannot be specified for this target')
         self.base_env = default_env(cfg, vars, subtarget)
+        fp = cfg.getfp(2)
+        fp.write('Makefile environment:\n')
+        env.dump_env(self.base_env, fp, indent='  ')
         self.os = subtarget
 
     def gen_build(self, cfg, proj):

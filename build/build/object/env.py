@@ -202,9 +202,9 @@ def merge_env(a):
             e[varname] = x
     return e
 
-def dump_env(env, file):
+def dump_env(env, file, *, indent=''):
     for k, v in sorted(env.items()):
-        print('{}: {}'.format(k, VAR[k].show(v)), file=file)
+        print('{}{}: {}'.format(indent, k, VAR[k].show(v)), file=file)
 
 class EnvModule(object):
     """Module which contains only a build environment."""
