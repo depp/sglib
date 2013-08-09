@@ -1,4 +1,4 @@
-import sys
+import build.config as config
 
 IN_FEEDBACK = False
 class Feedback(object):
@@ -20,8 +20,9 @@ class Feedback(object):
         self.active = True
         IN_FEEDBACK = True
         if self.cfg.verbosity >= 1:
-            sys.stderr.write(self.msg)
-            sys.stderr.flush()
+            config.console.write(self.msg)
+            config.console.flush()
+        config.logfile.write(self.msg + '\n')
         return self
     def write(self, msg, success=True):
         global IN_FEEDBACK
@@ -30,7 +31,8 @@ class Feedback(object):
         self.active = False
         IN_FEEDBACK = False
         if self.cfg.verbosity >= 1:
-            sys.stderr.write(' {}\n'.format(msg))
+            config.console.write(' {}\n'.format(msg))
+        config.logfile.write('{} {}\n'.format(self.msg, msg))
     def __exit__(self, exc_type, exc_value, traceback):
         if not self.active:
             return

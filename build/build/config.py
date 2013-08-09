@@ -1,5 +1,6 @@
 from build.error import Error, ConfigError
 from build.path import Path, split_native
+import build.shell as shell
 import collections
 import argparse
 import sys
@@ -9,6 +10,7 @@ import importlib
 import pickle
 import io
 import re
+import datetime
 
 TARGETS = {'make', 'msvc', 'xcode'}
 OS = {'osx', 'linux', 'windows'}
@@ -19,6 +21,25 @@ PLATFORMS = {
 }
 
 EXISTS_CACHE = {}
+
+class Tee(io.TextIOBase):
+    __slots__ = ['files']
+    def __init__(self, files):
+        super(Tee, self).__init__()
+        self.files = tuple(files)
+    def writable(self):
+        return True
+    def write(self, s):
+        for fp in self.files:
+            fp.write(s)
+
+def redirect_log(*, append):
+    global logfile
+    global console
+    console = sys.stderr
+    mode = 'a' if append else 'w'
+    logfile = open('config.log', mode)
+    sys.stderr = Tee([sys.stderr, logfile])
 
 def parse_archs(x):
     archs = x.split()
@@ -111,13 +132,19 @@ class Config(object):
             return base + ppath
         return base + sep + ppath
 
+    def getfp(self, level):
+        """Get logging file object for the given log level."""
+        if self.verbosity >= level:
+            return sys.stderr
+        return logfile
+
     def warn(self, msg, extra=None):
-        if self.verbosity >= 1:
-            sys.stderr.write('warning: {}\n'.format(msg))
-            if extra is not None:
-                sys.stderr.write(extra)
-                if not extra.endswith('\n'):
-                    sys.stderr.write('\n')
+        fp = self.getfp(1)
+        fp.write('warning: {}\n'.format(msg))
+        if extra is not None:
+            fp.write(extra)
+            if not extra.endswith('\n'):
+                fp.write('\n')
 
     def exists(self, path):
         ec = EXISTS_CACHE
@@ -285,11 +312,15 @@ class ConfigTool(object):
             cfg.warn('unknown variable: {!r}'.format(varname))
         return target
 
-    def parse_args(self):
+    def action_config(self):
         if len(sys.argv) < 3:
             print('invalid usage', file=sys.stderr)
             sys.exit(1)
-        __slots__ = ['flags', 'target']
+        redirect_log(append=False)
+        logfile.write(
+            'Configure {}\n'.format(datetime.datetime.now().isoformat()))
+        sys.stderr.write(
+            'Arguments: {}\n' .format(shell.escape_cmd(sys.argv[3:])))
 
         projfile = sys.argv[2]
         srcdir = os.path.dirname(projfile) or os.path.curdir
@@ -326,14 +357,17 @@ class ConfigTool(object):
                       .format(', '.join(target.archs)),
                       file=sys.stderr)
 
-        return cfg, args
+        self.run_config(cfg, args)
 
     def get_cache(self):
         with open('config.dat', 'rb') as fp:
             return pickle.load(fp)
 
-    def get_cached_args(self):
-        return pickle.loads(self.get_cache()[0]), None
+    def action_reconfig(self):
+        redirect_log(append=True)
+        logfile.write('\n{}\nReconfigure {}\n'.format(
+            '#' * 40, datetime.datetime.now().isoformat()))
+        self.run_config(pickle.loads(self.get_cache()[0]), None)
 
     def build(self, targetpath, target, cfg):
         fp = io.StringIO()
@@ -391,7 +425,7 @@ class ConfigTool(object):
                 print('Writing {}'.format(targetpath), file=sys.stderr)
             self.build(targetpath, target, cfg)
 
-    def run_regen(self):
+    def action_regen(self):
         if len(sys.argv) < 3:
             print('invalid usage', file=sys.stderr)
             sys.exit(1)
@@ -406,16 +440,12 @@ class ConfigTool(object):
             print('invalid usage', file=sys.stderr)
             sys.exit(1)
         action = sys.argv[1]
-
-        if action == 'config':
-            self.run_config(*self.parse_args())
-        elif action == 'reconfig':
-            self.run_config(*self.get_cached_args())
-        elif action == 'regen':
-            self.run_regen()
-        else:
+        try:
+            func = getattr(self, 'action_{}'.format(action))
+        except AttributeError:
             print('unknown action: {}'.format(action), file=sys.stderr)
             sys.exit(1)
+        func()
 
     def run(self):
         try:
