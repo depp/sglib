@@ -12,10 +12,12 @@
         <key name="source.language">c</key>
         <key name="source.prologue">
 #include &lt;math.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;stdio.h&gt;
         </key>
         <key name="source.body">
     double x = strtod(argv[1], 0);
-    printf("sin(%g) = %g\n", sin(x));
+    printf("sin(%g) = %g\n", x, sin(x));
         </key>
         <key name="flags.1.LIBS">-lm</key>
       </module>
