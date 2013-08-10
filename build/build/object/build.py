@@ -47,6 +47,8 @@ def format_missinglibs(libs):
         if plat not in plats.split():
             continue
         pkgs = [lib.info.get_string(key) for lib in libs if key in lib.info]
+        if not pkgs:
+            break
         print(file=info)
         print('To install the missing libraries, run the following command:',
               file=info)
