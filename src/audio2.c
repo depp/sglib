@@ -186,7 +186,7 @@ func3(unsigned msec)
     static int g_chan = -1, g_state, g_mod;
     int state = get_state(2);
     struct sg_audio_sample *fp;
-    float pan;
+    float pan = 0.0f;
 
     if (state && !g_state) {
         if (g_chan < 0)
