@@ -148,7 +148,7 @@ sg_aio_cancel(struct sg_aio_request *ioreq)
             ioreq->prev->next = ioreq->next;
         else
             q->first = ioreq->next;
-        if (ioreq->prev)
+        if (ioreq->next)
             ioreq->next->prev = ioreq->prev;
         else
             q->last = ioreq->prev;
