@@ -100,23 +100,21 @@ static const unsigned char SG_PATH_NORM[256] = {
     0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 };
 
-int
-sg_path_norm(char *buf, const char *path, size_t pathlen,
-             struct sg_error **err)
+static int
+sg_path_norm2(char *buf, char *pos,
+              const char *path, size_t pathlen,
+              struct sg_error **err)
 {
     char const *ip = path, *ie = path + pathlen;
-    char *op = buf, *os;
+    char *op = pos, *os, *oe = buf + SG_MAX_PATH;
     unsigned int ci, co;
     int r;
-
-    if (pathlen >= SG_MAX_PATH) {
-        sg_path_error(err, "path too long");
-        return -1;
-    }
 
     do {
         if (op != buf && op[-1] != '/')
             *op++ = '/';
+        if (op == oe)
+            goto toolong;
         os = op;
         while (1) {
             if (ip == ie) {
@@ -135,6 +133,8 @@ sg_path_norm(char *buf, const char *path, size_t pathlen,
                 }
             }
             *op++ = co;
+            if (op == oe)
+                goto toolong;
         }
         if (os == op) {
         } else if (os + 1 == op && op[0] == '.') {
@@ -152,4 +152,25 @@ sg_path_norm(char *buf, const char *path, size_t pathlen,
 
     *op = '\0';
     return (int) (op - buf);
+
+toolong:
+    sg_path_error(err, "path too long");
+    return -1;
+}
+
+int
+sg_path_norm(char *buf, const char *path, size_t pathlen,
+             struct sg_error **err)
+{
+    return sg_path_norm2(buf, buf, path, pathlen, err);
+}
+
+int
+sg_path_join(char *buf, const char *path, size_t pathlen,
+             struct sg_error **err)
+{
+    char *slash;
+    slash = strrchr(buf, '/');
+    return sg_path_norm2(buf, slash != NULL ? slash + 1 : buf,
+                         path, pathlen, err);
 }

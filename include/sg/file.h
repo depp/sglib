@@ -60,6 +60,18 @@ int
 sg_path_norm(char *buf, const char *path, size_t pathlen,
              struct sg_error **err);
 
+/* Join a relative path to a base path, and normalize the result.  The
+   base path must already be in the buffer.  If the base path is
+   nonempty but does not end with a slash, then the resulting path is
+   relative to the directory containing the base path.  Otherwise, the
+   resulting path is relative to the base path.  This is the same
+   logic used for relative URLs, but not the same logic used by
+   e.g. Python's os.path.join().  Has the same results as
+   sg_path_norm().  */
+int
+sg_path_join(char *buf, const char *path, size_t pathlen,
+             struct sg_error **err);
+
 /**
  * @brief A buffer of data read from a file.
  *
