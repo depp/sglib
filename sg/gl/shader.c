@@ -64,6 +64,7 @@ sg_shader_finish(struct sg_shader_load *lp, struct sg_error *err)
     if (lp->buf)
         sg_buffer_decref(lp->buf);
     free(lp);
+    sg_dispatch_resource_adjust(-1);
 }
 
 static void
@@ -246,6 +247,7 @@ sg_shader_file(const char *path, size_t pathlen, GLenum type,
     ep->key = pp;
     ep->value = sp;
 
+    sg_dispatch_resource_adjust(+1);
     pce_lock_release(&gp->lock);
     return sp;
 

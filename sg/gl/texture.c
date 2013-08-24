@@ -67,6 +67,7 @@ sg_texture_finish(struct sg_texture_load *lp, struct sg_error *err)
         sg_buffer_decref(lp->buf);
     sg_pixbuf_destroy(&lp->pixbuf);
     free(lp);
+    sg_dispatch_resource_adjust(-1);
 }
 
 /* Texture loading callback when IO operation completes */
@@ -291,6 +292,7 @@ sg_texture_file(const char *path, size_t pathlen,
     ep->key = pp;
     ep->value = tex;
 
+    sg_dispatch_resource_adjust(+1);
     pce_lock_release(&gp->lock);
     return tex;
 

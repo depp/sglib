@@ -34,7 +34,11 @@ typedef enum {
     SG_PRE_RENDER,
 
     /* Callbacks after rendering the frame.  */
-    SG_POST_RENDER
+    SG_POST_RENDER,
+
+    /* Callbacks after all resources are loaded, before rendering a
+       frame.  */
+    SG_RESOURCES_LOADED
 } sg_dispatch_time_t;
 
 /* Initialize synchronous queue.  */
@@ -56,6 +60,12 @@ sg_dispatch_sync_queue(sg_dispatch_time_t time, int delay, int *excl,
 /* Run all callbacks currently scheduled on the main thread.  */
 void
 sg_dispatch_sync_run(sg_dispatch_time_t time);
+
+/* Adjust the counter of the number of resources being loaded.  If the
+   counter hits zero, then all SG_RESOURCES_LOADED callbacks will be
+   queued.  */
+void
+sg_dispatch_resource_adjust(int amount);
 
 #ifdef __cplusplus
 }

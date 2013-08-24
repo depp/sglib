@@ -1,6 +1,7 @@
 /* Copyright 2012 Dietrich Epp <depp@zdome.net> */
 #include "libpce/thread.h"
 #include "sg/dispatch.h"
+#include "sg/log.h"
 #include <stdlib.h>
 #include <string.h>
 
@@ -25,6 +26,8 @@ struct sg_dispatch_sync {
 
     unsigned talloc;
     struct sg_dispatch_callback *tmp;
+
+    unsigned rsrc_count;
 };
 
 static struct sg_dispatch_sync sg_dispatch_sync;
@@ -74,8 +77,6 @@ err:
     abort();
 }
 
-#include <stdio.h>
-
 void
 sg_dispatch_sync_run(sg_dispatch_time_t time)
 {
@@ -121,4 +122,34 @@ sg_dispatch_sync_run(sg_dispatch_time_t time)
 
 err:
     abort();
+}
+
+#include <stdio.h>
+
+void
+sg_dispatch_resource_adjust(int amount)
+{
+    struct sg_dispatch_sync *m = &sg_dispatch_sync;
+    struct sg_dispatch_sqentry *qp, *qe;
+    unsigned oldcount, newcount;
+
+    pce_lock_acquire(&m->lock);
+    oldcount = m->rsrc_count;
+    newcount = oldcount + amount;
+    if (amount > 0) {
+        if (newcount < oldcount)
+            abort();
+    } else {
+        if (newcount > oldcount)
+            abort();
+        if (newcount == 0) {
+            sg_logs(sg_logger_get("rsrc"), LOG_INFO, "all resources loaded");
+            for (qp = m->queue, qe = qp + m->count; qp != qe; qp++) {
+                if (qp->time == SG_RESOURCES_LOADED)
+                    qp->time = SG_PRE_RENDER;
+            }
+        }
+    }
+    m->rsrc_count = newcount;
+    pce_lock_release(&m->lock);
 }
