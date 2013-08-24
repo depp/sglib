@@ -1,6 +1,7 @@
 #include "defs.h"
 #include "sg/opengl.h"
 #include "sg/entry.h"
+#include "sg/shader.h"
 #include "sg/texture.h"
 #include <assert.h>
 #include <math.h>
@@ -81,6 +82,11 @@ st_image_init(void)
         g_tex[i] = sg_texture_file(buf, strlen(buf), &err);
         assert(g_tex[i]);
     }
+
+    sg_shader_file("shader/textured.vert", strlen("shader/textured.vert"),
+                   GL_VERTEX_SHADER, NULL);
+    sg_shader_file("shader/textured.frag", strlen("shader/textured.frag"),
+                   GL_FRAGMENT_SHADER, NULL);
 }
 
 static void
