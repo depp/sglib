@@ -132,6 +132,7 @@
 
     <group path="sg/gl">
       <src path="opengl.c"/>
+      <src path="program.c"/>
       <src path="shader.c"/>
       <src path="texture.c"/>
     </group>
