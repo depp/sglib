@@ -23,6 +23,10 @@ sg_clock_get(void);
 int
 sg_clock_getdate(char *date);
 
+/* Sleep for the given number of milliseconds.  */
+void
+sg_clock_sleep(unsigned milliseconds);
+
 #ifdef __cplusplus
 }
 #endif

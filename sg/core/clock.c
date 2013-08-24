@@ -147,3 +147,26 @@ sg_clock_getdate(char *date)
 }
 
 #endif
+
+#if defined(_WIN32)
+
+void
+sg_clock_sleep(unsigned milliseconds)
+{
+    Sleep(milliseconds);
+}
+
+#else
+
+#include <time.h>
+
+void
+sg_clock_sleep(unsigned milliseconds)
+{
+    struct timespec req;
+    req.tv_sec = milliseconds / 1000;
+    req.tv_nsec = (milliseconds % 1000) * 1000000;
+    nanosleep(&req, NULL);
+}
+
+#endif
