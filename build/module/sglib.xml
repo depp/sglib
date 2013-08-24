@@ -104,10 +104,8 @@
       <src path="error.c"/>
       <src path="model.c"/>
       <src path="net.c"/>
-      <src path="opengl.c"/>
       <src path="rand.c"/>
       <src path="sys.c"/>
-      <src path="texture.c"/>
       <src path="version.c"/>
       <src path="version_const.c"/>
     </group>
@@ -133,7 +131,9 @@
     </group>
 
     <group path="sg/gl">
+      <src path="opengl.c"/>
       <src path="shader.c"/>
+      <src path="texture.c"/>
     </group>
 
     <group path="sg/log">
