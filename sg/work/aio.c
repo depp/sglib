@@ -1,5 +1,7 @@
 /* Copyright 2012 Dietrich Epp <depp@zdome.net> */
 #include "sg/aio.h"
+#include "sg/clock.h"
+#include "sg/cvar.h"
 #include "sg/error.h"
 #include "sg/file.h"
 #include "work.h"
@@ -24,6 +26,8 @@ struct sg_aio_queue {
 
     /* Linked list of all asynchronous IO requests */
     struct sg_aio_request *first, *last;
+
+    int delay;
 };
 
 static struct sg_aio_queue sg_aio_queue;
@@ -50,6 +54,9 @@ sg_aio_exec(void *taskptr)
     struct sg_aio_request *req = *(struct sg_aio_request **) taskptr;
     struct sg_error *err = NULL;
     struct sg_buffer *buf = NULL;
+
+    if (sg_aio_queue.delay > 0)
+        sg_clock_sleep(sg_aio_queue.delay);
 
     if (req->cancel) {
         sg_error_sets(&err, &SG_ERROR_CANCEL, 0, NULL);
@@ -80,6 +87,9 @@ sg_aio_init(void)
     q->wq.thread_max = 1;
     q->wq.dequeue = sg_aio_dequeue;
     q->wq.exec = sg_aio_exec;
+
+    q->delay = 0;
+    sg_cvar_geti("debug", "aiodelay", &q->delay);
 }
 
 struct sg_aio_request *
