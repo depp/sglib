@@ -132,6 +132,10 @@
       </switch>
     </group>
 
+    <group path="sg/gl">
+      <src path="shader.c"/>
+    </group>
+
     <group path="sg/log">
       <src path="console.c"/>
       <src path="impl.h"/>

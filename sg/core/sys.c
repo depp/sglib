@@ -12,6 +12,7 @@
 #include "sg/log.h"
 #include "sg/rand.h"
 #include "sg/record.h"
+#include "sg/shader.h"
 #include "sg/texture.h"
 #include "sg/version.h"
 
@@ -60,6 +61,7 @@ sg_sys_init(void)
     sg_dispatch_sync_init();
     sg_clock_init();
     sg_rand_seed(&sg_rand_global, 1);
+    sg_shader_init();
     sg_texture_init();
     sg_audio_sample_init();
     sg_audio_sys_init();
