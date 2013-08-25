@@ -72,6 +72,18 @@ struct {
 
     GLuint prog;
 
+    GLint a_loc;
+    GLint u_texoff, u_texmat, u_tex1, u_tex2, u_fade;
+
+    GLuint array;
+} g_prog_bkg;
+
+struct {
+    struct sg_shader *vert;
+    struct sg_shader *frag;
+
+    GLuint prog;
+
     GLint a_loc, a_texcoord;
     GLint u_vertoff, u_vertscale, u_texscale, u_texture;
 
@@ -88,6 +100,51 @@ st_image_loaded(void *cxt)
     (void) cxt;
 
     g_isloaded = 1;
+
+    /* Background program */
+
+    g_prog_bkg.prog = prog = glCreateProgram();
+    glAttachShader(prog, g_prog_bkg.vert->shader);
+    glAttachShader(prog, g_prog_bkg.frag->shader);
+    r = sg_program_link(prog, "background");
+    assert(r == 0);
+#define ATTR(x) g_prog_bkg.x = glGetAttribLocation(prog, #x)
+#define UNIFORM(x) g_prog_bkg.x = glGetUniformLocation(prog, #x)
+    ATTR(a_loc);
+    UNIFORM(u_texoff);
+    UNIFORM(u_texmat);
+    UNIFORM(u_tex1);
+    UNIFORM(u_tex2);
+    UNIFORM(u_fade);
+#undef ATTR
+#undef UNIFORM
+    glUseProgram(0);
+
+    static const short BKG_VERTEX[] = {
+        -1, -1,
+        +1, -1,
+        +1, +1,
+        -1, +1
+    };
+    GLuint bbuf;
+    glGenBuffers(1, &bbuf);
+    glBindBuffer(GL_ARRAY_BUFFER, bbuf);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(BKG_VERTEX), BKG_VERTEX,
+                 GL_STATIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+    glGenVertexArrays(1, &g_prog_bkg.array);
+    glBindVertexArray(g_prog_bkg.array);
+
+    glBindBuffer(GL_ARRAY_BUFFER, bbuf);
+    glVertexAttribPointer(
+        g_prog_bkg.a_loc, 2, GL_SHORT, GL_FALSE, 0, 0);
+    glEnableVertexAttribArray(g_prog_bkg.a_loc);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+    glBindVertexArray(0);
+
+    /* Foreground program */
 
     g_prog_tex.prog = prog = glCreateProgram();
     glAttachShader(prog, g_prog_tex.vert->shader);
@@ -163,6 +220,15 @@ st_image_init(void)
         assert(g_tex[i]);
     }
 
+    g_prog_bkg.vert = sg_shader_file(
+        "shader/bkg.vert",
+        strlen("shader/bkg.vert"),
+        GL_VERTEX_SHADER, NULL);
+    g_prog_bkg.frag = sg_shader_file(
+        "shader/bkg.frag",
+        strlen("shader/bkg.frag"),
+        GL_FRAGMENT_SHADER, NULL);
+
     g_prog_tex.vert = sg_shader_file(
         "shader/textured.vert",
         strlen("shader/textured.vert"),
@@ -187,70 +253,100 @@ st_image_event(union sg_event *evt)
     (void) evt;
 }
 
-#pragma GCC diagnostic ignored "-Wunused-variable"
-#pragma GCC diagnostic ignored "-Wunused-but-set-variable"
+/* All use column major order */
 
 static void
-st_image_draw(int x, int y, int width, int height, unsigned msec)
+matrix2_mul(float *x, const float *y, const float *z)
 {
-    int ix, iy, t;
-    float x0, x1, y0, y1, u0, u1, v0, v1, s;
-    float xoff, yoff, mod, mod2;
+    float y11 = y[0], y21 = y[1], y12 = y[2], y22 = y[3];
+    float z11 = z[0], z21 = z[1], z12 = z[2], z22 = z[3];
+    x[0] = y11 * z11 + y12 * z21;
+    x[1] = y21 * z11 + y22 * z21;
+    x[2] = y11 * z12 + y12 * z22;
+    x[3] = y21 * z12 + y22 * z22;
+}
 
-    glViewport(x, y, width, height);
+__attribute__((unused))
+static void
+matrix2_identity(float *x)
+{
+    x[0] = 1.0f;
+    x[1] = 0.0f;
+    x[2] = 0.0f;
+    x[3] = 1.0f;
+}
 
-    if (!g_isloaded) {
-        glClearColor(0.2f, 0.2f, 0.2f, 0.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
-        return;
-    }
+__attribute__((unused))
+static void
+matrix2_scale(float *x, float scale1, float scale2)
+{
+    x[0] = scale1;
+    x[1] = 0.0f;
+    x[2] = 0.0f;
+    x[3] = scale2;
+}
 
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    glOrtho(0.0, (double) width, 0, (double) height, 1.0, -1.0);
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
+__attribute__((unused))
+static void
+matrix2_rotate(float *x, float angle)
+{
+    float a = cosf(angle), b = sinf(angle);
+    x[0] = a;
+    x[1] = b;
+    x[2] = -b;
+    x[3] = a;
+}
 
+static void
+st_image_draw_background(int width, int height, unsigned msec)
+{
+    int t;
+    float mod, mod2, s;
 
-    glPushAttrib(GL_ENABLE_BIT);
-    glEnable(GL_TEXTURE_2D);
-
+    glUseProgram(g_prog_bkg.prog);
+    glUniform2f(g_prog_bkg.u_texoff, 0.0f, 0.0f);
+    
     t = (msec >> 12) % 3;
     mod = (float) (msec & ((1u << 12) - 1)) / (1 << 12);
     mod2 = (float) (msec & ((1u << 13) - 1)) / (1 << 13);
-    glBindTexture(GL_TEXTURE_2D, g_tex[t]->texnum);
-    s = 1.0f / 256.0f;
-    u1 = floorf((float)  width / 2); u0 = u1 - (float)  width;
-    v1 = floorf((float) height / 2); v0 = v1 - (float) height;
-    u0 *= s; u1 *= s; v0 *= s; v1 *= s;
-    x0 = 0; x1 = (float) width;
-    y0 = 0; y1 = (float) height;
-    glMatrixMode(GL_TEXTURE);
-    glLoadIdentity();
-    s = sinf((8 * atanf(1.0f)) * mod);
+    s = -cosf((8 * atanf(1.0f)) * mod);
     s = expf(logf(4) * s);
-    glScalef(s, s, s);
-    glRotatef(mod2 * 360, 0.0f, 0.0f, 1.0f);
-    glBegin(GL_TRIANGLE_STRIP);
-    glTexCoord2f(u0, v0); glVertex2f(x0, y0);
-    glTexCoord2f(u1, v0); glVertex2f(x1, y0);
-    glTexCoord2f(u0, v1); glVertex2f(x0, y1);
-    glTexCoord2f(u1, v1); glVertex2f(x1, y1);
-    glEnd();
-    glLoadIdentity();
-    glMatrixMode(GL_MODELVIEW);
-    glPopAttrib();
 
+    float bg_texmat[4], rot[4], mat[4];
+    matrix2_rotate(rot, mod2 * (8.0f * atanf(1.0f)));
+    matrix2_scale(mat, (float) width * (0.5f / 256) * s,
+                  (float) height * (0.5f / 256) * s);
+    matrix2_mul(bg_texmat, rot, mat);
+    glUniformMatrix2fv(g_prog_bkg.u_texmat, 1, GL_FALSE, bg_texmat);
+
+    glUniform1i(g_prog_bkg.u_tex1, 0);
+    glUniform1i(g_prog_bkg.u_tex2, 1);
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, g_tex[t]->texnum);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, g_tex[(t+1) % 3]->texnum);
+    glUniform1f(g_prog_bkg.u_fade, mod);
+
+    glBindVertexArray(g_prog_bkg.array);
+    glDrawArrays(GL_QUADS, 0, 4);
+
+    glUseProgram(0);
+}
+
+static void
+st_image_draw_foreground(int width, int height)
+{
+    int ix, iy, t;
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
     glUseProgram(g_prog_tex.prog);
     glUniform1i(g_prog_tex.u_texture, 0);
-    float vertscale[2] = { 32 * 2.0f / width, 32 * 2.0f / height };
-    glUniform2fv(g_prog_tex.u_vertscale, 1, vertscale);
-    float texscale[2] = { 1.0f, 1.0f };
-    glUniform2fv(g_prog_tex.u_texscale, 1, texscale);
+    glUniform2f(g_prog_tex.u_vertscale,
+                32 * 2.0f / width, 32 * 2.0f / height);
+    glUniform2f(g_prog_tex.u_texscale, 1.0f, 1.0f);
 
     for (ix = 0; ix < 6; ++ix) {
         for (iy = 0; iy < 5; ++iy) {
@@ -260,16 +356,28 @@ st_image_draw(int x, int y, int width, int height, unsigned msec)
 
             glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D, g_images[t]->texnum);
-            float vertoff[2] = { ix * 4 - 10, (4 - iy) * 4 - 8 };
-            glUniform2fv(g_prog_tex.u_vertoff, 1, vertoff);
+            glUniform2f(g_prog_tex.u_vertoff,
+                        ix * 4 - 10, (4 - iy) * 4 - 8);
             glBindVertexArray(g_prog_tex.array);
             glDrawArrays(GL_QUADS, 0, 4);
         }
     }
     glUseProgram(0);
     glDisable(GL_BLEND);
+}
 
-    (void) msec;
+static void
+st_image_draw(int x, int y, int width, int height, unsigned msec)
+{
+    glViewport(x, y, width, height);
+
+    if (!g_isloaded) {
+        glClearColor(0.2f, 0.2f, 0.2f, 0.0f);
+        glClear(GL_COLOR_BUFFER_BIT);
+    } else {
+        st_image_draw_background(width, height, msec);
+        st_image_draw_foreground(width, height);
+    }
 }
 
 const struct st_iface ST_IMAGE = {
