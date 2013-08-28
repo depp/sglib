@@ -1,2 +1,4 @@
 /test_strbuf
 /test_hashtable
+/*.log
+/*.trs
