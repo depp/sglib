@@ -97,7 +97,7 @@
 #  define PCE_ATTR_SENTINEL __attribute__((__sentinel__))
 # endif
 
-# if __GNUC__ > 4 || (__GNUC_MINOR__ >= 3)
+# if __GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 3)
 #  define PCE_ATTR_ARTIFICIAL __attribute__((__artificial__))
 # endif
 
