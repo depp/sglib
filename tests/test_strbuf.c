@@ -1,5 +1,6 @@
 /* Copyright 2012 Dietrich Epp <depp@zdome.net> */
 #include "libpce/strbuf.h"
+#include <stdlib.h>
 
 int main(int argc, char *argv[])
 {
