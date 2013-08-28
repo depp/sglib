@@ -1,4 +1,4 @@
-/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
+/* Copyright 2012-2013 Dietrich Epp <depp@zdome.net> */
 #ifndef PCE_ATOMIC_H
 #define PCE_ATOMIC_H
 #include "libpce/arch.h"
@@ -6,6 +6,18 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+/**
+ * @file atomic.h
+ *
+ * @brief Atomic operations.
+ *
+ * These are operations for working with an atomic counter type.
+ *
+ * A quick refresher on memory barriers: "release" semantics prevent
+ * reordering with respect to previous operations, and "acquire"
+ * semantics prevent reordering with respect to following operations.
+ */
 
 /*
   During 2012, both Clang (3.1) and GCC (4.7) introduced new atomic
@@ -18,34 +30,98 @@ extern "C" {
   If the 2012 builtins are unavailable, we use inline assembly to
   avoid the unnecessary full barriers provided by the __sync builtins.
   On unknown platforms, we then fall back to the __sync builtins.
-
-  pce_atomic_t -- atomic integer type (int)
-
-  pce_atomic_set(p, x) -- set an atomic: { *p = x; }
-
-  pce_atomic_get(p) -- get the value of an atomic { return *p; }
-
-  pce_atomic_inc(p) -- increment { *p++; }
-
-  pce_atomic_dec(p) -- decrement { *p--; }
-
-  pce_atomic_fetch_add(p, x) -- addition, returning the old value
-      { int tmp = *p; *p = tmp + x; return tmp; }
-
-  Plus barrier versions of atomic_fetch_add -- acquire and release
-  barriers are available, as well as an acquire + release barrier.
-  Barrier versions of set and get are also available, but only
-  set_release and get_acquire.
 */
 
+/**
+ * @brief Atomic counter type.
+ *
+ * Guaranteed to be at least as wide as int.
+ */
 typedef struct pce_atomic_s pce_atomic_t;
+
+/**
+ * @brief Set an atomic counter.
+ */
+PCE_INLINE
+void
+pce_atomic_set(pce_atomic_t *p, int x);
+
+/**
+ * @brief Set an atomic counter with release semantics.
+ */
+PCE_INLINE
+void
+pce_atomic_set_release(pce_atomic_t *p, int x);
+
+/**
+ * @brief Get an atomic counter value.
+ */
+PCE_INLINE
+int
+pce_atomic_get(pce_atomic_t *p);
+
+/**
+ * @brief Get an atomic counter value with acquire semantics.
+ */
+PCE_INLINE
+int
+pce_atomic_get_acquire(pce_atomic_t *p);
+
+/**
+ * @brief Increment an atomic counter value.
+ */
+PCE_INLINE
+void
+pce_atomic_inc(pce_atomic_t *p);
+
+/**
+ * @brief Decrement an atomic counter value.
+ */
+PCE_INLINE
+void
+pce_atomic_dec(pce_atomic_t *p);
+
+/**
+ * @brief Add a number to an atomic counter, returning the previous
+ * value.
+ */
+PCE_INLINE
+int
+pce_atomic_fetch_add(pce_atomic_t *p, int x);
+
+/**
+ * @brief Add a number to an atomic counter, returning the previous
+ * value, with acquire semantics.
+ */
+PCE_INLINE
+int
+pce_atomic_fetch_add_acquire(pce_atomic_t *p, int x);
+
+/**
+ * @brief Add a number to an atomic counter, returning the previous
+ * value, with release semantics.
+ */
+PCE_INLINE
+int
+pce_atomic_fetch_add_release(pce_atomic_t *p, int x);
+
+/**
+ * @brief Add a number to an atomic counter, returning the previous
+ * value, with acquire and release semantics.
+ */
+PCE_INLINE
+int
+pce_atomic_fetch_add_acq_rel(pce_atomic_t *p, int x);
 
 #if !defined(PCE_HAS_ATOMIC) && defined(__has_feature)
 #if __has_feature(c_atomic)
 #define PCE_HAS_ATOMIC 1
 
 /*
-  Clang atomics starting in Clang 3.1.  We detect Clang first because
+  ============================================================
+  Clang atomics
+
+  Available starting in Clang 3.1.  We detect Clang first because
   Clang impersonates GCC.
 */
 
@@ -131,8 +207,10 @@ pce_atomic_fetch_add_acq_rel(pce_atomic_t *p, int x)
 #define PCE_HAS_ATOMIC 1
 
 /*
-  GCC 4.7 provides an atomic interface for implementing C11 and C++11
-  atomics.
+  ============================================================
+  GCC atomics
+
+  Available in GCC 4.7.
 */
 
 struct pce_atomic_s {
@@ -215,7 +293,8 @@ pce_atomic_fetch_add_acq_rel(pce_atomic_t *p, int x)
 #define PCE_HAS_ATOMIC 1
 
 /*
-  If we still have GCC's inline assembly available, we use that.
+  ============================================================
+  x86 Inline Assembly
 */
 
 struct pce_atomic_s {
@@ -279,6 +358,11 @@ pce_atomic_fetch_add_acq_rel(pce_atomic_t *p, int x)
 
 #if !defined(PCE_HAS_ATOMIC) && defined(__GNUC__) && defined(PCE_CPU_PPC)
 #define PCE_HAS_ATOMIC 1
+
+/*
+  ============================================================
+  PowerPC Inline Assembly
+*/
 
 struct pce_atomic_s {
     volatile int v;
@@ -386,13 +470,13 @@ pce_atomic_fetch_add_acq_rel(pce_atomic_t *p, int x)
 
 #endif
 
-
 #if !defined(PCE_HAS_ATOMIC) && \
     (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 1))
 #define PCE_HAS_ATOMIC 1
 
 /*
-  As a last resort, we use the old GCC atomic builtins.
+  ============================================================
+  GCC atomic builtins
 */
 
 struct pce_atomic_s {
@@ -460,6 +544,11 @@ pce_atomic_fetch_add_acq_rel(pce_atomic_t *p, int x)
 #if !defined(PCE_HAS_ATOMIC) && defined(_MSC_VER)
 #define PCE_HAS_ATOMIC 1
 #include <intrin.h>
+
+/*
+  ============================================================
+  Visual C++ Intrinsics
+*/
 
 struct pce_atomic_s {
     volatile long v;

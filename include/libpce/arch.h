@@ -1,17 +1,25 @@
-/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
-/*
-  Portable compile-time CPU architecture macros.
-
-  Definitions:
-
-  x86: PCE_CPU_X86
-  x64: PCE_CPU_X86 and PCE_CPU_X64
-  PowerPC: PCE_CPU_PPC
-  PowerPC 64-bit: PCE_CPU_PPC and PCE_CPU_PPC64
-  ARM: PCE_CPU_ARM
-*/
+/* Copyright 2012-2013 Dietrich Epp <depp@zdome.net> */
 #ifndef PCE_ARCH_H
 #define PCE_ARCH_H
+
+/**
+ * @file arch.h
+ *
+ * @brief Architecture macros.
+ */
+
+#if defined(DOXYGEN)
+/** @brief Defined for 64-bit x86 CPUs.  */
+# define PCE_CPU_X64 1
+/** @brief Defined for x86 CPUs, including 64-bit.  */
+# define PCE_CPU_X86 1
+/** @brief Defined for PowerPC 64-bit CPUs.  */
+# define PCE_CPU_PPC64 1
+/** @brief Defined for PowerPC CPUs, including 64-bit.  */
+# define PCE_CPU_PPC 1
+/** @brief Defined for ARM CPUs.  */
+# define PCE_CPU_ARM 1
+#endif
 
 #if defined(_M_X64) || defined(__x86_64__)
 # define PCE_CPU_X64 1

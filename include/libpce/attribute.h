@@ -1,24 +1,15 @@
-/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
-/*
-  Portable function attribute definitons.
-
-  Most of these are available when using GCC and Clang, but some are
-  also available when using Microsoft's compiler.
-
-  PCE_ATTR_ARTIFICIAL for inline functions, debug locations in caller
-  PCE_ATTR_CONST only examines arguments, no side effects
-  PCE_ATTR_FORMAT(a,b,c) GCC format attribute
-  PCE_ATTR_MALLOC returns unaliased pointers
-  PCE_ATTR_NOINLINE do not inline
-  PCE_ATTR_NONNULL((x,...)) parameters at given indices must be nonnull
-  PCE_ATTR_NORETURN function does not return
-  PCE_ATTR_NOTHROW function does not throw
-  PCE_ATTR_PURE only examines arguments and globals, no side effects
-  PCE_ATTR_SENTINEL function takes a NULL sentinel
-  PCE_ATTR_WARN_UNUSED_RESULT warn if function result is unused
-*/
+/* Copyright 2012-2013 Dietrich Epp <depp@zdome.net> */
 #ifndef PCE_ATTRIBUTE_H
 #define PCE_ATTRIBUTE_H
+
+/**
+ * @file attribute.h
+ *
+ * @brief Portable function attribute definitions.
+ *
+ * Most of these are available when using GCC or Clang, but a few are
+ * also available when using Visual C++.
+ */
 
 /*
   GCC attributes we don't have macros for:
@@ -30,6 +21,11 @@
 */
 
 #if defined(__clang__)
+
+/*
+  ============================================================
+  Clang
+*/
 
 # if __has_attribute(__artificial__)
 #  define PCE_ATTR_CONST __attribute__((__artificial__))
@@ -71,6 +67,11 @@
 
 #elif defined(__GNUC__)
 
+/*
+  ============================================================
+  GCC
+*/
+
 # if __GNUC__ >= 3
 #  define PCE_ATTR_CONST __attribute__((__const__))
 #  define PCE_ATTR_FORMAT(a,b,c) __attribute__((__format__(a,b,c)))
@@ -105,6 +106,11 @@
 
 #elif defined(_MSC_VER)
 
+/*
+  ============================================================
+  Visual C++
+*/
+
 # define PCE_ATTR_DEPRECATED __declspec(deprecated)
 # define PCE_ATTR_MALLOC __declspec(restrict)
 # define PCE_ATTR_NOINLINE __declspec(noinline)
@@ -115,41 +121,63 @@
 
 #endif
 
+/*
+  ============================================================
+  Defaults
+*/
+
 #ifndef PCE_ATTR_ARTIFICIAL
+/** @brief for inline functions, debug locations in caller */
 # define PCE_ATTR_ARTIFICIAL
 #endif
 #ifndef PCE_ATTR_CONST
+/** @brief only examines arguments, no side effects */
 # define PCE_ATTR_CONST
 #endif
 #ifndef PCE_ATTR_DEPRECATED
+/** @brief tihs function is deprecated, using it will generate a warning */
 # define PCE_ATTR_DEPRECATED
 #endif
 #ifndef PCE_ATTR_FORMAT
+/** @brief GCC format attribute */
 # define PCE_ATTR_FORMAT(a,b,c)
 #endif
 #ifndef PCE_ATTR_MALLOC
+/** @brief returns unaliased pointers */
 # define PCE_ATTR_MALLOC
 #endif
 #ifndef PCE_ATTR_NOINLINE
+/** @brief do not inline */
 # define PCE_ATTR_NOINLINE
 #endif
 #ifndef PCE_ATTR_NONNULL
+/** @brief parameters at given indices must be nonnull */
 # define PCE_ATTR_NONNULL(x)
 #endif
 #ifndef PCE_ATTR_NORETURN
+/** @brief function does not return */
 # define PCE_ATTR_NORETURN
 #endif
 #ifndef PCE_ATTR_NOTHROW
+/** @brief function does not throw */
 # define PCE_ATTR_NOTHROW
 #endif
 #ifndef PCE_ATTR_PURE
+/** @brief only examines arguments and globals, no side effects */
 # define PCE_ATTR_PURE
 #endif
 #ifndef PCE_ATTR_SENTINEL
+/** @brief function takes a NULL sentinel */
 # define PCE_ATTR_SENTINEL
 #endif
 #ifndef PCE_ATTR_WARN_UNUSED_RESULT
+/** @brief warn if function result is unused */
 # define PCE_ATTR_WARN_UNUSED_RESULT
+#endif
+
+#if defined(DOXYGEN)
+/** @brief function can be inlined by the compiler */
+# define PCE_INLINE
 #endif
 
 #endif

@@ -1,14 +1,12 @@
-/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
-/*
-  Portable compile-time probing of byte order.
-
-  Defines PCE_BYTE_ORDER, PCE_BIG_ENDIAN, and PCE_LITTLE_ENDIAN.
-
-  PCE_BYTE_ORDER will be defined to PCE_BIG_ENDIAN or PCE_LITTLE_ENDIAN
-  as appropriate.
-*/
+/* Copyright 2012-2013 Dietrich Epp <depp@zdome.net> */
 #ifndef PCE_BYTEORDER_H
 #define PCE_BYTEORDER_H
+
+/**
+ * @file byteorder.h
+ *
+ * @brief Byte order macros.
+ */
 
 #if defined(__BYTE_ORDER__)
 /* GCC 4.6 and later */
@@ -16,7 +14,9 @@
 # define PCE_LITTLE_ENDIAN __ORDER_LITTLE_ENDIAN__
 # define PCE_BYTE_ORDER __BYTE_ORDER__
 #else
+/** @brief A constant used to indicate big endian.  */
 # define PCE_BIG_ENDIAN 4321
+/** @brief A constant used to indicate little endian.  */
 # define PCE_LITTLE_ENDIAN 1234
 # if defined(__BIG_ENDIAN__)
 /* Clang and Apple's GCC */
@@ -34,6 +34,10 @@
     defined(__ARMEB__) || defined(__THUMBEB__) ||\
     defined(_MIPSEB) || defined(__MIPSEB) || defined(__MIPSEB__)
 #  define PCE_BYTE_ORDER PCE_BIG_ENDIAN
+# elif defined(DOXYGEN)
+/** @brief The target byte order, equal to either @c PCE_BIG_ENDIAN or
+    @c PCE_LITTLE_ENDIAN.  */
+#  define PCE_BYTE_ORDER
 # else
 #  error "Unknown byte order"
 # endif

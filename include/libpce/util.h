@@ -1,4 +1,4 @@
-/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
+/* Copyright 2012-2013 Dietrich Epp <depp@zdome.net> */
 #ifndef PCE_UTIL_H
 #define PCE_UTIL_H
 #ifdef __cplusplus
@@ -9,13 +9,20 @@ extern "C" {
 #include "libpce/byteorder.h"
 
 /**
- * @defgroup util Utility functions
+ * @file util.h
+ *
+ * @brief Utility functions.
  *
  * These utility functions are miscellaneous useful integer functions.
  * This includes byte swapping, rotations, and alignmment.
- *
- * @{
  */
+
+#ifdef DOXYGEN
+/**
+ * @brief It is here
+ */
+void it_is_here();
+#endif
 
 #if defined(__clang__)
 # if __has_builtin(__builtin_bswap32)
@@ -37,24 +44,21 @@ extern "C" {
 #endif
 
 /**
- * Swap the byte order of a 16-bit integer between big and little
- * endian.
+ * @brief Swap the byte order of a 16-bit integer.
  */
 PCE_ATTR_ARTIFICIAL PCE_ATTR_CONST PCE_INLINE
 unsigned short
 pce_swap16(unsigned short x);
 
 /**
- * Swap the byte order of a 32-bit integer between big and little
- * endian.
+ * @brief Swap the byte order of a 32-bit integer.
  */
 PCE_ATTR_ARTIFICIAL PCE_ATTR_CONST PCE_INLINE
 unsigned
 pce_swap32(unsigned x);
 
 /**
- * Swap the byte order of a 64-bit integer between big and little
- * endian.
+ * @brief Swap the byte order of a 64-bit integer.
  */
 PCE_ATTR_ARTIFICIAL PCE_ATTR_CONST PCE_INLINE
 unsigned long long
@@ -158,39 +162,7 @@ pce_swap64(unsigned long long x)
         ((unsigned long long) pce_swap32((unsigned) x) << 32);
 }
 #endif
-
-/**
- * @def pce_swapbe16(x)
- *
- * Swap the byte order of a 16-bit integer between native and big
- * endian.
- *
- * @def pce_swapbe32(x)
- *
- * Swap the byte order of a 32-bit integer between native and big
- * endian.
- *
- * @def pce_swapbe64(x)
- *
- * Swap the byte order of a 64-bit integer between native and big
- * endian.
- *
- * @def pce_swaple16(x)
- *
- * Swap the byte order of a 16-bit integer between native and little
- * endian.
- *
- * @def pce_swaple32(x)
- *
- * Swap the byte order of a 32-bit integer between native and little
- * endian.
- *
- * @def pce_swaple64(x)
- *
- * Swap the byte order of a 64-bit integer between native and little
- * endian.
- */
-
+ 
 #if PCE_BYTE_ORDER == PCE_LITTLE_ENDIAN
 # define pce_swapbe16(x) pce_swap16(x)
 # define pce_swapbe32(x) pce_swap32(x)
@@ -198,24 +170,43 @@ pce_swap64(unsigned long long x)
 # define pce_swaple16(x) (x)
 # define pce_swaple32(x) (x)
 # define pce_swaple64(x) (x)
-#else
+#elif PCE_BYTE_ORDER == PCE_BIG_ENDIAN
 # define pce_swapbe16(x) (x)
 # define pce_swapbe32(x) (x)
 # define pce_swapbe64(x) (x)
 # define pce_swaple16(x) pce_swap16(x)
 # define pce_swaple32(x) pce_swap32(x)
 # define pce_swaple64(x) pce_swap64(x)
+#elif defined(DOXYGEN)
+/** @brief Swap the byte order of a 16-bit integer between native and
+    big endian.  */
+# define pce_swapbe16(x)
+/** @brief Swap the byte order of a 32-bit integer between native and
+    big endian.  */
+# define pce_swapbe32(x)
+/** @brief Swap the byte order of a 64-bit integer between native and
+    big endian.  */
+# define pce_swapbe64(x)
+/** @brief Swap the byte order of a 16-bit integer between native and
+    little endian.  */
+# define pce_swaple16(x)
+/** @brief Swap the byte order of a 32-bit integer between native and
+    little endian.  */
+# define pce_swaple32(x)
+/** @brief Swap the byte order of a 64-bit integer between native and
+    little endian.  */
+# define pce_swaple64(x)
 #endif
 
 /**
- * Rotate a 32-bit integer to the left.
+ * @brief Rotate a 32-bit integer to the left.
  */
 PCE_ATTR_ARTIFICIAL PCE_ATTR_CONST PCE_INLINE
 unsigned
 pce_rotl_32(unsigned x, unsigned k);
 
 /**
- * Rotate a 32-bit integer to the right.
+ * @brief Rotate a 32-bit integer to the right.
  */
 PCE_ATTR_ARTIFICIAL PCE_ATTR_CONST PCE_INLINE
 unsigned
@@ -258,8 +249,9 @@ pce_rotr_32(unsigned x, unsigned k)
 #endif
 
 /**
- * Round a 32-bit integer up to the next power of two.  Returns zero
- * on overflow.
+ * @brief Round a 32-bit integer up to the next power of two.
+ *
+ * Returns zero on overflow.
  */
 PCE_ATTR_ARTIFICIAL PCE_ATTR_CONST PCE_INLINE
 unsigned
@@ -275,8 +267,9 @@ pce_round_up_pow2_32(unsigned x)
 }
 
 /**
- * Round a @c size_t up to the next power of two.  Returns zero on
- * overflow.
+ * @brief Round a @c size_t up to the next power of two.
+ *
+ * Returns zero on overflow.
  */
 PCE_ATTR_ARTIFICIAL PCE_ATTR_CONST PCE_INLINE
 size_t
@@ -288,13 +281,16 @@ pce_round_up_pow2(size_t x)
     x |= x >> 4;
     x |= x >> 8;
     x |= x >> 16;
+    /* Any decent compiler will optimize this to x >> 32 or a nop, so
+       this will work correctly on both 32-bit and 64-bit systems and
+       it won't generate a warning for either.  */
     x |= (x >> 16) >> 16;
     return x + 1;
 }
 
 /**
- * Round a @c size_t up to the next multiple of the largest scalar
- * data type's alignment.
+ * @brief Round a @c size_t up to the next multiple of the largest
+ * scalar data type's alignment.
  */
 PCE_ATTR_ARTIFICIAL PCE_ATTR_CONST PCE_INLINE
 size_t
@@ -304,8 +300,8 @@ pce_align(size_t x)
 }
 
 /**
- * Round a @c size_t up to the next multiple of the vector data type's
- * alignment.
+ * @brief Round a @c size_t up to the next multiple of the vector data
+ * type's alignment.
  */
 PCE_ATTR_ARTIFICIAL PCE_ATTR_CONST PCE_INLINE
 size_t
@@ -313,8 +309,6 @@ pce_align_vec(size_t x)
 {
     return (x + 15) & ~(size_t) 15;
 }
-
-/** @} */
 
 #ifdef __cplusplus
 }
