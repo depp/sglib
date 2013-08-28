@@ -6,7 +6,7 @@
 */
 #define PCE_CPU_FEATURES_SET 0x80000000u
 
-const struct pce_cpufeature PCE_CPUF[] = {
+const struct pce_cpufeature PCE_CPUFEATURES[] = {
 #if defined(PCE_CPU_X86)
     { "mmx", PCE_CPUF_MMX },
     { "sse", PCE_CPUF_SSE },
