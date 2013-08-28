@@ -4,7 +4,7 @@ ACLOCAL_AMFLAGS = -I m4
 SUBDIRS = . tests
 
 AM_CPPFLAGS = -I@srcdir@/include
-AM_CFLAGS = @CWARN@
+AM_CFLAGS = @CWARN@ -pthread
 
 lib_LTLIBRARIES = libpce.la
 
@@ -19,6 +19,8 @@ pkginclude_HEADERS = \
 	include/libpce/strbuf.h \
 	include/libpce/thread.h \
 	include/libpce/util.h
+
+libpce_la_LDFLAGS = -pthread
 
 libpce_la_SOURCES = \
 	lib/cpu.c \
