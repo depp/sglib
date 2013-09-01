@@ -12,7 +12,6 @@
     <src path="error.hpp"/>
     <src path="file.hpp"/>
     <src path="letterbox.hpp"/>
-    <src path="model.hpp"/>
     <src path="rand.hpp"/>
     <src path="scene/group.hpp"/>
     <src path="scene/leafobject.hpp"/>
@@ -39,7 +38,6 @@
     <src path="error.cpp"/>
     <src path="file.cpp"/>
     <src path="letterbox.cpp"/>
-    <src path="model.cpp"/>
     <src path="texture.cpp"/>
     <src path="viewport.cpp"/>
   </group>

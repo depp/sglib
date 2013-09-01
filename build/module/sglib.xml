@@ -32,7 +32,6 @@
       <src path="event.h"/>
       <src path="file.h"/>
       <src path="log.h"/>
-      <src path="model.h"/>
       <src path="net.h"/>
       <src path="opengl.h"/>
       <src path="pixbuf.h"/>
@@ -102,7 +101,6 @@
       <src path="configfile_read.c"/>
       <src path="cvar.c"/>
       <src path="error.c"/>
-      <src path="model.c"/>
       <src path="net.c"/>
       <src path="rand.c"/>
       <src path="sys.c"/>
