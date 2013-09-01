@@ -1,6 +1,6 @@
-/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
-#ifndef SG_TYPE_IMPL_H
-#define SG_TYPE_IMPL_H
+/* Copyright 2012 Dietrich Epp.
+   This file is part of SGLib.  SGLib is licensed under the terms of the
+   2-clause BSD license.  For more information, see LICENSE.txt. */
 struct sg_pixbuf;
 
 /* The data structures use OpenGL-style coordinates (origin at bottom
@@ -84,4 +84,3 @@ void
 sg_layout_impl_render(struct sg_layout_impl *li, struct sg_pixbuf *pbuf,
                       int xoff, int yoff);
 
-#endif

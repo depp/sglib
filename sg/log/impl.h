@@ -1,6 +1,6 @@
-/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
-#ifndef SG_LOG_IMPL_H
-#define SG_LOG_IMPL_H
+/* Copyright 2012 Dietrich Epp.
+   This file is part of SGLib.  SGLib is licensed under the terms of the
+   2-clause BSD license.  For more information, see LICENSE.txt. */
 #include "sg/log.h"
 #include <stddef.h>
 
@@ -30,4 +30,3 @@ sg_log_console_init(void);
 void
 sg_log_network_init(void);
 
-#endif

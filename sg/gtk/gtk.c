@@ -1,4 +1,6 @@
-/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
+/* Copyright 2012 Dietrich Epp.
+   This file is part of SGLib.  SGLib is licensed under the terms of the
+   2-clause BSD license.  For more information, see LICENSE.txt. */
 #if defined(__GNUC__) && \
     ((__GNUC__ == 4 && __GNUC_MINOR >= 6) || __GNUC__ > 4)
 #define HAVE_DPUSH 1

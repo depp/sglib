@@ -1,3 +1,6 @@
+# Copyright 2013 Dietrich Epp.
+# This file is part of SGLib.  SGLib is licensed under the terms of the
+# 2-clause BSD license.  For more information, see LICENSE.txt.
 from build.error import Error, ConfigError
 from build.path import Path, split_native
 import build.shell as shell

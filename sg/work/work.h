@@ -1,6 +1,6 @@
-/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
-#ifndef SG_WORK_WORK_H
-#define SG_WORK_WORK_H
+/* Copyright 2012 Dietrich Epp.
+   This file is part of SGLib.  SGLib is licensed under the terms of the
+   2-clause BSD license.  For more information, see LICENSE.txt. */
 #include "libpce/thread.h"
 #include <stddef.h>
 
@@ -93,4 +93,3 @@ sg_workqueue_unlock(struct sg_workqueue *q);
 void
 sg_workqueue_wake(struct sg_workqueue *q);
 
-#endif

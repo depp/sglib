@@ -1,6 +1,6 @@
-/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
-#ifndef SG_AUDIO_SYSPRIVATE_H
-#define SG_AUDIO_SYSPRIVATE_H
+/* Copyright 2012 Dietrich Epp.
+   This file is part of SGLib.  SGLib is licensed under the terms of the
+   2-clause BSD license.  For more information, see LICENSE.txt. */
 #include "libpce/thread.h"
 #include "sg/audio_source.h"
 #include "sg/defs.h"
@@ -254,4 +254,3 @@ extern struct sg_audio_system sg_audio_system_global;
 void
 sg_audio_sample_setrate(int rate);
 
-#endif

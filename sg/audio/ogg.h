@@ -1,6 +1,6 @@
-/* Copyright 2013 Dietrich Epp <depp@zdome.net> */
-#ifndef SG_AUDIO_OGG_H
-#define SG_AUDIO_OGG_H
+/* Copyright 2013 Dietrich Epp.
+   This file is part of SGLib.  SGLib is licensed under the terms of the
+   2-clause BSD license.  For more information, see LICENSE.txt. */
 #include <ogg/ogg.h>
 struct sg_error;
 struct sg_audio_pcm;
@@ -37,4 +37,3 @@ int
 sg_vorbis_decoder_read(void *obj, struct sg_audio_pcm *pcm,
                        struct sg_error **err);
 
-#endif

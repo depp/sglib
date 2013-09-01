@@ -1,5 +1,11 @@
+width = 78
+tabsize = 4
+guards = false
 {
-  "width": 78,
-  "tabsize": 4,
-  "guard_prefix": ""
+    + *.xml
+    tabsize = 8
 }
+copyright_notice = <<EOF
+This file is part of SGLib.  SGLib is licensed under the terms of the
+2-clause BSD license.  For more information, see LICENSE.txt.
+EOF

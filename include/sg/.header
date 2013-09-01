@@ -1,0 +1,5 @@
+extern_c = true
+{
+    + /defs.h
+    extern_c = false
+}

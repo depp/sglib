@@ -1,4 +1,6 @@
-/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
+/* Copyright 2012 Dietrich Epp.
+   This file is part of SGLib.  SGLib is licensed under the terms of the
+   2-clause BSD license.  For more information, see LICENSE.txt. */
 /* POSIX file / path code.  Used on Linux, BSD, Mac OS X.  */
 
 /* This gives us 64-bit file offsets on 32-bit Linux */

@@ -1,7 +1,7 @@
-/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
+/* Copyright 2012 Dietrich Epp.
+   This file is part of SGLib.  SGLib is licensed under the terms of the
+   2-clause BSD license.  For more information, see LICENSE.txt. */
 /* Internal file / path subsystem interface.  */
-#ifndef SG_FILE_IMPL_H
-#define SG_FILE_IMPL_H
 #include <stddef.h>
 struct sg_file;
 struct sg_error;
@@ -55,4 +55,3 @@ sg_path_getexepath(pchar *path, size_t len);
 int
 sg_path_checkdir(const pchar *path);
 
-#endif

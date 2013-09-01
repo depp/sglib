@@ -1,4 +1,2 @@
-{
-  "guards": false,
-  "width": 0
-}
+guards = false
+width = 0

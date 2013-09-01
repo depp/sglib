@@ -1,4 +1,6 @@
-/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
+/* Copyright 2012 Dietrich Epp.
+   This file is part of SGLib.  SGLib is licensed under the terms of the
+   2-clause BSD license.  For more information, see LICENSE.txt. */
 // The GDisplay object is the center of the Mac UI code: it manages a window from the viewpoint of the common code.  It sends Cocoa events to the common code, and changes the window configuration in response to calls from the common code.
 // The display will also manage the OpenGL context and rendering thread / rendering timer.
 // Each display has a lock for accessing the OpenGL context and window object.  There is no need to obtain a lock, all calls are safe to call from the main thread and -update is safe to call from any thread.

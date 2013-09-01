@@ -1,4 +1,6 @@
-/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
+/* Copyright 2012 Dietrich Epp.
+   This file is part of SGLib.  SGLib is licensed under the terms of the
+   2-clause BSD license.  For more information, see LICENSE.txt. */
 /* Various definitions needed for compatibility with various compilers
    and platforms.  */
 #ifndef SG_DEFS_H

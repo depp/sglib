@@ -1,4 +1,6 @@
-/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
+/* Copyright 2012 Dietrich Epp.
+   This file is part of SGLib.  SGLib is licensed under the terms of the
+   2-clause BSD license.  For more information, see LICENSE.txt. */
 /* The logging API is modeled after the popular log4j, except it is
    simplified and modified to work with the existing configuration
    system.

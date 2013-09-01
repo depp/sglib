@@ -1,4 +1,6 @@
-/* Copyright 2013 Dietrich Epp <depp@zdome.net> */
+/* Copyright 2013 Dietrich Epp.
+   This file is part of SGLib.  SGLib is licensed under the terms of the
+   2-clause BSD license.  For more information, see LICENSE.txt. */
 #ifndef SG_PROGRAM_H
 #define SG_PROGRAM_H
 #include "sg/opengl.h"

@@ -1,3 +1,6 @@
+# Copyright 2013 Dietrich Epp.
+# This file is part of SGLib.  SGLib is licensed under the terms of the
+# 2-clause BSD license.  For more information, see LICENSE.txt.
 import xml.dom.minidom
 import xml.dom as dom
 # The methods you want to use are 'load' and 'dump'

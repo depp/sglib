@@ -1,4 +1,6 @@
-/* Copyright 2012 Dietrich Epp <depp@zdome.net> */
+/* Copyright 2012 Dietrich Epp.
+   This file is part of SGLib.  SGLib is licensed under the terms of the
+   2-clause BSD license.  For more information, see LICENSE.txt. */
 /* Internal clock implementation.  These functions and variables are
    private to the base library, and are used for converting from OS
    timestamps to game timestamps.
@@ -11,8 +13,6 @@
 
    sg_clock_convert: convert the OS timestamp to the number of
    milliseconds since the game epoch.  */
-#ifndef SG_CORE_CLOCK_IMPL_H
-#define SG_CORE_CLOCK_IMPL_H
 
 #if defined(__APPLE__)
 #define SG_CLOCK_APPLE 1
@@ -63,4 +63,3 @@ sg_clock_convert(const struct timeval *tv);
 
 #endif /* POSIX */
 
-#endif

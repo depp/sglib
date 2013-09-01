@@ -1,4 +1,2 @@
-{
-  "extern_c": true,
-  "guard_prefix": ""
-}
+guardname =
+guards = true
