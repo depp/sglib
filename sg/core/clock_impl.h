@@ -62,4 +62,3 @@ sg_clock_convert(const struct timeval *tv);
 #endif /* POSIX MONOTONIC / SIMPLE */
 
 #endif /* POSIX */
-

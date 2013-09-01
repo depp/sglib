@@ -292,7 +292,8 @@ class ConfigTool(object):
         sys.stdout.write(fp.getvalue().decode('utf-8'))
 
     def get_target(self, cfg, args):
-        osname, default_target = PLATFORMS.get(platform.system(), (None, None))
+        osname, default_target = PLATFORMS.get(
+            chrplatform.system(), (None, None))
         target = args.target
         if target is None:
             target = default_target

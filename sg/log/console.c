@@ -21,9 +21,9 @@ sg_log_console_msg(struct sg_log_listener *h, struct sg_log_msg *m)
             datelen -= 11;
         }
     }
-    
+
     (void) h;
-    
+
     fwrite(date, 1, datelen, stderr);
     putc(' ', stderr);
     fwrite(m->level, 1, m->levellen, stderr);

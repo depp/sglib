@@ -311,7 +311,7 @@ sg_net_getname(struct sg_addr *addr, struct sg_error **err)
         }
         port = in6->sin6_port;
         break;
-        
+
     default:
         sg_error_gai(err, EAI_FAMILY);
         return NULL;

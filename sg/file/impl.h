@@ -54,4 +54,3 @@ sg_path_getexepath(pchar *path, size_t len);
    an INFO message.  */
 int
 sg_path_checkdir(const pchar *path);
-

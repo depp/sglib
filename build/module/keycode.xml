@@ -10,13 +10,13 @@
     <src path="keyid.c"/>
     <switch value="$os">
       <case value="linux">
-	<src path="keytable_evdev.c"/>
+        <src path="keytable_evdev.c"/>
       </case>
       <case value="osx">
-	<src path="keytable_mac.c"/>
+        <src path="keytable_mac.c"/>
       </case>
       <case value="windows">
-	<src path="keytable_win.c"/>
+        <src path="keytable_win.c"/>
       </case>
     </switch>
   </group>

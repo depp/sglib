@@ -140,7 +140,7 @@ sg_audio_ds8main(void *param)
             buf, p1, len1, p2, len2);
         CHECKERR();
     }
-    
+
     return 0;
 
 timeout:

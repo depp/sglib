@@ -36,4 +36,3 @@ sg_vorbis_decoder_packet(void *obj, ogg_packet *op,
 int
 sg_vorbis_decoder_read(void *obj, struct sg_audio_pcm *pcm,
                        struct sg_error **err);
-

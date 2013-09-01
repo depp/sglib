@@ -192,7 +192,6 @@ sg_layout_draw(struct sg_layout *lp)
     glPopAttrib();
 }
 
-
 void
 sg_layout_drawmarks(struct sg_layout *lp)
 {
@@ -325,4 +324,3 @@ sg_style_setsize(struct sg_style *sp, float size)
 {
     sp->size = size;
 }
-

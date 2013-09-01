@@ -231,7 +231,7 @@ class FileRef(PathObject):
 
 class BuildFile(XcodeObject):
     """Files used in a build process.
-    
+
     Consists of a reference to a file reference.
     """
     __slots__ = ['fileRef', 'settings']
@@ -384,7 +384,7 @@ class BuildConfigList(XcodeObject):
 
 class BuildConfiguration(XcodeObject):
     """A build configuration (e.g., debug, release).
-    
+
     This is basically a dictionary of values.  It can be used as a
     dictionary.
     """
@@ -433,7 +433,7 @@ class Executable(XcodeObject):
 
 class Project(XcodeObject):
     """An Xcode project object.
-    
+
     This will be the root object of the project file.
     """
     __slots__ = ['buildConfigurationList', 'compatibilityVersion',

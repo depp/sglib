@@ -321,4 +321,3 @@ class Href(object):
                 elif self.frag > other.frag:
                     return False
         return False
-

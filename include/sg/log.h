@@ -34,7 +34,6 @@ typedef enum {
        fatal error should respond to a non-fatal erorr as well.  */
 } sg_log_level_t;
 
-
 /* A logger.  There are plenty of extra fields.  Never create a logger
    directly or copy a logger, instead use sg_logger_get.  */
 struct sg_logger {
@@ -75,7 +74,6 @@ sg_logv(struct sg_logger *logger, sg_log_level_t level,
 void
 sg_logerrs(struct sg_logger *logger, sg_log_level_t level,
            struct sg_error *err, const char *msg);
-
 
 void
 sg_logerrf(struct sg_logger *logger, sg_log_level_t level,

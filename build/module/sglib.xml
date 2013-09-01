@@ -58,39 +58,39 @@
       <src path="wav.c"/>
 
       <group>
-	<switch value="$flag.audio">
-	  <case value="alsa">
-	    <require module="alsa"/>
-	    <src path="alsa.c"/>
-	  </case>
-	  <case value="coreaudio">
-	    <require module="osx#CoreAudio osx#AudioUnit"/>
-	    <src path="coreaudio.c"/>
-	  </case>
-	  <case value="directsound">
-	    <src path="directsound8.c"/>
-	  </case>
-	</switch>
+        <switch value="$flag.audio">
+          <case value="alsa">
+            <require module="alsa"/>
+            <src path="alsa.c"/>
+          </case>
+          <case value="coreaudio">
+            <require module="osx#CoreAudio osx#AudioUnit"/>
+            <src path="coreaudio.c"/>
+          </case>
+          <case value="directsound">
+            <src path="directsound8.c"/>
+          </case>
+        </switch>
       </group>
 
       <if value="$flag.ogg == yes">
-	<group>
-	  <require module="ogg"/>
-	  <src path="ogg.c"/>
-	  <src path="ogg.h"/>
-	</group>
-	<if value="$flag.vorbis == yes">
-	  <group>
-	    <require module="ogg vorbis"/>
-	    <src path="vorbis.c"/>
-	  </group>
-	</if>
-	<if value="$flag.opus == yes">
-	  <group>
-	    <require module="ogg opus"/>
-	    <src path="opus.c"/>
-	  </group>
-	</if>
+        <group>
+          <require module="ogg"/>
+          <src path="ogg.c"/>
+          <src path="ogg.h"/>
+        </group>
+        <if value="$flag.vorbis == yes">
+          <group>
+            <require module="ogg vorbis"/>
+            <src path="vorbis.c"/>
+          </group>
+        </if>
+        <if value="$flag.opus == yes">
+          <group>
+            <require module="ogg opus"/>
+            <src path="opus.c"/>
+          </group>
+        </if>
       </if>
     </group>
 
@@ -119,12 +119,12 @@
       <src path="read.c"/>
 
       <switch value="$os">
-	<case value="linux|osx">
-	  <src path="posix.c"/>
-	</case>
-	<case value="windows">
-	  <src path="win.c"/>
-	</case>
+        <case value="linux|osx">
+          <src path="posix.c"/>
+        </case>
+        <case value="windows">
+          <src path="win.c"/>
+        </case>
       </switch>
     </group>
 
@@ -144,35 +144,35 @@
 
     <group path="sg/pixbuf">
       <group>
-	<switch value="$flag.jpeg">
-	  <case value="coregraphics">
-	    <require module="osx#ApplicationServices"/>
-	    <src path="coregraphics.c"/>
-	  </case>
-	  <case value="libjpeg">
-	    <require module="libjpeg"/>
-	    <src path="libjpeg.c"/>
-	  </case>
-	  <case value="wincodec">
-	    <src path="wincodec.cpp"/>
-	  </case>
-	</switch>
+        <switch value="$flag.jpeg">
+          <case value="coregraphics">
+            <require module="osx#ApplicationServices"/>
+            <src path="coregraphics.c"/>
+          </case>
+          <case value="libjpeg">
+            <require module="libjpeg"/>
+            <src path="libjpeg.c"/>
+          </case>
+          <case value="wincodec">
+            <src path="wincodec.cpp"/>
+          </case>
+        </switch>
       </group>
 
       <group>
-	<switch value="$flag.png">
-	  <case value="coregraphics">
-	    <require module="osx#ApplicationServices"/>
-	    <src path="coregraphics.c"/>
-	  </case>
-	  <case value="libpng">
-	    <require module="libpng"/>
-	    <src path="libpng.c"/>
-	  </case>
-	  <case value="wincodec">
-	    <src path="wincodec.cpp"/>
-	  </case>
-	</switch>
+        <switch value="$flag.png">
+          <case value="coregraphics">
+            <require module="osx#ApplicationServices"/>
+            <src path="coregraphics.c"/>
+          </case>
+          <case value="libpng">
+            <require module="libpng"/>
+            <src path="libpng.c"/>
+          </case>
+          <case value="wincodec">
+            <src path="wincodec.cpp"/>
+          </case>
+        </switch>
       </group>
 
       <src path="loadimage.c"/>
@@ -184,26 +184,26 @@
       <src path="record.c"/>
       <src path="shot.c"/>
       <if value="$flag.video-recording == yes">
-	<src path="vidproc.c"/>
-	<src path="yuv.c"/>
+        <src path="vidproc.c"/>
+        <src path="yuv.c"/>
       </if>
     </group>
 
     <group path="sg/type">
       <group>
-	<switch value="$flag.type">
-	  <case value="coretext">
-	    <require module="osx#ApplicationServices"/>
-	    <src path="coretext.c"/>
-	  </case>
-	  <case value="pango">
-	    <require module="pango"/>
-	    <src path="pango.c"/>
-	  </case>
-	  <case value="uniscribe">
-	    <src path="uniscribe.c"/>
-	  </case>
-	</switch>
+        <switch value="$flag.type">
+          <case value="coretext">
+            <require module="osx#ApplicationServices"/>
+            <src path="coretext.c"/>
+          </case>
+          <case value="pango">
+            <require module="pango"/>
+            <src path="pango.c"/>
+          </case>
+          <case value="uniscribe">
+            <src path="uniscribe.c"/>
+          </case>
+        </switch>
       </group>
       <src path="impl.h"/>
       <src path="type.c"/>
@@ -214,12 +214,12 @@
       <src path="dispatch.c"/>
       <src path="work.h"/>
       <switch value="$os">
-	<case value="linux|osx">
-	  <src path="pthread.c"/>
-	</case>
-	<case value="windows">
-	  <src path="windows.c"/>
-	</case>
+        <case value="linux|osx">
+          <src path="pthread.c"/>
+        </case>
+        <case value="windows">
+          <src path="windows.c"/>
+        </case>
       </switch>
     </group>
   </module>

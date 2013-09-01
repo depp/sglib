@@ -83,4 +83,3 @@ sg_layout_impl_calcbounds(struct sg_layout_impl *li,
 void
 sg_layout_impl_render(struct sg_layout_impl *li, struct sg_pixbuf *pbuf,
                       int xoff, int yoff);
-

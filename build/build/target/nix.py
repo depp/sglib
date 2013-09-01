@@ -111,7 +111,7 @@ def default_env(cfg, vars, osname):
     config = 'debug' if cfg.config is None else cfg.config
     warnings = True if cfg.warnings is None else cfg.warnings
     werror = (config == 'debug') if cfg.werror is None else cfg.werror
-    
+
     base_env = {}
     envs = [base_env]
     if cfg.config == 'debug':

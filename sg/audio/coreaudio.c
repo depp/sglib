@@ -110,7 +110,9 @@ sg_audio_sys_pstart(void)
         goto error;
     }
     isampleRate = (int) floor(sampleRate + 0.5);
-    if (isampleRate < SG_AUDIO_COREAUDIO_MINRATE || isampleRate > SG_AUDIO_COREAUDIO_MAXRATE) {
+    if (isampleRate < SG_AUDIO_COREAUDIO_MINRATE ||
+        isampleRate > SG_AUDIO_COREAUDIO_MAXRATE)
+    {
         why = "sample rate is too extreme";
         goto error;
     }

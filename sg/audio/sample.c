@@ -230,7 +230,6 @@ sg_audio_sample_load(struct sg_audio_sample *sp)
     struct sg_error *err = NULL;
     char *pp;
 
-
     lp = malloc(sizeof(*lp) + sp->namelen + 1);
     if (!lp) {
         sg_error_nomem(&err);

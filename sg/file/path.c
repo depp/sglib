@@ -43,7 +43,7 @@ sg_path_copy(pchar *dest, const char *src, size_t len)
 #else
     memcpy(dest, src, len);
 #endif
-}   
+}
 
 /* Same, without separator normalization.  */
 static void

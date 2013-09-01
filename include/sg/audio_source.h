@@ -64,7 +64,6 @@ typedef enum {
     SG_AUDIO_PAN
 } sg_audio_param_t;
 
-
 #define SG_AUDIO_PARAMCOUNT ((int) SG_AUDIO_PAN + 1)
 
 /* Return a reference to a new sound source, or return -1 if it could
@@ -108,7 +107,6 @@ sg_audio_source_plinear(int src, sg_audio_param_t param,
 void
 sg_audio_source_pslope(int src, sg_audio_param_t param,
                        unsigned time, float value, float slope);
-
 
 /* Commit to not producing any sounds or audio events with timestamps
    before the given timestamps.  Note: if this function is

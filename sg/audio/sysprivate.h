@@ -253,4 +253,3 @@ extern struct sg_audio_system sg_audio_system_global;
 */
 void
 sg_audio_sample_setrate(int rate);
-

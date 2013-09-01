@@ -92,4 +92,3 @@ sg_workqueue_unlock(struct sg_workqueue *q);
 */
 void
 sg_workqueue_wake(struct sg_workqueue *q);
-

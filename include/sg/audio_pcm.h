@@ -65,7 +65,7 @@ typedef enum {
     /** @brief 32-bit floating-point samples, big endian */
     SG_AUDIO_F32BE,
     /** @brief 32-bit floating-point samples, little endian */
-    SG_AUDIO_F32LE 
+    SG_AUDIO_F32LE
 } sg_audio_format_t;
 
 /**

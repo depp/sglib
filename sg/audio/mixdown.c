@@ -741,7 +741,7 @@ sg_audio_mixdown_new1(sg_audio_mixdowntype_t type,
     nchan = SG_AUDIO_MAXCHAN;
     assert(nsrc > 0 && nchan > 0);
 
-    bufscount = 4 * bufsize + 
+    bufscount = 4 * bufsize +
         nchan * SG_AUDIO_PARAMCOUNT * (bufsize >> SG_AUDIO_PARAMBITS);
     bufslen = pce_align(sizeof(float) * bufscount);
     srcoffset = bufslen + pce_align(sizeof(*mp));

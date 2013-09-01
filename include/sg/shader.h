@@ -52,7 +52,7 @@ struct sg_shader {
     /**
      * @private @brief Pointer to shader loading state for this
      * shader.
-     * 
+     *
      * This field should not be accessed at all without the proper
      * lock.  It is @c NULL if the shader is not currently being
      * loaded.

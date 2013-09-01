@@ -140,7 +140,8 @@ sg_pixbuf_writepng(struct sg_pixbuf *pbuf, struct sg_file *fp,
         case SG_YA:   nchan = 2; ifo = kCGImageAlphaLast; break;
         /* SG_RGB not supported */
         case SG_RGBA: nchan = 4; ifo = kCGImageAlphaNoneSkipLast; break;
-        /* case SG_RGBA: nchan = 4; ifo = kCGImageAlphaPremultipliedLast; break; */
+        /* case SG_RGBA: nchan = 4; ifo = kCGImageAlphaPremultipliedLast;
+           break; */
         default: assert(0);
     }
 
@@ -172,7 +173,7 @@ sg_pixbuf_writepng(struct sg_pixbuf *pbuf, struct sg_file *fp,
     CFRelease(img);
     CFRelease(dp);
     CFRelease(colorSpace);
-    
+
     return 0;
     (void) err;
 }

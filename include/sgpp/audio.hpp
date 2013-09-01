@@ -77,7 +77,7 @@ public:
 
     void play(unsigned time, const AudioFile &f, int flags)
     {
-        sg_audio_source_play(m_id, time, f.m_ptr, flags); 
+        sg_audio_source_play(m_id, time, f.m_ptr, flags);
     }
 
     void stop(unsigned time)

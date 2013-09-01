@@ -106,7 +106,7 @@ sg_pixbuf_loadwincodec(struct sg_pixbuf *pbuf, const void *data, size_t len,
     hr = converter->GetSize(&iwidth, &iheight);
     if (hr != S_OK)
         goto failed;
-    
+
     r = sg_pixbuf_set(pbuf, pfmt, iwidth, iheight, err);
     if (r)
         goto done;

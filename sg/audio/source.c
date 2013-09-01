@@ -682,7 +682,7 @@ sg_audio_source_sprocess(struct sg_audio_system *SG_RESTRICT sp)
             if ((int) (ctime - srcs[src].d.a.params[i].time[1]) > 0) {
                 srcs[src].d.a.params[i].time[0] = ctime;
                 srcs[src].d.a.params[i].time[1] = ctime;
-                srcs[src].d.a.params[i].val[0] = 
+                srcs[src].d.a.params[i].val[0] =
                     srcs[src].d.a.params[i].val[1];
             }
         }

@@ -20,10 +20,10 @@
     <src path="strbuf.c"/>
     <switch value="$os">
       <case value="linux|osx">
-	<src path="thread_pthread.c"/>
+        <src path="thread_pthread.c"/>
       </case>
       <case value="windows">
-	<src path="thread_windows.c"/>
+        <src path="thread_windows.c"/>
       </case>
     </switch>
   </group>

@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <module path="../..">
   <key name="desc">SGLib Cocoa Frontend</key>
-  <require module="sglib osx#AppKit osx#Foundation osx#CoreVideo osx#OpenGL osx#Carbon"/>
+  <require module="sglib osx#AppKit osx#Foundation osx#CoreVideo
+                   osx#OpenGL osx#Carbon"/>
   <group path="sg/osx">
     <src path="GApplication.h"/>
     <src path="GApplication.m"/>

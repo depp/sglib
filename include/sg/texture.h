@@ -38,7 +38,7 @@ struct sg_texture {
     /**
      * @private @brief Pointer to texture loading state for this
      * texture.
-     * 
+     *
      * This field should not be accessed at all without the proper
      * lock.  It is @c NULL if the texture is not currently being
      * loaded.

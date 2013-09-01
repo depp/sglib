@@ -56,7 +56,8 @@ class ParamParser(object):
                 try:
                     val = param.type(val)
                 except ValueError as ex:
-                    raise ConfigError('invalid value for {}: {!r}'.format(name, val))
+                    raise ConfigError(
+                        'invalid value for {}: {!r}'.format(name, val))
             result[name] = val
         for key, param in self._params.items():
             result.setdefault(key, param.default)
