@@ -1,4 +1,12 @@
+width = 78
+tabsize = 4
+copyright_notice = <<EOF
+This file is part of LibPCE.  LibPCE is licensed under the terms of the
+2-clause BSD license.  For more information, see LICENSE.txt.
+EOF
+
 {
-  "width": 78,
-  "tabsize": 4
+    + /include/libpce
+    guards = true
+    guardname = PCE
 }

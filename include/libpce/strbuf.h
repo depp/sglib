@@ -1,4 +1,6 @@
-/* Copyright 2011-2013 Dietrich Epp <depp@zdome.net> */
+/* Copyright 2011-2013 Dietrich Epp.
+   This file is part of LibPCE.  LibPCE is licensed under the terms of the
+   2-clause BSD license.  For more information, see LICENSE.txt. */
 #ifndef PCE_STRBUF_H
 #define PCE_STRBUF_H
 #include <assert.h>
