@@ -1,4 +1,4 @@
-/* Copyright 2012 Dietrich Epp.
+/* Copyright 2012-2013 Dietrich Epp.
    This file is part of SGLib.  SGLib is licensed under the terms of the
    2-clause BSD license.  For more information, see LICENSE.txt. */
 #ifndef SG_AUDIO_SOURCE_H
@@ -6,7 +6,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-struct sg_audio_sample;
+struct sg_audio_pcm_obj;
 
 /*
   Farthest time in the future permitted for any audio system event,
@@ -79,7 +79,7 @@ sg_audio_source_close(int src);
 /* Play the given audio sample.  */
 void
 sg_audio_source_play(int src, unsigned time,
-                     struct sg_audio_sample *sample, int flags);
+                     struct sg_audio_pcm_obj *sample, int flags);
 
 /* Stop playing the audio source.  */
 void

@@ -1,4 +1,4 @@
-/* Copyright 2012 Dietrich Epp.
+/* Copyright 2012-2013 Dietrich Epp.
    This file is part of SGLib.  SGLib is licensed under the terms of the
    2-clause BSD license.  For more information, see LICENSE.txt. */
 #include "config.h"
@@ -9,6 +9,7 @@
 #include "sg/record.h"
 #include <stdlib.h>
 
+#if 0
 enum {
     SG_REC_SHOT = 1,
     SG_REC_VID = 2
@@ -144,8 +145,10 @@ sg_record_callback(void *cxt)
 static void
 sg_record_schedule(void)
 {
+#if 0
     sg_dispatch_sync_queue(SG_POST_RENDER, 0, &sg_rec_state.excl,
                            NULL, sg_record_callback);
+#endif
 }
 
 void
@@ -169,4 +172,17 @@ sg_record_fixsize(int width, int height)
 {
     sg_rec_state.width = width;
     sg_rec_state.height = height;
+}
+
+#endif
+
+void
+sg_record_screenshot(void)
+{ }
+
+void
+sg_record_fixsize(int width, int height)
+{
+    (void) width;
+    (void) height;
 }

@@ -1,9 +1,9 @@
-/* Copyright 2012 Dietrich Epp.
+/* Copyright 2012-2013 Dietrich Epp.
    This file is part of SGLib.  SGLib is licensed under the terms of the
    2-clause BSD license.  For more information, see LICENSE.txt. */
 #include "config.h"
 #include "keycode/keycode.h"
-#include "sg/audio_sample.h"
+#include "sg/audio_pcm.h"
 #include "sg/audio_system.h"
 #include "sg/aio.h"
 #include "sg/clock.h"
@@ -14,8 +14,6 @@
 #include "sg/log.h"
 #include "sg/rand.h"
 #include "sg/record.h"
-#include "sg/shader.h"
-#include "sg/texture.h"
 #include "sg/version.h"
 
 struct sg_sys_state sg_sst;
@@ -60,12 +58,8 @@ sg_sys_init(void)
     sg_path_init();
     sg_dispatch_init();
     sg_aio_init();
-    sg_dispatch_sync_init();
     sg_clock_init();
     sg_rand_seed(&sg_rand_global, 1);
-    sg_shader_init();
-    sg_texture_init();
-    sg_audio_sample_init();
     sg_audio_sys_init();
     sg_game_init();
     sg_log_video = sg_logger_get("video");
@@ -143,8 +137,6 @@ sg_sys_draw(void)
     unsigned msec, n;
     (void) n;
 
-    sg_dispatch_sync_run(SG_PRE_RENDER);
-
     msec = sg_clock_get() - sg_sst.tick_offset;
 #if defined(ENABLE_VIDEO_RECORDING)
     if (sg_sst.rec_numer && (int) (msec - sg_sst.rec_next) >= 0) {
@@ -166,7 +158,6 @@ sg_sys_draw(void)
 #endif
 
     sg_game_draw(0, 0, sg_sst.width, sg_sst.height, msec);
-    sg_dispatch_sync_run(SG_POST_RENDER);
 }
 
 void

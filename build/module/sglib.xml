@@ -37,7 +37,6 @@
       <src path="pixbuf.h"/>
       <src path="rand.h"/>
       <src path="record.h"/>
-      <src path="texture.h"/>
       <src path="type.h"/>
       <src path="version.h"/>
     </group>
@@ -51,7 +50,6 @@
       <src path="ofile.c"/>
       <src path="pcm.c"/>
       <src path="resample.c"/>
-      <src path="sample.c"/>
       <src path="source.c"/>
       <src path="sysprivate.h"/>
       <src path="system.c"/>
@@ -108,10 +106,6 @@
       <src path="version_const.c"/>
     </group>
 
-    <group path="sg/dispatch">
-      <src path="sync.c"/>
-    </group>
-
     <group path="sg/file">
       <src path="impl.h"/>
       <src path="norm.c"/>
@@ -126,13 +120,6 @@
           <src path="win.c"/>
         </case>
       </switch>
-    </group>
-
-    <group path="sg/gl">
-      <src path="opengl.c"/>
-      <src path="program.c"/>
-      <src path="shader.c"/>
-      <src path="texture.c"/>
     </group>
 
     <group path="sg/log">

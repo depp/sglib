@@ -1,4 +1,4 @@
-/* Copyright 2012 Dietrich Epp.
+/* Copyright 2012-2013 Dietrich Epp.
    This file is part of SGLib.  SGLib is licensed under the terms of the
    2-clause BSD license.  For more information, see LICENSE.txt. */
 #include "libpce/thread.h"
@@ -64,7 +64,7 @@ struct sg_audio_msghdr {
 };
 
 struct sg_audio_msgplay {
-    struct sg_audio_sample *sample;
+    struct sg_audio_pcm_obj *sample;
     int flags;
 };
 
@@ -123,7 +123,7 @@ struct sg_audio_source {
             unsigned msgtime;
             /* Current audio file playing, or NULL if no sound is
                playing */
-            struct sg_audio_sample *sample;
+            struct sg_audio_pcm_obj *sample;
             /* Start time of current sound playing */
             unsigned start_time;
             /* The latest segments of parameter automation.  */

@@ -1,5 +1,6 @@
 extern_c = true
 {
     + /defs.h
+    + /opengl.h
     extern_c = false
 }

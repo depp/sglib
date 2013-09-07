@@ -1,8 +1,9 @@
-/* Copyright 2012 Dietrich Epp.
+/* Copyright 2012-2013 Dietrich Epp.
    This file is part of SGLib.  SGLib is licensed under the terms of the
    2-clause BSD license.  For more information, see LICENSE.txt. */
 #ifndef SG_AUDIO_PCM_H
 #define SG_AUDIO_PCM_H
+#include "libpce/atomic.h"
 #include "libpce/attribute.h"
 #include "libpce/byteorder.h"
 #include <stddef.h>
@@ -16,13 +17,6 @@ struct sg_error;
  *
  * @brief Audio PCM buffer.
  */
-
-/**
- * @brief Arbitrary limit on audio file size.
- *
- * @todo Make this configurable.
- */
-#define SG_AUDIO_PCM_MAXFILESZ ((size_t) 1024 * 1024 * 16)
 
 /**
  * @brief List of filename extensions for audio files.
@@ -40,13 +34,6 @@ extern const char SG_AUDIO_PCM_EXTENSIONS[];
  * @brief Maximum sample rate for audio samples, in hertz.
  */
 #define SG_AUDIO_PCM_MAXRATE 96000
-
-/**
- * @brief Maximum audio file length, in seconds.
- *
- * This is 30 minutes, which is actually kind of rediculous.
- */
-#define SG_AUDIO_MAXLENGTH (30*60)
 
 /**
  * @brief PCM data formats.
@@ -259,6 +246,62 @@ sg_audio_pcm_convert(struct sg_audio_pcm *buf, sg_audio_format_t format,
 int
 sg_audio_pcm_resample(struct sg_audio_pcm *buf, int rate,
                       struct sg_error **err);
+
+/**
+ * @brief Get the playing time of a buffer, in milliseconds.
+ */
+int
+sg_audio_pcm_playtime(struct sg_audio_pcm *buf);
+
+/**
+ * @brief Reference-counted PCM buffer object.
+ *
+ * This is nothing more than a wrapper around a PCM buffer.
+ */
+struct sg_audio_pcm_obj {
+    /**
+     * @private @brief Reference count.
+     */
+    pce_atomic_t refcount;
+
+    /**
+     * @brief PCM buffer data.
+     */
+    struct sg_audio_pcm buf;
+};
+
+/**
+ * @brief Create a new audio PCM buffer object, or return null if out
+ * of memory.
+ */
+struct sg_audio_pcm_obj*
+sg_audio_pcm_obj_new(void);
+
+/**
+ * @private @brief Free an audio PCM buffer object.
+ */
+void
+sg_audio_pcm_obj_free_(struct sg_audio_pcm_obj *obj);
+
+/**
+ * @brief Increment an audio PCM buffer object's reference count.
+ */
+PCE_INLINE void
+sg_audio_pcm_obj_incref(struct sg_audio_pcm_obj *obj)
+{
+    pce_atomic_inc(&obj->refcount);
+}
+
+/**
+ * @brief Decrement an audio PCM buffer object's reference count.
+ */
+PCE_INLINE void
+sg_audio_pcm_obj_decref(struct sg_audio_pcm_obj *obj)
+{
+    int c = pce_atomic_fetch_add_acq_rel(&obj->refcount, -1);
+    if (c == 1)
+        sg_audio_pcm_obj_free_(obj);
+}
 
 #ifdef __cplusplus
 }

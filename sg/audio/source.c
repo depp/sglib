@@ -1,8 +1,8 @@
-/* Copyright 2012 Dietrich Epp.
+/* Copyright 2012-2013 Dietrich Epp.
    This file is part of SGLib.  SGLib is licensed under the terms of the
    2-clause BSD license.  For more information, see LICENSE.txt. */
 #include "libpce/util.h"
-#include "sg/audio_sample.h"
+#include "sg/audio_pcm.h"
 #include "sg/audio_source.h"
 #include "sg/log.h"
 #include "sysprivate.h"
@@ -233,7 +233,7 @@ sg_audio_source_cliptime(struct sg_audio_system *SG_RESTRICT sp,
 
 void
 sg_audio_source_play(int src, unsigned time,
-                     struct sg_audio_sample *sample, int flags)
+                     struct sg_audio_pcm_obj *sample, int flags)
 {
     struct sg_audio_system *SG_RESTRICT sp = &sg_audio_system_global;
     struct sg_audio_source *srcp;
@@ -249,9 +249,9 @@ sg_audio_source_play(int src, unsigned time,
     if (!(srcp->flags & SG_AUDIO_OPEN))
         goto done;
 
-    sg_audio_sample_incref(sample);
+    sg_audio_pcm_obj_incref(sample);
     if (srcp->d.a.sample)
-        sg_audio_sample_decref(srcp->d.a.sample);
+        sg_audio_pcm_obj_decref(srcp->d.a.sample);
     srcp->d.a.sample = sample;
     srcp->d.a.start_time = time;
 
@@ -259,7 +259,7 @@ sg_audio_source_play(int src, unsigned time,
     mdat.sample = sample;
 
     sg_audio_sysmsg(sp, SG_AUDIO_MSG_PLAY, src, time, &mdat, sizeof(mdat));
-    sg_audio_sample_incref(sample);
+    sg_audio_pcm_obj_incref(sample);
 
 done:
     pce_lock_release(&sp->slock);
@@ -282,7 +282,7 @@ sg_audio_source_stop(int src, unsigned time)
         goto done;
 
     if (srcp->d.a.sample)
-        sg_audio_sample_decref(srcp->d.a.sample);
+        sg_audio_pcm_obj_decref(srcp->d.a.sample);
     srcp->d.a.sample = NULL;
     srcp->flags &= ~0xffffu;
     sg_audio_sysmsg(sp, SG_AUDIO_MSG_STOP, src, time, NULL, 0);
@@ -608,7 +608,7 @@ sg_audio_source_bufprocess(struct sg_audio_system *SG_RESTRICT sp,
         case SG_AUDIO_MSG_PLAY:
             mplay = sg_audio_source_bufread(bp, sizeof(*mplay));
             assert(mplay != NULL);
-            sg_audio_sample_decref(mplay->sample);
+            sg_audio_pcm_obj_decref(mplay->sample);
             break;
 
         case SG_AUDIO_MSG_STOP:
@@ -637,7 +637,7 @@ sg_audio_source_bufprocess(struct sg_audio_system *SG_RESTRICT sp,
 static void
 sg_audio_source_sprocess(struct sg_audio_system *SG_RESTRICT sp)
 {
-    struct sg_audio_sample *samp;
+    struct sg_audio_pcm_obj *samp;
     struct sg_audio_source *SG_RESTRICT srcs;
     unsigned ctime, ltime, src;
     int i, len;
@@ -651,13 +651,10 @@ sg_audio_source_sprocess(struct sg_audio_system *SG_RESTRICT sp)
 
         samp = srcs[src].d.a.sample;
         if (samp) {
-            if (sg_audio_sample_is_loaded(samp))
-                len = samp->playtime;
-            else
-                len = 2000; /* guess at length */
+            len = sg_audio_pcm_playtime(&samp->buf);
             if ((int) (ctime - srcs[src].d.a.start_time) > len) {
                 /* LOOP here */
-                sg_audio_sample_decref(srcs[src].d.a.sample);
+                sg_audio_pcm_obj_decref(srcs[src].d.a.sample);
                 srcs[src].d.a.sample = NULL;
                 srcs[src].d.a.start_time = 0;
             }
