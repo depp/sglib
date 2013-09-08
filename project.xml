@@ -29,7 +29,6 @@
       <src path="main.c"/>
       <src path="menu.c"/>
       <src path="test_audio.c"/>
-      <src path="test_audio2.c"/>
       <src path="test_image.c"/>
       <src path="test_type.c"/>
     </group>

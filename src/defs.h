@@ -15,7 +15,7 @@ struct st_iface {
 
 extern const struct st_iface *st_screen;
 extern const struct st_iface
-    ST_MENU, ST_IMAGE, ST_TYPE, ST_AUDIO, ST_AUDIO2;
+    ST_MENU, ST_IMAGE, ST_TYPE, ST_AUDIO;
 
 struct sg_audio_pcm_obj *
 load_audio(const char *path);
