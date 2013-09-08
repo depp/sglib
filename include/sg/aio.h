@@ -36,12 +36,6 @@ struct sg_aio_request;
  */
 
 /**
- * @brief Initialize the asynchronous IO subsystem.
- */
-void
-sg_aio_init(void);
-
-/**
  * @brief Callback for completed AIO requests.
  *
  * @param cxt User-supplied callback parameter

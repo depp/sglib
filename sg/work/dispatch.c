@@ -4,6 +4,7 @@
 #include "work.h"
 #include "sg/defs.h"
 #include "sg/dispatch.h"
+#include "../private.h"
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>

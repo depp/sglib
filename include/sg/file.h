@@ -45,10 +45,6 @@ enum {
     SG_MAX_PATH = 128
 };
 
-/* Initialize the path subsystem.  */
-void
-sg_path_init(void);
-
 /* Normalize a path.  Returns the length of the result, or -1 if the
    path is not legal, which sets the error.  The buffer must be
    SG_MAX_PATH long.  The resulting path will use '/' as a path

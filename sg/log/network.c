@@ -6,6 +6,7 @@
 #include "sg/error.h"
 #include "sg/log.h"
 #include "sg/net.h"
+#include "../private.h"
 
 #include <errno.h>
 #include <stdlib.h>

@@ -17,10 +17,6 @@ enum {
     SG_DISPATCH_PRIO_MIN = -32768
 };
 
-/* Initialize asynchronous task dispatching system.  */
-void
-sg_dispatch_init(void);
-
 /* Add a task to the queue to be completed asynchronously.  */
 void
 sg_dispatch_queue(int priority, void *cxt, void (*func)(void *));

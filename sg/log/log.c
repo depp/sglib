@@ -7,6 +7,7 @@
 #include "sg/cvar.h"
 #include "sg/error.h"
 #include "sg/log.h"
+#include "../private.h"
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>

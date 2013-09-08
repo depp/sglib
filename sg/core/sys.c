@@ -15,6 +15,7 @@
 #include "sg/rand.h"
 #include "sg/record.h"
 #include "sg/version.h"
+#include "../private.h"
 
 struct sg_sys_state sg_sst;
 static struct sg_logger *sg_log_video;

@@ -4,6 +4,7 @@
 #include "sg/defs.h"
 #include "sg/error.h"
 #include "sg/net.h"
+#include "../private.h"
 
 #include <assert.h>
 #include <errno.h>

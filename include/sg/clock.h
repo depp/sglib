@@ -10,10 +10,6 @@ extern "C" {
 /* The minimum buffer size for sg_clock_getdate.  */
 #define SG_DATE_LEN 25
 
-/* Initialize the timer, setting the current time to zero.  */
-void
-sg_clock_init(void);
-
 /* Return the number of milliseconds since the timer was initialized.
    This will wrap every 2^32 ms, a little less than 50 days.  */
 unsigned

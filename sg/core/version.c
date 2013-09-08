@@ -5,7 +5,6 @@
 #include "config.h"
 #endif
 
-#include "sg/entry.h"
 #include "sg/log.h"
 #include "sg/version.h"
 

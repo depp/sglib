@@ -27,11 +27,6 @@ struct sg_addr {
     } addr;
 };
 
-/* Initialize network subsystem.  Safe to call multiple times.
-   Returns 1 if successful, 0 for failure.  */
-int
-sg_net_init(void);
-
 /* Convert a human-readable address to a socket address.  Uses the
    same format as URIs: "host:port", "ipv4addr:port", and
    "[ipv6addr]:port" are accepted.  */

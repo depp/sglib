@@ -3,6 +3,7 @@
    2-clause BSD license.  For more information, see LICENSE.txt. */
 #include "clock_impl.h"
 #include "sg/clock.h"
+#include "../private.h"
 #include <stdio.h>
 
 #if defined(_MSC_VER)

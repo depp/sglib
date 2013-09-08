@@ -41,14 +41,6 @@ struct sg_logger {
     sg_log_level_t level;
 };
 
-/* Initialize logging subsystem.  */
-void
-sg_log_init(void);
-
-/* Shut down logging system: close sockets, etc.  */
-void
-sg_log_term(void);
-
 /* Get a logger with the given name.  The result should not be freed.
    If the name is NULL or empty, the root logger is returned.  */
 struct sg_logger *

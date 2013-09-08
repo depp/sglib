@@ -6,6 +6,7 @@
 #include "sg/cvar.h"
 #include "sg/error.h"
 #include "sg/file.h"
+#include "../private.h"
 #include "work.h"
 #include <stdlib.h>
 #include <string.h>
