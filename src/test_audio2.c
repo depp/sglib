@@ -1,5 +1,7 @@
+/* Copyright 2013 Dietrich Epp.
+   This file is part of SGLib.  SGLib is licensed under the terms of the
+   2-clause BSD license.  For more information, see LICENSE.txt. */
 #include "defs.h"
-#include "sg/audio_sample.h"
 #include "sg/audio_source.h"
 #include "sg/entry.h"
 #include "sg/event.h"
@@ -8,40 +10,28 @@
 #include <assert.h>
 #include <string.h>
 
-static struct sg_audio_sample *g_snd_clank;
-static struct sg_audio_sample *g_snd_donk;
-static struct sg_audio_sample *g_snd_tink;
-static struct sg_audio_sample *g_snd_stereo;
-static struct sg_audio_sample *g_snd_left;
-static struct sg_audio_sample *g_snd_right;
-static struct sg_audio_sample *g_snd_music;
-static struct sg_audio_sample *g_snd_alien;
+static struct sg_audio_pcm_obj *g_snd_clank;
+static struct sg_audio_pcm_obj *g_snd_donk;
+static struct sg_audio_pcm_obj *g_snd_tink;
+static struct sg_audio_pcm_obj *g_snd_stereo;
+static struct sg_audio_pcm_obj *g_snd_left;
+static struct sg_audio_pcm_obj *g_snd_right;
+static struct sg_audio_pcm_obj *g_snd_music;
+static struct sg_audio_pcm_obj *g_snd_alien;
 
 static unsigned g_cmd;
-
-static struct sg_audio_sample *
-xloadaudio(const char *name)
-{
-    struct sg_audio_sample *fp;
-    char buf[16];
-    strcpy(buf, "fx/");
-    strcat(buf, name);
-    fp = sg_audio_sample_file(buf, strlen(buf), NULL);
-    assert(fp);
-    return fp;
-}
 
 static void
 st_audio2_init(void)
 {
-    g_snd_clank = xloadaudio("clank1");
-    g_snd_donk = xloadaudio("donk1");
-    g_snd_tink = xloadaudio("tink1");
-    g_snd_stereo = xloadaudio("stereo");
-    g_snd_left = xloadaudio("left");
-    g_snd_right = xloadaudio("right");
-    g_snd_music = xloadaudio("looptrack");
-    g_snd_alien = xloadaudio("alien");
+    g_snd_clank  = load_audio("fx/clank1");
+    g_snd_donk   = load_audio("fx/donk1");
+    g_snd_tink   = load_audio("fx/tink1");
+    g_snd_stereo = load_audio("fx/stereo");
+    g_snd_left   = load_audio("fx/left");
+    g_snd_right  = load_audio("fx/right");
+    g_snd_music  = load_audio("fx/looptrack");
+    g_snd_alien  = load_audio("fx/alien");
 }
 
 static void
@@ -130,7 +120,7 @@ func1(unsigned msec)
 {
     static int g_chan = -1, g_state, g_mod;
     int state = get_state(0);
-    struct sg_audio_sample *fp;
+    struct sg_audio_pcm_obj *fp;
 
     if (state && !g_state) {
         if (g_chan < 0)
@@ -154,7 +144,7 @@ func2(unsigned msec)
 {
     static int g_chan = -1, g_state, g_mod;
     int state = get_state(1);
-    struct sg_audio_sample *fp;
+    struct sg_audio_pcm_obj *fp;
     float pan = 0.0f;
 
     if (state && !g_state) {
@@ -185,7 +175,7 @@ func3(unsigned msec)
 {
     static int g_chan = -1, g_state, g_mod;
     int state = get_state(2);
-    struct sg_audio_sample *fp;
+    struct sg_audio_pcm_obj *fp;
     float pan = 0.0f;
 
     if (state && !g_state) {

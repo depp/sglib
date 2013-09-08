@@ -21,13 +21,17 @@
     <key name="uuid">8d7f256e-ed27-443c-b350-c375d25a9e54</key>
     <require module="math"/>
     <group path="src">
-      <src path="audio.c"/>
-      <src path="audio2.c"/>
       <src path="defs.h"/>
-      <src path="image.c"/>
+      <src path="load_audio.c"/>
+      <src path="load_program.c"/>
+      <src path="load_shader.c"/>
+      <src path="load_texture.c"/>
       <src path="main.c"/>
       <src path="menu.c"/>
-      <src path="type.c"/>  
+      <src path="test_audio.c"/>
+      <src path="test_audio2.c"/>
+      <src path="test_image.c"/>
+      <src path="test_type.c"/>
     </group>
   </module>
 </build>

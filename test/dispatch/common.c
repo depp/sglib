@@ -1,3 +1,6 @@
+/* Copyright 2013 Dietrich Epp.
+   This file is part of SGLib.  SGLib is licensed under the terms of the
+   2-clause BSD license.  For more information, see LICENSE.txt. */
 #include "dispatch_impl.h"
 #include <stdint.h>
 #include <stdio.h>
@@ -39,7 +42,7 @@ pop(struct sg_dispatch_queue *q, int i)
         exit(1);
     }
     if (t.func != (void (*)(void *)) (intptr_t) i) {
-        fprintf(stderr, "Function: expected %p, got %p\n", 
+        fprintf(stderr, "Function: expected %p, got %p\n",
                 (void *) (intptr_t) i, (void *) t.func);
         fail();
     }

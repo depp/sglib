@@ -1,5 +1,8 @@
+/* Copyright 2013 Dietrich Epp.
+   This file is part of SGLib.  SGLib is licensed under the terms of the
+   2-clause BSD license.  For more information, see LICENSE.txt. */
 #include "defs.h"
-#include "sg/audio_sample.h"
+#include "sg/audio_pcm.h"
 #include "sg/audio_source.h"
 #include "sg/entry.h"
 #include "sg/opengl.h"
@@ -10,9 +13,9 @@
 
 #define NUMOBJS 10
 
-static struct sg_audio_sample *g_snd_clank[3];
-static struct sg_audio_sample *g_snd_donk[3];
-static struct sg_audio_sample *g_snd_tink[3];
+static struct sg_audio_pcm_obj *g_snd_clank[3];
+static struct sg_audio_pcm_obj *g_snd_donk[3];
+static struct sg_audio_pcm_obj *g_snd_tink[3];
 static int g_snd_source;
 
 struct obj {
@@ -26,30 +29,18 @@ static int g_initted;
 static unsigned g_tick;
 static struct obj g_objs[NUMOBJS];
 
-static struct sg_audio_sample *
-xloadaudio(const char *name)
-{
-    struct sg_audio_sample *fp;
-    char buf[16];
-    strcpy(buf, "fx/");
-    strcat(buf, name);
-    fp = sg_audio_sample_file(buf, strlen(buf), NULL);
-    assert(fp);
-    return fp;
-}
-
 static void
 st_audio_init(void)
 {
-    g_snd_clank[0] = xloadaudio("clank1");
-    g_snd_clank[1] = xloadaudio("clank2");
-    g_snd_clank[2] = xloadaudio("clank3");
-    g_snd_donk[0] = xloadaudio("donk1");
-    g_snd_donk[1] = xloadaudio("donk2");
-    g_snd_donk[2] = xloadaudio("donk3");
-    g_snd_tink[0] = xloadaudio("tink1");
-    g_snd_tink[1] = xloadaudio("tink2");
-    g_snd_tink[2] = xloadaudio("tink3");
+    g_snd_clank[0] = load_audio("fx/clank1");
+    g_snd_clank[1] = load_audio("fx/clank2");
+    g_snd_clank[2] = load_audio("fx/clank3");
+    g_snd_donk[0]  = load_audio("fx/donk1");
+    g_snd_donk[1]  = load_audio("fx/donk2");
+    g_snd_donk[2]  = load_audio("fx/donk3");
+    g_snd_tink[0]  = load_audio("fx/tink1");
+    g_snd_tink[1]  = load_audio("fx/tink2");
+    g_snd_tink[2]  = load_audio("fx/tink3");
     g_snd_source = sg_audio_source_open();
     assert(g_snd_source >= 0);
 }
@@ -69,7 +60,7 @@ st_audio_draw(int x, int y, int width, int height, unsigned msec)
 {
     int i, j, sidx;
     float r, a, px, py, dx, dy;
-    struct sg_audio_sample *snd;
+    struct sg_audio_pcm_obj *snd;
 
     glClear(GL_COLOR_BUFFER_BIT);
     glViewport(x, y, width, height);

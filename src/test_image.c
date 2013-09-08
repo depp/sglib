@@ -1,10 +1,10 @@
+/* Copyright 2013 Dietrich Epp.
+   This file is part of SGLib.  SGLib is licensed under the terms of the
+   2-clause BSD license.  For more information, see LICENSE.txt. */
 #include "defs.h"
 #include "sg/opengl.h"
 #include "sg/dispatch.h"
 #include "sg/entry.h"
-#include "sg/program.h"
-#include "sg/shader.h"
-#include "sg/texture.h"
 #include <assert.h>
 #include <math.h>
 #include <stddef.h>
@@ -63,13 +63,10 @@ enum {
 
 static const char TEX_NAMES[NUM_TEX][12] = { "brick", "ivy", "roughstone" };
 
-static struct sg_texture *g_images[NUM_IMG];
-static struct sg_texture *g_tex[NUM_TEX];
+static GLuint g_images[NUM_IMG];
+static GLuint g_tex[NUM_TEX];
 
 struct {
-    struct sg_shader *vert;
-    struct sg_shader *frag;
-
     GLuint prog;
 
     GLint a_loc;
@@ -78,36 +75,12 @@ struct {
     GLuint array;
 } g_prog_bkg;
 
-struct {
-    struct sg_shader *vert;
-    struct sg_shader *frag;
-
-    GLuint prog;
-
-    GLint a_loc, a_texcoord;
-    GLint u_vertoff, u_vertscale, u_texscale, u_texture;
-
-    GLuint array;
-} g_prog_tex;
-
-static int g_isloaded;
-
-static void
-st_image_loaded(void *cxt)
+static void st_image_load_bkgprog(void)
 {
-    GLuint prog;
-    int r;
-    (void) cxt;
+    GLuint prog, buf;
 
-    g_isloaded = 1;
-
-    /* Background program */
-
-    g_prog_bkg.prog = prog = glCreateProgram();
-    glAttachShader(prog, g_prog_bkg.vert->shader);
-    glAttachShader(prog, g_prog_bkg.frag->shader);
-    r = sg_program_link(prog, "background");
-    assert(r == 0);
+    g_prog_bkg.prog = prog = load_program(
+        "shader/bkg.vert", "shader/bkg.frag");
 #define ATTR(x) g_prog_bkg.x = glGetAttribLocation(prog, #x)
 #define UNIFORM(x) g_prog_bkg.x = glGetUniformLocation(prog, #x)
     ATTR(a_loc);
@@ -120,37 +93,47 @@ st_image_loaded(void *cxt)
 #undef UNIFORM
     glUseProgram(0);
 
-    static const short BKG_VERTEX[] = {
+    static const short VERTEX[] = {
         -1, -1,
         +1, -1,
         +1, +1,
         -1, +1
     };
-    GLuint bbuf;
-    glGenBuffers(1, &bbuf);
-    glBindBuffer(GL_ARRAY_BUFFER, bbuf);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(BKG_VERTEX), BKG_VERTEX,
+
+    glGenBuffers(1, &buf);
+    glBindBuffer(GL_ARRAY_BUFFER, buf);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(VERTEX), VERTEX,
                  GL_STATIC_DRAW);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
     glGenVertexArrays(1, &g_prog_bkg.array);
     glBindVertexArray(g_prog_bkg.array);
 
-    glBindBuffer(GL_ARRAY_BUFFER, bbuf);
+    glBindBuffer(GL_ARRAY_BUFFER, buf);
     glVertexAttribPointer(
         g_prog_bkg.a_loc, 2, GL_SHORT, GL_FALSE, 0, 0);
     glEnableVertexAttribArray(g_prog_bkg.a_loc);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
     glBindVertexArray(0);
+}
 
-    /* Foreground program */
+struct {
+    GLuint prog;
 
-    g_prog_tex.prog = prog = glCreateProgram();
-    glAttachShader(prog, g_prog_tex.vert->shader);
-    glAttachShader(prog, g_prog_tex.frag->shader);
-    r = sg_program_link(prog, "texture");
-    assert(r == 0);
+    GLint a_loc, a_texcoord;
+    GLint u_vertoff, u_vertscale, u_texscale, u_texture;
+
+    GLuint array;
+} g_prog_tex;
+
+static void
+st_image_load_fgprog(void)
+{
+    GLuint prog, buf[2];
+
+    g_prog_tex.prog = prog = load_program(
+        "shader/textured.vert", "shader/textured.frag");
 #define ATTR(x) g_prog_tex.x = glGetAttribLocation(prog, #x)
 #define UNIFORM(x) g_prog_tex.x = glGetUniformLocation(prog, #x)
     ATTR(a_loc);
@@ -175,7 +158,6 @@ st_image_loaded(void *cxt)
         1, 0,
         0, 0
     };
-    GLuint buf[2];
     glGenBuffers(2, buf);
     glBindBuffer(GL_ARRAY_BUFFER, buf[0]);
     glBufferData(GL_ARRAY_BUFFER, sizeof(VERTEX), VERTEX,
@@ -205,42 +187,19 @@ static void
 st_image_init(void)
 {
     int i;
-    struct sg_error *err = NULL;
     char buf[32];
     for (i = 0; i < NUM_IMG; ++i) {
         strcpy(buf, "imgtest/");
         strcat(buf, IMAGE_NAMES[i]);
-        g_images[i] = sg_texture_file(buf, strlen(buf), &err);
-        assert(g_images[i]);
+        g_images[i] = load_texture(buf);
     }
     for (i = 0; i < NUM_TEX; ++i) {
         strcpy(buf, "tex/");
         strcat(buf, TEX_NAMES[i]);
-        g_tex[i] = sg_texture_file(buf, strlen(buf), &err);
-        assert(g_tex[i]);
+        g_tex[i] = load_texture(buf);
     }
-
-    g_prog_bkg.vert = sg_shader_file(
-        "shader/bkg.vert",
-        strlen("shader/bkg.vert"),
-        GL_VERTEX_SHADER, NULL);
-    g_prog_bkg.frag = sg_shader_file(
-        "shader/bkg.frag",
-        strlen("shader/bkg.frag"),
-        GL_FRAGMENT_SHADER, NULL);
-
-    g_prog_tex.vert = sg_shader_file(
-        "shader/textured.vert",
-        strlen("shader/textured.vert"),
-        GL_VERTEX_SHADER, NULL);
-    g_prog_tex.frag = sg_shader_file(
-        "shader/textured.frag",
-        strlen("shader/textured.frag"),
-        GL_FRAGMENT_SHADER, NULL);
-
-    sg_dispatch_sync_queue(
-        SG_RESOURCES_LOADED, 0, NULL,
-        NULL, st_image_loaded);
+    st_image_load_bkgprog();
+    st_image_load_fgprog();
 }
 
 static void
@@ -305,7 +264,7 @@ st_image_draw_background(int width, int height, unsigned msec)
 
     glUseProgram(g_prog_bkg.prog);
     glUniform2f(g_prog_bkg.u_texoff, 0.0f, 0.0f);
-    
+
     t = (msec >> 12) % 3;
     mod = (float) (msec & ((1u << 12) - 1)) / (1 << 12);
     mod2 = (float) (msec & ((1u << 13) - 1)) / (1 << 13);
@@ -323,9 +282,9 @@ st_image_draw_background(int width, int height, unsigned msec)
     glUniform1i(g_prog_bkg.u_tex2, 1);
 
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, g_tex[t]->texnum);
+    glBindTexture(GL_TEXTURE_2D, g_tex[t]);
     glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, g_tex[(t+1) % 3]->texnum);
+    glBindTexture(GL_TEXTURE_2D, g_tex[(t+1) % 3]);
     glUniform1f(g_prog_bkg.u_fade, mod);
 
     glBindVertexArray(g_prog_bkg.array);
@@ -355,7 +314,7 @@ st_image_draw_foreground(int width, int height)
                 continue;
 
             glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, g_images[t]->texnum);
+            glBindTexture(GL_TEXTURE_2D, g_images[t]);
             glUniform2f(g_prog_tex.u_vertoff,
                         ix * 4 - 10, (4 - iy) * 4 - 8);
             glBindVertexArray(g_prog_tex.array);
@@ -370,14 +329,8 @@ static void
 st_image_draw(int x, int y, int width, int height, unsigned msec)
 {
     glViewport(x, y, width, height);
-
-    if (!g_isloaded) {
-        glClearColor(0.2f, 0.2f, 0.2f, 0.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
-    } else {
-        st_image_draw_background(width, height, msec);
-        st_image_draw_foreground(width, height);
-    }
+    st_image_draw_background(width, height, msec);
+    st_image_draw_foreground(width, height);
 }
 
 const struct st_iface ST_IMAGE = {
