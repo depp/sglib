@@ -154,6 +154,7 @@ static void handleMouse(GDisplay *d, NSEvent *e, sg_event_type_t t, int button)
     if (!sg_glew_initted) {
         sg_glew_initted = 1;
         [cxt makeCurrentContext];
+        glewExperimental = GL_TRUE;
         err = glewInit();
         if (err != GLEW_OK) {
             fprintf(stderr, "GLEW initialization failed: %s\n",
