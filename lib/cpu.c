@@ -68,17 +68,17 @@ unsigned pce_getcpufeatures(void)
 
     k = strlen(pfx);
     memcpy(name, pfx, k);
-    for (i = 0; PCE_CPUF[i].name[0]; ++i) {
-        fname = PCE_CPUF[i].name;
+    for (i = 0; PCE_CPUFEATURES[i].name[0]; ++i) {
+        fname = PCE_CPUFEATURES[i].name;
 #if defined(PCE_CPU_X86)
-        if (PCE_CPUF[i].feature == PCE_CPUF_SSSE3)
+        if (PCE_CPUFEATURES[i].feature == PCE_CPUF_SSSE3)
             fname = "supplementalsse3";
 #endif
         strcpy(name + k, fname);
         length = sizeof(enabled);
         r = sysctlbyname(name, &enabled, &length, NULL, 0);
         if (r == 0 && enabled != 0)
-            features |= PCE_CPUF[i].feature;
+            features |= PCE_CPUFEATURES[i].feature;
     }
     return PCE_CPU_FEATURES_SET | features;
 }
