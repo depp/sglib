@@ -293,7 +293,7 @@ class ConfigTool(object):
 
     def get_target(self, cfg, args):
         osname, default_target = PLATFORMS.get(
-            chrplatform.system(), (None, None))
+            platform.system(), (None, None))
         target = args.target
         if target is None:
             target = default_target
