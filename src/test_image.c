@@ -72,12 +72,12 @@ struct {
     GLint a_loc;
     GLint u_texoff, u_texmat, u_tex1, u_tex2, u_fade;
 
-    GLuint array;
+    GLuint buf;
 } g_prog_bkg;
 
 static void st_image_load_bkgprog(void)
 {
-    GLuint prog, buf;
+    GLuint prog;
     sg_opengl_checkerror("st_image_load_bkgprog start");
 
     g_prog_bkg.prog = prog = load_program(
@@ -101,19 +101,10 @@ static void st_image_load_bkgprog(void)
         -1, +1
     };
 
-    glGenBuffers(1, &buf);
-    glBindBuffer(GL_ARRAY_BUFFER, buf);
+    glGenBuffers(1, &g_prog_bkg.buf);
+    glBindBuffer(GL_ARRAY_BUFFER, g_prog_bkg.buf);
     glBufferData(GL_ARRAY_BUFFER, sizeof(VERTEX), VERTEX,
                  GL_STATIC_DRAW);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-    glGenVertexArrays(1, &g_prog_bkg.array);
-    glBindVertexArray(g_prog_bkg.array);
-
-    glBindBuffer(GL_ARRAY_BUFFER, buf);
-    glVertexAttribPointer(
-        g_prog_bkg.a_loc, 2, GL_SHORT, GL_FALSE, 0, 0);
-    glEnableVertexAttribArray(g_prog_bkg.a_loc);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
     glBindVertexArray(0);
@@ -126,13 +117,13 @@ struct {
     GLint a_loc, a_texcoord;
     GLint u_vertoff, u_vertscale, u_texscale, u_texture;
 
-    GLuint array;
+    GLuint buf;
 } g_prog_tex;
 
 static void
 st_image_load_fgprog(void)
 {
-    GLuint prog, buf[2];
+    GLuint prog;
     sg_opengl_checkerror("st_image_load_fgprog start");
 
     g_prog_tex.prog = prog = load_program(
@@ -149,38 +140,23 @@ st_image_load_fgprog(void)
 #undef UNIFORM
     glUseProgram(0);
 
-    static const short VERTEX[] = {
+    static const short DATA[] = {
+        // vertex data
         -1, -1,
         +1, -1,
         +1, +1,
-        -1, +1
-    };
-    static const short TEXCOORD[] = {
+        -1, +1,
+
+        // texcoord data
         0, 1,
         1, 1,
         1, 0,
         0, 0
     };
-    glGenBuffers(2, buf);
-    glBindBuffer(GL_ARRAY_BUFFER, buf[0]);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(VERTEX), VERTEX,
+    glGenBuffers(1, &g_prog_tex.buf);
+    glBindBuffer(GL_ARRAY_BUFFER, g_prog_tex.buf);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(DATA), DATA,
                  GL_STATIC_DRAW);
-    glBindBuffer(GL_ARRAY_BUFFER, buf[1]);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(TEXCOORD), TEXCOORD,
-                 GL_STATIC_DRAW);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-    glGenVertexArrays(1, &g_prog_tex.array);
-    glBindVertexArray(g_prog_tex.array);
-
-    glBindBuffer(GL_ARRAY_BUFFER, buf[0]);
-    glVertexAttribPointer(
-        g_prog_tex.a_loc, 2, GL_SHORT, GL_FALSE, 0, 0);
-    glEnableVertexAttribArray(g_prog_tex.a_loc);
-    glBindBuffer(GL_ARRAY_BUFFER, buf[1]);
-    glVertexAttribPointer(
-        g_prog_tex.a_texcoord, 2, GL_SHORT, GL_FALSE, 0, 0);
-    glEnableVertexAttribArray(g_prog_tex.a_texcoord);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
     glBindVertexArray(0);
@@ -292,9 +268,14 @@ st_image_draw_background(int width, int height, unsigned msec)
     glBindTexture(GL_TEXTURE_2D, g_tex[(t+1) % 3]);
     glUniform1f(g_prog_bkg.u_fade, mod);
 
-    glBindVertexArray(g_prog_bkg.array);
+    glBindBuffer(GL_ARRAY_BUFFER, g_prog_bkg.buf);
+    glEnableVertexAttribArray(g_prog_bkg.a_loc);
+    glVertexAttribPointer(g_prog_bkg.a_loc, 2, GL_SHORT, GL_FALSE, 0, 0);
+
     glDrawArrays(GL_QUADS, 0, 4);
 
+    glDisableVertexAttribArray(g_prog_bkg.a_loc);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
     glUseProgram(0);
 
     sg_opengl_checkerror("st_image_draw_background");
@@ -314,6 +295,15 @@ st_image_draw_foreground(int width, int height)
                 32 * 2.0f / width, 32 * 2.0f / height);
     glUniform2f(g_prog_tex.u_texscale, 1.0f, 1.0f);
 
+    glBindBuffer(GL_ARRAY_BUFFER, g_prog_tex.buf);
+    glEnableVertexAttribArray(g_prog_tex.a_loc);
+    glEnableVertexAttribArray(g_prog_tex.a_texcoord);
+    glVertexAttribPointer(
+        g_prog_tex.a_loc, 2, GL_SHORT, GL_FALSE, 0, 0);
+    glVertexAttribPointer(
+        g_prog_tex.a_texcoord, 2, GL_SHORT, GL_FALSE, 0,
+        (void *) (sizeof(short) * 2 * 4));
+
     for (ix = 0; ix < 6; ++ix) {
         for (iy = 0; iy < 5; ++iy) {
             t = IMAGE_LOCS[iy][ix];
@@ -324,10 +314,13 @@ st_image_draw_foreground(int width, int height)
             glBindTexture(GL_TEXTURE_2D, g_images[t]);
             glUniform2f(g_prog_tex.u_vertoff,
                         ix * 4 - 10, (4 - iy) * 4 - 8);
-            glBindVertexArray(g_prog_tex.array);
             glDrawArrays(GL_QUADS, 0, 4);
         }
     }
+
+    glDisableVertexAttribArray(g_prog_tex.a_loc);
+    glDisableVertexAttribArray(g_prog_tex.a_texcoord);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
     glUseProgram(0);
     glDisable(GL_BLEND);
 
