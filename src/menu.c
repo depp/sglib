@@ -111,6 +111,7 @@ static void st_menu_event(union sg_event *evt)
 static void st_menu_draw(int x, int y, int width, int height, unsigned msec)
 {
     int i;
+    sg_opengl_checkerror("st_menu_draw start");
 
     glViewport(x, y, width, height);
     glClearColor(0.1, 0.2, 0.3, 0.0);
@@ -144,6 +145,7 @@ static void st_menu_draw(int x, int y, int width, int height, unsigned msec)
     glEnd();
     glPopMatrix();
 
+    sg_opengl_checkerror("st_menu_draw");
     (void) msec;
 }
 

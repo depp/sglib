@@ -78,6 +78,7 @@ struct {
 static void st_image_load_bkgprog(void)
 {
     GLuint prog, buf;
+    sg_opengl_checkerror("st_image_load_bkgprog start");
 
     g_prog_bkg.prog = prog = load_program(
         "shader/bkg.vert", "shader/bkg.frag");
@@ -116,6 +117,7 @@ static void st_image_load_bkgprog(void)
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
     glBindVertexArray(0);
+    sg_opengl_checkerror("st_image_load_bkgprog");
 }
 
 struct {
@@ -131,6 +133,7 @@ static void
 st_image_load_fgprog(void)
 {
     GLuint prog, buf[2];
+    sg_opengl_checkerror("st_image_load_fgprog start");
 
     g_prog_tex.prog = prog = load_program(
         "shader/textured.vert", "shader/textured.frag");
@@ -181,6 +184,8 @@ st_image_load_fgprog(void)
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
     glBindVertexArray(0);
+
+    sg_opengl_checkerror("st_image_load_fgprog");
 }
 
 static void
@@ -291,6 +296,8 @@ st_image_draw_background(int width, int height, unsigned msec)
     glDrawArrays(GL_QUADS, 0, 4);
 
     glUseProgram(0);
+
+    sg_opengl_checkerror("st_image_draw_background");
 }
 
 static void
@@ -323,6 +330,8 @@ st_image_draw_foreground(int width, int height)
     }
     glUseProgram(0);
     glDisable(GL_BLEND);
+
+    sg_opengl_checkerror("st_image_draw_foreground");
 }
 
 static void
