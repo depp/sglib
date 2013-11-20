@@ -99,6 +99,7 @@
       <src path="configfile_read.c"/>
       <src path="cvar.c"/>
       <src path="error.c"/>
+      <src path="opengl.c"/>
       <src path="net.c"/>
       <src path="rand.c"/>
       <src path="sys.c"/>

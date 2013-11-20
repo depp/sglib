@@ -11,4 +11,9 @@
 # include <GL/glew.h>
 #endif
 
+/* Check for OpenGL errors and log them.  If there were no errors, then zero
+   is returned.  If there were errors, a non-zero value is returned.  */
+int
+sg_opengl_checkerror(const char *where);
+
 #endif
