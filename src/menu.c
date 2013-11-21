@@ -9,9 +9,9 @@
 #include <assert.h>
 #include <string.h>
 
-#define BOX_MARGIN 4.0f
-#define BOX_WIDTH 100.0f
-#define BOX_HEIGHT 18.0f
+#define BOX_MARGIN 4
+#define BOX_WIDTH 100
+#define BOX_HEIGHT 18
 
 static const struct st_iface *const ST_ITEMS[] = {
     &ST_IMAGE, &ST_TYPE, &ST_AUDIO
@@ -26,6 +26,26 @@ enum {
 static int g_menu_item = 0;
 static unsigned g_buttons = 0;
 static struct sg_layout *g_menu_text[ST_NITEMS];
+static GLuint g_box_buffer;
+
+struct {
+    GLuint prog;
+    GLuint u_vertoff, u_vertscale, u_color;
+    GLuint a_loc;
+} g_prog_plain;
+
+static void st_menu_load_plainprog(void)
+{
+    GLuint prog;
+    g_prog_plain.prog = prog = load_program(
+        "shader/plain.vert", "shader/plain.frag");
+#define UNIFORM(x) g_prog_plain.x = glGetUniformLocation(prog, #x)
+    UNIFORM(u_vertoff);
+    UNIFORM(u_vertscale);
+    UNIFORM(u_color);
+#undef UNIFORM
+    g_prog_plain.a_loc = glGetAttribLocation(prog, "a_loc");
+}
 
 static void st_menu_init(void)
 {
@@ -40,6 +60,19 @@ static void st_menu_init(void)
         g_menu_text[i] = lp;
     }
     g_buttons = 0;
+
+    st_menu_load_plainprog();
+
+    static const short VERTEX[] = {
+        -BOX_MARGIN, -BOX_MARGIN,
+        BOX_MARGIN + BOX_WIDTH, -BOX_MARGIN,
+        BOX_MARGIN + BOX_WIDTH, BOX_MARGIN + BOX_HEIGHT,
+        -BOX_MARGIN, BOX_MARGIN + BOX_HEIGHT
+    };
+    glGenBuffers(1, &g_box_buffer);
+    glBindBuffer(GL_ARRAY_BUFFER, g_box_buffer);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(VERTEX), VERTEX, GL_STATIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
 static void st_menu_destroy(void)
@@ -110,8 +143,12 @@ static void st_menu_event(union sg_event *evt)
 
 static void st_menu_draw(int x, int y, int width, int height, unsigned msec)
 {
+    float xscale, yscale;
     int i;
     sg_opengl_checkerror("st_menu_draw start");
+
+    xscale = 2.0f / (float) width;
+    yscale = 2.0f / (float) height;
 
     glViewport(x, y, width, height);
     glClearColor(0.1, 0.2, 0.3, 0.0);
@@ -135,15 +172,20 @@ static void st_menu_draw(int x, int y, int width, int height, unsigned msec)
     glDisable(GL_BLEND);
 
     i = g_menu_item;
-    glPushMatrix();
-    glTranslatef(32.0f, (float) height - 32.0f * (float) (i + 1), 0.0f);
-    glBegin(GL_LINE_LOOP);
-    glVertex2f(-BOX_MARGIN, BOX_MARGIN);
-    glVertex2f(BOX_WIDTH + BOX_MARGIN, BOX_MARGIN);
-    glVertex2f(BOX_WIDTH + BOX_MARGIN, -BOX_HEIGHT - BOX_MARGIN);
-    glVertex2f(-BOX_MARGIN, -BOX_HEIGHT - BOX_MARGIN);
-    glEnd();
-    glPopMatrix();
+    glUseProgram(g_prog_plain.prog);
+    glUniform2f(
+        g_prog_plain.u_vertoff,
+        32.0f - 0.5f * (float) width,
+        0.5f * (float) height - 32.0f * (float) (i + 1) - BOX_HEIGHT);
+    glUniform2f(g_prog_plain.u_vertscale, xscale, yscale);
+    glUniform4f(g_prog_plain.u_color, 1.0f, 1.0f, 1.0f, 1.0f);
+    glBindBuffer(GL_ARRAY_BUFFER, g_box_buffer);
+    glEnableVertexAttribArray(g_prog_plain.a_loc);
+    glVertexAttribPointer(g_prog_plain.a_loc, 2, GL_SHORT, GL_FALSE, 0, 0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glDrawArrays(GL_LINE_LOOP, 0, 4);
+    glDisableVertexAttribArray(g_prog_plain.a_loc);
+    glUseProgram(0);
 
     sg_opengl_checkerror("st_menu_draw");
     (void) msec;
