@@ -10,10 +10,7 @@ const struct st_iface *st_screen;
 
 void
 sg_game_init(void)
-{
-    st_screen = &ST_MENU;
-    st_screen->init();
-}
+{ }
 
 void
 sg_game_destroy(void)
@@ -35,7 +32,7 @@ sg_game_event(union sg_event *evt)
             if (!escape_down) {
                 if (st_screen == &ST_MENU) {
                     sg_platform_quit();
-                } else {
+                } else if (st_screen) {
                     st_screen->destroy();
                     st_screen = &ST_MENU;
                     st_screen->init();
@@ -57,11 +54,16 @@ sg_game_event(union sg_event *evt)
         break;
     }
 
-    st_screen->event(evt);
+    if (st_screen)
+        st_screen->event(evt);
 }
 
 void
 sg_game_draw(int x, int y, int width, int height, unsigned msec)
 {
+    if (!st_screen) {
+        st_screen = &ST_MENU;
+        st_screen->init();
+    }
     st_screen->draw(x, y, width, height, msec);
 }
