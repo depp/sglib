@@ -10,6 +10,9 @@
 #include <assert.h>
 #include <string.h>
 
+static GLuint g_buf;
+static struct prog_plain g_prog_plain;
+
 static struct sg_audio_pcm_obj *g_snd_clank;
 static struct sg_audio_pcm_obj *g_snd_donk;
 static struct sg_audio_pcm_obj *g_snd_tink;
@@ -20,6 +23,13 @@ static struct sg_audio_pcm_obj *g_snd_music;
 static struct sg_audio_pcm_obj *g_snd_alien;
 
 static unsigned g_cmd;
+
+static const float DATA[] = {
+    -0.9f, -0.9f,
+    -0.9f, +0.9f,
+    +0.9f, +0.9f,
+    +0.9f, -0.9f
+};
 
 static void
 st_audio_init(void)
@@ -32,6 +42,15 @@ st_audio_init(void)
     g_snd_right  = load_audio("fx/right");
     g_snd_music  = load_audio("fx/looptrack");
     g_snd_alien  = load_audio("fx/alien");
+
+    glGenBuffers(1, &g_buf);
+    glBindBuffer(GL_ARRAY_BUFFER, g_buf);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(DATA), DATA, GL_STATIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+    sg_opengl_checkerror("st_audio_init");
+
+    load_prog_plain(&g_prog_plain);
 }
 
 static void
@@ -75,38 +94,38 @@ st_audio_event(union sg_event *evt)
 static void
 draw_key(int key, int state)
 {
-    float sz = 0.9f * 0.1f;
-    (void) state;
+    int n = 10;
+    double scale = 1.0 / n;
 
-    glPushAttrib(GL_CURRENT_BIT);
-    glPushMatrix();
-    glTranslatef(-0.9f + 0.2f * key, -0.9f, 0.0f);
-    glScalef(sz, sz, sz);
-
-    if (state)
-        glColor3ub(240, 90, 30);
-    else
-        glColor3ub(10, 5, 0);
-    glBegin(GL_TRIANGLE_FAN);
-    glVertex2f(-1.0, -1.0);
-    glVertex2f(+1.0, -1.0);
-    glVertex2f(+1.0, +1.0);
-    glVertex2f(-1.0, +1.0);
-    glEnd();
+    glUseProgram(g_prog_plain.prog);
+    glUniform2f(
+        g_prog_plain.u_vertoff, 2*key+1-n, 1-n);
+    glUniform2f(g_prog_plain.u_vertscale, scale, scale);
+    glBindBuffer(GL_ARRAY_BUFFER, g_buf);
+    glEnableVertexAttribArray(g_prog_plain.a_loc);
+    glVertexAttribPointer(g_prog_plain.a_loc, 2, GL_FLOAT, GL_FALSE, 0, 0);
 
     if (state)
-        glColor3ub(255, 0, 0);
+        glUniform4f(g_prog_plain.u_color,
+                    240 / 255.0, 90 / 255.0, 30 / 255.0, 1.0f);
     else
-        glColor3ub(40, 0, 0);
-    glBegin(GL_LINE_LOOP);
-    glVertex2f(-1.0, -1.0);
-    glVertex2f(+1.0, -1.0);
-    glVertex2f(+1.0, +1.0);
-    glVertex2f(-1.0, +1.0);
-    glEnd();
+        glUniform4f(g_prog_plain.u_color,
+                    10 / 255.0, 5 / 255.0, 0 / 255.0, 1.0f);
 
-    glPopMatrix();
-    glPopAttrib();
+    glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+
+    if (state)
+        glUniform4f(g_prog_plain.u_color,
+                    255 / 255.0, 0 / 255.0, 0 / 255.0, 1.0f);
+    else
+        glUniform4f(g_prog_plain.u_color,
+                    40 / 255.0, 0 / 255.0, 0 / 255.0, 1.0f);
+
+    glDrawArrays(GL_LINE_LOOP, 0, 4);
+
+    glDisableVertexAttribArray(g_prog_plain.a_loc);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glUseProgram(0);
 }
 
 static int
@@ -239,11 +258,6 @@ st_audio_draw(int x, int y, int width, int height, unsigned msec)
     glClearColor(0.08, 0.05, 0.16, 0.0);
     glViewport(x, y, width, height);
     glClear(GL_COLOR_BUFFER_BIT);
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    glOrtho(-1.0, 1.0, -1.0, 1.0, -1.0, 1.0);
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
 
     func1(msec);
     func2(msec);
