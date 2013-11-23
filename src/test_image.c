@@ -107,7 +107,6 @@ static void st_image_load_bkgprog(void)
                  GL_STATIC_DRAW);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-    glBindVertexArray(0);
     sg_opengl_checkerror("st_image_load_bkgprog");
 }
 
@@ -158,8 +157,6 @@ st_image_load_fgprog(void)
     glBufferData(GL_ARRAY_BUFFER, sizeof(DATA), DATA,
                  GL_STATIC_DRAW);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-    glBindVertexArray(0);
 
     sg_opengl_checkerror("st_image_load_fgprog");
 }
