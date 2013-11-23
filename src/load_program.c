@@ -2,43 +2,55 @@
    This file is part of SGLib.  SGLib is licensed under the terms of the
    2-clause BSD license.  For more information, see LICENSE.txt. */
 #include "defs.h"
-#include "sg/file.h"
-#include "sg/log.h"
-#include <stdlib.h>
-#include <string.h>
 
-GLuint
-load_program(const char *vertpath, const char *fragpath)
+#define ATTR(x) p->x = glGetAttribLocation(prog, #x)
+#define UNIFORM(x) p->x = glGetUniformLocation(prog, #x)
+
+void
+load_prog_plain(struct prog_plain *p)
 {
-    struct sg_logger *log;
-    GLuint prog, vertshader, fragshader;
-    GLint flag, loglen;
-    char *errlog;
-
-    vertshader = load_shader(vertpath, GL_VERTEX_SHADER);
-    fragshader = load_shader(fragpath, GL_FRAGMENT_SHADER);
-    prog = glCreateProgram();
-    glAttachShader(prog, vertshader);
-    glAttachShader(prog, fragshader);
-    glDeleteShader(vertshader);
-    glDeleteShader(fragshader);
-
-    glLinkProgram(prog);
-    glGetProgramiv(prog, GL_LINK_STATUS, &flag);
-    if (flag)
-        return prog;
-
-    log = sg_logger_get("shader");
-    sg_logf(log, LOG_ERROR, "%s + %s: linking failed",
-            vertpath, fragpath);
-    glGetProgramiv(prog, GL_INFO_LOG_LENGTH, &loglen);
-    if (loglen <= 0) {
-        errlog = malloc(loglen);
-        if (errlog) {
-            glGetProgramInfoLog(prog, loglen, NULL, errlog);
-            sg_logs(log, LOG_ERROR, errlog);
-            free(errlog);
-        }
-    }
-    abort();
+    GLuint prog;
+    sg_opengl_checkerror("load_prog_plain start");
+    p->prog = prog = load_program(
+        "shader/plain.vert", "shader/plain.frag");
+    ATTR(a_loc);
+    UNIFORM(u_vertoff);
+    UNIFORM(u_vertscale);
+    UNIFORM(u_color);
+    sg_opengl_checkerror("load_prog_plain");
 }
+
+void
+load_prog_bkg(struct prog_bkg *p)
+{
+    GLuint prog;
+    sg_opengl_checkerror("load_prog_bkg start");
+    p->prog = prog = load_program(
+        "shader/bkg.vert", "shader/bkg.frag");
+    ATTR(a_loc);
+    UNIFORM(u_texoff);
+    UNIFORM(u_texmat);
+    UNIFORM(u_tex1);
+    UNIFORM(u_tex2);
+    UNIFORM(u_fade);
+    sg_opengl_checkerror("load_prog_bkg");
+}
+
+void
+load_prog_textured(struct prog_textured *p)
+{
+    GLuint prog;
+    sg_opengl_checkerror("load_prog_textured start");
+    p->prog = prog = load_program(
+        "shader/textured.vert", "shader/textured.frag");
+    ATTR(a_loc);
+    ATTR(a_texcoord);
+    UNIFORM(u_vertoff);
+    UNIFORM(u_vertscale);
+    UNIFORM(u_texscale);
+    UNIFORM(u_texture);
+    sg_opengl_checkerror("load_prog_textured");
+}
+
+#undef ATTR
+#undef UNIFORM

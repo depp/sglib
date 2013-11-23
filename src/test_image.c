@@ -65,107 +65,32 @@ static const char TEX_NAMES[NUM_TEX][12] = { "brick", "ivy", "roughstone" };
 
 static GLuint g_images[NUM_IMG];
 static GLuint g_tex[NUM_TEX];
+static GLuint g_buf;
+static struct prog_bkg g_prog_bkg;
+static struct prog_textured g_prog_tex;
 
-struct {
-    GLuint prog;
+static const short DATA[] = {
+    // vertex data
+    -1, -1,
+    +1, -1,
+    +1, +1,
+    -1, +1,
 
-    GLint a_loc;
-    GLint u_texoff, u_texmat, u_tex1, u_tex2, u_fade;
-
-    GLuint buf;
-} g_prog_bkg;
-
-static void st_image_load_bkgprog(void)
-{
-    GLuint prog;
-    sg_opengl_checkerror("st_image_load_bkgprog start");
-
-    g_prog_bkg.prog = prog = load_program(
-        "shader/bkg.vert", "shader/bkg.frag");
-#define ATTR(x) g_prog_bkg.x = glGetAttribLocation(prog, #x)
-#define UNIFORM(x) g_prog_bkg.x = glGetUniformLocation(prog, #x)
-    ATTR(a_loc);
-    UNIFORM(u_texoff);
-    UNIFORM(u_texmat);
-    UNIFORM(u_tex1);
-    UNIFORM(u_tex2);
-    UNIFORM(u_fade);
-#undef ATTR
-#undef UNIFORM
-    glUseProgram(0);
-
-    static const short VERTEX[] = {
-        -1, -1,
-        +1, -1,
-        +1, +1,
-        -1, +1
-    };
-
-    glGenBuffers(1, &g_prog_bkg.buf);
-    glBindBuffer(GL_ARRAY_BUFFER, g_prog_bkg.buf);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(VERTEX), VERTEX,
-                 GL_STATIC_DRAW);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-    sg_opengl_checkerror("st_image_load_bkgprog");
-}
-
-struct {
-    GLuint prog;
-
-    GLint a_loc, a_texcoord;
-    GLint u_vertoff, u_vertscale, u_texscale, u_texture;
-
-    GLuint buf;
-} g_prog_tex;
-
-static void
-st_image_load_fgprog(void)
-{
-    GLuint prog;
-    sg_opengl_checkerror("st_image_load_fgprog start");
-
-    g_prog_tex.prog = prog = load_program(
-        "shader/textured.vert", "shader/textured.frag");
-#define ATTR(x) g_prog_tex.x = glGetAttribLocation(prog, #x)
-#define UNIFORM(x) g_prog_tex.x = glGetUniformLocation(prog, #x)
-    ATTR(a_loc);
-    ATTR(a_texcoord);
-    UNIFORM(u_vertoff);
-    UNIFORM(u_vertscale);
-    UNIFORM(u_texscale);
-    UNIFORM(u_texture);
-#undef ATTR
-#undef UNIFORM
-    glUseProgram(0);
-
-    static const short DATA[] = {
-        // vertex data
-        -1, -1,
-        +1, -1,
-        +1, +1,
-        -1, +1,
-
-        // texcoord data
-        0, 1,
-        1, 1,
-        1, 0,
-        0, 0
-    };
-    glGenBuffers(1, &g_prog_tex.buf);
-    glBindBuffer(GL_ARRAY_BUFFER, g_prog_tex.buf);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(DATA), DATA,
-                 GL_STATIC_DRAW);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-    sg_opengl_checkerror("st_image_load_fgprog");
-}
+    // texcoord data
+    0, 1,
+    1, 1,
+    1, 0,
+    0, 0
+};
 
 static void
 st_image_init(void)
 {
     int i;
     char buf[32];
+
+    sg_opengl_checkerror("st_image_init start");
+
     for (i = 0; i < NUM_IMG; ++i) {
         strcpy(buf, "imgtest/");
         strcat(buf, IMAGE_NAMES[i]);
@@ -176,8 +101,16 @@ st_image_init(void)
         strcat(buf, TEX_NAMES[i]);
         g_tex[i] = load_texture(buf);
     }
-    st_image_load_bkgprog();
-    st_image_load_fgprog();
+
+    glGenBuffers(1, &g_buf);
+    glBindBuffer(GL_ARRAY_BUFFER, g_buf);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(DATA), DATA, GL_STATIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+    sg_opengl_checkerror("st_image_init");
+
+    load_prog_bkg(&g_prog_bkg);
+    load_prog_textured(&g_prog_tex);
 }
 
 static void
@@ -265,7 +198,7 @@ st_image_draw_background(int width, int height, unsigned msec)
     glBindTexture(GL_TEXTURE_2D, g_tex[(t+1) % 3]);
     glUniform1f(g_prog_bkg.u_fade, mod);
 
-    glBindBuffer(GL_ARRAY_BUFFER, g_prog_bkg.buf);
+    glBindBuffer(GL_ARRAY_BUFFER, g_buf);
     glEnableVertexAttribArray(g_prog_bkg.a_loc);
     glVertexAttribPointer(g_prog_bkg.a_loc, 2, GL_SHORT, GL_FALSE, 0, 0);
 
@@ -292,7 +225,7 @@ st_image_draw_foreground(int width, int height)
                 32 * 2.0f / width, 32 * 2.0f / height);
     glUniform2f(g_prog_tex.u_texscale, 1.0f, 1.0f);
 
-    glBindBuffer(GL_ARRAY_BUFFER, g_prog_tex.buf);
+    glBindBuffer(GL_ARRAY_BUFFER, g_buf);
     glEnableVertexAttribArray(g_prog_tex.a_loc);
     glEnableVertexAttribArray(g_prog_tex.a_texcoord);
     glVertexAttribPointer(

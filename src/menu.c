@@ -27,30 +27,22 @@ static int g_menu_item = 0;
 static unsigned g_buttons = 0;
 static struct sg_layout *g_menu_text[ST_NITEMS];
 static GLuint g_box_buffer;
+static struct prog_plain g_prog_plain;
 
-struct {
-    GLuint prog;
-    GLuint u_vertoff, u_vertscale, u_color;
-    GLuint a_loc;
-} g_prog_plain;
-
-static void st_menu_load_plainprog(void)
-{
-    GLuint prog;
-    g_prog_plain.prog = prog = load_program(
-        "shader/plain.vert", "shader/plain.frag");
-#define UNIFORM(x) g_prog_plain.x = glGetUniformLocation(prog, #x)
-    UNIFORM(u_vertoff);
-    UNIFORM(u_vertscale);
-    UNIFORM(u_color);
-#undef UNIFORM
-    g_prog_plain.a_loc = glGetAttribLocation(prog, "a_loc");
-}
+static const short VERTEX[] = {
+    -BOX_MARGIN, -BOX_MARGIN,
+    BOX_MARGIN + BOX_WIDTH, -BOX_MARGIN,
+    BOX_MARGIN + BOX_WIDTH, BOX_MARGIN + BOX_HEIGHT,
+    -BOX_MARGIN, BOX_MARGIN + BOX_HEIGHT
+};
 
 static void st_menu_init(void)
 {
     int i;
     struct sg_layout *lp;
+
+    sg_opengl_checkerror("st_menu_init start");
+
     for (i = 0; i < ST_NITEMS; i++) {
         lp = sg_layout_new();
         assert(lp);
@@ -61,18 +53,14 @@ static void st_menu_init(void)
     }
     g_buttons = 0;
 
-    st_menu_load_plainprog();
-
-    static const short VERTEX[] = {
-        -BOX_MARGIN, -BOX_MARGIN,
-        BOX_MARGIN + BOX_WIDTH, -BOX_MARGIN,
-        BOX_MARGIN + BOX_WIDTH, BOX_MARGIN + BOX_HEIGHT,
-        -BOX_MARGIN, BOX_MARGIN + BOX_HEIGHT
-    };
     glGenBuffers(1, &g_box_buffer);
     glBindBuffer(GL_ARRAY_BUFFER, g_box_buffer);
     glBufferData(GL_ARRAY_BUFFER, sizeof(VERTEX), VERTEX, GL_STATIC_DRAW);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+    sg_opengl_checkerror("st_menu_init");
+
+    load_prog_plain(&g_prog_plain);
 }
 
 static void st_menu_destroy(void)
