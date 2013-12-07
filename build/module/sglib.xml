@@ -193,8 +193,6 @@
           </case>
         </switch>
       </group>
-      <src path="impl.h"/>
-      <src path="type.c"/>
     </group>
 
     <group path="sg/work">

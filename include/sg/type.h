@@ -1,100 +1,154 @@
-/* Copyright 2012 Dietrich Epp.
+/* Copyright 2012-2013 Dietrich Epp.
    This file is part of SGLib.  SGLib is licensed under the terms of the
    2-clause BSD license.  For more information, see LICENSE.txt. */
 #ifndef SG_TYPE_H
 #define SG_TYPE_H
+#include <stddef.h>
 #ifdef __cplusplus
 extern "C" {
 #endif
+struct sg_error;
+struct sg_pixbuf;
 
-/* A layout object consists of text, styles, and all data necessary to
-   draw text to the screen.  A layout object will manage the necessary
-   OpenGL textures.  When drawn to the screen, it will draw objects
-   with an alpha texture.  (You must set up the blend mode
-   yourself.)  */
-struct sg_layout;
+/**
+ * @file sg/type.h
+ *
+ * @brief Type and text rendering.
+ */
 
-/* Information about the text style.  */
-struct sg_style;
-
-/* Bounding box alignment.  Not to be confused with text alignment.
-   Any vertical alignment can be ORed with any horizontal alignment.
-   The default alignment is the left baseline.  */
-enum {
-    /* Vertical alignment of bounding box.  */
-    SG_VALIGN_ORIGIN = 00,
-    SG_VALIGN_TOP = 01,
-    SG_VALIGN_CENTER = 02,
-    SG_VALIGN_BOTTOM = 03,
-
-    /* Horizontal alignment of bounding box.  */
-    SG_HALIGN_ORIGIN = 00,
-    SG_HALIGN_LEFT = 04,
-    SG_HALIGN_CENTER = 010,
-    SG_HALIGN_RIGHT = 014,
-
-    SG_VALIGN_MASK = 03,
-    SG_HALIGN_MASK = 014
+/**
+ * @brief A point in the text layout system
+ */
+struct sg_textpoint {
+    /** @brief X coordinate */
+    short x;
+    /** @brief Y coordinate */
+    short y;
 };
 
-/**********************************************************************/
+/**
+ * @brief A rectangle in the text layout system
+ */
+struct sg_textrect {
+    /** @brief Minimum x coordinate */
+    short x0;
+    /** @brief Minimum y coordinate */
+    short y0;
+    /** @brief Maximum x coordinate */
+    short x1;
+    /** @brief Maximum y coordinate */
+    short y1;
+};
 
-struct sg_layout *
-sg_layout_new(void);
+/**
+ * @brief Metrics for a text layout
+ */
+struct sg_textlayout_metrics {
+    /**
+     * @brief Logical bounds.
+     *
+     * May be smaller or larger than the pixel bounds.
+     */
+    struct sg_textrect logical;
 
+    /**
+     * @brief Pixel bounds.
+     *
+     * May be smaller or larger than the logical bounds.
+     */
+    struct sg_textrect pixel;
+
+    /**
+     * @brief The origin.
+     *
+     * For text with left alignment, this is the left edge of the
+     * first baseline.  For right alignment, this is the right edge of
+     * the first baseline.  For center alignment, this is the center
+     * of the first baseline.
+     */
+    struct sg_textpoint origin;
+};
+
+/**
+ * @brief Text alignment constants.
+ */
+typedef enum {
+    /** @brief Align the text on the left margin.  */
+    SG_TEXTALIGN_LEFT,
+    /** @brief Align the text on the right margin.  */
+    SG_TEXTALIGN_RIGHT,
+    /** @brief Center the text.  */
+    SG_TEXTALIGN_CENTER
+} sg_textalign_t;
+
+struct sg_textbitmap;
+
+/**
+ * @brief Create a simple text bitmap using the platform's text layout
+ * engine.
+ *
+ * Note that the results are platform dependent.  This will use Core
+ * Text on OS X, Pango on Linux, Uniscribe on Windows, etc.  The
+ * available fonts depend on the system and no fonts are guaranteed to
+ * be available.
+ *
+ * Text alignment may still affect the results even if the text spans multiple lines.
+ *
+ * @param text The text, encoded in UTF-8.
+ * @param textlen The length of the text in bytes.
+ * @param fontname The name of the font to use, NUL-terminated.
+ * @param fontsize The size of the font to use, in pixels.
+ * @param align The horizontal text alignment.
+ * @param width The width at which to wrap the text, or a negative
+ * number to indicate that the text should not wrap.
+ * @param err On failure, the error.
+ *
+ * @return A new text bitmap
+ */
+struct sg_textbitmap *
+sg_textbitmap_new_simple(const char *text, size_t textlen,
+                         const char *fontname, double fontsize,
+                         sg_textalign_t alignment, double width,
+                         struct sg_error **err);
+
+/**
+ * @brief Free a text bitmap object.
+ *
+ * @param bitmap The bitmap
+ */
 void
-sg_layout_incref(struct sg_layout *lp);
+sg_textbatmap_free(struct sg_textbitmap *bitmap);
 
-void
-sg_layout_decref(struct sg_layout *lp);
+/**
+ * @brief Get the metrics for a text bitmap.
+ *
+ * @param bitmap The text bitmap.
+ * @param metrics On return, the layout metrics.
+ * @param err On failure, the error.
+ * @return Zero for success or nonzero for failure.
+ */
+int
+sg_textbitmap_getmetrics(struct sg_textbitmap *bitmap,
+                         struct sg_textlayout_metrics *metrics,
+                         struct sg_error **err);
 
-/* Set the text in the layout to the given string.  The string must be
-   UTF-8 encoded.  */
-void
-sg_layout_settext(struct sg_layout *lp, const char *text, unsigned length);
-
-/* Draw the layout to the OpenGL context.  */
-void
-sg_layout_draw(struct sg_layout *lp);
-
-/* Draw the border and origin.  Used for debugging layouts.  */
-void
-sg_layout_drawmarks(struct sg_layout *lp);
-
-/* Set the width of the layout.  Lines that extend beyond this width
-   are wrapped or truncated.  A negative width indicates unlimited
-   width, which is the default.  Note that the actual pixel bounds may
-   extend beyond this.  */
-void
-sg_layout_setwidth(struct sg_layout *lp, float width);
-
-/* Set the base style of the entire layout.  This uses the current
-   value of the style; the style can be modified or freed afterwards
-   without affecting the layout.  */
-void
-sg_layout_setstyle(struct sg_layout *lp, struct sg_style *sp);
-
-/* Set the bounding box alignment of the layout.  Not to be confused
-   with text alignment.  */
-void
-sg_layout_setboxalign(struct sg_layout *lp, int align);
-
-/**********************************************************************/
-
-struct sg_style *
-sg_style_new(void);
-
-void
-sg_style_incref(struct sg_style *sp);
-
-void
-sg_style_decref(struct sg_style *sp);
-
-void
-sg_style_setfamily(struct sg_style *sp, const char *family);
-
-void
-sg_style_setsize(struct sg_style *sp, float size);
+/**
+ * @brief Render a text bitmap into a pixel buffer.
+ *
+ * Note that this uses the convention that the origin is at the bottom
+ * left of the pixel buffer, and positive Y coordinates are up.
+ *
+ * @param bitmap The source text bitmap
+ * @param pixbuf The target pixel buffer, already initialized
+ * @param offset The offset at which to draw the text
+ * @param err On failure, the error
+ * @return Zero on success, nonzero on failure
+ */
+int
+sg_textbitmap_render(struct sg_textbitmap *bitmap,
+                     struct sg_pixbuf *pixbuf,
+                     struct sg_textpoint offset,
+                     struct sg_error **err);
 
 #ifdef __cplusplus
 }
