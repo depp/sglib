@@ -52,5 +52,22 @@ load_prog_textured(struct prog_textured *p)
     sg_opengl_checkerror("load_prog_textured");
 }
 
+void
+load_prog_text(struct prog_text *p)
+{
+    GLuint prog;
+    sg_opengl_checkerror("load_prog_text start");
+    p->prog = prog = load_program(
+        "shader/text.vert", "shader/text.frag");
+    ATTR(a_vert);
+    UNIFORM(u_vertoff);
+    UNIFORM(u_vertscale);
+    UNIFORM(u_texscale);
+    UNIFORM(u_texture);
+    UNIFORM(u_color);
+    UNIFORM(u_bgcolor);
+    sg_opengl_checkerror("load_prog_text");
+}
+
 #undef ATTR
 #undef UNIFORM

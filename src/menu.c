@@ -25,9 +25,10 @@ enum {
 
 static int g_menu_item = 0;
 static unsigned g_buttons = 0;
-static struct sg_layout *g_menu_text[ST_NITEMS];
+static struct text_layout g_menu_text[ST_NITEMS];
 static GLuint g_box_buffer;
 static struct prog_plain g_prog_plain;
+static struct prog_text g_prog_text;
 
 static const short VERTEX[] = {
     -BOX_MARGIN, -BOX_MARGIN,
@@ -39,17 +40,13 @@ static const short VERTEX[] = {
 static void st_menu_init(void)
 {
     int i;
-    struct sg_layout *lp;
 
     sg_opengl_checkerror("st_menu_init start");
 
     for (i = 0; i < ST_NITEMS; i++) {
-        lp = sg_layout_new();
-        assert(lp);
-        sg_layout_settext(lp, ST_ITEMS[i]->name,
-                          (unsigned) strlen(ST_ITEMS[i]->name));
-        sg_layout_setboxalign(lp, SG_VALIGN_TOP | SG_HALIGN_LEFT);
-        g_menu_text[i] = lp;
+        text_layout_create(
+            &g_menu_text[i], ST_ITEMS[i]->name, strlen(ST_ITEMS[i]->name),
+            "Sans", 14.0, SG_TEXTALIGN_LEFT, 0.0);
     }
     g_buttons = 0;
 
@@ -61,17 +58,11 @@ static void st_menu_init(void)
     sg_opengl_checkerror("st_menu_init");
 
     load_prog_plain(&g_prog_plain);
+    load_prog_text(&g_prog_text);
 }
 
 static void st_menu_destroy(void)
 {
-    int i;
-    for (i = 0; i < ST_NITEMS; i++) {
-        if (!g_menu_text[i])
-            continue;
-        sg_layout_decref(g_menu_text[i]);
-        g_menu_text[i] = NULL;
-    }
 }
 
 static void st_menu_event(union sg_event *evt)
@@ -142,21 +133,37 @@ static void st_menu_draw(int x, int y, int width, int height, unsigned msec)
     glClearColor(0.1, 0.2, 0.3, 0.0);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    glOrtho(0.0, (double) width, 0, (double) height, 1.0, -1.0);
-    glMatrixMode(GL_MODELVIEW);
-
     glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+    glUseProgram(g_prog_text.prog);
+    glUniform2f(
+        g_prog_text.u_vertscale, xscale, yscale);
+    glUniform1i(g_prog_text.u_texture, 0);
+    glUniform4f(g_prog_text.u_color, 1.0f, 1.0f, 1.0f, 1.0f);
+    glUniform4f(g_prog_text.u_bgcolor, 0.0f, 0.0f, 0.0f, 0.0f);
+    glActiveTexture(GL_TEXTURE0);
+    glEnableVertexAttribArray(g_prog_text.a_vert);
 
     for (i = 0; i < ST_NITEMS; i++) {
-        glPushMatrix();
-        glTranslatef(32.0f, (float) height - 32.0f * (float) (i + 1), 0.0f);
-        sg_layout_draw(g_menu_text[i]);
-        glPopMatrix();
+        glBindTexture(GL_TEXTURE_2D, g_menu_text[i].texture);
+        glUniform2f(
+            g_prog_text.u_vertoff,
+            -0.5f * (float) width + 32.0f,
+            0.5f * (float) height - 32.0f * (float) (i + 1));
+        glUniform2fv(
+            g_prog_text.u_texscale, 1, g_menu_text[i].texture_scale);
+
+        glBindBuffer(GL_ARRAY_BUFFER, g_menu_text[i].buffer);
+        glVertexAttribPointer(g_prog_text.a_vert, 4,
+                              GL_SHORT, GL_FALSE, 0, 0);
+
+        glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
     }
 
+    glEnableVertexAttribArray(g_prog_text.a_vert);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindTexture(GL_TEXTURE_2D, 0);
+    glUseProgram(0);
     glDisable(GL_BLEND);
 
     i = g_menu_item;

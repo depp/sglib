@@ -31,6 +31,7 @@
       <src path="test_audio.c"/>
       <src path="test_image.c"/>
       <src path="test_type.c"/>
+      <src path="text_layout.c"/>
     </group>
   </module>
 </build>

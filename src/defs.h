@@ -2,6 +2,7 @@
    This file is part of SGLib.  SGLib is licensed under the terms of the
    2-clause BSD license.  For more information, see LICENSE.txt. */
 #include "sg/opengl.h"
+#include "sg/type.h"
 
 /* ========================================
    Menu system
@@ -32,10 +33,33 @@ GLuint
 load_shader(const char *path, GLenum type);
 
 GLuint
+load_pixbuf(struct sg_pixbuf *pixbuf, int do_swizzle);
+
+GLuint
 load_texture(const char *path);
 
 GLuint
 load_program(const char *vertpath, const char *fragpath);
+
+/* ========================================
+   Text layout
+   ======================================== */
+
+/* Consists of a texture, and a buffer containing an array containing
+   a triangle strip, with each vertex containing screen coordinates
+   and texture coordinates.  */
+struct text_layout {
+    GLuint texture;
+    GLuint buffer;
+    struct sg_textlayout_metrics metrics;
+    float texture_scale[2];
+};
+
+void
+text_layout_create(struct text_layout *layout,
+                   const char *text, size_t textlen,
+                   const char *fontname, double fontsize,
+                   sg_textalign_t alignment, double width);
 
 /* ========================================
    Shader programs
@@ -70,3 +94,13 @@ struct prog_textured {
 
 void
 load_prog_textured(struct prog_textured *p);
+
+struct prog_text {
+    GLuint prog;
+
+    GLint a_vert;
+    GLint u_vertoff, u_vertscale, u_texscale, u_texture, u_color, u_bgcolor;
+};
+
+void
+load_prog_text(struct prog_text *p);

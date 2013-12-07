@@ -37,9 +37,31 @@ static const struct texture_fmt TEXTURE_FMT[SG_PIXBUF_NFORMAT] = {
 };
 
 GLuint
-load_texture(const char *path)
+load_pixbuf(struct sg_pixbuf *pixbuf, int do_swizzle)
 {
     const struct texture_fmt *fmt;
+    GLuint texture;
+
+    fmt = &TEXTURE_FMT[pixbuf->format];
+
+    glGenTextures(1, &texture);
+    glBindTexture(GL_TEXTURE_2D, texture);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexImage2D(GL_TEXTURE_2D, 0,
+                 fmt->ifmt, pixbuf->pwidth, pixbuf->pheight, 0,
+                 fmt->fmt, fmt->type, pixbuf->data);
+    if (do_swizzle)
+        glTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_RGBA,
+                         fmt->swizzle);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    return texture;
+}
+
+GLuint
+load_texture(const char *path)
+{
     struct sg_buffer *buf;
     struct sg_pixbuf pixbuf;
     int r;
@@ -54,19 +76,8 @@ load_texture(const char *path)
     r = sg_pixbuf_loadimage(&pixbuf, buf->data, buf->length, NULL);
     if (r)
         abort();
-    fmt = &TEXTURE_FMT[pixbuf.format];
     sg_buffer_decref(buf);
-
-    glGenTextures(1, &texture);
-    glBindTexture(GL_TEXTURE_2D, texture);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexImage2D(GL_TEXTURE_2D, 0,
-                 fmt->ifmt, pixbuf.pwidth, pixbuf.pheight, 0,
-                 fmt->fmt, fmt->type, pixbuf.data);
-    glTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_RGBA, fmt->swizzle);
-    glBindTexture(GL_TEXTURE_2D, 0);
-
+    texture = load_pixbuf(&pixbuf, 1);
     sg_pixbuf_destroy(&pixbuf);
 
     return texture;
