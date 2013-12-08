@@ -51,7 +51,6 @@ st_type_init(void)
     text_layout_create(&g_text4, TEXT4, strlen(TEXT4),
                        "Sans", 16.0, SG_TEXTALIGN_LEFT, 0.0);
 
-    
     glGenBuffers(1, &g_bar_buffer);
     glBindBuffer(GL_ARRAY_BUFFER, g_bar_buffer);
     glBufferData(GL_ARRAY_BUFFER, sizeof(VERTEX), VERTEX, GL_STATIC_DRAW);
