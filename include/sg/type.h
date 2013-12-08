@@ -117,7 +117,7 @@ sg_textbitmap_new_simple(const char *text, size_t textlen,
  * @param bitmap The bitmap
  */
 void
-sg_textbatmap_free(struct sg_textbitmap *bitmap);
+sg_textbitmap_free(struct sg_textbitmap *bitmap);
 
 /**
  * @brief Get the metrics for a text bitmap.

@@ -118,7 +118,7 @@ nomem:
 }
 
 void
-sg_textbatmap_free(struct sg_textbitmap *bitmap)
+sg_textbitmap_free(struct sg_textbitmap *bitmap)
 {
     if (bitmap->layout)
         g_object_unref(bitmap->layout);
