@@ -44,6 +44,8 @@ load_pixbuf(struct sg_pixbuf *pixbuf, int do_swizzle)
 
     fmt = &TEXTURE_FMT[pixbuf->format];
 
+    sg_opengl_checkerror("load_pixbuf start");
+
     glGenTextures(1, &texture);
     glBindTexture(GL_TEXTURE_2D, texture);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -55,6 +57,8 @@ load_pixbuf(struct sg_pixbuf *pixbuf, int do_swizzle)
         glTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_RGBA,
                          fmt->swizzle);
     glBindTexture(GL_TEXTURE_2D, 0);
+
+    sg_opengl_checkerror("load_pixbuf");
 
     return texture;
 }
