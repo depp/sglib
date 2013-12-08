@@ -92,7 +92,8 @@ struct sg_textbitmap;
  * available fonts depend on the system and no fonts are guaranteed to
  * be available.
  *
- * Text alignment may still affect the results even if the text spans multiple lines.
+ * Text alignment may still affect the results even if the text spans
+ * multiple lines.
  *
  * @param text The text, encoded in UTF-8.
  * @param textlen The length of the text in bytes.

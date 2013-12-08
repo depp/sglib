@@ -92,7 +92,7 @@ sg_textbitmap_new_simple(const char *text, size_t textlen,
     pango_layout_set_font_description(pl, pf);
     pango_font_description_free(pf);
     pf = NULL;
-    
+
     switch (alignment) {
     default:
     case SG_TEXTALIGN_LEFT: palign = PANGO_ALIGN_LEFT; break;
