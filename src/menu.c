@@ -148,8 +148,10 @@ static void st_menu_draw(int x, int y, int width, int height, unsigned msec)
         glBindTexture(GL_TEXTURE_2D, g_menu_text[i].texture);
         glUniform2f(
             g_prog_text.u_vertoff,
-            -0.5f * (float) width + 32.0f,
-            0.5f * (float) height - 32.0f * (float) (i + 1));
+            -0.5f * (float) width + 32.0f
+            - g_menu_text[i].metrics.logical.x0,
+            +0.5f * (float) height - 32.0f * (float) (i + 1)
+            - g_menu_text[i].metrics.logical.y1);
         glUniform2fv(
             g_prog_text.u_texscale, 1, g_menu_text[i].texture_scale);
 
