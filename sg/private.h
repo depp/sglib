@@ -1,6 +1,7 @@
 /* Copyright 2013 Dietrich Epp.
    This file is part of SGLib.  SGLib is licensed under the terms of the
    2-clause BSD license.  For more information, see LICENSE.txt. */
+#include <stddef.h>
 struct sg_game_info;
 union sg_event;
 
@@ -81,3 +82,13 @@ sg_sys_draw(void);
 /* Perform any cleanup necessary before the process exits.  */
 void
 sg_sys_destroy(void);
+
+#if defined(_WIN32)
+
+/* Convert a UTF-8 string to UTF-16, alloctaing the destination buffer.
+   Returns 0 for success.  You must free the buffer afterwards.  The
+   destlen pointer may be NULL.  The dest pointer must not be NULL.  */
+int
+sg_wchar_from_utf8(wchar_t **dest, int *destlen, const char *src, size_t srclen);
+
+#endif

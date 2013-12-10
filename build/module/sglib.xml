@@ -107,6 +107,10 @@
       <src path="sys.c"/>
       <src path="version.c"/>
       <src path="version_const.c"/>
+
+      <if value="$os == windows">
+        <src path="winutf8.c"/> 
+      </if>
     </group>
 
     <group path="sg/file">
