@@ -1,15 +1,16 @@
 /* Copyright 2012 Dietrich Epp.
    This file is part of SGLib.  SGLib is licensed under the terms of the
    2-clause BSD license.  For more information, see LICENSE.txt. */
+#include "../private.h"
+#include "keycode/keytable.h"
 #include "sg/audio_system.h"
 #include "sg/cvar.h"
 #include "sg/entry.h"
 #include "sg/event.h"
-#include "keycode/keytable.h"
-#include <Windows.h>
-#include <string.h>
 #include "sg/opengl.h"
 #include "sg/version.h"
+#include <Windows.h>
+#include <string.h>
 
 #pragma comment(lib, "opengl32.lib")
 #pragma comment(lib, "glu32.lib")
@@ -429,6 +430,7 @@ static void
 init(int nCmdShow)
 {
     HRESULT hr;
+    GLenum err;
 
     cmdline_parse();
     sg_sys_init();
@@ -443,15 +445,12 @@ init(int nCmdShow)
     if (!createWindow(nCmdShow))
         exit(0);
     sg_audio_sys_pstart();
-    glBlendColor = (void (APIENTRY *)(GLclampf, GLclampf, GLclampf, GLclampf))
-        wglGetProcAddress("glBlendColor");
-    if (0 && !glBlendColor) {
-        errorBox("Can't get glBlendColor address.");
+    err = glewInit();
+    if (err) {
+        errorBox("Could not initialize GLEW.");
         exit(1);
     }
 }
-
-void (APIENTRY *glBlendColor)(GLclampf, GLclampf, GLclampf, GLclampf);
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
                    LPSTR lpCmdLine, int nCmdShow)
