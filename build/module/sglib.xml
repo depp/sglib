@@ -15,6 +15,8 @@
     <require module="keycode libpce glew" public="true"/>
     <header-path path="include" public="true"/>
 
+    <src path="private.h"/>
+
     <group path="include/sg">
       <src path="audio_mixdown.h"/>
       <src path="audio_ofile.h"/>
