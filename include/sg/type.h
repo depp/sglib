@@ -59,14 +59,9 @@ struct sg_textlayout_metrics {
     struct sg_textrect pixel;
 
     /**
-     * @brief The origin.
-     *
-     * For text with left alignment, this is the left edge of the
-     * first baseline.  For right alignment, this is the right edge of
-     * the first baseline.  For center alignment, this is the center
-     * of the first baseline.
+     * @brief The P coordinate of the baseline of the first line.
      */
-    struct sg_textpoint origin;
+    int baseline;
 };
 
 /**
