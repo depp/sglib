@@ -288,21 +288,18 @@ sg_textbitmap_getmetrics(struct sg_textbitmap *bitmap,
                 r = sg_textbitmap_ctline_logbounds(line, origin);
                 logbounds = CGRectUnion(logbounds, r);
             }
-            metrics->origin.x = (int) floorf(origins[0].x + 0.5f);
-            metrics->origin.y = (int) floorf(origins[0].y + 0.5f);
+            metrics->baseline = (int) floorf(origins[0].y + 0.5f);
             free(origins);
         } else {
             pixbounds = CGRectZero;
             logbounds = CGRectZero;
-            metrics->origin.x = 0;
-            metrics->origin.y = 0;
+            metrics->baseline = 0;
         }
     } else {
         line = bitmap->line;
         pixbounds = CTLineGetImageBounds(line, cxt);
         logbounds = sg_textbitmap_ctline_logbounds(line, CGPointZero);
-        metrics->origin.x = 0;
-        metrics->origin.y = 0;
+        metrics->baseline = 0;
     }
     sg_textbitmap_copyrect(&metrics->pixel, &pixbounds);
     sg_textbitmap_copyrect(&metrics->logical, &logbounds);
