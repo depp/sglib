@@ -99,39 +99,31 @@
       <src path="configfile_read.c"/>
       <src path="cvar.c"/>
       <src path="error.c"/>
-      <src path="opengl.c"/>
+      <src path="file_impl.h"/>
+      <src path="file_read.c"/>
+      <src path="log.c"/>
+      <src path="log_console.c"/>
+      <src path="log_impl.h"/>
+      <src path="log_network.c"/>
       <src path="net.c"/>
+      <src path="opengl.c"/>
+      <src path="path.c"/>
+      <src path="path_norm.c"/>
       <src path="rand.c"/>
       <src path="sys.c"/>
       <src path="version.c"/>
       <src path="version_const.c"/>
 
-      <if value="$os == windows">
-        <src path="winutf8.c"/>
-      </if>
-    </group>
-
-    <group path="src/file">
-      <src path="impl.h"/>
-      <src path="norm.c"/>
-      <src path="path.c"/>
-      <src path="read.c"/>
-
       <switch value="$os">
         <case value="linux|osx">
-          <src path="posix.c"/>
+          <src path="file_posix.c"/>
         </case>
         <case value="windows">
-          <src path="win.c"/>
+          <src path="winutf8.c"/>
+          <src path="file_win.c"/>
         </case>
       </switch>
-    </group>
 
-    <group path="src/log">
-      <src path="console.c"/>
-      <src path="impl.h"/>
-      <src path="log.c"/>
-      <src path="network.c"/>
     </group>
 
     <group path="src/pixbuf">

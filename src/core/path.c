@@ -8,7 +8,7 @@
 
 #define SG_PATH_INITSZ 1
 
-#include "impl.h"
+#include "file_impl.h"
 #include "sg/cvar.h"
 #include "sg/error.h"
 #include "sg/file.h"

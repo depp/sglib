@@ -6,7 +6,7 @@
 /* This gives us 64-bit file offsets on 32-bit Linux */
 #define _FILE_OFFSET_BITS 64
 
-#include "impl.h"
+#include "file_impl.h"
 #include "sg/error.h"
 #include "sg/file.h"
 #include "sg/log.h"

@@ -10,8 +10,7 @@ import re
 import uuid
 
 REQS = {
-    'sglib': ['sglib'],
-    'sglib++':  ['sglib++'],
+    'sglib': ['sglib']
 }
 
 APPS = {
@@ -55,7 +54,7 @@ def gen_info_plist(info, main_nib, icon):
     data = xml.dump({k:v for k, v in plist.items() if v is not None})
     return data.decode('UTF-8')
 
-@data.template('sglib', 'sglib++')
+@data.template('sglib')
 def template_sglib(module, buildinfo, cfg, proj):
     sgroot = cfg.path(os.path.dirname(os.path.dirname(__file__)))
     moddir = sgroot.join('build/module')
@@ -130,7 +129,7 @@ def template_sglib(module, buildinfo, cfg, proj):
         xibpath = rsrcdir.join1(filename, '.xib')
         xib = data.Module(None, 'template-file')
         xib.info['target'] = [xibpath]
-        xib.info['source'] = [sgroot.join('sg/osx/MainMenu.xib')]
+        xib.info['source'] = [sgroot.join('src/core/osx/MainMenu.xib')]
         xib.info['var.EXE_NAME'] = [filename]
         yield xib
         src.group.sources.append(data.Source(xibpath, 'xib'))

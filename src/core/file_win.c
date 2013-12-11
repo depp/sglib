@@ -4,7 +4,7 @@
 /* Windows file / path code.  */
 #include "sg/error.h"
 #include "sg/file.h"
-#include "impl.h"
+#include "file.h"
 
 #include <Windows.h>
 #include <stdio.h>
