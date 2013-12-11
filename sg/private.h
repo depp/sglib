@@ -7,10 +7,6 @@ union sg_event;
 
 /* ===== Subsystem initialization ===== */
 
-/* Initialize the asynchronous IO subsystem.  */
-void
-sg_aio_init(void);
-
 /* Initialize the main audio system.  */
 void
 sg_audio_sys_init(void);
@@ -18,10 +14,6 @@ sg_audio_sys_init(void);
 /* Initialize the timer, setting the current time to zero.  */
 void
 sg_clock_init(void);
-
-/* Initialize asynchronous task dispatching system.  */
-void
-sg_dispatch_init(void);
 
 /* Initialize logging subsystem.  */
 void

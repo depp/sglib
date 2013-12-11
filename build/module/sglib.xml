@@ -28,7 +28,6 @@
       <src path="configfile.h"/>
       <src path="cvar.h"/>
       <src path="defs.h"/>
-      <src path="dispatch.h"/>
       <src path="entry.h"/>
       <src path="error.h"/>
       <src path="event.h"/>
@@ -38,7 +37,6 @@
       <src path="opengl.h"/>
       <src path="pixbuf.h"/>
       <src path="rand.h"/>
-      <src path="record.h"/>
       <src path="type.h"/>
       <src path="version.h"/>
     </group>
@@ -174,15 +172,6 @@
       <src path="premultiply_alpha.c"/>
     </group>
 
-    <group path="sg/record">
-      <src path="record.c"/>
-      <src path="shot.c"/>
-      <if value="$flag.video-recording == yes">
-        <src path="vidproc.c"/>
-        <src path="yuv.c"/>
-      </if>
-    </group>
-
     <group path="sg/type">
       <group>
         <switch value="$flag.type">
@@ -199,20 +188,6 @@
           </case>
         </switch>
       </group>
-    </group>
-
-    <group path="sg/work">
-      <src path="aio.c"/>
-      <src path="dispatch.c"/>
-      <src path="work.h"/>
-      <switch value="$os">
-        <case value="linux|osx">
-          <src path="pthread.c"/>
-        </case>
-        <case value="windows">
-          <src path="windows.c"/>
-        </case>
-      </switch>
     </group>
   </module>
 </build>
