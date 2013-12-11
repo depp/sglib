@@ -135,8 +135,7 @@ sg_textbitmap_getmetrics(struct sg_textbitmap *bitmap,
 
     (void) err;
 
-    metrics->origin.x = 0;
-    metrics->origin.y = -(pango_layout_get_baseline(pl) / PANGO_SCALE);
+    metrics->baseline = -(pango_layout_get_baseline(pl) / PANGO_SCALE);
     pango_layout_get_pixel_extents(pl, &ibounds, &lbounds);
 
     sg_textbitmap_copyrect(&metrics->logical, &lbounds);
