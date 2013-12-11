@@ -66,7 +66,8 @@ struct sg_textbitmap_state {
     /* Temporary buffer for each code unit in the current item */
     WORD *cluster;
 
-    /* Temporary buffer for attributes for each code unit in the current item */
+    /* Temporary buffer for attributes for each code unit in the
+       current item */
     int logattralloc;
     SCRIPT_LOGATTR *logattr;
 };
@@ -98,7 +99,8 @@ sg_textbitmap_getfont(const char *fontname, double fontsize)
     int wfontnamelen;
     LOGFONTW f;
 
-    if (sg_wchar_from_utf8(&wfontname, &wfontnamelen, fontname, strlen(fontname) + 1))
+    if (sg_wchar_from_utf8(&wfontname, &wfontnamelen,
+                           fontname, strlen(fontname) + 1))
         return NULL;
 
     f.lfHeight = -(long) floor(fontsize + 0.5);
@@ -128,7 +130,8 @@ static void
 sg_textbitmap_uniscribe_init(void)
 {
     HRESULT hr;
-    hr = ScriptRecordDigitSubstitution(LOCALE_USER_DEFAULT, &sg_uniscribe_psds);
+    hr = ScriptRecordDigitSubstitution(LOCALE_USER_DEFAULT,
+                                       &sg_uniscribe_psds);
     if (FAILED(hr))
         abort();
 }
@@ -172,9 +175,9 @@ sg_textbitmap_itemize(struct sg_textbitmap_state *state)
     return 0;
 }
 
-/* Allocate arrays for glyphs in the text bitmap.  
-   Count is the minimum number of unused glyphs to allocate.
-   So the postcondition is bitmap->glyphalloc >= bitmap->glyphcount + count.  */
+/* Allocate arrays for glyphs in the text bitmap.  Count is the
+   minimum number of unused glyphs to allocate.  So the postcondition
+   is bitmap->glyphalloc >= bitmap->glyphcount + count.  */
 static int
 sg_textbitmap_allocglyphs(struct sg_textbitmap *bitmap, int count)
 {
@@ -199,7 +202,8 @@ sg_textbitmap_allocglyphs(struct sg_textbitmap *bitmap, int count)
         return -1;
     bitmap->glyph = glyph;
 
-    glyphadvance = realloc(bitmap->glyphadvance, sizeof(*glyphadvance) * nalloc);
+    glyphadvance = realloc(bitmap->glyphadvance,
+                           sizeof(*glyphadvance) * nalloc);
     if (!glyphadvance)
         return -1;
     bitmap->glyphadvance = glyphadvance;
@@ -230,8 +234,10 @@ sg_textbitmap_allocvisattr(struct sg_textbitmap_state *state, int count)
 
 /* Shape the current item into glyphs.  Returns the number of glyphs.  */
 static int
-sg_textbitmap_shape(struct sg_textbitmap *bitmap, struct sg_textbitmap_state *state,
-                        int textstart, int textcount, SCRIPT_ANALYSIS *analysis)
+sg_textbitmap_shape(struct sg_textbitmap *bitmap,
+                    struct sg_textbitmap_state *state,
+                    int textstart, int textcount,
+                    SCRIPT_ANALYSIS *analysis)
 {
     int maxglyphs, glyphcount;
     unsigned nalloc;
@@ -274,8 +280,10 @@ sg_textbitmap_shape(struct sg_textbitmap *bitmap, struct sg_textbitmap_state *st
 
 /* Find the position, in code units, at which to wrap the current item */
 static int
-sg_textbitmap_wrap(struct sg_textbitmap *bitmap, struct sg_textbitmap_state *state,
-                    int textstart, int textcount, int glyphcount, const SCRIPT_ANALYSIS *analysis)
+sg_textbitmap_wrap(struct sg_textbitmap *bitmap,
+                   struct sg_textbitmap_state *state,
+                    int textstart, int textcount, int glyphcount,
+                   const SCRIPT_ANALYSIS *analysis)
 {
     int remx, i, j, advance;
     unsigned nalloc;
@@ -291,7 +299,8 @@ sg_textbitmap_wrap(struct sg_textbitmap *bitmap, struct sg_textbitmap_state *sta
         remx -= advance;
     }
 
-    /* Find the first character corresponding to a cluster containing the glyph past the bounding box.  */
+    /* Find the first character corresponding to a cluster containing
+       the glyph past the bounding box.  */
     for (j = 0; j < glyphcount; ++j) {
         cluster = state->cluster[j];
         if (cluster >= i) {
@@ -310,7 +319,8 @@ sg_textbitmap_wrap(struct sg_textbitmap *bitmap, struct sg_textbitmap_state *sta
         free(state->logattr);
         state->logattr = NULL;
         nalloc = pce_round_up_pow2_32(textcount);
-        if (!nalloc || nalloc > INT_MAX || nalloc > (size_t)-1 / sizeof(*state->logattr))
+        if (!nalloc || nalloc > INT_MAX ||
+            nalloc > (size_t)-1 / sizeof(*state->logattr))
             return -1;
         state->logattr = malloc(sizeof(*state->logattr) * nalloc);
         if (!state->logattr)
@@ -337,7 +347,7 @@ sg_textbitmap_wrap(struct sg_textbitmap *bitmap, struct sg_textbitmap_state *sta
 
     /* i = # of characters in this line */
     /* j = relative offset of first character in next line */
-    
+
     return i;
 }
 
@@ -349,7 +359,8 @@ sg_textbitmap_newline(struct sg_textbitmap *bitmap)
     struct sg_textbitmap_line *line;
     if (bitmap->linecount >= bitmap->linealloc) {
         nalloc = pce_round_up_pow2_32((unsigned)bitmap->linecount + 1);
-        if (!nalloc || nalloc > INT_MAX || nalloc > (size_t)-1 / sizeof(*line))
+        if (!nalloc || nalloc > INT_MAX ||
+            nalloc > (size_t)-1 / sizeof(*line))
             return -1;
         line = realloc(bitmap->line, sizeof(*line) * nalloc);
         if (!line)
@@ -387,10 +398,14 @@ sg_textbitmap_newrun(struct sg_textbitmap *bitmap)
     return &bitmap->run[bitmap->runcount++];
 }
 
-
-/* Place an item.  Returns the number of characters placed, or -1 on failure.  */
+/* Place an item.  Returns the number of characters placed, or -1 on
+   failure.  */
 static int
-sg_textbitmap_place(struct sg_textbitmap *bitmap, struct sg_textbitmap_state *state, int textstart, int textcount, SCRIPT_ANALYSIS itemanalysis, const TEXTMETRIC *metrics)
+sg_textbitmap_place(struct sg_textbitmap *bitmap,
+                    struct sg_textbitmap_state *state,
+                    int textstart, int textcount,
+                    SCRIPT_ANALYSIS itemanalysis,
+                    const TEXTMETRIC *metrics)
 {
     HRESULT hr;
     ABC abc;
@@ -402,7 +417,8 @@ sg_textbitmap_place(struct sg_textbitmap *bitmap, struct sg_textbitmap_state *st
     SCRIPT_ANALYSIS analysis;
 
     analysis = itemanalysis;
-    glyphcount = sg_textbitmap_shape(bitmap, state, textstart, textcount, &analysis);
+    glyphcount = sg_textbitmap_shape(bitmap, state, textstart, textcount,
+                                     &analysis);
     if (glyphcount < 0)
         return -1;
 
@@ -421,7 +437,8 @@ sg_textbitmap_place(struct sg_textbitmap *bitmap, struct sg_textbitmap_state *st
 
     width = abc.abcA + abc.abcB + abc.abcC;
     if (state->width > 0 && state->posx + width > state->width) {
-        breakpos = sg_textbitmap_wrap(bitmap, state, textstart, textcount, glyphcount, &analysis);
+        breakpos = sg_textbitmap_wrap(bitmap, state, textstart, textcount,
+                                      glyphcount, &analysis);
         if (breakpos < 0)
             return -1;
 
@@ -449,7 +466,9 @@ sg_textbitmap_place(struct sg_textbitmap *bitmap, struct sg_textbitmap_state *st
                     return -1;
                 state->posx = 0;
                 if (width > state->width) {
-                    breakpos = sg_textbitmap_wrap(bitmap, state, textstart, textcount, glyphcount, &analysis);
+                    breakpos = sg_textbitmap_wrap(
+                        bitmap, state, textstart, textcount,
+                        glyphcount, &analysis);
                     if (breakpos < 0)
                         return -1;
                 }
@@ -536,7 +555,7 @@ sg_textbitmap_new_simple(const char *text, size_t textlen,
     if (sg_textbitmap_itemize(&state))
         goto error;
 
-    /* 
+    /*
      * Allocate buffers for layout.
      * These values (x + x/2 + 16) are recommended by the docs.
      */
@@ -544,9 +563,11 @@ sg_textbitmap_new_simple(const char *text, size_t textlen,
     state.cluster = malloc(sizeof(*state.cluster) * maxitemlength);
     if (!state.cluster)
         goto error;
-    if (sg_textbitmap_allocglyphs(bitmap, state.textlen + state.textlen / 2 + 16))
+    if (sg_textbitmap_allocglyphs(
+            bitmap, state.textlen + state.textlen / 2 + 16))
         goto error;
-    if (sg_textbitmap_allocvisattr(&state, maxitemlength + maxitemlength / 2 + 16))
+    if (sg_textbitmap_allocvisattr(
+            &state, maxitemlength + maxitemlength / 2 + 16))
         goto error;
 
     /* Get the device context handle.  */
@@ -569,7 +590,9 @@ sg_textbitmap_new_simple(const char *text, size_t textlen,
         textstart = state.item[curitem].iCharPos;
         textcount = state.item[curitem + 1].iCharPos - textstart;
         while (textcount > 0) {
-            advance = sg_textbitmap_place(bitmap, &state, textstart, textcount, state.item[curitem].a, &metrics);
+            advance = sg_textbitmap_place(
+                bitmap, &state, textstart, textcount,
+                state.item[curitem].a, &metrics);
             if (advance < 0)
                 goto error;
             textstart += advance;
@@ -706,7 +729,8 @@ sg_textbitmap_renderdc(struct sg_textbitmap *bitmap,
 }
 
 static int
-sg_textbitmap_createbitmap(HDC dc, int width, int height, HBITMAP *hbit, void **data)
+sg_textbitmap_createbitmap(HDC dc, int width, int height,
+                           HBITMAP *hbit, void **data)
 {
     HBITMAP hbitmap;
     BITMAPINFO bmi;
@@ -771,7 +795,8 @@ sg_textbitmap_render(struct sg_textbitmap *bitmap,
     SetTextColor(dc, RGB(255, 255, 255));
     if (sg_textbitmap_renderdc(bitmap, offset, height))
         goto error;
-    sg_textbitmap_copypixels(pixbuf->data, pixbuf->rowbytes, bitmapdata, width * 4, width, height);
+    sg_textbitmap_copypixels(pixbuf->data, pixbuf->rowbytes,
+                             bitmapdata, width * 4, width, height);
     DeleteObject(hbitmap);
     return 0;
 

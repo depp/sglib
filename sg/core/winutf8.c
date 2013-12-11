@@ -9,7 +9,8 @@
 #include <string.h>
 
 int
-sg_wchar_from_utf8(wchar_t **dest, int *destlen, const char *src, size_t srclen)
+sg_wchar_from_utf8(wchar_t **dest, int *destlen,
+                   const char *src, size_t srclen)
 {
     wchar_t *wtext;
     int wlen, r;

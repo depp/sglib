@@ -109,7 +109,7 @@
       <src path="version_const.c"/>
 
       <if value="$os == windows">
-        <src path="winutf8.c"/> 
+        <src path="winutf8.c"/>
       </if>
     </group>
 
