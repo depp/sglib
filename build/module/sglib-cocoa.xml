@@ -3,7 +3,7 @@
   <key name="desc">SGLib Cocoa Frontend</key>
   <require module="sglib osx#AppKit osx#Foundation osx#CoreVideo
                    osx#OpenGL osx#Carbon"/>
-  <group path="sg/osx">
+  <group path="src/osx">
     <src path="GApplication.h"/>
     <src path="GApplication.m"/>
     <src path="GController.h"/>

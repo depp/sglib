@@ -5,7 +5,7 @@
   </module>
 
   <module type="version-info">
-    <key name="target"><path path="sg/core/version_const.c"/></key>
+    <key name="target"><path path="src/core/version_const.c"/></key>
 
     <key name="repo.SG_SG"><path path="."/></key>
     <key name="repo.SG_APP"><path path="/"/></key>
@@ -43,7 +43,7 @@
 
     <src path="include/config.h"/>
 
-    <group path="sg/audio">
+    <group path="src/audio">
       <src path="convert.c"/>
       <src path="load.c"/>
       <src path="mixdown.c"/>
@@ -92,7 +92,7 @@
       </if>
     </group>
 
-    <group path="sg/core">
+    <group path="src/core">
       <src path="clock.c"/>
       <src path="clock_impl.h"/>
       <src path="configfile.c"/>
@@ -111,7 +111,7 @@
       </if>
     </group>
 
-    <group path="sg/file">
+    <group path="src/file">
       <src path="impl.h"/>
       <src path="norm.c"/>
       <src path="path.c"/>
@@ -127,14 +127,14 @@
       </switch>
     </group>
 
-    <group path="sg/log">
+    <group path="src/log">
       <src path="console.c"/>
       <src path="impl.h"/>
       <src path="log.c"/>
       <src path="network.c"/>
     </group>
 
-    <group path="sg/pixbuf">
+    <group path="src/pixbuf">
       <group>
         <switch value="$flag.jpeg">
           <case value="coregraphics">
@@ -172,7 +172,7 @@
       <src path="premultiply_alpha.c"/>
     </group>
 
-    <group path="sg/type">
+    <group path="src/type">
       <group>
         <switch value="$flag.type">
           <case value="coretext">

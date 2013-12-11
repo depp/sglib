@@ -2,7 +2,7 @@
 <module path="../..">
   <key name="desc">SGLib SDL Frontend</key>
   <require module="sglib sdl"/>
-  <group path="sg/sdl">
+  <group path="src/sdl">
     <src path="sdl.c"/>
   </group>
 </module>
