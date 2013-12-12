@@ -5,7 +5,7 @@
   </module>
 
   <module type="version-info">
-    <key name="target"><path path="src/core/version_const.c"/></key>
+    <key name="target"><path path="src/core/common/version_const.c"/></key>
 
     <key name="repo.SG_SG"><path path="."/></key>
     <key name="repo.SG_APP"><path path="/"/></key>
@@ -92,7 +92,7 @@
       </if>
     </group>
 
-    <group path="src/core">
+    <group path="src/core/common">
       <src path="clock.c"/>
       <src path="clock_impl.h"/>
       <src path="configfile.c"/>

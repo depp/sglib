@@ -3,7 +3,7 @@
    2-clause BSD license.  For more information, see LICENSE.txt. */
 #include "sg/defs.h"
 
-#include "../private.h"
+#include "private.h"
 #include <Windows.h>
 #include <limits.h>
 #include <string.h>

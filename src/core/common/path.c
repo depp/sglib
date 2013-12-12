@@ -13,7 +13,7 @@
 #include "sg/error.h"
 #include "sg/file.h"
 #include "sg/log.h"
-#include "../private.h"
+#include "private.h"
 #include <stdlib.h>
 #include <string.h>
 

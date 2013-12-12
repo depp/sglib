@@ -2,7 +2,7 @@
 <module path="../..">
   <key name="desc">SGLib Windows Frontend</key>
   <require module="sglib"/>
-  <group path="src/windows">
+  <group path="src/core/windows">
     <src path="windows.c"/>
   </group>
 </module>

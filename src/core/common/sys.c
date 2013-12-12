@@ -12,7 +12,7 @@
 #include "sg/log.h"
 #include "sg/rand.h"
 #include "sg/version.h"
-#include "../private.h"
+#include "private.h"
 
 struct sg_sys_state sg_sst;
 static struct sg_logger *sg_log_video;

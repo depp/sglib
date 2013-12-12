@@ -2,7 +2,7 @@
 <module path="../..">
   <key name="desc">SGLib Gtk Frontend</key>
   <require module="sglib gtk gtkglext"/>
-  <group path="src/gtk">
+  <group path="src/core/gtk">
     <src path="gtk.c"/>
   </group>
 </module>
