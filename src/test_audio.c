@@ -2,27 +2,33 @@
    This file is part of SGLib.  SGLib is licensed under the terms of the
    2-clause BSD license.  For more information, see LICENSE.txt. */
 #include "defs.h"
-#include "sg/audio_source.h"
+#include "sg/audio_buffer.h"
+#include "sg/audio_mixer.h"
 #include "sg/entry.h"
 #include "sg/event.h"
 #include "sg/opengl.h"
 #include "keycode/keycode.h"
 #include <assert.h>
+#include <stdlib.h>
 #include <string.h>
 
 static GLuint g_buf;
 static struct prog_plain g_prog_plain;
 
-static struct sg_audio_pcm_obj *g_snd_clank;
-static struct sg_audio_pcm_obj *g_snd_donk;
-static struct sg_audio_pcm_obj *g_snd_tink;
-static struct sg_audio_pcm_obj *g_snd_stereo;
-static struct sg_audio_pcm_obj *g_snd_left;
-static struct sg_audio_pcm_obj *g_snd_right;
-static struct sg_audio_pcm_obj *g_snd_music;
-static struct sg_audio_pcm_obj *g_snd_alien;
+struct {
+    struct sg_audio_buffer clank;
+    struct sg_audio_buffer donk;
+    struct sg_audio_buffer tink;
+    struct sg_audio_buffer stereo;
+    struct sg_audio_buffer left;
+    struct sg_audio_buffer right;
+    struct sg_audio_buffer music;
+    struct sg_audio_buffer alien;
+} g_audio;
 
 static unsigned g_cmd;
+
+static struct sg_audio_mixer *g_mixer;
 
 static const float DATA[] = {
     -0.9f, -0.9f,
@@ -34,14 +40,14 @@ static const float DATA[] = {
 static void
 st_audio_init(void)
 {
-    g_snd_clank  = load_audio("fx/clank1");
-    g_snd_donk   = load_audio("fx/donk1");
-    g_snd_tink   = load_audio("fx/tink1");
-    g_snd_stereo = load_audio("fx/stereo");
-    g_snd_left   = load_audio("fx/left");
-    g_snd_right  = load_audio("fx/right");
-    g_snd_music  = load_audio("fx/looptrack");
-    g_snd_alien  = load_audio("fx/alien");
+    load_audio(&g_audio.clank,  "fx/clank1");
+    load_audio(&g_audio.donk,   "fx/donk1");
+    load_audio(&g_audio.tink,   "fx/tink1");
+    load_audio(&g_audio.stereo, "fx/stereo");
+    load_audio(&g_audio.left,   "fx/left");
+    load_audio(&g_audio.right,  "fx/right");
+    load_audio(&g_audio.music,  "fx/looptrack");
+    load_audio(&g_audio.alien,  "fx/alien");
 
     glGenBuffers(1, &g_buf);
     glBindBuffer(GL_ARRAY_BUFFER, g_buf);
@@ -137,21 +143,20 @@ get_state(int n)
 static void
 func1(unsigned msec)
 {
-    static int g_chan = -1, g_state, g_mod;
+    static int g_state, g_mod;
     int state = get_state(0);
-    struct sg_audio_pcm_obj *fp;
+    struct sg_audio_buffer *buf;
 
     if (state && !g_state) {
-        if (g_chan < 0)
-            g_chan = sg_audio_source_open();
-        fp = NULL;
+        buf = NULL;
         switch (g_mod) {
-        case 0: fp = g_snd_clank; break;
-        case 1: fp = g_snd_donk;  break;
-        case 2: fp = g_snd_tink;  break;
+        case 0: buf = &g_audio.clank; break;
+        case 1: buf = &g_audio.donk;  break;
+        case 2: buf = &g_audio.tink;  break;
         }
+        assert(buf != NULL);
         g_mod = (g_mod + 1) % 3;
-        sg_audio_source_play(g_chan, msec, fp, 0);
+        sg_audio_mixer_startbuf(g_mixer, 0, msec, buf, 0, 0, NULL, NULL);
     }
 
     draw_key(0, state);
@@ -161,28 +166,27 @@ func1(unsigned msec)
 static void
 func2(unsigned msec)
 {
-    static int g_chan = -1, g_state, g_mod;
+    static int g_state, g_mod;
     int state = get_state(1);
-    struct sg_audio_pcm_obj *fp;
+    struct sg_audio_buffer *buf;
     float pan = 0.0f;
 
     if (state && !g_state) {
-        if (g_chan < 0)
-            g_chan = sg_audio_source_open();
-        fp = NULL;
+        buf = NULL;
         switch (g_mod / 3) {
-        case 0: fp = g_snd_clank; break;
-        case 1: fp = g_snd_donk;  break;
-        case 2: fp = g_snd_tink;  break;
+        case 0: buf = &g_audio.clank; break;
+        case 1: buf = &g_audio.donk;  break;
+        case 2: buf = &g_audio.tink;  break;
         }
+        assert(buf != NULL);
         switch (g_mod % 3) {
         case 0: pan = 0.0f; break;
         case 1: pan = -1.0f; break;
         case 2: pan = 1.0f; break;
         }
         g_mod = (g_mod + 1) % 9;
-        sg_audio_source_pset(g_chan, SG_AUDIO_PAN, msec, pan);
-        sg_audio_source_play(g_chan, msec, fp, 0);
+        sg_audio_mixer_set(g_mixer, 1, msec, SG_AUDIO_MIXERPARAM_PAN, pan);
+        sg_audio_mixer_startbuf(g_mixer, 1, msec, buf, 0, 0, NULL, NULL);
     }
 
     draw_key(1, state);
@@ -192,24 +196,24 @@ func2(unsigned msec)
 static void
 func3(unsigned msec)
 {
-    static int g_chan = -1, g_state, g_mod;
+    static int g_state, g_mod;
     int state = get_state(2);
-    struct sg_audio_pcm_obj *fp;
+    struct sg_audio_buffer *buf;
     float pan = 0.0f;
 
     if (state && !g_state) {
-        if (g_chan < 0)
-            g_chan = sg_audio_source_open();
-        fp = g_snd_stereo;
+        buf = &g_audio.stereo;
+        buf = NULL;
         switch (g_mod) {
-        case 0: fp = g_snd_stereo; pan =  0.00f; break;
-        case 1: fp = g_snd_left;   pan = -0.75f; break;
-        case 2: fp = g_snd_right;  pan = +0.75f; break;
+        case 0: buf = &g_audio.stereo; pan =  0.00f; break;
+        case 1: buf = &g_audio.left;   pan = -0.75f; break;
+        case 2: buf = &g_audio.right;  pan = +0.75f; break;
         }
+        assert(buf != NULL);
         g_mod = (g_mod + 1) % 3;
-        sg_audio_source_stop(g_chan, msec);
-        sg_audio_source_pset(g_chan, SG_AUDIO_PAN, msec, pan);
-        sg_audio_source_play(g_chan, msec, fp, 0);
+        sg_audio_mixer_stop(g_mixer, 2, msec);
+        sg_audio_mixer_set(g_mixer, 2, msec, SG_AUDIO_MIXERPARAM_PAN, pan);
+        sg_audio_mixer_startbuf(g_mixer, 2, msec, buf, 0, 0, NULL, NULL);
     }
 
     draw_key(2, state);
@@ -219,25 +223,22 @@ func3(unsigned msec)
 static void
 func4(unsigned msec)
 {
-    static int g_chan = -1, g_state;
+    static int g_state;
     int state = get_state(3);
-
-    if (g_chan < 0)
-        g_chan = sg_audio_source_open();
+    struct sg_audio_buffer *buf;
 
     switch (g_state & 3) {
     case 0:
         if (state) {
-            sg_audio_source_play(
-                g_chan, msec,
-                (g_state & 4) ? g_snd_alien : g_snd_music, 0);
+            buf = (g_state & 4) ? &g_audio.alien : &g_audio.music;
+            sg_audio_mixer_startbuf(g_mixer, 3, msec, buf, 0, 0, NULL, NULL);
             g_state++;
         }
         break;
 
     case 2:
         if (state) {
-            sg_audio_source_stop(g_chan, msec);
+            sg_audio_mixer_stop(g_mixer, 3, msec);
             g_state++;
         }
         break;
@@ -253,10 +254,10 @@ func4(unsigned msec)
 }
 
 static void
-st_audio_draw(int x, int y, int width, int height, unsigned msec)
+st_audio_draw(int width, int height, unsigned msec)
 {
     glClearColor(0.08, 0.05, 0.16, 0.0);
-    glViewport(x, y, width, height);
+    glViewport(0, 0, width, height);
     glClear(GL_COLOR_BUFFER_BIT);
 
     func1(msec);
@@ -264,7 +265,7 @@ st_audio_draw(int x, int y, int width, int height, unsigned msec)
     func3(msec);
     func4(msec);
 
-    sg_audio_source_commit(msec, msec);
+    sg_audio_mixer_commit(g_mixer, msec);
 }
 
 const struct st_iface ST_AUDIO = {

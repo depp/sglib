@@ -15,7 +15,7 @@ struct st_iface {
     void (*init)();
     void (*destroy)();
     void (*event)(union sg_event *evt);
-    void (*draw)(int x, int y, int width, int height, unsigned msec);
+    void (*draw)(int width, int height, unsigned msec);
 };
 
 extern const struct st_iface *st_screen;
@@ -26,8 +26,11 @@ extern const struct st_iface
    Resource loading
    ======================================== */
 
-struct sg_audio_pcm_obj *
-load_audio(const char *path);
+struct sg_audio_buffer;
+struct sg_pixbuf;
+
+void
+load_audio(struct sg_audio_buffer *buffer, const char *path);
 
 GLuint
 load_shader(const char *path, GLenum type);

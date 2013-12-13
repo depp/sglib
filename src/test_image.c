@@ -3,7 +3,6 @@
    2-clause BSD license.  For more information, see LICENSE.txt. */
 #include "defs.h"
 #include "sg/opengl.h"
-#include "sg/dispatch.h"
 #include "sg/entry.h"
 #include <assert.h>
 #include <math.h>
@@ -258,9 +257,9 @@ st_image_draw_foreground(int width, int height)
 }
 
 static void
-st_image_draw(int x, int y, int width, int height, unsigned msec)
+st_image_draw(int width, int height, unsigned msec)
 {
-    glViewport(x, y, width, height);
+    glViewport(0, 0, width, height);
     st_image_draw_background(width, height, msec);
     st_image_draw_foreground(width, height);
 }

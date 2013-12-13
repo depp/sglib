@@ -137,11 +137,11 @@ st_type_draw_layout(struct text_layout *layout, int width, int height,
 }
 
 static void
-st_type_draw(int x, int y, int width, int height, unsigned msec)
+st_type_draw(int width, int height, unsigned msec)
 {
     float mod;
 
-    glViewport(x, y, width, height);
+    glViewport(0, 0, width, height);
     if (!g_dark)
         glClearColor(0.0, 0.0, 0.0, 0.0);
     else

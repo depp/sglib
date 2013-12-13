@@ -120,7 +120,7 @@ static void st_menu_event(union sg_event *evt)
     }
 }
 
-static void st_menu_draw(int x, int y, int width, int height, unsigned msec)
+static void st_menu_draw(int width, int height, unsigned msec)
 {
     float xscale, yscale;
     int i;
@@ -129,7 +129,7 @@ static void st_menu_draw(int x, int y, int width, int height, unsigned msec)
     xscale = 2.0f / (float) width;
     yscale = 2.0f / (float) height;
 
-    glViewport(x, y, width, height);
+    glViewport(0, 0, width, height);
     glClearColor(0.1, 0.2, 0.3, 0.0);
     glClear(GL_COLOR_BUFFER_BIT);
 

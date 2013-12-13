@@ -25,7 +25,7 @@ load_shader(const char *path, GLenum type)
 
     if (buf->length > INT_MAX) {
         log = sg_logger_get("shader");
-        sg_logf(log, LOG_ERROR, "%s: too long", path);
+        sg_logf(log, SG_LOG_ERROR, "%s: too long", path);
         return -1;
     }
 
@@ -39,13 +39,13 @@ load_shader(const char *path, GLenum type)
         return shader;
 
     log = sg_logger_get("shader");
-    sg_logf(log, LOG_ERROR, "%s: compilation failed", path);
+    sg_logf(log, SG_LOG_ERROR, "%s: compilation failed", path);
     glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &loglen);
     if (loglen > 0) {
         errlog = malloc(loglen);
         if (errlog) {
             glGetShaderInfoLog(shader, loglen, NULL, errlog);
-            sg_logs(log, LOG_ERROR, errlog);
+            sg_logs(log, SG_LOG_ERROR, errlog);
             free(errlog);
         }
     }
@@ -75,14 +75,14 @@ load_program(const char *vertpath, const char *fragpath)
         return prog;
 
     log = sg_logger_get("shader");
-    sg_logf(log, LOG_ERROR, "%s + %s: linking failed",
+    sg_logf(log, SG_LOG_ERROR, "%s + %s: linking failed",
             vertpath, fragpath);
     glGetProgramiv(prog, GL_INFO_LOG_LENGTH, &loglen);
     if (loglen <= 0) {
         errlog = malloc(loglen);
         if (errlog) {
             glGetProgramInfoLog(prog, loglen, NULL, errlog);
-            sg_logs(log, LOG_ERROR, errlog);
+            sg_logs(log, SG_LOG_ERROR, errlog);
             free(errlog);
         }
     }

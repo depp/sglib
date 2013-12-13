@@ -3,40 +3,39 @@
    2-clause BSD license.  For more information, see LICENSE.txt. */
 #include "defs.h"
 #include "sg/log.h"
-#include "sg/audio_pcm.h"
+#include "sg/audio_buffer.h"
+#include "sg/audio_file.h"
 #include "sg/file.h"
+#include "sg/log.h"
 #include <stdlib.h>
 #include <string.h>
 
-struct sg_audio_pcm_obj *
-load_audio(const char *path)
+void
+load_audio(struct sg_audio_buffer *buffer, const char *path)
 {
     struct sg_buffer *buf;
-    struct sg_audio_pcm *pcm;
+    struct sg_audio_buffer *pcm;
     size_t pcmcount;
-    struct sg_audio_pcm_obj *obj;
     int r;
 
     buf = sg_file_get(path, strlen(path), SG_RDONLY,
-                      SG_AUDIO_PCM_EXTENSIONS,
+                      SG_AUDIO_FILE_EXTENSIONS,
                       1024 * 1024 * 64, NULL);
     if (!buf)
         abort();
 
-    r = sg_audio_pcm_load(&pcm, &pcmcount, buf->data, buf->length, NULL);
+    r = sg_audio_file_load(&pcm, &pcmcount, buf->data, buf->length, NULL);
     if (r)
         abort();
-    if (pcmcount != 1)
+    if (pcmcount != 1) {
+        sg_logf(sg_logger_get(NULL), SG_LOG_ERROR,
+                "Ogg file has multiple sections: %s", path);
         abort();
+    }
 
-    r = sg_audio_pcm_convert(&pcm[0], SG_AUDIO_S16NE, NULL);
+    r = sg_audio_buffer_convert(&pcm[0], SG_AUDIO_S16NE, NULL);
     if (r)
         abort();
 
-    obj = sg_audio_pcm_obj_new();
-    if (!obj)
-        abort();
-    memcpy(&obj->buf, &pcm[0], sizeof(obj->buf));
-
-    return obj;
+    memcpy(buffer, &pcm[0], sizeof(struct sg_audio_buffer));
 }

@@ -10,7 +10,9 @@ const struct st_iface *st_screen;
 
 void
 sg_game_init(void)
-{ }
+{
+    st_screen = &ST_MENU;
+}
 
 void
 sg_game_destroy(void)
@@ -27,11 +29,24 @@ sg_game_event(union sg_event *evt)
 {
     static int escape_down;
     switch (evt->type) {
+    case SG_EVENT_VIDEO_INIT:
+        st_screen->init();
+        return;
+
+    case SG_EVENT_VIDEO_TERM:
+        return;
+
+    case SG_EVENT_AUDIO_INIT:
+        return;
+
+    case SG_EVENT_AUDIO_TERM:
+        return;
+
     case SG_EVENT_KDOWN:
         if (evt->key.key == KEY_Escape) {
             if (!escape_down) {
                 if (st_screen == &ST_MENU) {
-                    sg_platform_quit();
+                    sg_sys_quit();
                 } else if (st_screen) {
                     st_screen->destroy();
                     st_screen = &ST_MENU;
@@ -54,16 +69,19 @@ sg_game_event(union sg_event *evt)
         break;
     }
 
-    if (st_screen)
-        st_screen->event(evt);
+    st_screen->event(evt);
 }
 
 void
-sg_game_draw(int x, int y, int width, int height, unsigned msec)
+sg_game_draw(int width, int height, unsigned msec)
 {
-    if (!st_screen) {
-        st_screen = &ST_MENU;
-        st_screen->init();
-    }
-    st_screen->draw(x, y, width, height, msec);
+    st_screen->draw(width, height, msec);
+}
+
+sg_audio_result_t
+sg_game_audio(float *buffer, int msec)
+{
+    (void) buffer;
+    (void) msec;
+    return 0;
 }
