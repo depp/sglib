@@ -34,10 +34,10 @@ sg_log_console_msg(struct sg_log_listener *h, struct sg_log_msg *m)
     color = NULL;
     if (sg_log_color) {
         switch (m->levelval) {
-        case LOG_DEBUG: color = "\x1b[36m";   /* Cyan */     break;
-        case LOG_INFO:                        /* White */    break;
-        case LOG_WARN:  color = "\x1b[33m";   /* Yellow */   break;
-        case LOG_ERROR: color = "\x1b[1;31m"; /* Red+Bold */ break;
+        case SG_LOG_DEBUG: color = "\x1b[36m";   /* Cyan */     break;
+        case SG_LOG_INFO:                        /* White */    break;
+        case SG_LOG_WARN:  color = "\x1b[33m";   /* Yellow */   break;
+        case SG_LOG_ERROR: color = "\x1b[1;31m"; /* Red+Bold */ break;
         }
     }
     if (color)

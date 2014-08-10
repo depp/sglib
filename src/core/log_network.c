@@ -75,7 +75,7 @@ sg_log_network_msg(struct sg_log_listener *llp, struct sg_log_msg *msg)
     return;
 
 overflow:
-    sg_logs(sg_logger_get(NULL), LOG_WARN, "log message too long");
+    sg_logs(sg_logger_get(NULL), SG_LOG_WARN, "log message too long");
     return;
 
 error_errno:
@@ -84,7 +84,7 @@ error_errno:
 #else
     sg_error_win32(&err, WSAGetLastError());
 #endif
-    sg_logf(sg_logger_get(NULL), LOG_ERROR,
+    sg_logf(sg_logger_get(NULL), SG_LOG_ERROR,
             "logging to %s failed: %s",
             lp->name, err->msg);
     sg_error_clear(&err);
@@ -125,7 +125,7 @@ sg_log_network_init(void)
     if (r) goto error;
     addrname = sg_net_getname(&addr, &err);
     if (r) goto error;
-    sg_logf(logger, LOG_INFO, "connecting to %s", addrname);
+    sg_logf(logger, SG_LOG_INFO, "connecting to %s", addrname);
     sock = socket(addr.addr.addr.sa_family, SOCK_STREAM, 0);
     if (!SOCKET_VALID(sock)) goto error_errno;
     r = connect(sock, &addr.addr.addr, addr.len);
@@ -154,7 +154,7 @@ error_errno:
 error:
     if (SOCKET_VALID(sock))
         closesocket(sock);
-    sg_logf(sg_logger_get(NULL), LOG_ERROR,
+    sg_logf(sg_logger_get(NULL), SG_LOG_ERROR,
             "logging to %s failed: %s",
             addrname ? addrname : addrstr, err->msg);
     sg_error_clear(&err);

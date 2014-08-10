@@ -39,7 +39,7 @@ sg_log_listen(struct sg_log_listener *listener)
             return;
         }
     }
-    sg_logs(&sg_logger_root.head, LOG_WARN,
+    sg_logs(&sg_logger_root.head, SG_LOG_WARN,
             "Too many log listeners, log listener dropped.");
 }
 
@@ -60,13 +60,13 @@ sg_logger_conflevel(const char *name, size_t len)
     r = sg_cvar_gets("log.level", buf, &v);
     if (r) {
         if (!strcmp(v, "debug"))
-            return LOG_DEBUG;
+            return SG_LOG_DEBUG;
         if (!strcmp(v, "info"))
-            return LOG_INFO;
+            return SG_LOG_INFO;
         if (!strcmp(v, "warn"))
-            return LOG_WARN;
+            return SG_LOG_WARN;
         if (!strcmp(v, "error"))
-            return LOG_ERROR;
+            return SG_LOG_ERROR;
     }
     return LOG_INHERIT;
 }
@@ -76,7 +76,7 @@ sg_log_init(void)
 {
     sg_log_level_t level = sg_logger_conflevel(NULL, 0);
     pce_lock_init(&sg_logger_lock);
-    sg_logger_root.head.level = level == LOG_INHERIT ? LOG_WARN : level;
+    sg_logger_root.head.level = level == LOG_INHERIT ? SG_LOG_WARN : level;
     sg_logger_root.level = level;
     sg_log_console_init();
     sg_log_network_init();
