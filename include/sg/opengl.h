@@ -5,15 +5,53 @@
 #define SG_OPENGL_H
 #include "config.h"
 
-#if defined USE_BUNDLED_GLEW
-# include "GL/glew.h"
+/**
+ * @file opengl.h
+ *
+ * @brief OpenGL.
+ *
+ * This file automatically includes the correct OpenGL header for the
+ * platform and configuration.
+ */
+
+#if defined USE_OPENGL_GLEW || 1
+# if defined USE_BUNDLED_GLEW
+#  include "GL/glew.h"
+# else
+#  include <GL/glew.h>
+# endif
+#elif defined USE_OPENGL_PLATFORM
+# if defined __APPLE__
+#  include <OpenGL/gl.h>
+#  include <OpenGL/glext.h>
+# else
+#  include <GL/gl.h>
+#  include <GL/glext.h>
+# endif
+#elif defined USE_OPENGL_PLATFORM_GL3
+# if defined __APPLE__
+#  include <OpenGL/gl3.h>
+# else
+#  include <GL/gl3.h>
+# endif
 #else
-# include <GL/glew.h>
+# error "No OpenGL implementation configured."
 #endif
 
-/* Check for OpenGL errors and log them.  If there were no errors, then zero
-   is returned.  If there were errors, a non-zero value is returned.  */
-int
-sg_opengl_checkerror(const char *where);
+#ifdef __cplusplus
+extern "C" {
+#endif
 
+/**
+ * @brief Check for OpenGL errors and log them.
+ *
+ * @param where A format string for error locations.
+ * @return Zero if there were no errors, nonzero otherwise.
+ */
+int
+sg_opengl_checkerror(const char *where, ...);
+
+#ifdef __cplusplus
+}
+#endif
 #endif
