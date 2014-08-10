@@ -1,0 +1,22 @@
+# Xcode
+/*.xcodeproj
+
+# Build directory (OS X / Linux)
+/build
+
+# Build system
+/Makefile
+/config.dat
+/config.log
+/*Test*
+
+# Visual Studio
+/Debug
+/Release
+/x64
+/*.sln
+/*.sdf
+/*.suo
+/*.opensdf
+/*.vcxproj*
+/ipch
