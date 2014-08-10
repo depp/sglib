@@ -1,4 +1,4 @@
-/* Copyright 2012 Dietrich Epp.
+/* Copyright 2012-2013 Dietrich Epp.
    This file is part of SGLib.  SGLib is licensed under the terms of the
    2-clause BSD license.  For more information, see LICENSE.txt. */
 #include "sg/rand.h"
@@ -69,13 +69,13 @@ sg_girand(void)
     return sg_irand(&sg_rand_global);
 }
 
-float
+double
 sg_frand(struct sg_rand_state *s)
 {
-    return (float) sg_irand(s) * (1.0f / 4294967296.0f);
+    return (float) sg_irand(s) * (1.0 / 4294967296.0);
 }
 
-float
+double
 sg_gfrand(void)
 {
     return sg_frand(&sg_rand_global);
