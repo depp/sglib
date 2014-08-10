@@ -14,12 +14,12 @@ void
 sg_version_lib(struct sg_logger *lp, const char *libname,
                const char *compileversion, const char *runversion)
 {
-    if (LOG_DEBUG >= lp->level && compileversion && runversion &&
+    if (SG_LOG_DEBUG >= lp->level && compileversion && runversion &&
         strcmp(compileversion, runversion))
-        sg_logf(lp, LOG_INFO, "%s: version %s (compiled against %s)",
+        sg_logf(lp, SG_LOG_INFO, "%s: version %s (compiled against %s)",
                 libname, compileversion, runversion);
     else
-        sg_logf(lp, LOG_INFO, "%s: version %s", libname,
+        sg_logf(lp, SG_LOG_INFO, "%s: version %s", libname,
                 runversion ? runversion : compileversion);
 }
 
@@ -101,7 +101,7 @@ next_file:
         dist = buf;
     else
         dist = buf + qlen + 1;
-    sg_logf(lp, LOG_INFO, "Linux distribution: %s", dist);
+    sg_logf(lp, SG_LOG_INFO, "Linux distribution: %s", dist);
 }
 
 static void
@@ -120,7 +120,7 @@ sg_version_os(struct sg_logger *lp)
     Gestalt(gestaltSystemVersionMajor, &major);
     Gestalt(gestaltSystemVersionMinor, &minor);
     Gestalt(gestaltSystemVersionBugFix, &bugfix);
-    sg_logf(lp, LOG_INFO, "Mac OS X: %d.%d.%d", major, minor, bugfix);
+    sg_logf(lp, SG_LOG_INFO, "Mac OS X: %d.%d.%d", major, minor, bugfix);
 }
 
 #elif defined(_WIN32)
@@ -135,7 +135,7 @@ sg_version_os(struct sg_logger *lp)
     v.dwOSVersionInfoSize = sizeof(v);
     br = GetVersionExW(&v);
     if (!br) return;
-    sg_logf(lp, LOG_INFO, "Windows: %d.%d",
+    sg_logf(lp, SG_LOG_INFO, "Windows: %d.%d",
             v.dwMajorVersion, v.dwMinorVersion);
 }
 
@@ -177,12 +177,12 @@ void
 sg_version_print(void)
 {
     struct sg_logger *log = sg_logger_get("init");
-    sg_logf(log, LOG_INFO, "App version: %s (%s)",
+    sg_logf(log, SG_LOG_INFO, "App version: %s (%s)",
             SG_APP_VERSION, SG_APP_COMMIT);
-    sg_logf(log, LOG_INFO, "SGLib version: %s (%s)",
+    sg_logf(log, SG_LOG_INFO, "SGLib version: %s (%s)",
             SG_SG_VERSION, SG_SG_COMMIT);
-    sg_logf(log, LOG_INFO, "Compiler: " COMPILER);
-    sg_logf(log, LOG_INFO, "Architecture: " ARCH);
+    sg_logf(log, SG_LOG_INFO, "Compiler: " COMPILER);
+    sg_logf(log, SG_LOG_INFO, "Architecture: " ARCH);
     sg_version_os(log);
     sg_version_platform(log);
     sg_version_libjpeg(log);

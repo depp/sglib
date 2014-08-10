@@ -223,13 +223,13 @@ sg_path_checkdir(const pchar *path)
     r = access(path, R_OK | X_OK);
     if (r) {
         e = errno;
-        if (LOG_INFO >= logger->level) {
-            sg_logf(logger, LOG_INFO,
+        if (SG_LOG_INFO >= logger->level) {
+            sg_logf(logger, SG_LOG_INFO,
                     "path skipped: %s (%s)", path, strerror(e));
         }
         return 0;
     } else {
-        sg_logf(logger, LOG_INFO, "path: %s", path);
+        sg_logf(logger, SG_LOG_INFO, "path: %s", path);
         return 1;
     }
 }

@@ -102,7 +102,7 @@ sg_file_open(const char *path, size_t pathlen, int flags,
             extlen = (unsigned) strlen(extq);
         }
         if (nexts == MAX_EXTENSIONS) {
-            sg_logs(sg_logger_get(NULL), LOG_ERROR,
+            sg_logs(sg_logger_get(NULL), SG_LOG_ERROR,
                     "list of extensions is too long");
             break;
         }

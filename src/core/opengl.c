@@ -1,8 +1,10 @@
 /* Copyright 2012-2013 Dietrich Epp <depp@zdome.net>.
    This file is part of SGLib.  SGLib is licensed under the terms of the
    2-clause BSD license.  For more information, see LICENSE.txt. */
-#include "sg/opengl.h"
+#include "sg/error.h"
 #include "sg/log.h"
+#include "sg/opengl.h"
+#include <stdarg.h>
 #include <stdio.h>
 
 struct sg_opengl_error {
@@ -27,26 +29,41 @@ sg_opengl_logerror(const char *where, struct sg_logger *logger, GLenum code)
     int i, n = sizeof(SG_ERROR_OPENGL_NAMES) / sizeof(*SG_ERROR_OPENGL_NAMES);
     for (i = 0; i < n; i++) {
         if (SG_ERROR_OPENGL_NAMES[i].code == code) {
-            sg_logf(logger, LOG_ERROR, "%s: OpenGL error GL_%s",
+            sg_logf(logger, SG_LOG_ERROR, "%s: OpenGL error GL_%s",
                     where, SG_ERROR_OPENGL_NAMES[i].name);
             return;
         }
     }
-    sg_logf(logger, LOG_ERROR, "%s: OpenGL error 0x%04x",
+    sg_logf(logger, SG_LOG_ERROR, "%s: OpenGL error 0x%04x",
             where, code);
 }
 
 int
-sg_opengl_checkerror(const char *where)
+sg_opengl_checkerror(const char *msg, ...)
 {
     struct sg_logger *logger;
-    GLenum error = glGetError();
+    va_list ap;
+    char where[256];
+    GLenum error;
+
+    error = glGetError();
     if (!error)
         return 0;
+
+    va_start(ap, msg);
+    where[0] = '\0';
+#if defined(_MSC_VER)
+    vsnprintf_s(where, sizeof(where), _TRUNCATE, msg, ap);
+#else
+    vsnprintf(where, sizeof(where), msg, ap);
+#endif
+    va_end(ap);
+
     logger = sg_logger_get("opengl");
     do {
         sg_opengl_logerror(where, logger, error);
         error = glGetError();
     } while (error);
+
     return 1;
 }

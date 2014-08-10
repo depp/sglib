@@ -1,21 +1,12 @@
 /* Copyright 2012-2013 Dietrich Epp.
    This file is part of SGLib.  SGLib is licensed under the terms of the
    2-clause BSD license.  For more information, see LICENSE.txt. */
-#include "config.h"
-#include "keycode/keycode.h"
-#include "sg/audio_pcm.h"
-#include "sg/audio_system.h"
-#include "sg/clock.h"
 #include "sg/entry.h"
-#include "sg/event.h"
-#include "sg/file.h"
 #include "sg/log.h"
 #include "sg/rand.h"
 #include "sg/version.h"
 #include "private.h"
-
-struct sg_sys_state sg_sst;
-static struct sg_logger *sg_log_video;
+#include <stdio.h>
 
 void
 sg_sys_init(void)
@@ -23,14 +14,13 @@ sg_sys_init(void)
     struct sg_logger *log;
     sg_log_init();
     log = sg_logger_get("init");
-    if (LOG_INFO >= log->level)
+    if (SG_LOG_INFO >= log->level)
         sg_version_print();
     sg_path_init();
     sg_clock_init();
     sg_rand_seed(&sg_rand_global, 1);
-    sg_audio_sys_init();
+    sg_audio_init();
     sg_game_init();
-    sg_log_video = sg_logger_get("video");
 }
 
 void
@@ -40,54 +30,41 @@ sg_sys_getinfo(struct sg_game_info *info)
     info->min_height = 180;
     info->default_width = 1280;
     info->default_height = 720;
-    info->min_aspect = SG_GAME_ASPECT_SCALE * 5 / 4;
-    info->max_aspect = SG_GAME_ASPECT_SCALE * 2;
+    info->min_aspect = 1.25;
+    info->max_aspect = 2.0;
     sg_game_getinfo(info);
+    if (info->min_width < 1)
+        info->min_width = 1;
+    if (info->min_height < 1)
+        info->min_height = 1;
+    if (info->default_width < info->min_width)
+        info->default_width = info->min_width;
+    if (info->default_height < info->min_height)
+        info->default_height = info->min_height;
+    if (info->min_aspect < 0.125)
+        info->min_aspect = 0.125;
+    if (info->max_aspect > 8.0)
+        info->max_aspect = 8.0;
 }
 
 void
-sg_sys_event(union sg_event *evt)
+sg_sys_abortf(const char *msg, ...)
 {
-    const char *status;
-    switch (evt->type) {
-    default:
-        break;
-
-    case SG_EVENT_RESIZE:
-        sg_sst.width = evt->resize.width;
-        sg_sst.height = evt->resize.height;
-        break;
-
-    case SG_EVENT_STATUS:
-        sg_sst.status = evt->status.status;
-        if (LOG_INFO >= sg_log_video->level) {
-            if (sg_sst.status & SG_STATUS_VISIBLE) {
-                if (sg_sst.status & SG_STATUS_FULLSCREEN)
-                    status = "fullscreen";
-                else
-                    status = "windowed";
-            } else {
-                status = "hidden";
-            }
-            sg_logf(sg_log_video, LOG_INFO, "Status: %s", status);
-        }
-        break;
-    }
-    sg_game_event(evt);
+    va_list ap;
+    va_start(ap, msg);
+    sg_sys_abortv(msg, ap);
+    va_end(ap);
 }
 
 void
-sg_sys_draw(void)
+sg_sys_abortv(const char *msg, va_list ap)
 {
-    unsigned msec, n;
-    (void) n;
-
-    msec = sg_clock_get() - sg_sst.tick_offset;
-    sg_game_draw(0, 0, sg_sst.width, sg_sst.height, msec);
-}
-
-void
-sg_sys_destroy(void)
-{
-    sg_game_destroy();
+    char buf[512];
+    buf[0] = '\0';
+#if defined(_MSC_VER)
+    vsnprintf_s(buf, sizeof(buf), _TRUNCATE, msg, ap);
+#else
+    vsnprintf(buf, sizeof(buf), msg, ap);
+#endif
+    sg_sys_abort(buf);
 }
