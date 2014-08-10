@@ -17,11 +17,11 @@ sg_error_clobber(const struct sg_error_domain *dom,
 {
     struct sg_logger *logger = sg_logger_get(NULL);
     if (code)
-        sg_logf(logger, LOG_ERROR,
+        sg_logf(logger, SG_LOG_ERROR,
                 "warning: error discarded: %s (%s %ld)\n",
                 msg, dom->name, code);
     else
-        sg_logf(logger, LOG_ERROR,
+        sg_logf(logger, SG_LOG_ERROR,
                 "warning: error discarded: %s (%s)\n",
                 msg, dom->name);
 }
@@ -114,9 +114,12 @@ const struct sg_error_domain SG_ERROR_DATA = { "data" };
 const struct sg_error_domain SG_ERROR_CANCEL = { "cancel" };
 
 void
-sg_error_invalid(struct sg_error **err)
+sg_error_invalid(struct sg_error **err,
+                 const char *function, const char *argument)
 {
-    sg_error_sets(err, &SG_ERROR_INVALID, 0, "invalid argument");
+    sg_error_setf(err, &SG_ERROR_INVALID, 0,
+                  "invalid argument: function=%s argument=%s",
+                  function, argument);
 }
 
 void
