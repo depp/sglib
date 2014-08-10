@@ -7,91 +7,141 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-/* A configuration file is a collection of variables.  Conceptually,
-   each variable is identified by a qualified name and has a value
-   which is a string.  The periods in a qualified name separate the
-   section name from the variable name.  For example, A.B.C is a
-   variable named C in section A.B.  Configuration files use a variant
-   of INI file format, which is not really standardized.  */
+/**
+ * @file sg/configfile.h
+ *
+ * @brief Configuration files.
+ *
+ * A configuration file is a collection of variables.  Conceptually,
+ * each variable is identified by a qualified name and has a value
+ * which is a string.  The periods in a qualified name separate the
+ * section name from the variable name.  For example, A.B.C is a
+ * variable named C in section A.B.
+ */
 
-/* Entries in a config file are sections allocated with malloc.  The
-   name of each section is also allocated with malloc and is shared
-   with the section structure.  */
-struct configfile {
+/**
+ * @brief A configuration file.
+ */
+struct sg_configfile {
+    /**
+     * @brief The configuration sections, private.
+     *
+     * Entries in a config file are sections allocated with malloc.
+     * The name of each section is also allocated with malloc and is
+     * shared with the section structure.
+     */
     struct pce_hashtable sect;
 };
 
-/* Entries in a config file section have each key and value set to
-   nul-terminated strings allocated with malloc.  These are all owned
-   by the section.  */
-struct configfile_section {
+/**
+ * @brief A configuration section.
+ *
+ * Entries in a config file section have each key and value set to
+ * nul-terminated strings allocated with malloc.  These are all owned
+ * by the section.
+ */
+struct sg_configfile_section {
+    /** @brief The section name, owned by the section.  */
     char *name;
+    /** @brief The section variables, owned by the section.  */
     struct pce_hashtable var;
 };
 
-/* Initialize an empty config file.  */
+/**
+ * @brief Initialize a configuration file.
+ *
+ * @param file The configuration file.
+ */
 void
-configfile_init(struct configfile *f);
+sg_configfile_init(struct sg_configfile *file);
 
-/* Destroy a config file.  */
+/**
+ * @brief Destroy a configuration file.
+ *
+ * @param file The configuraiton file.
+ */
 void
-configfile_destroy(struct configfile *f);
+sg_configfile_destroy(struct sg_configfile *file);
 
-/* Get a variable from a config file, or return NULL if the variable
-   does not exist.  */
+/**
+ * @brief Get a variable from a configuration file.
+ *
+ * @param file The configuration file.
+ * @param section The section name.
+ * @param name The variable name.
+ * @return The variable value, or NULL if it does not exist.
+ */
 const char *
-configfile_get(struct configfile *f, const char *section,
-               const char *name);
+sg_configfile_get(struct sg_configfile *file, const char *section,
+                  const char *name);
 
-/* Set a variable in a config file and return 0, or return ENOMEM if
-   out of memory..  */
+/**
+ * @brief Set a variable in a configuration file.
+ *
+ * @param file The configuration file.
+ * @param section The section name.
+ * @param name The variable name.
+ * @param value The variable value, a NUL-terminated UTF-8 string.
+ * @return Zero for success, or nonzero if out of memory.
+ */
 int
-configfile_set(struct configfile *f, const char *section,
-               const char *name, const char *value);
+sg_configfile_set(struct sg_configfile *file, const char *section,
+                  const char *name, const char *value);
 
-/* Erase a variable from a configuration file.  If the variable is the
-   only variable in its section, delete the section.  */
+/**
+ * @brief Erase a variable from a configuration file.
+ *
+ * If the variable is the only variable in its section, delete the section.
+ *
+ * @param file The configuration file.
+ * @param section The section name.
+ * @param name The variable name.
+ */
 void
-configfile_remove(struct configfile *f,
-                  const char *section, const char *name);
+sg_configfile_remove(struct sg_configfile *file,
+                     const char *section, const char *name);
 
-/* ===== Low-level functions ===== */
+/**
+ * @brief Get a section from a configuration file, creating it if necessary.
+ *
+ * @param file The configuration file.
+ * @param name The section name.
+ * @return The section, or NULL if out of memory.
+ */
+struct sg_configfile_section *
+sg_configfile_insert_section(struct sg_configfile *file, const char *name);
 
-/* Get a section in a config file, creating it if necessary.  Return
-   NULL if out of memory.  */
-struct configfile_section *
-configfile_insert_section(struct configfile *f, const char *name);
-
-/* Erase the given section from the configuration file.  */
+/**
+ * @brief Erase a section from a configuration file.
+ *
+ * @param file The configuration file.
+ * @param section The configuration section.
+ */
 void
-configfile_erase_section(struct configfile *f,
-                         struct configfile_section *s);
+sg_configfile_erase_section(struct sg_configfile *file,
+                            struct sg_configfile_section *section);
 
-/* Set a variable in a config file section and return 0, or return
-   ENOMEM if out of memory.  */
+/**
+ * @brief Set a variable in a configuration section.
+ *
+ * @param section The configuration section.
+ * @param name The variable name.
+ * @param value The variable value, a NUL-terminated UTF-8 string.
+ * @return Zero for success, or nonzero if out of memory.
+ */
 int
-configfile_insert_var(struct configfile_section *s,
-                      const char *name, const char *value);
+sg_configfile_insert_var(struct sg_configfile_section *section,
+                         const char *name, const char *value);
 
-/* Erase the given variable from the config file section.  */
+/**
+ * @brief Erase a variable from a configuration section.
+ *
+ * @param section The configuration section.
+ * @param entry The hash bucket for the variable.
+ */
 void
-configfile_erase_var(struct configfile_section *s,
-                     struct pce_hashtable_entry *e);
-
-/* ===== I/O functions ===== */
-
-/* Read a configuration file.  Return 0 if successful or if the file
-   does not exist, an error code if an error occured, or -1 if error
-   in the file syntax caused the operation to abort.  Duplicate
-   variables will be discarded with a warning, the first copy of each
-   variable will be kept.  */
-int
-configfile_read(struct configfile *f, const char *path);
-
-/* Write a configuration file and return 0, or return an error
-   code.  */
-int
-configfile_write(struct configfile *f, const char *path);
+sg_configfile_erase_var(struct sg_configfile_section *section,
+                        struct pce_hashtable_entry *entry);
 
 #ifdef __cplusplus
 }

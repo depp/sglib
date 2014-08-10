@@ -8,46 +8,46 @@
 #include <errno.h>
 
 void
-configfile_init(struct configfile *f)
+sg_configfile_init(struct sg_configfile *file)
 {
-    pce_hashtable_init(&f->sect);
+    pce_hashtable_init(&file->sect);
 }
 
 static void
-configfile_section_free(struct configfile_section *s)
+sg_configfile_section_free(struct sg_configfile_section *section)
 {
     struct pce_hashtable_entry
-        *p = s->var.contents, *e = p + s->var.capacity;
+        *p = section->var.contents, *e = p + section->var.capacity;
     for (; p != e; ++p) {
         if (p->key) {
             free(p->key);
             free(p->value);
         }
     }
-    free(s->var.contents);
-    free(s->name);
-    free(s);
+    free(section->var.contents);
+    free(section->name);
+    free(section);
 }
 
 void
-configfile_destroy(struct configfile *f)
+sg_configfile_destroy(struct sg_configfile *file)
 {
     struct pce_hashtable_entry
-        *p = f->sect.contents, *e = p + f->sect.capacity;
+        *p = file->sect.contents, *e = p + file->sect.capacity;
     for (; p != e; ++p) {
         if (p->key)
-            configfile_section_free(p->value);
+            sg_configfile_section_free(p->value);
     }
-    free(f->sect.contents);
+    free(file->sect.contents);
 }
 
 const char *
-configfile_get(struct configfile *f, const char *section,
-               const char *name)
+sg_configfile_get(struct sg_configfile *file, const char *section,
+                  const char *name)
 {
     struct pce_hashtable_entry *e;
-    struct configfile_section *s;
-    e = pce_hashtable_get(&f->sect, section);
+    struct sg_configfile_section *s;
+    e = pce_hashtable_get(&file->sect, section);
     if (!e)
         return NULL;
     s = e->value;
@@ -58,44 +58,44 @@ configfile_get(struct configfile *f, const char *section,
 }
 
 int
-configfile_set(struct configfile *f, const char *section,
-               const char *name, const char *value)
+sg_configfile_set(struct sg_configfile *file, const char *section,
+                  const char *name, const char *value)
 {
-    struct configfile_section *s;
-    s = configfile_insert_section(f, section);
+    struct sg_configfile_section *s;
+    s = sg_configfile_insert_section(file, section);
     if (!s)
-        return ENOMEM;
-    return configfile_insert_var(s, name, value);
+        return -1;
+    return sg_configfile_insert_var(s, name, value);
 }
 
 void
-configfile_remove(struct configfile *f,
-                  const char *section, const char *name)
+sg_configfile_remove(struct sg_configfile *file,
+                     const char *section, const char *name)
 {
     struct pce_hashtable_entry *se, *ve;
-    struct configfile_section *s;
-    se = pce_hashtable_get(&f->sect, section);
+    struct sg_configfile_section *s;
+    se = pce_hashtable_get(&file->sect, section);
     if (!se)
         return;
     s = se->value;
     ve = pce_hashtable_get(&s->var, name);
     if (!ve)
         return;
-    configfile_erase_var(s, ve);
+    sg_configfile_erase_var(s, ve);
     if (!s->var.size) {
-        configfile_section_free(s);
-        pce_hashtable_erase(&f->sect, se);
+        sg_configfile_section_free(s);
+        pce_hashtable_erase(&file->sect, se);
     }
 }
 
-struct configfile_section *
-configfile_insert_section(struct configfile *f, const char *name)
+struct sg_configfile_section *
+sg_configfile_insert_section(struct sg_configfile *file, const char *name)
 {
     struct pce_hashtable_entry *e;
-    struct configfile_section *s;
+    struct sg_configfile_section *s;
     char *nname;
     size_t len;
-    e = pce_hashtable_insert(&f->sect, (char *) name);
+    e = pce_hashtable_insert(&file->sect, (char *) name);
     if (!e)
         return NULL;
     if (e->value)
@@ -103,13 +103,13 @@ configfile_insert_section(struct configfile *f, const char *name)
     len = strlen(name);
     nname = malloc(len + 1);
     if (!nname) {
-        pce_hashtable_erase(&f->sect, e);
+        pce_hashtable_erase(&file->sect, e);
         return NULL;
     }
     memcpy(nname, name, len + 1);
     s = malloc(sizeof(*s));
     if (!s) {
-        pce_hashtable_erase(&f->sect, e);
+        pce_hashtable_erase(&file->sect, e);
         free(nname);
         return NULL;
     }
@@ -121,35 +121,35 @@ configfile_insert_section(struct configfile *f, const char *name)
 }
 
 void
-configfile_erase_section(struct configfile *f,
-                         struct configfile_section *s)
+sg_configfile_erase_section(struct sg_configfile *file,
+                            struct sg_configfile_section *section)
 {
     struct pce_hashtable_entry *e;
-    e = pce_hashtable_get(&f->sect, s->name);
+    e = pce_hashtable_get(&file->sect, section->name);
     if (!e)
         return;
-    assert(e->value == s);
-    configfile_section_free(s);
-    pce_hashtable_erase(&f->sect, e);
+    assert(e->value == section);
+    sg_configfile_section_free(section);
+    pce_hashtable_erase(&file->sect, e);
 }
 
 int
-configfile_insert_var(struct configfile_section *s,
-                      const char *name, const char *value)
+sg_configfile_insert_var(struct sg_configfile_section *section,
+                         const char *name, const char *value)
 {
     struct pce_hashtable_entry *e;
     char *nvalue, *nname;
     size_t vlen, nlen;
 
-    e = pce_hashtable_insert(&s->var, (char *) name);
+    e = pce_hashtable_insert(&section->var, (char *) name);
     if (!e)
-        return ENOMEM;
+        return -1;
     if (!e->value) {
         nlen = strlen(name);
         nname = malloc(nlen + 1);
         if (!nname) {
-            pce_hashtable_erase(&s->var, e);
-            return ENOMEM;
+            pce_hashtable_erase(&section->var, e);
+            return -1;
         }
         memcpy(nname, name, nlen + 1);
         e->key = nname;
@@ -161,9 +161,9 @@ configfile_insert_var(struct configfile_section *s,
     if (!nvalue) {
         if (nname) {
             free(nname);
-            pce_hashtable_erase(&s->var, e);
+            pce_hashtable_erase(&section->var, e);
         }
-        return ENOMEM;
+        return -1;
     }
     memcpy(nvalue, value, vlen + 1);
     if (e->value)
@@ -173,10 +173,10 @@ configfile_insert_var(struct configfile_section *s,
 }
 
 void
-configfile_erase_var(struct configfile_section *s,
-                     struct pce_hashtable_entry *e)
+sg_configfile_erase_var(struct sg_configfile_section *section,
+                        struct pce_hashtable_entry *entry)
 {
-    free(e->key);
-    free(e->value);
-    pce_hashtable_erase(&s->var, e);
+    free(entry->key);
+    free(entry->value);
+    pce_hashtable_erase(&section->var, entry);
 }
