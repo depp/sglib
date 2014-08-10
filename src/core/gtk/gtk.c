@@ -16,7 +16,7 @@
 #include "sg/event.h"
 #include "sg/opengl.h"
 #include "sg/version.h"
-#include "../common/private.h"
+#include "../private.h"
 
 /* The Gtk headers generate a warning.  */
 #if defined(HAVE_DPUSH)

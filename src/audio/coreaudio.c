@@ -1,7 +1,7 @@
 /* Copyright 2012 Dietrich Epp.
    This file is part of SGLib.  SGLib is licensed under the terms of the
    2-clause BSD license.  For more information, see LICENSE.txt. */
-#include "../core/common/clock_impl.h"
+#include "../core/clock_impl.h"
 #include "sg/audio_mixdown.h"
 #include "sg/audio_system.h"
 #include "sg/clock.h"

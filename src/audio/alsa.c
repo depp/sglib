@@ -3,7 +3,7 @@
    2-clause BSD license.  For more information, see LICENSE.txt. */
 #define _XOPEN_SOURCE 600
 
-#include "../core/common/clock_impl.h"
+#include "../core/clock_impl.h"
 #include "libpce/byteorder.h"
 #include "sg/audio_mixdown.h"
 #include "sg/audio_system.h"

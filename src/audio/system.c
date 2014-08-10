@@ -4,7 +4,7 @@
 #include "sg/audio_system.h"
 #include "sg/log.h"
 #include "sysprivate.h"
-#include "../core/common/private.h"
+#include "../core/private.h"
 
 struct sg_audio_system sg_audio_system_global;
 
