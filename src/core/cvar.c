@@ -1,26 +1,16 @@
-/* Copyright 2012 Dietrich Epp.
+/* Copyright 2012-2014 Dietrich Epp.
    This file is part of SGLib.  SGLib is licensed under the terms of the
    2-clause BSD license.  For more information, see LICENSE.txt. */
 #include "sg/cvar.h"
 #include "sg/configfile.h"
 
-#include <float.h>
 #include <limits.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#ifdef _MSC_VER
-static const unsigned uinfinity = 0x7f800000u;
-static const unsigned unan = 0x7fc00000;
-#define INFINITY (*(const float *) &uinfinity)
-#define NAN (*(const float *) &unan)
-#define isfinite(x) _finite(x)
-#define isnan(x) _isnan(x)
-#endif
-
-static struct configfile sg_cvar_conf, sg_cvar_arg;
+static struct sg_configfile sg_cvar_conf, sg_cvar_arg;
 
 static int
 to_lower(int c)
@@ -31,7 +21,7 @@ to_lower(int c)
 }
 
 void
-sg_cvar_addarg(const char *section, const char *name, const char *v)
+sg_cvar_addarg(const char *section, const char *name, const char *value)
 {
     char buf[128];
     const char *p, *sptr, *nptr, *vptr;
@@ -39,18 +29,18 @@ sg_cvar_addarg(const char *section, const char *name, const char *v)
     int r;
 
     if (!name) {
-        p = strchr(v, '=');
+        p = strchr(value, '=');
         if (!p)
             goto invalid;
-        len = p - v;
+        len = p - value;
         if (len >= sizeof(buf))
             goto invalid;
-        memcpy(buf, v, len);
+        memcpy(buf, value, len);
         buf[len] = '\0';
         vptr = p + 1;
         nptr = buf;
     } else {
-        vptr = v;
+        vptr = value;
         nptr = name;
     }
 
@@ -71,7 +61,7 @@ sg_cvar_addarg(const char *section, const char *name, const char *v)
         sptr = section;
     }
 
-    r = configfile_set(&sg_cvar_arg, sptr, nptr, vptr);
+    r = sg_configfile_set(&sg_cvar_arg, sptr, nptr, vptr);
     if (r) { }
     return;
 
@@ -79,74 +69,63 @@ invalid:
     return;
 }
 
-/*
 void
-sg_cvar_load(void)
-{
-    configfile_destroy(&sg_cvar_conf);
-    configfile_init(&sg_cvar_conf);
-    configfile_read(...);
-}
-*/
-
-void
-sg_cvar_sets(const char *section, const char *name, const char *v)
+sg_cvar_sets(const char *section, const char *name, const char *value)
 {
     int r;
-    r = configfile_set(&sg_cvar_conf, section, name, v);
+    r = sg_configfile_set(&sg_cvar_conf, section, name, value);
     if (r) { }
-    configfile_remove(&sg_cvar_arg, section, name);
+    sg_configfile_remove(&sg_cvar_arg, section, name);
 }
 
 int
-sg_cvar_gets(const char *section, const char *name, const char **v)
+sg_cvar_gets(const char *section, const char *name, const char **value)
 {
     const char *r;
-    r = configfile_get(&sg_cvar_arg, section, name);
+    r = sg_configfile_get(&sg_cvar_arg, section, name);
     if (!r)
-        r = configfile_get(&sg_cvar_conf, section, name);
+        r = sg_configfile_get(&sg_cvar_conf, section, name);
     if (!r)
         return 0;
-    *v = r;
+    *value = r;
     return 1;
 }
 
 void
-sg_cvar_seti(const char *section, const char *name, int v)
+sg_cvar_seti(const char *section, const char *name, int value)
 {
-    sg_cvar_setl(section, name, v);
+    sg_cvar_setl(section, name, value);
 }
 
 int
-sg_cvar_geti(const char *section, const char *name, int *v)
+sg_cvar_geti(const char *section, const char *name, int *value)
 {
     long l;
     if (!sg_cvar_getl(section, name, &l))
         return 0;
     if (l >= INT_MAX)
-        *v = INT_MAX;
+        *value = INT_MAX;
     else if (l <= INT_MIN)
-        *v = INT_MIN;
+        *value = INT_MIN;
     else
-        *v = l;
+        *value = l;
     return 1;
 }
 
 void
-sg_cvar_setl(const char *section, const char *name, long v)
+sg_cvar_setl(const char *section, const char *name, long value)
 {
     char buf[32];
 #if !defined(_WIN32)
-    snprintf(buf, sizeof(buf), "%ld", v);
+    snprintf(buf, sizeof(buf), "%ld", value);
 #else
-    _snprintf(buf, sizeof(buf), "%ld", v);
-    buf[sizeof(buf) - 1] = '\0';
+    _snprintf_s(buf, sizeof(buf), _TRUNCATE, "%ld", value);
 #endif
     sg_cvar_sets(section, name, buf);
 }
 
 int
-sg_cvar_getl(const char *section, const char *name, long *v)
+sg_cvar_getl(const char *section, const char *name, long *value)
 {
     char *e;
     char const *s;
@@ -159,19 +138,19 @@ sg_cvar_getl(const char *section, const char *name, long *v)
     l = strtol(s, &e, 0);
     if (*e)
         return 0;
-    *v = l;
+    *value = l;
     return 1;
 }
 
 void
-sg_cvar_setb(const char *section, const char *name, int v)
+sg_cvar_setb(const char *section, const char *name, int value)
 {
-    sg_cvar_sets(section, name, v ? "yes" : "no");
+    sg_cvar_sets(section, name, value ? "yes" : "no");
 }
 
 /* Recognizes true/false, yes/no, on/off */
 int
-sg_cvar_getb(const char *section, const char *name, int *v)
+sg_cvar_getb(const char *section, const char *name, int *value)
 {
     const char *s;
     size_t l;
@@ -219,36 +198,34 @@ sg_cvar_getb(const char *section, const char *name, int *v)
 
     if (b == 2)
         return 0;
-    *v = b;
+    *value = b;
     return 1;
 }
 
 void
-sg_cvar_setd(const char *section, const char *name, double v)
+sg_cvar_setd(const char *section, const char *name, double value)
 {
     char buf[64];
-    if (isfinite(v)) {
+    if (isfinite(value)) {
 #if !defined(_WIN32)
-        snprintf(buf, sizeof(buf), "%.17g", v);
+        snprintf(buf, sizeof(buf), "%.17g", value);
 #else
-        _snprintf(buf, sizeof(buf), "%.17g", v);
+        _snprintf(buf, sizeof(buf), "%.17g", value);
         buf[sizeof(buf) - 1] = 0;
 #endif
         sg_cvar_sets(section, name, buf);
-    } else if (isnan(v)) {
+    } else if (isnan(value)) {
         sg_cvar_sets(section, name, "nan");
     } else {
-        sg_cvar_sets(section, name, v > 0 ? "+inf" : "-inf");
+        sg_cvar_sets(section, name, value > 0 ? "+inf" : "-inf");
     }
 }
 
 int
-sg_cvar_getd(const char *section, const char *name, double *v)
+sg_cvar_getd(const char *section, const char *name, double *value)
 {
     const char *s;
-    size_t l;
-    unsigned i, neg;
-    char buf[8], *p;
+    char *p;
     double d;
 
     if (!sg_cvar_gets(section, name, &s))
@@ -256,36 +233,9 @@ sg_cvar_getd(const char *section, const char *name, double *v)
     if (!*s)
         return 0;
 
-    l = strlen(s);
-    if (l <= 4) {
-        for (i = 0; i < l; ++i)
-            buf[i] = to_lower(s[i]);
-        buf[l] = '\0';
-        p = buf;
-        if (*p == '+') {
-            p++;
-            l--;
-            neg = 0;
-        } else if (*p == '-') {
-            p++;
-            l--;
-            neg = 1;
-        } else {
-            neg = 0;
-        }
-        if (!strcmp(p, "nan")) {
-            *v = NAN;
-            return 1;
-        }
-        if (!strcmp(p, "inf")) {
-            *v = neg ? -INFINITY : INFINITY;
-            return 1;
-        }
-    }
-
     d = strtod(s, &p);
     if (*p)
         return 0;
-    *v = d;
+    *value = d;
     return 1;
 }
