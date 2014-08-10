@@ -1,0 +1,64 @@
+\documentclass[12pt,letterpaper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{amssymb}
+
+\DeclareMathOperator{\Prob}{P}
+\DeclareMathOperator{\E}{E}
+\DeclareMathOperator{\n}{n}
+\DeclareMathOperator{\erf}{erf}
+
+\title{Real-time event mapping}
+\author{Dietrich Epp}
+\date{August 7, 2014}
+\begin{document}
+\maketitle
+
+Real-time mixers are fed a stream of timestamped events, and must map the timestamps to sample positions in consecutive timestamped output buffers.
+A naïve solution is to map each timestamp to the directly corresponding output sample position.
+However, events corresponding to a buffer may be received by the time the buffer must be rendered.
+A simple solution is to delay those events until they are received, but this will affect the relative timing of different events.
+Another simple solution is to delay output until the events are received, but this will cause gaps in audio playback.
+Our solution is to automatically adjust event delay to maintain relative timing while minimizing delay and jitter.
+
+In a stream of events, the \textit{commit time} is the oldest timestamp at which new events may yet be received.
+Events from before the commit time may be rendered to output without affecting relative timing.
+
+Let output buffer $t \in \mathbb{Z}$ contain audio with sample positions $t - 1\le y < t$, and let $c_t$ be the current commit time when buffer $t$ is rendered.
+Our goal is to create a function $f$ mapping input timestamps to sample positions, with the following properties:
+\begin{itemize}
+\item It is unlikely that $f(c_t) < t$, as this would mean that events received in the future should have been placed in previously rendered buffers.
+\item $f$ is continuous, monotonically increasing, and piecewise linear.
+\end{itemize}
+
+\section*{Modeling and prediction}
+
+We are lazy, so we model the commit timestamp for buffer $t$ as
+\begin{equation*}
+  C_t = \alpha + \beta t + \epsilon_t,
+\end{equation*}
+where the error $\epsilon_t$ is an iid random normal variable with variance $\sigma^2$.
+The algorithm samples $N$ commit times $c_1,\dotsc,c_N$, and uses the commit times to construct the next segment of $f$.
+
+We can fit the $(x_t, t)$ points to a linear function,
+\begin{equation*}
+  g(x) = a + bx,
+\end{equation*}
+giving parameters
+\begin{align*}
+  b & = \frac{\E[x_t t] - \E[x_t]\E[t]}{\E[x^2] - \E[x]^2}, \\
+  a & = \E[t] - b\E[x_t],
+\end{align*}
+where $\E[X]$ gives the expected value of $X$ taken from the samples.
+
+We then add a delay $\delta$ to $g$, tuned to give the desired probability $p$ that $g(x_t) + \delta < t$.
+Using the sample variance as an estimate for the true variance, we choose
+\begin{equation*}
+  \delta = \sqrt{s_{N}^2} \erf^{-1}(p).
+\end{equation*}
+
+A point $(x, g(x)+\delta)$ is then sampled and linearly interpolated to form $f$.
+These points can be filtered using an IIR filter, to reduce the effect of noise and remove sudden changes in the slope of $f$.
+
+\end{document}
+
