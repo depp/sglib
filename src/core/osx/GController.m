@@ -3,29 +3,14 @@
    2-clause BSD license.  For more information, see LICENSE.txt. */
 #import "GController.h"
 #import "GDisplay.h"
-#import "sg/audio_system.h"
+#import "../private.h"
 #import "sg/entry.h"
 #import "sg/cvar.h"
+#import "sg/entry.h"
 #import "sg/error.h"
 #import "sg/version.h"
 
 static GController *gController;
-
-void
-sg_platform_failf(const char *fmt, ...)
-{
-    va_list ap;
-    va_start(ap, fmt);
-    sg_platform_failv(fmt, ap);
-    va_end(ap);
-}
-
-void
-sg_platform_failv(const char *fmt, va_list ap)
-{
-    vfprintf(stderr, fmt, ap);
-    abort();
-}
 
 void
 sg_platform_faile(struct sg_error *err)
@@ -91,7 +76,6 @@ sg_version_platform(struct sg_logger *sp)
         sg_cvar_addarg(NULL, [key UTF8String], [value UTF8String]);
     }
     sg_sys_init();
-    sg_audio_sys_pstart();
     sg_sys_getinfo(&gameinfo);
     GDisplay *d = [[[GDisplay alloc] init] autorelease];
     [d setDefaultSize:NSMakeSize(gameinfo.default_width, gameinfo.default_height)];

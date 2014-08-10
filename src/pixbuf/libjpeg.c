@@ -94,7 +94,7 @@ sg_pixbuf_loadjpeg(struct sg_pixbuf *pbuf, const void *data, size_t len,
 
     default:
         sg_error_data(err, "JPEG");
-        sg_logf(sg_logger_get("image"), LOG_ERROR,
+        sg_logf(sg_logger_get("image"), SG_LOG_ERROR,
                 "JPEG has unknown color space");
         goto error;
     }

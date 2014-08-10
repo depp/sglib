@@ -7,7 +7,7 @@
 #include "sg/error.h"
 #include "sg/log.h"
 #include "sysprivate.h"
-#include "../core/clock_impl.h"
+#include "../core/common/clock_impl.h"
 #include <assert.h>
 #include <string.h>
 

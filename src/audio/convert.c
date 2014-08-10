@@ -1,7 +1,7 @@
 /* Copyright 2013 Dietrich Epp.
    This file is part of SGLib.  SGLib is licensed under the terms of the
    2-clause BSD license.  For more information, see LICENSE.txt. */
-#include "sg/audio_pcm.h"
+#include "sg/audio_buffer.h"
 #include "sg/defs.h"
 #include "sg/error.h"
 #include <assert.h>
@@ -95,8 +95,9 @@ sg_audio_pcm_copy_f32(short *SG_RESTRICT dest, const void *SG_RESTRICT src,
 }
 
 int
-sg_audio_pcm_convert(struct sg_audio_pcm *buf, sg_audio_format_t format,
-                     struct sg_error **err)
+sg_audio_buffer_convert(struct sg_audio_buffer *buf,
+                        sg_audio_format_t format,
+                        struct sg_error **err)
 {
     size_t nsamp, osz, nsz;
     void *dest;

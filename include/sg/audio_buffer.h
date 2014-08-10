@@ -1,9 +1,8 @@
 /* Copyright 2012-2013 Dietrich Epp.
    This file is part of SGLib.  SGLib is licensed under the terms of the
    2-clause BSD license.  For more information, see LICENSE.txt. */
-#ifndef SG_AUDIO_PCM_H
-#define SG_AUDIO_PCM_H
-#include "libpce/atomic.h"
+#ifndef SG_AUDIO_BUFFER_H
+#define SG_AUDIO_BUFFER_H
 #include "libpce/attribute.h"
 #include "libpce/byteorder.h"
 #include <stddef.h>
@@ -11,32 +10,24 @@
 extern "C" {
 #endif
 struct sg_error;
-
 /**
- * @file sg/audio_pcm.h
+ * @file sg/audio_buffer.h
  *
  * @brief Audio PCM buffer.
  */
 
 /**
- * @brief List of filename extensions for audio files.
- *
- * See sg_file_open() for a description of the format.
- */
-extern const char SG_AUDIO_PCM_EXTENSIONS[];
-
-/**
  * @brief Minimum sample rate for audio samples, in hertz.
  */
-#define SG_AUDIO_PCM_MINRATE 8000
+#define SG_AUDIO_BUFFER_MINRATE 8000
 
 /**
  * @brief Maximum sample rate for audio samples, in hertz.
  */
-#define SG_AUDIO_PCM_MAXRATE 96000
+#define SG_AUDIO_BUFFER_MAXRATE 96000
 
 /**
- * @brief PCM data formats.
+ * @brief Audio PCM data formats.
  */
 typedef enum {
     /** @brief 8-bit unsigned samples */
@@ -112,8 +103,10 @@ sg_audio_format_size(sg_audio_format_t fmt)
 
 /**
  * @brief Audio PCM buffer.
+ *
+ * This structure may be copied or moved freely.
  */
-struct sg_audio_pcm {
+struct sg_audio_buffer {
     /**
      * @brief Memory region holding the sample data, which must be
      * freed with free().
@@ -156,7 +149,7 @@ struct sg_audio_pcm {
  * @brief Initialize a PCM buffer.
  */
 void
-sg_audio_pcm_init(struct sg_audio_pcm *buf);
+sg_audio_buffer_init(struct sg_audio_buffer *buf);
 
 /**
  * @brief Destroy a PCM buffer and free the associated memory.
@@ -166,142 +159,48 @@ sg_audio_pcm_init(struct sg_audio_pcm *buf);
  * the `alloc` and `data` fields, other fields will be unchanged.
  */
 void
-sg_audio_pcm_destroy(struct sg_audio_pcm *buf);
-
-/**
- * @brief Get a buffer containing the PCM data and destroy the PCM
- * buffer in the process.
- *
- * This function may or may not copy the PCM data, depending on the
- * state of the buffer.  This will only change the `alloc` and `data`
- * fields, other fields will be unchanged.
- *
- * @param buf The PCM buffer.  This buffer will be reset by this
- * operation.
- *
- * @param err On failure, the error object.
- *
- * @return On success, a pointer to a region of memory containing the
- * sample data from the PCM buffer, or `NULL` if region is empty.  The
- * caller is responsible for freeing the region with free().  On
- * failure, `NULL`.
- */
-void *
-sg_audio_pcm_detach(struct sg_audio_pcm *buf, struct sg_error **err);
-
-/**
- * @brief Load an audio file.
- *
- * The audio file format is automatically detected.
- *
- * This can return multiple buffers of audio with different settings
- * (sample rate, number of channels, etc.) because this can happen
- * with concatenated audio streams in Ogg files.  The resulting
- * buffers may alias the input data if it is flat PCM.
- *
- * @param buf On success, a pointer to an array of audio buffers.  The
- * array must be freed with free().
- * @param bufcount On success, the number of audio buffers.
- * @param data The data to load.
- * @param len The length of the data to load.
- * @param err On failure, the error.
- */
-int
-sg_audio_pcm_load(struct sg_audio_pcm **buf, size_t *bufcount,
-                  const void *data, size_t len,
-                  struct sg_error **err);
-
-/**
- * @brief Load a WAV file into the given buffer.
- *
- * The buffer may alias the file data.  The buffer should not be
- * initialized, and it will remain uninitialized on failure.
- */
-int
-sg_audio_pcm_loadwav(struct sg_audio_pcm *buf, const void *data, size_t len,
-                     struct sg_error **err);
-
-/**
- * @brief Load an Ogg file into an array of buffers.
- */
-int
-sg_audio_pcm_loadogg(struct sg_audio_pcm **buf, size_t *bufcount,
-                     const void *data, size_t len,
-                     struct sg_error **err);
+sg_audio_buffer_destroy(struct sg_audio_buffer *buf);
 
 /**
  * @brief Convert an audio buffer to the given format.
  *
  * This can only convert to signed 16-bit samples in native endian.
+ *
+ * @param buf The audio buffer.
+ * @param format The new sample format.
+ * @param err On failure, the error.
+ * @return Zero for success, nonzero for failure.
  */
 int
-sg_audio_pcm_convert(struct sg_audio_pcm *buf, sg_audio_format_t format,
-                     struct sg_error **err);
+sg_audio_buffer_convert(struct sg_audio_buffer *buf,
+                        sg_audio_format_t format,
+                        struct sg_error **err);
 
 /**
  * @brief Resample an audio buffer at the given sample rate.
  *
  * This can only convert 16-bit samples in native endian.
+ *
+ * @param buf The audio buffer.
+ * @param rate The new sample rate.
+ * @param err On failure, the error.
+ * @return Zero for success, nonzero for failure.
  */
 int
-sg_audio_pcm_resample(struct sg_audio_pcm *buf, int rate,
-                      struct sg_error **err);
+sg_audio_buffer_resample(struct sg_audio_buffer *buf,
+                         int rate,
+                         struct sg_error **err);
 
 /**
  * @brief Get the playing time of a buffer, in milliseconds.
+ *
+ * The result will always be rounded up.
+ *
+ * @param buf The audio buffer.
+ * @return The playing time, in milliseconds.
  */
 int
-sg_audio_pcm_playtime(struct sg_audio_pcm *buf);
-
-/**
- * @brief Reference-counted PCM buffer object.
- *
- * This is nothing more than a wrapper around a PCM buffer.
- */
-struct sg_audio_pcm_obj {
-    /**
-     * @private @brief Reference count.
-     */
-    pce_atomic_t refcount;
-
-    /**
-     * @brief PCM buffer data.
-     */
-    struct sg_audio_pcm buf;
-};
-
-/**
- * @brief Create a new audio PCM buffer object, or return null if out
- * of memory.
- */
-struct sg_audio_pcm_obj*
-sg_audio_pcm_obj_new(void);
-
-/**
- * @private @brief Free an audio PCM buffer object.
- */
-void
-sg_audio_pcm_obj_free_(struct sg_audio_pcm_obj *obj);
-
-/**
- * @brief Increment an audio PCM buffer object's reference count.
- */
-PCE_INLINE void
-sg_audio_pcm_obj_incref(struct sg_audio_pcm_obj *obj)
-{
-    pce_atomic_inc(&obj->refcount);
-}
-
-/**
- * @brief Decrement an audio PCM buffer object's reference count.
- */
-PCE_INLINE void
-sg_audio_pcm_obj_decref(struct sg_audio_pcm_obj *obj)
-{
-    int c = pce_atomic_fetch_add_acq_rel(&obj->refcount, -1);
-    if (c == 1)
-        sg_audio_pcm_obj_free_(obj);
-}
+sg_audio_buffer_playtime(struct sg_audio_buffer *buf);
 
 #ifdef __cplusplus
 }

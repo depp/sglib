@@ -6,13 +6,10 @@
 #define HAVE_DPUSH 1
 #endif
 
-#include "keycode/keycode.h"
 #include "keycode/keytable.h"
-#include "sg/audio_system.h"
 #include "sg/clock.h"
 #include "sg/cvar.h"
 #include "sg/entry.h"
-#include "sg/error.h"
 #include "sg/event.h"
 #include "sg/opengl.h"
 #include "sg/version.h"
@@ -32,128 +29,94 @@
 
 #include <signal.h>
 #include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
 
-static gint sg_timer;
-static int sg_window_width, sg_window_height;
-static int sg_update_size;
-static unsigned sg_gtk_status;
-static GtkWindow *sg_window;
-static int sg_glew_initted;
+struct sg_gtk {
+    /* Timer identifier for the redraw timer */
+    gint timer;
 
-static void
-quit(void)
+    /* Window size */
+    int width, height;
+
+    /* The game has been sent the current video state.  */
+    int init_sent;
+
+    /* Information about the viewport size is current.  */
+    int size_current;
+
+    /* The window status (SG_WINDOW_FULLSCREEN, etc.) */
+    unsigned window_status;
+
+    /* The main window.  */
+    GtkWindow *window;
+
+    /* The drawing area.  */
+    GtkWidget *area;
+};
+
+static struct sg_gtk sg_gtk;
+
+void
+sg_sys_quit(void)
 {
-    if (sg_timer > 0) {
-        g_source_remove(sg_timer);
-        sg_timer = 0;
+    if (sg_gtk.timer > 0) {
+        g_source_remove(sg_gtk.timer);
+        sg_gtk.timer = 0;
     }
     gtk_main_quit();
 }
 
-static void
-toggle_fullscreen(void)
-{
-    if (sg_gtk_status & SG_STATUS_VISIBLE) {
-        if (sg_gtk_status & SG_STATUS_FULLSCREEN)
-            gtk_window_unfullscreen(sg_window);
-        else
-            gtk_window_fullscreen(sg_window);
-    }
-}
-
 void
-sg_platform_quit(void)
+sg_sys_abort(const char *msg)
 {
-    quit();
-}
-
-void
-sg_platform_failf(const char *fmt, ...)
-{
-    va_list ap;
-    va_start(ap, fmt);
-    sg_platform_failv(fmt, ap);
-    va_end(ap);
-}
-
-void
-sg_platform_failv(const char *fmt, va_list ap)
-{
-    vfprintf(stderr, fmt, ap);
-    quit();
-}
-
-void
-sg_platform_faile(struct sg_error *err)
-{
-    if (err) {
-        if (err->code)
-            fprintf(stderr, "error: %s (%s %ld)\n",
-                    err->msg, err->domain->name, err->code);
-        else
-            fprintf(stderr, "error: %s (%s)\n",
-                    err->msg, err->domain->name);
-    } else {
-        fputs("error: an unknown error occurred\n", stderr);
-    }
-    quit();
-}
-
-__attribute__((noreturn))
-void
-sg_platform_return(void)
-{
+    fputs("Critical error, exiting.\n", stderr);
+    fputs(msg, stderr);
+    fputc('\n', stderr);
     exit(1);
 }
 
+/* Toggle whether the window is full-screen.  */
+static void
+sg_gtk_toggle_fullscreen(void)
+{
+    if (sg_gtk.window_status & SG_WINDOW_VISIBLE) {
+        if (sg_gtk.window_status & SG_WINDOW_FULLSCREEN)
+            gtk_window_unfullscreen(sg_gtk.window);
+        else
+            gtk_window_fullscreen(sg_gtk.window);
+    }
+}
+
+/* Handle window destroyed event.  This is called after the main
+   window is already closed.  */
 static gboolean
-handle_destroy(GtkWidget *widget, GdkEvent *event, void *user_data)
+sg_gtk_handle_destroy(GtkWidget *widget, GdkEvent *event, void *user_data)
 {
     (void) widget;
     (void) event;
     (void) user_data;
-    quit();
+    sg_sys_quit();
     return FALSE;
 }
 
+/* Handle a window exposed event, and redraw the window.  */
 static gboolean
-handle_expose(GtkWidget *area)
+sg_gtk_handle_expose(GtkWidget *area)
 {
-    struct sg_event_resize rsz;
-    GtkAllocation a;
+    union sg_event event;
     GdkGLContext *context = gtk_widget_get_gl_context(area);
     GdkGLDrawable *drawable = gtk_widget_get_gl_drawable(area);
-    GLenum err;
 
     if (!gdk_gl_drawable_gl_begin(drawable, context)) {
         fputs("Could not begin GL drawing\n", stderr);
         exit(1);
     }
 
-    if (!sg_glew_initted) {
-        sg_glew_initted = 1;
-        err = glewInit();
-        if (err != GLEW_OK) {
-            fprintf(stderr, "GLEW initialization failed: %s\n",
-                    glewGetErrorString(err));
-            exit(1);
-        }
+    if (!sg_gtk.init_sent) {
+        event.type = SG_EVENT_VIDEO_INIT;
+        sg_game_event(&event);
     }
 
-    if (sg_update_size) {
-        gtk_widget_get_allocation(area, &a);
-        if (a.width != sg_window_width || a.height != sg_window_height) {
-            sg_window_width = a.width;
-            sg_window_height = a.height;
-            rsz.type = SG_EVENT_RESIZE;
-            rsz.width = a.width;
-            rsz.height = a.height;
-            sg_sys_event((union sg_event *) &rsz);
-        }
-    }
-    sg_sys_draw();
+    sg_game_draw(sg_gtk.width, sg_gtk.height, sg_clock_get());
 
     if (gdk_gl_drawable_is_double_buffered(drawable))
         gdk_gl_drawable_swap_buffers(drawable);
@@ -163,15 +126,20 @@ handle_expose(GtkWidget *area)
     return TRUE;
 }
 
+/* Handle a window configured event (window resize).  */
 static gboolean
-handle_configure(void)
+sg_gtk_handle_configure(void)
 {
-    sg_update_size = 1;
+    GtkAllocation allocation;
+    gtk_widget_get_allocation(sg_gtk.area, &allocation);
+    sg_gtk.width = allocation.width;
+    sg_gtk.height = allocation.height;
     return TRUE;
 }
 
+/* Handle the timer firing, and update the window.  */
 static gboolean
-update(void *obj)
+sg_gtk_update(void *obj)
 {
     GtkWidget *area = GTK_WIDGET(obj);
     gdk_window_invalidate_rect(area->window, &area->allocation, FALSE);
@@ -179,14 +147,15 @@ update(void *obj)
     return TRUE;
 }
 
+/* Handle a keyboard event.  */
 static gboolean
-handle_key(GdkEventKey *e, sg_event_type_t t)
+sg_gtk_handle_key(GdkEventKey *e, sg_event_type_t t)
 {
     int code = e->hardware_keycode, hcode;
-    struct sg_event_key evt;
+    union sg_event evt;
     if (e->keyval == GDK_F11) {
         if (e->type == GDK_KEY_PRESS)
-            toggle_fullscreen();
+            sg_gtk_toggle_fullscreen();
         return TRUE;
     }
     if (code < 0 || code > 255)
@@ -194,38 +163,42 @@ handle_key(GdkEventKey *e, sg_event_type_t t)
     hcode = EVDEV_NATIVE_TO_HID[code];
     if (hcode == 255)
         return TRUE;
-    evt.type = t;
-    evt.key = hcode;
-    sg_sys_event((union sg_event *) &evt);
+    evt.key.type = t;
+    evt.key.key = hcode;
+    sg_game_event(&evt);
     return TRUE;
 }
 
+/* Handle a mouse motion event.  */
 static gboolean
-handle_motion(GdkEventMotion *e)
+sg_gtk_handle_motion(GdkEventMotion *e)
 {
-    struct sg_event_mouse evt;
-    evt.type = SG_EVENT_MMOVE;
-    evt.button = -1;
-    evt.x = e->x;
-    evt.y = sg_window_height - 1 - e->y;
-    sg_sys_event((union sg_event *) &evt);
+    union sg_event evt;
+    evt.mouse.type = SG_EVENT_MMOVE;
+    evt.mouse.button = -1;
+    evt.mouse.x = e->x;
+    evt.mouse.y = sg_gtk.height - 1 - e->y;
+    sg_game_event(&evt);
     return TRUE;
 }
 
+/* Handle a mouse button event.  */
 static gboolean
-handle_button(GdkEventButton *e, sg_event_type_t t)
+sg_gtk_handle_button(GdkEventButton *e, sg_event_type_t t)
 {
-    struct sg_event_mouse evt;
-    evt.type = t;
+    union sg_event evt;
+    int button;
     switch (e->button) {
-    case 1:  evt.button = SG_BUTTON_LEFT; break;
-    case 2:  evt.button = SG_BUTTON_MIDDLE; break;
-    case 3:  evt.button = SG_BUTTON_RIGHT; break;
-    default: evt.button = SG_BUTTON_OTHER + e->button - 4; break;
+    case 1:  button = SG_BUTTON_LEFT; break;
+    case 2:  button = SG_BUTTON_MIDDLE; break;
+    case 3:  button = SG_BUTTON_RIGHT; break;
+    default: button = SG_BUTTON_OTHER + e->button - 4; break;
     }
-    evt.x = e->x;
-    evt.y = sg_window_height - 1 - e->y;
-    sg_sys_event((union sg_event *) &evt);
+    evt.mouse.type = t;
+    evt.mouse.button = button;
+    evt.mouse.x = e->x;
+    evt.mouse.y = sg_gtk.height - 1 - e->y;
+    sg_game_event(&evt);
     return TRUE;
 }
 
@@ -237,7 +210,7 @@ struct wstate {
 };
 
 static void
-print_wstate_flags(GdkWindowState st, GdkWindowState ch)
+sg_gtk_print_wstate_flags(GdkWindowState st, GdkWindowState ch)
 {
     static const struct wstate FLAGS[] = {
         { GDK_WINDOW_STATE_WITHDRAWN,  "withdrawn" },
@@ -262,56 +235,59 @@ print_wstate_flags(GdkWindowState st, GdkWindowState ch)
 }
 
 #else
-#define print_wstate_flags(x,y) (void)0
+#define sg_gtk_print_wstate_flags(x,y) (void)0
 #endif
 
 static gboolean
-handle_window_state(GtkWidget *widget, GdkEvent *event, gpointer user_data)
+sg_gtk_handle_window_state(GtkWidget *widget, GdkEvent *event,
+                           gpointer user_data)
 {
-    /* WITHDRAWN, ICONIFIED, MAXIMIZED, STICKY,
+    /* The states are: WITHDRAWN, ICONIFIED, MAXIMIZED, STICKY,
        FULLSCREEN, ABOVE, BELOW */
     GdkWindowState st = event->window_state.new_window_state;
     int fullscreen, shown;
     unsigned status;
-    struct sg_event_status evt;
+    union sg_event evt;
     (void) user_data;
     (void) widget;
-    print_wstate_flags(st, event->window_state.changed_mask);
+    sg_gtk_print_wstate_flags(st, event->window_state.changed_mask);
     fullscreen = (st & GDK_WINDOW_STATE_FULLSCREEN) != 0;
     shown = !(st & (GDK_WINDOW_STATE_ICONIFIED | GDK_WINDOW_STATE_WITHDRAWN));
     if (!shown) {
         status = 0;
     } else {
-        status = SG_STATUS_VISIBLE;
+        status = SG_WINDOW_VISIBLE;
         if (fullscreen)
-            status |= SG_STATUS_FULLSCREEN;
+            status |= SG_WINDOW_FULLSCREEN;
     }
-    evt.type = SG_EVENT_STATUS;
-    evt.status = status;
-    sg_sys_event((union sg_event *) &evt);
-    sg_gtk_status = status;
+    if (status != sg_gtk.window_status) {
+        evt.status.type = SG_EVENT_WINDOW;
+        evt.status.status = status;
+        sg_game_event(&evt);
+        sg_gtk.window_status = status;
+    }
     return TRUE;
 }
 
 static gboolean
-handle_event(GtkWidget *widget, GdkEvent *event, void *obj)
+sg_gtk_handle_event(GtkWidget *widget, GdkEvent *event, void *obj)
 {
     (void) obj;
     switch (event->type) {
     case GDK_EXPOSE:
-        return handle_expose(widget);
+        return sg_gtk_handle_expose(widget);
     case GDK_MOTION_NOTIFY:
-        return handle_motion(&event->motion);
+        return sg_gtk_handle_motion(&event->motion);
     case GDK_BUTTON_PRESS:
-        return handle_button(&event->button, SG_EVENT_MDOWN);
+        return sg_gtk_handle_button(&event->button, SG_EVENT_MDOWN);
     case GDK_BUTTON_RELEASE:
-        return handle_button(&event->button, SG_EVENT_MUP);
+        return sg_gtk_handle_button(&event->button, SG_EVENT_MUP);
     case GDK_KEY_PRESS:
-        return handle_key(&event->key, SG_EVENT_KDOWN);
+        return sg_gtk_handle_key(&event->key, SG_EVENT_KDOWN);
     case GDK_KEY_RELEASE:
-        return handle_key(&event->key, SG_EVENT_KUP);
+        return sg_gtk_handle_key(&event->key, SG_EVENT_KUP);
     case GDK_CONFIGURE:
-        return handle_configure();
+        return sg_gtk_handle_configure();
     default:
         return FALSE;
     }
@@ -342,7 +318,7 @@ static const int *const SG_GL_ATTRIB[] = {
 };
 
 static void
-init(int argc, char *argv[])
+sg_gtk_init(int argc, char *argv[])
 {
     GtkWidget *window, *area;
     GdkScreen *screen;
@@ -352,7 +328,6 @@ init(int argc, char *argv[])
     unsigned mask, i;
     gboolean r;
     struct sg_game_info gameinfo;
-    double ascale = 1.0 / SG_GAME_ASPECT_SCALE;
 
     gtk_init(&argc, &argv);
     gtk_gl_init(&argc, &argv);
@@ -370,7 +345,6 @@ init(int argc, char *argv[])
     }
 
     sg_sys_init();
-    sg_audio_sys_pstart();
     sg_sys_getinfo(&gameinfo);
     if (gameinfo.min_width < 128)
         gameinfo.min_width = 128;
@@ -379,8 +353,8 @@ init(int argc, char *argv[])
 
     geom.min_width  = gameinfo.min_width;
     geom.min_height = gameinfo.min_height;
-    geom.min_aspect = (double) gameinfo.min_aspect * ascale;
-    geom.max_aspect = (double) gameinfo.max_aspect * ascale;
+    geom.min_aspect = gameinfo.min_aspect;
+    geom.max_aspect = gameinfo.max_aspect;
 
     window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     area = gtk_drawing_area_new();
@@ -394,7 +368,7 @@ init(int argc, char *argv[])
         GDK_HINT_MIN_SIZE | GDK_HINT_ASPECT);
 
     g_signal_connect_swapped(G_OBJECT(window), "destroy",
-                             G_CALLBACK(handle_destroy), NULL);
+                             G_CALLBACK(sg_gtk_handle_destroy), NULL);
 
     gtk_widget_set_can_focus(area, TRUE);
     mask = GDK_EXPOSURE_MASK |
@@ -423,22 +397,23 @@ init(int argc, char *argv[])
         exit(1);
     }
 
-    g_signal_connect(area, "event", G_CALLBACK(handle_event), NULL);
+    g_signal_connect(area, "event", G_CALLBACK(sg_gtk_handle_event), NULL);
     g_signal_connect(window, "window-state-event",
-                     G_CALLBACK(handle_window_state), NULL);
+                     G_CALLBACK(sg_gtk_handle_window_state), NULL);
 
     gtk_widget_show_all(window);
 
-    sg_timer = g_timeout_add(10, update, area);
+    sg_gtk.timer = g_timeout_add(10, sg_gtk_update, area);
 
-    sg_window = GTK_WINDOW(window);
+    sg_gtk.window = GTK_WINDOW(window);
+    sg_gtk.area = area;
 }
 
 int
 main(int argc, char *argv[])
 {
     signal(SIGPIPE, SIG_IGN);
-    init(argc, argv);
+    sg_gtk_init(argc, argv);
     gtk_main();
     return 0;
 }

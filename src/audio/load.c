@@ -2,18 +2,19 @@
    This file is part of SGLib.  SGLib is licensed under the terms of the
    2-clause BSD license.  For more information, see LICENSE.txt. */
 #include "config.h"
-#include "sg/audio_pcm.h"
+#include "sg/audio_buffer.h"
+#include "sg/audio_file.h"
 #include "sg/error.h"
 #include <stdlib.h>
 #include <string.h>
 
 int
-sg_audio_pcm_load(struct sg_audio_pcm **buf, size_t *bufcount,
-                  const void *data, size_t len,
-                  struct sg_error **err)
+sg_audio_file_load(struct sg_audio_buffer **buf, size_t *bufcount,
+                   const void *data, size_t len,
+                   struct sg_error **err)
 {
     const unsigned char *p = data;
-    struct sg_audio_pcm *bufp;
+    struct sg_audio_buffer *bufp;
     int r;
 
     if (len >= 12 && !memcmp(p, "RIFF", 4) && !memcmp(p + 8, "WAVE", 4)) {
@@ -22,7 +23,7 @@ sg_audio_pcm_load(struct sg_audio_pcm **buf, size_t *bufcount,
             sg_error_nomem(err);
             return -1;
         }
-        r = sg_audio_pcm_loadwav(bufp, data, len, err);
+        r = sg_audio_file_loadwav(bufp, data, len, err);
         if (r) {
             free(bufp);
             return -1;
@@ -34,7 +35,7 @@ sg_audio_pcm_load(struct sg_audio_pcm **buf, size_t *bufcount,
 
 #if defined(ENABLE_OGG)
     if (len >= 4 && !memcmp(p, "OggS", 4))
-        return sg_audio_pcm_loadogg(buf, bufcount, data, len, err);
+        return sg_audio_file_loadogg(buf, bufcount, data, len, err);
 #endif
 
     sg_error_data(err, "audio");

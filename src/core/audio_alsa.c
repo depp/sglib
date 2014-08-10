@@ -3,50 +3,56 @@
    2-clause BSD license.  For more information, see LICENSE.txt. */
 #define _XOPEN_SOURCE 600
 
-#include "../core/clock_impl.h"
+#include "clock_impl.h"
+#include "private.h"
 #include "libpce/byteorder.h"
-#include "sg/audio_mixdown.h"
-#include "sg/audio_system.h"
-#include "sg/clock.h"
 #include "sg/cvar.h"
-#include "sg/error.h"
+#include "sg/entry.h"
+#include "sg/event.h"
 #include "sg/log.h"
 #include <alloca.h>
 #include <alsa/asoundlib.h>
-#include <assert.h>
-#include <limits.h>
 #include <pthread.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
+
+typedef enum {
+    SG_AUDIO_STATE_STOPPED,
+    SG_AUDIO_STATE_RUNNING,
+    SG_AUDIO_STATE_STOPPING
+} sg_audio_state_t;
 
 struct sg_audio_alsa {
+    struct sg_logger *logger;
+
+    /* Mutex so that only one thread can access the audio state.  */
+    pthread_mutex_t mutex;
+    /* Condition variable to signal state changes.  */
+    pthread_cond_t cond;
+
+    /* Current audio system state.  */
+    sg_audio_state_t state;
+
+    /* Requested audio device name.  */
     const char *req_name;
+    /* Requested sample rate.  */
     int req_rate;
+    /* Requested buffer size.  */
     int req_bufsize;
 
+    /* The ALSA audio stream.  */
     snd_pcm_t *pcm;
-    struct sg_audio_mixdown *mix;
+    /* The buffer for receiving samples from the game, interleaved
+       stereo with a number of frames equal to periodsize (NOT
+       bufsize).  */
     float *buffer;
+    /* The sample rate.  */
     int rate;
+    /* The size of ALSA's audio buffer NOT the buffer field above.  */
     int bufsize;
+    /* The number of frames to fill for each request.  */
     int periodsize;
 };
 
-static struct sg_logger *sg_audio_alsa_logger;
-
-static void
-sg_audio_alsa_getinfo(struct sg_audio_alsa *alsa)
-{
-    if (!sg_cvar_gets("audio", "alsadevice", &alsa->req_name))
-        alsa->req_name = "default";
-    if (!sg_cvar_geti("audio", "rate", &alsa->req_rate))
-        alsa->req_rate = 48000;
-    assert(alsa->req_rate > 0);
-    if (!sg_cvar_geti("audio", "bufsize", &alsa->req_bufsize))
-        alsa->req_bufsize = 1024;
-    assert(alsa->req_bufsize > 0);
-}
+static struct sg_audio_alsa sg_audio_alsa;
 
 /*
   ALSA timestamps:
@@ -79,8 +85,8 @@ sg_audio_alsa_getinfo(struct sg_audio_alsa *alsa)
 static void *
 sg_audio_loop(void *ptr)
 {
-    struct sg_audio_alsa *alsa = ptr;
-    struct sg_audio_mixdown *mix = alsa->mix;
+    union sg_event event;
+    struct sg_audio_alsa *alsa = &sg_audio_alsa;
     snd_pcm_t *pcm = alsa->pcm;
     float *buf = alsa->buffer;
     unsigned periodsize = alsa->periodsize, bufsize = alsa->bufsize,
@@ -89,14 +95,28 @@ sg_audio_loop(void *ptr)
     snd_pcm_uframes_t nframes;
     struct timespec ts;
     snd_pcm_status_t *status;
+    int rr;
     snd_pcm_status_alloca(&status);
 
-    while (1) {
-        snd_pcm_wait(pcm, 1000);
+    (void) ptr;
 
+    event.audioinit.type = SG_EVENT_AUDIO_INIT;
+    event.audioinit.rate = rate;
+    event.audioinit.buffersize = periodsize;
+    sg_game_event(&event);
+
+    while (1) {
+        rr = pthread_mutex_lock(&alsa->mutex);
+        if (rr) abort();
+        if (alsa->state == SG_AUDIO_STATE_STOPPING)
+            goto done;
+        rr = pthread_mutex_unlock(&alsa->mutex);
+        if (rr) abort();
+
+        snd_pcm_wait(pcm, 1000);
         r = snd_pcm_status(pcm, status);
         if (r < 0) {
-            sg_logf(sg_audio_alsa_logger, LOG_INFO,
+            sg_logf(alsa->logger, SG_LOG_INFO,
                     "snd_pcm_status: %s", snd_strerror(r));
             goto done;
         }
@@ -112,7 +132,7 @@ sg_audio_loop(void *ptr)
         ts.tv_nsec = nsec % 1000000000;
         time = sg_clock_convert(&ts);
 
-        sg_audio_mixdown_read(mix, time, buf);
+        sg_game_audio(buf, time);
         pos = 0;
         while (pos < periodsize) {
             r = snd_pcm_writei(pcm, buf + pos, periodsize - pos);
@@ -125,7 +145,7 @@ sg_audio_loop(void *ptr)
                 prepare:
                     r = snd_pcm_prepare(pcm);
                     if (r < 0) {
-                        sg_logf(sg_audio_alsa_logger, LOG_INFO,
+                        sg_logf(alsa->logger, SG_LOG_INFO,
                                 "snd_pcm_prepare: %s", snd_strerror(r));
                     }
                     break;
@@ -142,7 +162,7 @@ sg_audio_loop(void *ptr)
                     break;
 
                 default:
-                    sg_logf(sg_audio_alsa_logger, LOG_ERROR,
+                    sg_logf(alsa->logger, SG_LOG_ERROR,
                             "snd_pcm_writei: %s", snd_strerror(r));
                     goto done;
                 }
@@ -151,16 +171,74 @@ sg_audio_loop(void *ptr)
             }
         }
     }
+
 done:
-    /* FIXME LEAK */
+    event.type = SG_EVENT_AUDIO_TERM;
+    sg_game_event(&event);
+
+    rr = pthread_mutex_lock(&alsa->mutex);
+    if (rr) abort();
+    snd_pcm_close(alsa->pcm);
+    free(alsa->buffer);
+    alsa->pcm = NULL;
+    alsa->buffer = NULL;
+    alsa->rate = 0;
+    alsa->bufsize = 0;
+    alsa->periodsize = 0;
+    alsa->state = SG_AUDIO_STATE_STOPPED;
+    rr = pthread_mutex_unlock(&alsa->mutex);
+    if (rr) abort();
+    rr = pthread_cond_broadcast(&alsa->cond);
+    if (rr) abort();
+
     return NULL;
 }
 
 void
-sg_audio_sys_pstart(void)
+sg_audio_init(void)
 {
-    struct sg_error *err = NULL;
-    struct sg_audio_alsa *alsa;
+    struct sg_audio_alsa *alsa = &sg_audio_alsa;
+    int r;
+    pthread_mutexattr_t mattr;
+
+    alsa->logger = sg_logger_get("audio");
+
+    r = pthread_mutexattr_init(&mattr);
+    if (r) abort();
+    r = pthread_mutexattr_settype(&mattr, PTHREAD_MUTEX_NORMAL);
+    if (r) abort();
+    r = pthread_mutex_init(&alsa->mutex, &mattr);
+    if (r) abort();
+    r = pthread_mutexattr_destroy(&mattr);
+    if (r) abort();
+
+    r = pthread_cond_init(&alsa->cond, NULL);
+    if (r) abort();
+
+    alsa->state = SG_AUDIO_STATE_STOPPED;
+
+    if (!sg_cvar_gets("audio", "alsadevice", &alsa->req_name))
+        alsa->req_name = "default";
+    if (!sg_cvar_geti("audio", "rate", &alsa->req_rate))
+        alsa->req_rate = 48000;
+    if (!sg_cvar_geti("audio", "bufsize", &alsa->req_bufsize))
+        alsa->req_bufsize = 1024;
+
+    if (alsa->req_rate < 8000)
+        alsa->req_rate = 8000;
+    if (alsa->req_rate > 192000)
+        alsa->req_rate = 192000;
+
+    if (alsa->req_bufsize < 32)
+        alsa->req_bufsize = 32;
+    if (alsa->req_bufsize > 4096)
+        alsa->req_bufsize = 4096;
+}
+
+int
+sg_sys_audio_start(void)
+{
+    struct sg_audio_alsa *alsa = &sg_audio_alsa;
     snd_pcm_hw_params_t *hwparms = NULL;
     snd_pcm_sw_params_t *swparms = NULL;
     pthread_t thread;
@@ -168,19 +246,17 @@ sg_audio_sys_pstart(void)
     const char *why;
     int r;
     unsigned rate;
-    snd_pcm_uframes_t bufsize, periodsize;
+    snd_pcm_uframes_t bufsize, periodsize, avail_min;
 
-    sg_audio_alsa_logger = sg_logger_get("audio");
-
-    /* Get configuration, initialize data structures */
-    alsa = malloc(sizeof(*alsa));
-    if (!alsa)
-        goto nomem;
-    alsa->pcm = NULL;
-    alsa->mix = NULL;
+    r = pthread_mutex_lock(&alsa->mutex);
+    if (r) abort();
+    if (alsa->state != SG_AUDIO_STATE_STOPPED) {
+        r = pthread_mutex_unlock(&alsa->mutex);
+        if (r) abort();
+        return -1;
+    }
 
     /* Open ALSA PCM connection */
-    sg_audio_alsa_getinfo(alsa);
     r = snd_pcm_open(
         &alsa->pcm,
         alsa->req_name,
@@ -238,10 +314,10 @@ sg_audio_sys_pstart(void)
         why = "could not set sample rate";
         goto alsa_error;
     }
-    sg_logf(sg_audio_alsa_logger, LOG_INFO,
+    sg_logf(alsa->logger, SG_LOG_INFO,
             "audio sample rate: %u", rate);
     if (rate > 200000 || rate < 4000) {
-        sg_logf(sg_audio_alsa_logger, LOG_ERROR,
+        sg_logf(alsa->logger, SG_LOG_ERROR,
                 "audio sample rate too extreme: %u", rate);
         goto cleanup;
     }
@@ -254,7 +330,7 @@ sg_audio_sys_pstart(void)
         why = "could not set buffer size";
         goto alsa_error;
     }
-    sg_logf(sg_audio_alsa_logger, LOG_INFO,
+    sg_logf(alsa->logger, SG_LOG_INFO,
             "audio buffer size: %lu", bufsize);
     alsa->bufsize = bufsize;
     periodsize = (bufsize + 1) >> 1;
@@ -275,24 +351,15 @@ sg_audio_sys_pstart(void)
         goto alsa_error;
     }
 
-    snd_pcm_uframes_t avail_min;
     r = snd_pcm_sw_params_get_avail_min(swparms, &avail_min);
     if (r < 0) {
         why = "could not get avail_min";
         goto alsa_error;
     }
-    sg_logf(sg_audio_alsa_logger, LOG_INFO,
+    sg_logf(alsa->logger, SG_LOG_INFO,
             "audio buffer threshold: %u", (unsigned) avail_min);
 
     /* ==================== */
-
-    alsa->mix = sg_audio_mixdown_new(rate, periodsize, &err);
-    if (!alsa->mix) {
-        sg_logerrs(sg_audio_alsa_logger, LOG_ERROR, err,
-                   "could not create audio mixdown");
-        sg_error_clear(&err);
-        goto cleanup;
-    }
 
     alsa->buffer = malloc(sizeof(float) * periodsize * 2);
     if (!alsa->buffer)
@@ -303,38 +370,54 @@ sg_audio_sys_pstart(void)
     if (r) goto pthread_error;
     r = pthread_attr_setdetachstate(&threadattr, PTHREAD_CREATE_DETACHED);
     if (r) goto pthread_error;
-    r = pthread_create(&thread, &threadattr, sg_audio_loop, alsa);
+    r = pthread_create(&thread, &threadattr, sg_audio_loop, NULL);
     if (r) goto pthread_error;
     pthread_attr_destroy(&threadattr);
 
-    return;
+    alsa->state = SG_AUDIO_STATE_RUNNING;
+    r = pthread_mutex_unlock(&alsa->mutex);
+    if (r) abort();
+
+    return 0;
 
 alsa_error:
-    sg_logf(sg_audio_alsa_logger, LOG_ERROR,
+    sg_logf(alsa->logger, SG_LOG_ERROR,
             "%s: %s", why, snd_strerror(r));
     goto cleanup;
 
 pthread_error:
-    sg_logs(sg_audio_alsa_logger, LOG_ERROR, strerror(r));
+    sg_logs(alsa->logger, SG_LOG_ERROR, strerror(r));
     goto cleanup;
 
 cleanup:
-    if (alsa) {
-        if (alsa->pcm)
-            snd_pcm_close(alsa->pcm);
-        if (alsa->mix)
-            sg_audio_mixdown_free(alsa->mix);
-        if (alsa)
-            free(alsa);
-    }
-    return;
+    if (alsa->pcm)
+        snd_pcm_close(alsa->pcm);
+    free(alsa->buffer);
+
+    r = pthread_mutex_unlock(&alsa->mutex);
+    if (r) abort();
+
+    return -1;
 
 nomem:
-    sg_logs(sg_audio_alsa_logger, LOG_ERROR,
+    sg_logs(alsa->logger, SG_LOG_ERROR,
             "out of memory");
-    abort();
+    goto cleanup;
 }
 
 void
-sg_audio_sys_pstop(void)
-{ }
+sg_sys_audio_stop(void)
+{
+    struct sg_audio_alsa *alsa = &sg_audio_alsa;
+    int r;
+    r = pthread_mutex_lock(&alsa->mutex);
+    if (r) abort();
+    if (alsa->state == SG_AUDIO_STATE_RUNNING)
+        alsa->state = SG_AUDIO_STATE_STOPPING;
+    while (alsa->state == SG_AUDIO_STATE_STOPPING) {
+        r = pthread_cond_wait(&alsa->cond, &alsa->mutex);
+        if (r) abort();
+    }
+    r = pthread_mutex_unlock(&alsa->mutex);
+    if (r) abort();
+}
