@@ -3,3 +3,25 @@
 
 # Doxygen
 /html
+
+# Build system
+/config.dat
+/config.log
+
+# Build system, GNUMake
+/Makefile
+/build
+
+# Build system, Xcode
+/*.xcodeproj
+
+# Build system, Visual Studio
+/Debug
+/Release
+/x64
+/*.sln
+/*.sdf
+/*.suo
+/*.opensdf
+/*.vcxproj*
+/ipch

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<build>
+<build path="test/demo">
   <key name="name">SGLib Tests</key>
   <key name="email">depp@zdome.net</key>
   <key name="url">http://moria.us/</key>

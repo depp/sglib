@@ -16,4 +16,4 @@ if "$PYTHON" -c 'import sys; sys.exit(sys.version_info[0] == 3)' ; then
     exit 1
 fi
 srcdir=`dirname "$0"`
-exec "$PYTHON" "$srcdir/sglib/build/config.py" config "$srcdir/project.xml" "$@"
+exec "$PYTHON" "$srcdir/build/config.py" config "$srcdir/project.xml" "$@"
