@@ -3,8 +3,6 @@
    2-clause BSD license.  For more information, see LICENSE.txt. */
 #ifndef SG_ENTRY_H
 #define SG_ENTRY_H
-/* Entry points: the layer that connects library code, game code, and
-   platform code.  */
 #include <stdarg.h>
 #include "libpce/attribute.h"
 #include "sg/audio.h"
