@@ -3,7 +3,7 @@
    2-clause BSD license.  For more information, see LICENSE.txt. */
 #include <ogg/ogg.h>
 struct sg_error;
-struct sg_audio_pcm;
+struct sg_audio_buffer;
 
 /* ========== Opus ========== */
 
@@ -18,7 +18,7 @@ sg_opus_decoder_packet(void *obj, ogg_packet *op,
                        struct sg_error **err);
 
 int
-sg_opus_decoder_read(void *obj, struct sg_audio_pcm *pcm,
+sg_opus_decoder_read(void *obj, struct sg_audio_buffer *pcm,
                      struct sg_error **err);
 
 /* ========== Vorbis ========== */
@@ -34,5 +34,5 @@ sg_vorbis_decoder_packet(void *obj, ogg_packet *op,
                          struct sg_error **err);
 
 int
-sg_vorbis_decoder_read(void *obj, struct sg_audio_pcm *pcm,
+sg_vorbis_decoder_read(void *obj, struct sg_audio_buffer *pcm,
                        struct sg_error **err);

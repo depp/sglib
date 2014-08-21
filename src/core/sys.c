@@ -1,4 +1,4 @@
-/* Copyright 2012-2013 Dietrich Epp.
+/* Copyright 2012-2014 Dietrich Epp.
    This file is part of SGLib.  SGLib is licensed under the terms of the
    2-clause BSD license.  For more information, see LICENSE.txt. */
 #include "sg/entry.h"
@@ -19,7 +19,7 @@ sg_sys_init(void)
     sg_path_init();
     sg_clock_init();
     sg_rand_seed(&sg_rand_global, 1);
-    sg_audio_init();
+    sg_mixer_init();
     sg_game_init();
 }
 

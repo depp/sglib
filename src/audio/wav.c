@@ -2,7 +2,8 @@
    This file is part of SGLib.  SGLib is licensed under the terms of the
    2-clause BSD license.  For more information, see LICENSE.txt. */
 #include "libpce/binary.h"
-#include "sg/audio_pcm.h"
+#include "sg/audio_buffer.h"
+#include "sg/audio_file.h"
 #include "sg/error.h"
 #include "sg/log.h"
 #include <stdlib.h>
@@ -126,8 +127,9 @@ sg_audio_wav_logger(void)
 }
 
 int
-sg_audio_pcm_loadwav(struct sg_audio_pcm *buf, const void *data, size_t len,
-                     struct sg_error **err)
+sg_audio_file_loadwav(struct sg_audio_buffer *buf,
+                      const void *data, size_t len,
+                      struct sg_error **err)
 {
     struct sg_riff riff;
     struct sg_riff_tag *tag;
@@ -156,8 +158,8 @@ sg_audio_pcm_loadwav(struct sg_audio_pcm *buf, const void *data, size_t len,
     rate = pce_read_lu32(p + 4);
     /* blkalign = pce_read_lu16(p + 12); */
     sampbits = pce_read_lu16(p + 14);
-    if (rate < SG_AUDIO_PCM_MINRATE || rate > SG_AUDIO_PCM_MAXRATE) {
-        sg_logf(sg_audio_wav_logger(), LOG_ERROR,
+    if (rate < SG_AUDIO_BUFFER_MINRATE || rate > SG_AUDIO_BUFFER_MAXRATE) {
+        sg_logf(sg_audio_wav_logger(), SG_LOG_ERROR,
                 "WAVE sample rate too extreme (%u Hz)", rate);
         goto fmterr;
     }
@@ -190,7 +192,7 @@ sg_audio_pcm_loadwav(struct sg_audio_pcm *buf, const void *data, size_t len,
             break;
 
         default:
-            sg_logf(sg_audio_wav_logger(), LOG_ERROR,
+            sg_logf(sg_audio_wav_logger(), SG_LOG_ERROR,
                     "invalid WAVE bit depth: %d", sampbits);
             goto fmterr;
         }
@@ -198,7 +200,7 @@ sg_audio_pcm_loadwav(struct sg_audio_pcm *buf, const void *data, size_t len,
 
     case SG_WAVE_FLOAT:
         if (sampbits != 32) {
-            sg_logs(sg_audio_wav_logger(), LOG_ERROR,
+            sg_logs(sg_audio_wav_logger(), SG_LOG_ERROR,
                     "WAVE float bits != 32");
             goto fmterr;
         }
@@ -207,7 +209,7 @@ sg_audio_pcm_loadwav(struct sg_audio_pcm *buf, const void *data, size_t len,
         break;
 
     default:
-        sg_logf(sg_audio_wav_logger(), LOG_ERROR,
+        sg_logf(sg_audio_wav_logger(), SG_LOG_ERROR,
                 "unknown WAVE data format: 0x%04x", afmt);
         goto fmterr;
     }

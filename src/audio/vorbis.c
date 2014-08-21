@@ -3,7 +3,7 @@
    2-clause BSD license.  For more information, see LICENSE.txt. */
 #include "libpce/util.h"
 #include "ogg.h"
-#include "sg/audio_pcm.h"
+#include "sg/audio_buffer.h"
 #include "sg/error.h"
 #include "sg/log.h"
 #include <vorbis/codec.h>
@@ -13,7 +13,7 @@
 static void
 sg_vorbis_log(const char *msg)
 {
-    sg_logf(sg_logger_get("audio"), LOG_ERROR,
+    sg_logf(sg_logger_get("audio"), SG_LOG_ERROR,
             "Vorbis error: %s", msg);
 }
 
@@ -171,7 +171,7 @@ vorbis_error:
 }
 
 int
-sg_vorbis_decoder_read(void *obj, struct sg_audio_pcm *pcm,
+sg_vorbis_decoder_read(void *obj, struct sg_audio_buffer *pcm,
                        struct sg_error **err)
 {
     struct sg_vorbis_decoder *st = obj;

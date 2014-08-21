@@ -44,32 +44,12 @@
     <src path="include/config.h"/>
 
     <group path="src/audio">
+      <src path="buffer.c"/>
       <src path="convert.c"/>
-      <src path="load.c"/>
-      <src path="mixdown.c"/>
-      <src path="ofile.c"/>
-      <src path="pcm.c"/>
+      <src path="file.c"/>
       <src path="resample.c"/>
-      <src path="source.c"/>
-      <src path="sysprivate.h"/>
-      <src path="system.c"/>
       <src path="wav.c"/>
-
-      <group>
-        <switch value="$flag.audio">
-          <case value="alsa">
-            <require module="alsa"/>
-            <src path="alsa.c"/>
-          </case>
-          <case value="coreaudio">
-            <require module="osx#CoreAudio osx#AudioUnit"/>
-            <src path="coreaudio.c"/>
-          </case>
-          <case value="directsound">
-            <src path="directsound8.c"/>
-          </case>
-        </switch>
-      </group>
+      <src path="writer.c"/>
 
       <if value="$flag.ogg == yes">
         <group>
@@ -96,7 +76,6 @@
       <src path="clock.c"/>
       <src path="clock_impl.h"/>
       <src path="configfile.c"/>
-      <src path="configfile_read.c"/>
       <src path="cvar.c"/>
       <src path="error.c"/>
       <src path="file_impl.h"/>
@@ -123,6 +102,43 @@
           <src path="file_win.c"/>
         </case>
       </switch>
+
+    </group>
+
+    <group path="src/mixer">
+      <!--
+      <src path="mixer.h"/>
+      <src path="offline.c"/>
+      <src path="queue.c"/>
+      <src path="realtime.c"/>
+      <src path="sample.c"/>
+      -->
+      <src path="channel.c"/>
+      <src path="mixdown.c"/>
+      <src path="mixer.c"/>
+      <src path="mixer.h"/>
+      <src path="queue.c"/>
+      <src path="sound.c"/>
+      <src path="sound.h"/>
+      <src path="time.c"/>
+      <src path="time.h"/>
+      <src path="timeexact.c"/>
+
+      <group>
+        <switch value="$flag.audio">
+          <case value="alsa">
+            <require module="alsa"/>
+            <src path="system_alsa.c"/>
+          </case>
+          <case value="coreaudio">
+            <require module="osx#CoreAudio osx#AudioUnit"/>
+            <src path="system_coreaudio.c"/>
+          </case>
+          <case value="directsound">
+            <src path="system_directsound8.c"/>
+          </case>
+        </switch>
+      </group>
 
     </group>
 

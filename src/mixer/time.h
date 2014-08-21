@@ -4,11 +4,11 @@
 #include "sg/defs.h"
 
 /*
-  A note about timestamps: The input timestamps are unsigned sample
-  positions, and the output timestamps are signed sample positions.
+  A note about timestamps: The input timestamps are unsigned
+  milliseconds, and the output timestamps are signed sample positions.
   This is because the input timestamps can go on forever, wrapping
-  around (about once per day at 48 kHz).  The output timestamps are
-  relative to the current buffer.
+  around every 50 days.  The output timestamps are relative to the
+  current buffer.
 */
 
 enum {
@@ -24,6 +24,9 @@ enum {
 /* Mixer timing state.  This is used to adjust command timestamps for
    live mixers.  */
 struct sg_mixer_time {
+    /* (Public) Audio sample rate, in Hz.  */
+    int samplerate;
+
     /* (Public) Audio buffer size, in samples.  Do not modify this
        value after calling update().  */
     int bufsize;
@@ -83,7 +86,7 @@ struct sg_mixer_time {
    care.  */
 void
 sg_mixer_time_init(struct sg_mixer_time *SG_RESTRICT mtime,
-                   int bufsize);
+                   int samplerate, int bufsize);
 
 /* Update the state for the next buffer.  The commit time is the most
    recent commit time.  The buffer time is the timestamp corresponding
@@ -102,3 +105,32 @@ sg_mixer_time_get(struct sg_mixer_time const *SG_RESTRICT mtime,
 /* Get the current mixer latency, in samples.  */
 double
 sg_mixer_time_latency(struct sg_mixer_time const *SG_RESTRICT mtime);
+
+/* Mixer timing for an offline mixer.  */
+struct sg_mixer_timeexact {
+    /* The audio buffer size, in samples.  */
+    int bufsize;
+
+    /* The audio sample rate, in Hz.  */
+    int samplerate;
+
+    /* The reference input time.  */
+    unsigned intime;
+
+    /* The reference output time.  */
+    int outtime;
+};
+
+/* Initialize the timing system.  */
+void
+sg_mixer_timeexact_init(struct sg_mixer_timeexact *mtime,
+                        int bufsize, int samplerate, unsigned reftime);
+
+/* Update the state for the next buffer.  */
+void
+sg_mixer_timeexact_update(struct sg_mixer_timeexact *mtime);
+
+/* Get the sample position for the given timestamp.  */
+int
+sg_mixer_timeexact_get(struct sg_mixer_timeexact *mtime,
+                       unsigned time);

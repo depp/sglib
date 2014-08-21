@@ -192,6 +192,20 @@ sg_audio_buffer_resample(struct sg_audio_buffer *buf,
                          struct sg_error **err);
 
 /**
+ * @brief Get the audio data from a buffer, destroying the buffer.
+ *
+ * The resulting memory is a region which must be freed with `free()`.
+ * If the audio buffer aliases other memory, this function will
+ * allocate a new region.  In either case, the buffer is destroyed.
+ *
+ * @param buf The audio buffer.
+ * @param err On failure, the error.
+ * @return The data or `NULL` for failure.
+ */
+void *
+sg_audio_buffer_detach(struct sg_audio_buffer *buf, struct sg_error **err);
+
+/**
  * @brief Get the playing time of a buffer, in milliseconds.
  *
  * The result will always be rounded up.

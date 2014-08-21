@@ -23,10 +23,11 @@
 
 void
 sg_mixer_time_init(struct sg_mixer_time *SG_RESTRICT mtime,
-                   int bufsize)
+                   int samplerate, int bufsize)
 {
+    mtime->samplerate = samplerate;
     mtime->bufsize = bufsize;
-    mtime->deltabits = 14;
+    mtime->deltabits = 8;
     mtime->mixahead = bufsize >> 3;
     mtime->safety = 2.0;
     mtime->maxslope = 1.5;
@@ -80,7 +81,8 @@ sg_mixer_time_predict(struct sg_mixer_time *SG_RESTRICT mtime)
     y = pa + sqrt(avar) * mtime->safety + mtime->mixahead;
     if (isfinite(y)) {
         dy = y - mtime->outtime[1];
-        maxdy = (1 << mtime->deltabits) * mtime->maxslope;
+        maxdy = (mtime->samplerate << mtime->deltabits) *
+            mtime->maxslope * 0.001;
         if (dy > maxdy)
             dy = maxdy;
         else if (dy < mtime->bufsize)
@@ -105,11 +107,12 @@ sg_mixer_time_update(struct sg_mixer_time *SG_RESTRICT mtime,
         mtime->buftime[0] = buffertime - mtime->bufsize;
         mtime->buftime[1] = buffertime;
         mtime->intime = committime;
-        delta = 1 << mtime->deltabits;
+        delta = (mtime->samplerate << mtime->deltabits) / 1000;
         for (i = 0; i < SG_MIXER_TIME_NPOINT; i++)
             mtime->outtime[i] = mtime->bufsize - delta * i;
+        delta = (mtime->bufsize * 1000) / mtime->samplerate;
         for (i = 0; i < SG_MIXER_TIME_NSAMP; i++)
-            mtime->commit_sample[i] = mtime->bufsize *
+            mtime->commit_sample[i] = delta *
                 (i + 1 - SG_MIXER_TIME_NSAMP);
         mtime->commit_sample_num = 0;
         return;

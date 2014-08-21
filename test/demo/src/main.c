@@ -5,6 +5,7 @@
 #include "keycode/keycode.h"
 #include "sg/entry.h"
 #include "sg/event.h"
+#include "sg/mixer.h"
 
 const struct st_iface *st_screen;
 
@@ -12,6 +13,7 @@ void
 sg_game_init(void)
 {
     st_screen = &ST_MENU;
+    sg_mixer_start();
 }
 
 void
@@ -75,13 +77,7 @@ sg_game_event(union sg_event *evt)
 void
 sg_game_draw(int width, int height, unsigned msec)
 {
+    sg_mixer_settime(msec);
     st_screen->draw(width, height, msec);
-}
-
-sg_audio_result_t
-sg_game_audio(float *buffer, int msec)
-{
-    (void) buffer;
-    (void) msec;
-    return 0;
+    sg_mixer_commit();
 }

@@ -86,8 +86,8 @@ sg_audio_file_loadogg(struct sg_audio_buffer **buf, size_t *bufcount,
  * @brief Create a new WAV file and start writing to it.
  *
  * The format selected is the format of the data passed to the writer.
- * It may be converted into a different format if the requested format
- * is not supported for WAV files.
+ * The data will be byte-swapped as necessary, but 24-bit formats are
+ * not supported.
  *
  * @param path Path to the WAV file to create.
  * @param format The format of data that will be written.

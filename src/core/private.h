@@ -26,7 +26,7 @@ sg_clock_init(void);
 
 /* Initialize the main audio system.  */
 void
-sg_audio_init(void);
+sg_mixer_init(void);
 
 /* Shut down logging system: close sockets, etc.  */
 void

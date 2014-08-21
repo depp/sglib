@@ -26,11 +26,11 @@ extern const struct st_iface
    Resource loading
    ======================================== */
 
-struct sg_audio_buffer;
+struct sg_mixer_sound;
 struct sg_pixbuf;
 
-void
-load_audio(struct sg_audio_buffer *buffer, const char *path);
+struct sg_mixer_sound *
+load_audio(const char *path);
 
 GLuint
 load_shader(const char *path, GLenum type);

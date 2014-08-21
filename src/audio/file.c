@@ -8,6 +8,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+const char SG_AUDIO_FILE_EXTENSIONS[] = "wav:ogg:opus:oga";
+
 int
 sg_audio_file_load(struct sg_audio_buffer **buf, size_t *bufcount,
                    const void *data, size_t len,

@@ -1,7 +1,7 @@
-/* Copyright 2012 Dietrich Epp.
+/* Copyright 2012-2014 Dietrich Epp.
    This file is part of SGLib.  SGLib is licensed under the terms of the
    2-clause BSD license.  For more information, see LICENSE.txt. */
-#include "sg/audio_pcm.h"
+#include "sg/audio_buffer.h"
 #include "sg/defs.h"
 #include "sg/error.h"
 #include <limits.h>
@@ -9,8 +9,8 @@
 #include <stdlib.h>
 
 static void
-sg_audio_file_resample_1(short *SG_RESTRICT dest, int dlen, int drate,
-                         const short *SG_RESTRICT src, int slen, int srate)
+sg_audio_buffer_resample_1(short *SG_RESTRICT dest, int dlen, int drate,
+                           const short *SG_RESTRICT src, int slen, int srate)
 {
     double rr;
     int i, pos, x;
@@ -27,8 +27,8 @@ sg_audio_file_resample_1(short *SG_RESTRICT dest, int dlen, int drate,
 }
 
 static void
-sg_audio_file_resample_2(short *SG_RESTRICT dest, int dlen, int drate,
-                         const short *SG_RESTRICT src, int slen, int srate)
+sg_audio_buffer_resample_2(short *SG_RESTRICT dest, int dlen, int drate,
+                           const short *SG_RESTRICT src, int slen, int srate)
 {
     double rr;
     int i, pos, x0, x1;
@@ -49,8 +49,9 @@ sg_audio_file_resample_2(short *SG_RESTRICT dest, int dlen, int drate,
 }
 
 int
-sg_audio_pcm_resample(struct sg_audio_pcm *buf, int rate,
-                      struct sg_error **err)
+sg_audio_buffer_resample(struct sg_audio_buffer *buf,
+                         int rate,
+                         struct sg_error **err)
 {
     void (*func)(short *SG_RESTRICT, int, int,
                  const short *SG_RESTRICT, int, int);
@@ -65,17 +66,16 @@ sg_audio_pcm_resample(struct sg_audio_pcm *buf, int rate,
     }
 
     nchan = buf->nchan;
-    if (buf->format != SG_AUDIO_S16NE ||
-        buf->rate <= 0)
+    if (buf->format != SG_AUDIO_S16NE || buf->rate <= 0)
         goto invalid;
 
     switch (nchan) {
     case 1:
-        func = sg_audio_file_resample_1;
+        func = sg_audio_buffer_resample_1;
         break;
 
     case 2:
-        func = sg_audio_file_resample_2;
+        func = sg_audio_buffer_resample_2;
         break;
 
     default:
@@ -116,6 +116,6 @@ nomem:
     return -1;
 
 invalid:
-    sg_error_invalid(err);
+    sg_error_invalid(err, __FUNCTION__, "buf");
     return -1;
 }

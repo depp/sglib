@@ -5,7 +5,6 @@
 #define SG_ENTRY_H
 #include <stdarg.h>
 #include "libpce/attribute.h"
-#include "sg/audio.h"
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -92,23 +91,6 @@ void
 sg_game_draw(int width, int height, unsigned msec);
 
 /**
- * @brief Get audio data.
- *
- * This is a game entry point, and must be implemented.  The OpenGL
- * context will not be valid.
- *
- * @param buffer The audio buffer to fill.  The buffer size is taken
- * from the audio initialization event.  The buffer format is always
- * interleaved stereo with 32-bit floating pont values.
- *
- * @param The current time, in milliseconds since startup.
- *
- * @return A result code for the audio stream.
- */
-sg_audio_result_t
-sg_game_audio(float *buffer, int msec);
-
-/**
  * @brief Handle game shutdown.
  *
  * This is a game entry point, and must be implemented.  The OpenGL
@@ -118,29 +100,6 @@ sg_game_audio(float *buffer, int msec);
  */
 void
 sg_game_destroy(void);
-
-/**
- * @brief Start the audio system.
- *
- * If successful, this will send an audio initialization event, then
- * start calling the ::sg_game_audio callback.  The audio system may
- * be started on another thread and this function may return before
- * the audio system is fully initialized.
- *
- * @return 0 if the audio system was started, nonzero if the audio
- * system could not be started.
- */
-int
-sg_sys_audio_start(void);
-
-/**
- * @brief Stop the audio system.
- *
- * This will wait for the audio system to shut down, which requires
- * handling the audio stop event.
- */
-void
-sg_sys_audio_stop(void);
 
 /**
  * @brief Quit the program.

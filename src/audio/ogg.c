@@ -3,7 +3,8 @@
    2-clause BSD license.  For more information, see LICENSE.txt. */
 #include "config.h"
 #include "ogg.h"
-#include "sg/audio_pcm.h"
+#include "sg/audio_buffer.h"
+#include "sg/audio_file.h"
 #include "sg/error.h"
 #include "sg/log.h"
 #include <stdlib.h>
@@ -26,9 +27,9 @@ struct sg_ogg_stream {
 };
 
 int
-sg_audio_pcm_loadogg(struct sg_audio_pcm **buf, size_t *bufcount,
-                     const void *data, size_t len,
-                     struct sg_error **err)
+sg_audio_file_loadogg(struct sg_audio_buffer **buf, size_t *bufcount,
+                      const void *data, size_t len,
+                      struct sg_error **err)
 {
     ogg_sync_state oy;
     ogg_page og;
@@ -39,13 +40,13 @@ sg_audio_pcm_loadogg(struct sg_audio_pcm **buf, size_t *bufcount,
     struct sg_ogg_stream stream[SG_OGG_MAXSTREAM];
     const char *msg;
 
-    struct sg_audio_pcm *pcm = NULL, *npcm;
+    struct sg_audio_buffer *pcm = NULL, *npcm;
     size_t pcmcount = 0, pcmalloc = 0, k;
 
     void *decoder = NULL;
     void (*decoder_free)(void *) = NULL;
     int (*decoder_packet)(void *, ogg_packet *, struct sg_error **) = NULL;
-    int (*decoder_read)(void *, struct sg_audio_pcm *,
+    int (*decoder_read)(void *, struct sg_audio_buffer *,
                         struct sg_error **) = NULL;
 
     /* always returs 0 */
@@ -210,7 +211,7 @@ ogg_eof:
     goto done;
 
 ogg_error:
-    sg_logf(sg_logger_get("audio"), LOG_ERROR,
+    sg_logf(sg_logger_get("audio"), SG_LOG_ERROR,
             "Ogg error: %s", msg);
     sg_error_data(err, "ogg");
     r = -1;
@@ -226,7 +227,7 @@ done:
         decoder_free(decoder);
     if (!r) {
         if (!pcmcount) {
-            sg_logs(sg_logger_get("audio"), LOG_ERROR,
+            sg_logs(sg_logger_get("audio"), SG_LOG_ERROR,
                     "No streams with known codecs were found");
             sg_error_data(err, "ogg");
             return -1;
@@ -236,7 +237,7 @@ done:
         return 0;
     } else {
         for (k = 0; k < pcmcount; k++)
-            sg_audio_pcm_destroy(&pcm[k]);
+            sg_audio_buffer_destroy(&pcm[k]);
         return -1;
     }
 }

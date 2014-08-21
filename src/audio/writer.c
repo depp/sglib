@@ -3,7 +3,8 @@
    2-clause BSD license.  For more information, see LICENSE.txt. */
 #include "libpce/binary.h"
 #include "libpce/util.h"
-#include "sg/audio_ofile.h"
+#include "sg/defs.h"
+#include "sg/audio_file.h"
 #include "sg/error.h"
 #include "sg/file.h"
 
@@ -11,30 +12,73 @@
 #include <stdlib.h>
 #include <string.h>
 
-struct sg_audio_ofile {
+/* Information about how the formats get written to a WAVE file: 0x40
+   means the format must be byte swapped, 0x80 means the format is
+   floating-point.  */
+
+static const unsigned char SG_AUDIO_WRITER_INFO[SG_AUDIO_NFMT] = {
+    1,
+    2 | 0x40,
+    2,
+    0,
+    0,
+    4 | 0x40 | 0x80,
+    4        | 0x80
+};
+
+static int
+sg_audio_writer_fmtsize(sg_audio_format_t format)
+{
+    return SG_AUDIO_WRITER_INFO[format] & 0x3F;
+}
+
+static int
+sg_audio_writer_fmtswapped(sg_audio_format_t format)
+{
+    return (SG_AUDIO_WRITER_INFO[format] & 0x40) != 0;
+}
+
+static int
+sg_audio_writer_fmtfloat(sg_audio_format_t format)
+{
+    return (SG_AUDIO_WRITER_INFO[format] & 0x80) != 0;
+}
+
+/* Audio writer structure and functions.  */
+
+struct sg_audio_writer {
     struct sg_file *fp;
+    sg_audio_format_t format;
+    int channelcount;
     int samplerate;
     int len;
 
-    unsigned short *tmp;
-    size_t tmplen;
+    void *tmp;
+    size_t tmpalloc;
 };
 
 enum {
     WAV_HEADER_SIZE = 44
 };
 
-struct sg_audio_ofile *
-sg_audio_ofile_open(const char *path, int samplerate,
-                    struct sg_error **err)
+struct sg_audio_writer *
+sg_audio_writer_open(const char *path,
+                     sg_audio_format_t format,
+                     int samplerate, int channelcount,
+                     struct sg_error **err)
 {
-    struct sg_audio_ofile *afp = NULL;
+    struct sg_audio_writer *writer = NULL;
     struct sg_file *fp = NULL;
     char header[WAV_HEADER_SIZE];
     int r, pos;
 
-    afp = malloc(sizeof(*afp));
-    if (!afp) {
+    if (sg_audio_writer_fmtsize(format) == 0) {
+        sg_error_invalid(err, __FUNCTION__, "format");
+        return NULL;
+    }
+
+    writer = malloc(sizeof(*writer));
+    if (!writer) {
         sg_error_nomem(err);
         return NULL;
     }
@@ -53,47 +97,53 @@ sg_audio_ofile_open(const char *path, int samplerate,
         pos += r;
     }
 
-    afp->fp = fp;
-    afp->samplerate = samplerate;
-    afp->len = 0;
-    afp->tmp = 0;
-    afp->tmplen = 0;
+    writer->fp = fp;
+    writer->format = format;
+    writer->channelcount = channelcount;
+    writer->samplerate = samplerate;
+    writer->len = 0;
+    writer->tmp = 0;
+    writer->tmpalloc = 0;
 
-    return afp;
+    return writer;
 
 cleanup:
-    if (afp)
-        free(afp);
+    if (writer)
+        free(writer);
     if (fp)
         fp->close(fp);
     return NULL;
 }
 
 int
-sg_audio_ofile_close(struct sg_audio_ofile *afp,
-                     struct sg_error **err)
+sg_audio_writer_close(struct sg_audio_writer *writer,
+                      struct sg_error **err)
 {
-    struct sg_file *fp = afp->fp;
-    int r, sz, pos, ret;
+    struct sg_file *fp = writer->fp;
+    int r, sz, pos, ret, ssize, sfloat, fsize;
     int64_t rr;
     char header[WAV_HEADER_SIZE];
+
+    ssize = sg_audio_writer_fmtsize(writer->format);
+    sfloat = sg_audio_writer_fmtfloat(writer->format);
+    fsize = writer->channelcount * ssize;
 
     rr = fp->seek(fp, 0, SEEK_SET);
     if (rr < 0) goto error;
 
-    sz = afp->len;
+    sz = writer->len;
     memcpy(header, "RIFF", 4);
     pce_write_lu32(header + 4, sz * 4 + 36);
     memcpy(header + 8, "WAVE", 4);
 
     memcpy(header + 12, "fmt ", 4);
     pce_write_lu32(header + 16, 16);
-    pce_write_lu16(header + 20, 1);
-    pce_write_lu16(header + 22, 2);
-    pce_write_lu32(header + 24, afp->samplerate);
-    pce_write_lu32(header + 28, afp->samplerate * 4);
-    pce_write_lu16(header + 32, 4);
-    pce_write_lu16(header + 34, 16);
+    pce_write_lu16(header + 20, sfloat ? 3 : 1);
+    pce_write_lu16(header + 22, writer->channelcount);
+    pce_write_lu32(header + 24, writer->samplerate);
+    pce_write_lu32(header + 28, writer->samplerate * fsize);
+    pce_write_lu16(header + 32, fsize);
+    pce_write_lu16(header + 34, ssize * 8);
 
     memcpy(header + 36, "data", 4);
     pce_write_lu32(header + 40, sz * 4);
@@ -114,8 +164,8 @@ sg_audio_ofile_close(struct sg_audio_ofile *afp,
 done:
     if (fp)
         fp->close(fp);
-    free(afp->tmp);
-    free(afp);
+    free(writer->tmp);
+    free(writer);
     return ret;
 
 error:
@@ -124,54 +174,88 @@ error:
     goto done;
 }
 
-static unsigned short
-swap16(unsigned short x)
+static void
+sg_audio_pcm_swap2(void *SG_RESTRICT out, const void *SG_RESTRICT in,
+                   size_t count)
 {
-    return (x >> 8) | (x << 8);
+    unsigned char *outp = out;
+    const unsigned char *inp = in;
+    size_t i;
+    for (i = 0; i < count; i++) {
+        outp[1] = inp[0];
+        outp[0] = inp[1];
+        inp += 2;
+        outp += 2;
+    }
+}
+
+static void
+sg_audio_pcm_swap4(void *SG_RESTRICT out, const void *SG_RESTRICT in,
+                   size_t count)
+{
+    unsigned char *outp = out;
+    const unsigned char *inp = in;
+    size_t i;
+    for (i = 0; i < count; i++) {
+        outp[3] = inp[0];
+        outp[2] = inp[1];
+        outp[1] = inp[2];
+        outp[0] = inp[3];
+        inp += 4;
+        outp += 4;
+    }
 }
 
 int
-sg_audio_ofile_write(struct sg_audio_ofile *afp,
-                     const short *samples, int nframe,
-                     struct sg_error **err)
+sg_audio_writer_write(struct sg_audio_writer *writer,
+                      const void *data, int count,
+                      struct sg_error **err)
 {
-    struct sg_file *fp = afp->fp;
-    const unsigned char *buf;
-    unsigned short *tmp;
-    size_t nlen, len, pos;
-    int i, r;
+    struct sg_file *fp = writer->fp;
+    int ssize, sswapped, r;
+    size_t nsamp, bsize, pos, nalloc;
+    void *tmp;
+    const unsigned *buf;
 
-    if (PCE_BYTE_ORDER == PCE_BIG_ENDIAN) {
-        if (afp->tmplen < (unsigned) nframe) {
-            free(afp->tmp);
-            afp->tmp = NULL;
-            nlen = pce_round_up_pow2(nframe);
-            if (nlen > (size_t) -1 / 4)
+    ssize = sg_audio_writer_fmtsize(writer->format);
+    sswapped = sg_audio_writer_fmtswapped(writer->format);
+    nsamp = (size_t) writer->channelcount * count;
+    bsize = nsamp * ssize;
+
+    if (sswapped) {
+        if (writer->tmpalloc < bsize) {
+            free(writer->tmp);
+            writer->tmp = NULL;
+            nalloc = pce_round_up_pow2(bsize);
+            if (!nalloc)
                 goto nomem;
-            tmp = malloc(nlen * 4);
+            tmp = malloc(nalloc);
             if (!tmp)
                 goto nomem;
-            afp->tmp = tmp;
-            afp->tmplen = nlen;
+            writer->tmp = tmp;
+            writer->tmpalloc = nalloc;
         } else {
-            tmp = afp->tmp;
+            tmp = writer->tmp;
         }
-        for (i = 0; i < nframe; ++i) {
-            tmp[2*i+0] = swap16(samples[2*i+0]);
-            tmp[2*i+1] = swap16(samples[2*i+1]);
+        switch (bsize) {
+        case 2:
+            sg_audio_pcm_swap2(tmp, data, nsamp);
+            break;
+        case 4:
+            sg_audio_pcm_swap4(tmp, data, nsamp);
+            break;
         }
-        buf = (unsigned char *) tmp;
+        buf = tmp;
     } else {
-        buf = (const unsigned char *) samples;
+        buf = data;
     }
 
-    len = nframe * 4;
     pos = 0;
-    while (pos < len) {
-        r = fp->write(fp, buf + pos, len - pos);
+    while (pos < bsize) {
+        r = fp->write(fp, buf + pos, bsize - pos);
         if (r < 0)
             goto ferror;
-        pos += len;
+        pos += r;
     }
 
     return 0;
