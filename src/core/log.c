@@ -19,10 +19,9 @@
 
 struct sg_logger_obj {
     struct sg_logger head;
-    sg_log_level_t level;
     char *name;
     size_t namelen;
-    struct sg_logger_obj *child, *next;
+    struct sg_logger_obj *next;
 };
 
 static struct sg_logger_obj sg_logger_root;
@@ -44,20 +43,11 @@ sg_log_listen(struct sg_log_listener *listener)
 }
 
 static sg_log_level_t
-sg_logger_conflevel(const char *name, size_t len)
+sg_logger_conflevel(const char *name)
 {
     const char *v;
-    char buf[128];
     int r;
-    if (!len) {
-        name = "root";
-        len = 4;
-    }
-    if (len > sizeof(buf) - 1)
-        return LOG_INHERIT;
-    memcpy(buf, name, len);
-    buf[len] = '\0';
-    r = sg_cvar_gets("log.level", buf, &v);
+    r = sg_cvar_gets("log.level", name, &v);
     if (r) {
         if (!strcmp(v, "debug"))
             return SG_LOG_DEBUG;
@@ -74,10 +64,9 @@ sg_logger_conflevel(const char *name, size_t len)
 void
 sg_log_init(void)
 {
-    sg_log_level_t level = sg_logger_conflevel(NULL, 0);
+    sg_log_level_t level = sg_logger_conflevel("root");
     pce_lock_init(&sg_logger_lock);
     sg_logger_root.head.level = level == LOG_INHERIT ? SG_LOG_WARN : level;
-    sg_logger_root.level = level;
     sg_log_console_init();
     sg_log_network_init();
 }
@@ -92,61 +81,44 @@ sg_log_term(void)
 }
 
 static struct sg_logger_obj *
-sg_logger_new(struct sg_logger_obj *parent,
-              const char *name, size_t namelen)
+sg_logger_new(const char *name, size_t namelen)
 {
     struct sg_logger_obj *np;
     sg_log_level_t level;
-    np = malloc(sizeof(*np) + namelen);
+    np = malloc(sizeof(*np) + namelen + 1);
     if (!np)
         abort();
-    level = sg_logger_conflevel(name, namelen);
-    np->head.level = level == LOG_INHERIT ? parent->head.level : level;
-    np->level = level;
+    level = sg_logger_conflevel(name);
+    np->head.level = level == LOG_INHERIT ? sg_logger_root.head.level : level;
     np->name = (char *) (np + 1);
     np->namelen = namelen;
-    np->child = NULL;
-    np->next = parent->child;
-    parent->child = np;
-    memcpy(np->name, name, namelen);
+    np->next = sg_logger_root.next;
+    sg_logger_root.next = np;
+    memcpy(np->name, name, namelen + 1);
     return np;
 }
 
 struct sg_logger *
 sg_logger_get(const char *name)
 {
-    size_t len, clen, off = 0;
-    char *q;
-    struct sg_logger_obj *lp = &sg_logger_root, *np;
-    if (!name || !*name)
-        return &lp->head;
+    struct sg_logger_obj *np;
+    size_t len;
+
+    if (!name)
+        return &sg_logger_root.head;
+
     len = strlen(name);
-    for (off = 0; off < len; ++off) {
-        if (!((name[off] >= 'a' && name[off] <= 'z') ||
-              (name[off] >= 'A' && name[off] <= 'Z') ||
-              (name[off] >= '0' && name[off] <= '9') ||
-              name[off] == '-' || name[off] == '.' || name[off] == '_'))
-            abort();
+
+    pce_lock_acquire(&sg_logger_lock);
+    for (np = &sg_logger_root; np; np = np->next) {
+        if (np->namelen == len && !memcmp(np->name, name, len))
+            break;
     }
-    off = 0;
-    while (1) {
-        q = memchr(name + off, '.', len - off);
-        clen = q ? (size_t) (q - (name + off)) : (len - off);
-        for (np = lp->child; np; np = np->next)
-            if (!memcmp(np->name + off, name + off, clen))
-                break;
-        if (!np)
-            np = sg_logger_new(lp, name, off + clen);
-        off += clen;
-        lp = np;
-        if (!name[off])
-            return &lp->head;
-        if (name[off] == '.') {
-            off += 1;
-            if (!name[off])
-                abort();
-        }
-    }
+    if (!np)
+        np = sg_logger_new(name, len);
+    pce_lock_release(&sg_logger_lock);
+
+    return &np->head;
 }
 
 static const char SG_LOGLEVEL[4][6] = {
