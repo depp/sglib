@@ -139,12 +139,14 @@ sg_path_norm2(char *buf, char *pos,
                 goto toolong;
         }
         if (os == op) {
-        } else if (os + 1 == op && op[0] == '.') {
+        } else if (os + 1 == op && os[0] == '.') {
             op = os;
-        } else if (os + 2 == op && op[0] == '.' && op[1] == '.') {
+        } else if (os + 2 == op && os[0] == '.' && os[1] == '.') {
             op = os;
-            while (op != buf && op[-1] != '/')
-                op--;
+            if (op != buf) {
+                do op--;
+                while (op != buf && op[-1] != '/');
+            }
         } else {
             r = sg_path_checkpart(os, op - os, err);
             if (r)
