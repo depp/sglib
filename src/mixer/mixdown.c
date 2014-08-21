@@ -386,3 +386,17 @@ sg_mixer_mixdown_process(struct sg_mixer_mixdowniface *mp,
 
     return mp->mixdown.bufsz;
 }
+
+void
+sg_mixer_mixdown_get_f32(struct sg_mixer_mixdowniface *mp,
+                         float *buffer)
+{
+    int apos, asz = mp->mixdown.bufsz;
+    const float *SG_RESTRICT input = mp->mixdown.audio_buf;
+    float *SG_RESTRICT output = buffer;
+    /* FIXME: Performance improvement: use SSE */
+    for (apos = 0; apos < asz; apos++) {
+        output[apos * 2 + 0] = input[apos + asz * 2];
+        output[apos * 2 + 1] = input[apos + asz * 3];
+    }
+}

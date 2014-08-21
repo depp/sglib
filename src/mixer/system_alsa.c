@@ -8,6 +8,7 @@
 #include "libpce/byteorder.h"
 #include "sg/cvar.h"
 #include "sg/entry.h"
+#include "sg/error.h"
 /* #include "sg/event.h" */
 #include "sg/log.h"
 #include <alloca.h>
@@ -36,6 +37,8 @@ struct sg_mixer_alsa {
 
     /* The ALSA audio stream.  */
     snd_pcm_t *pcm;
+    /* The buffer for interleaved data.  */
+    float *buffer;
     /* The sample rate.  */
     int rate;
     /* The size of ALSA's audio buffer, NOT the size of the buffer
@@ -84,8 +87,7 @@ sg_audio_loop(void *ptr)
     snd_pcm_t *pcm = alsa->pcm;
     unsigned periodsize = alsa->periodsize, bufsize = alsa->bufsize,
         rate = alsa->rate, time, pos, dx, dt, nsec;
-    float *buf = mp->mixdown.audio_buf + periodsize * 2;
-    void *bufs[2];
+    float *buf = alsa->buffer;
     snd_pcm_sframes_t r;
     snd_pcm_uframes_t nframes;
     struct timespec ts;
@@ -125,11 +127,10 @@ sg_audio_loop(void *ptr)
         rcount = sg_mixer_mixdown_process(mp, time);
         if (rcount == 0)
             break;
+        sg_mixer_mixdown_get_f32(mp, buf);
         pos = 0;
         while (pos < periodsize) {
-            bufs[0] = buf + periodsize * 0 + pos;
-            bufs[1] = buf + periodsize * 1 + pos;
-            r = snd_pcm_writen(pcm, bufs, periodsize - pos);
+            r = snd_pcm_writei(pcm, buf + 2 * pos, periodsize - pos);
             if (r < 0) {
                 switch (-r) {
                 case EAGAIN:
@@ -287,7 +288,7 @@ sg_mixer_start(void)
 
     r = snd_pcm_hw_params_set_access(
         alsa->pcm, hwparms,
-        SND_PCM_ACCESS_RW_NONINTERLEAVED);
+        SND_PCM_ACCESS_RW_INTERLEAVED);
     if (r < 0) {
         why = "could not set access mode";
         goto alsa_error;
@@ -363,6 +364,14 @@ sg_mixer_start(void)
 
     /* ==================== */
 
+    alsa->buffer = malloc(sizeof(float) * periodsize * 2);
+    if (alsa->buffer == NULL) {
+        sg_error_nomem(&err);
+        sg_logerrs(alsa->logger, SG_LOG_ERROR, err,
+                   "failed to create buffer");
+        goto cleanup;
+    }
+
     mp = sg_mixer_mixdown_create_live(rate, periodsize, &err);
     if (!mp) {
         sg_logerrs(alsa->logger, SG_LOG_ERROR, err,
@@ -395,6 +404,8 @@ pthread_error:
     goto cleanup;
 
 cleanup:
+    sg_error_clear(&err);
+    free(alsa->buffer);
     if (alsa->pcm)
         snd_pcm_close(alsa->pcm);
     if (mp)
