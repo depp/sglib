@@ -293,6 +293,7 @@ sg_mixer_mixdown_render(struct sg_mixer_mixdown *SG_RESTRICT mp)
                 starttime = sg_mixer_timeexact_get(
                     &mp->time.exact, sg_mixer.channel[ch].starttime);
             if (starttime < asz) {
+                mp->channel[ch].flags |= SG_MIXER_LFLAG_STARTED;
                 if (starttime < 0)
                     starttime = 0;
                 mp->channel[ch].samplepos = 0;
@@ -327,13 +328,14 @@ sg_mixer_mixdown_render(struct sg_mixer_mixdown *SG_RESTRICT mp)
                 stoptime = asz;
             }
         } else {
-            starttime = asz;
+            stoptime = asz;
         }
 
         /* Render parameter changes into parameter sample buffer.  */
         for (param = 0; param < SG_MIXER_PARAM_COUNT; param++) {
             addr = (ch << 16) | param;
             paramval = mp->channel[ch].param[param];
+            ppos = 0;
             for (; i < nmsg && msg[i].addr == addr; i++) {
                 if (which == SG_MIXER_LIVE)
                     msgtime = sg_mixer_time_get(
