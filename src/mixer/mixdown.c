@@ -25,7 +25,7 @@ sg_mixer_mixdown_new(sg_mixer_which_t which, int bufsz)
 
     sg_mixer_queue_init(&mp->procqueue);
     mp->which = which;
-    mp->channel = malloc(sizeof(*mp->channel) * channelcount);
+    mp->channel = calloc(sizeof(*mp->channel), channelcount);
     if (!mp->channel)
         goto nomem1;
     mp->channelcount = channelcount;
