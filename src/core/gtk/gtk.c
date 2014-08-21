@@ -118,6 +118,7 @@ sg_gtk_handle_expose(GtkWidget *area)
             sg_sys_abort("Could not initialize GLEW.");
         event.type = SG_EVENT_VIDEO_INIT;
         sg_game_event(&event);
+        sg_gtk.init_sent = 1;
     }
 
     sg_game_draw(sg_gtk.width, sg_gtk.height, sg_clock_get());
