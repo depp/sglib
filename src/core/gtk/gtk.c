@@ -102,6 +102,7 @@ sg_gtk_handle_destroy(GtkWidget *widget, GdkEvent *event, void *user_data)
 static gboolean
 sg_gtk_handle_expose(GtkWidget *area)
 {
+    GLenum err;
     union sg_event event;
     GdkGLContext *context = gtk_widget_get_gl_context(area);
     GdkGLDrawable *drawable = gtk_widget_get_gl_drawable(area);
@@ -112,6 +113,9 @@ sg_gtk_handle_expose(GtkWidget *area)
     }
 
     if (!sg_gtk.init_sent) {
+        err = glewInit();
+        if (err)
+            sg_sys_abort("Could not initialize GLEW.");
         event.type = SG_EVENT_VIDEO_INIT;
         sg_game_event(&event);
     }
