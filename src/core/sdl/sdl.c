@@ -1,11 +1,14 @@
-/* Copyright 2012 Dietrich Epp.
+/* Copyright 2012-2014 Dietrich Epp.
    This file is part of SGLib.  SGLib is licensed under the terms of the
    2-clause BSD license.  For more information, see LICENSE.txt. */
-#include "base/cvar.h"
-#include "base/entry.h"
-#include "base/error.h"
-#include "base/event.h"
-#include "base/version.h"
+#include "sg/clock.h"
+#include "sg/cvar.h"
+#include "sg/entry.h"
+#include "sg/error.h"
+#include "sg/event.h"
+#include "sg/opengl.h"
+#include "sg/version.h"
+#include "../private.h"
 #include "SDL.h"
 #include <getopt.h>
 #include <stdio.h>
@@ -14,48 +17,23 @@ static int sg_window_width, sg_window_height;
 
 __attribute__((noreturn))
 static void
-quit(int status)
+sdl_quit(int status)
 {
     SDL_Quit();
     exit(status);
 }
 
 void
-sg_platform_quit(void)
+sg_sys_quit(void)
 {
-    quit(0);
+    sdl_quit(0);
 }
 
 void
-sg_platform_failf(const char *fmt, ...)
+sg_sys_abort(const char *msg)
 {
-    va_list ap;
-    va_start(ap, fmt);
-    sg_platform_failv(fmt, ap);
-    va_end(ap);
-}
-
-void
-sg_platform_failv(const char *fmt, va_list ap)
-{
-    vfprintf(stderr, fmt, ap);
-    quit(1);
-}
-
-void
-sg_platform_faile(struct sg_error *err)
-{
-    if (err) {
-        if (err->code)
-            fprintf(stderr, "error: %s (%s %ld)\n",
-                    err->msg, err->domain->name, err->code);
-        else
-            fprintf(stderr, "error: %s (%s)\n",
-                    err->msg, err->domain->name);
-    } else {
-        fputs("error: an unknown error occurred\n", stderr);
-    }
-    quit(1);
+    fprintf(stderr, "error: %s\n", msg);
+    sdl_quit(1);
 }
 
 void
@@ -75,15 +53,16 @@ static void
 sdl_error(const char *what)
 {
     fprintf(stderr, "error: %s: %s\n", what, SDL_GetError());
-    quit(1);
+    sdl_quit(1);
 }
 
 static SDL_Surface *sdl_surface;
 
 static void
-init(int argc, char *argv[])
+sdl_init(int argc, char *argv[])
 {
-    struct sg_event_resize rsz;
+    GLenum err;
+    union sg_event evt;
     struct sg_game_info gameinfo;
     int opt;
 
@@ -109,12 +88,13 @@ init(int argc, char *argv[])
         32, SDL_OPENGL);
     if (!sdl_surface)
         sdl_error("could not set video mode");
+    err = glewInit();
+    if (err)
+        sg_sys_abort("could not initialize GLEW");
     sg_window_width = sdl_surface->w;
     sg_window_height = sdl_surface->h;
-    rsz.type = SG_EVENT_RESIZE;
-    rsz.width = sdl_surface->w;
-    rsz.height = sdl_surface->h;
-    sg_sys_event((union sg_event *) &rsz);
+    evt.type = SG_EVENT_VIDEO_INIT;
+    sg_game_event(&evt);
 }
 
 static void
@@ -125,7 +105,7 @@ sdl_event_mousemove(SDL_MouseMotionEvent *e)
     ee.button = -1;
     ee.x = e->x;
     ee.y = sg_window_height - 1 - e->y;
-    sg_sys_event((union sg_event *) &ee);
+    sg_game_event((union sg_event *) &ee);
 }
 
 static void
@@ -144,7 +124,7 @@ sdl_event_mousebutton(SDL_MouseButtonEvent *e)
     }
     ee.x = e->x;
     ee.y = sg_window_height - 1 - e->y;
-    sg_sys_event((union sg_event *) &ee);
+    sg_game_event((union sg_event *) &ee);
 }
 
 static void
@@ -154,19 +134,14 @@ sdl_event_key(SDL_KeyboardEvent *e)
     ee.type = e->type == SDL_KEYDOWN ?
         SG_EVENT_KDOWN : SG_EVENT_KUP;
     ee.key = -1;
-    sg_sys_event((union sg_event *) &ee);
+    sg_game_event((union sg_event *) &ee);
 }
 
 static void
 sdl_event_resize(SDL_ResizeEvent *e)
 {
-    struct sg_event_resize ee;
     sg_window_width = e->w;
     sg_window_height = e->h;
-    ee.type = SG_EVENT_RESIZE;
-    ee.width = e->w;
-    ee.height = e->h;
-    sg_sys_event((union sg_event *) &ee);
 }
 
 static void
@@ -202,7 +177,7 @@ sdl_main(void)
             }
         }
 
-        sg_sys_draw();
+        sg_game_draw(sg_window_width, sg_window_height, sg_clock_get());
         SDL_GL_SwapBuffers();
     }
 }
@@ -210,7 +185,7 @@ sdl_main(void)
 int
 main(int argc, char *argv[])
 {
-    init(argc, argv);
+    sdl_init(argc, argv);
     sdl_main();
     return 0;
 }

@@ -216,7 +216,7 @@ def build_sdl_config(build, mod, name, external):
     cmdname = 'sdl-config'
     flags = {}
     for varname, arg in (('LIBS', '--libs'), ('CFLAGS', '--cflags')):
-        stdout, stderr, retcode = get_output([cmdname, arg])
+        stdout, stderr, retcode = shell.get_output([cmdname, arg])
         if retcode:
             raise ConfigError('{} failed'.format(cmdname), stderr)
         flags[varname] = parse_flags(mod, varname, stdout)
