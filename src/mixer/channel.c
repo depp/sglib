@@ -10,6 +10,9 @@ sg_mixer_channel_play(struct sg_mixer_sound *sound,
     struct sg_mixer_channel *chp, *che;
     int i;
 
+    if (!sound)
+        return NULL;
+
     chp = sg_mixer.channel;
     che = chp + sg_mixer.channelcount;
     for (; chp != che; chp++)
