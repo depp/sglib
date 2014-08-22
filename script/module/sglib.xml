@@ -21,12 +21,10 @@
       <src path="arch.h"/>
       <src path="atomic.h"/>
       <src path="attribute.h"/>
-      <src path="audio_mixdown.h"/>
-      <src path="audio_ofile.h"/>
-      <src path="audio_pcm.h"/>
-      <src path="audio_sample.h"/>
-      <src path="audio_source.h"/>
-      <src path="audio_system.h"/>
+      <src path="audio_buffer.h"/>
+      <src path="audio_file.h"/>
+      <src path="audio_stream.h"/>
+      <src path="binary.h"/>
       <src path="byteorder.h"/>
       <src path="clock.h"/>
       <src path="configfile.h"/>
@@ -42,6 +40,7 @@
       <src path="key.h"/>
       <src path="keycode.h"/>
       <src path="log.h"/>
+      <src path="mixer.h"/>
       <src path="net.h"/>
       <src path="opengl.h"/>
       <src path="pixbuf.h"/>
@@ -94,6 +93,7 @@
       <src path="file_read.c"/>
       <src path="keyid.c"/>
       <src path="log.c"/>
+      <!-- <src path="logtest.c"/> -->
       <src path="log_console.c"/>
       <src path="log_impl.h"/>
       <src path="log_network.c"/>
@@ -101,6 +101,7 @@
       <src path="opengl.c"/>
       <src path="path.c"/>
       <src path="path_norm.c"/>
+      <src path="private.h"/>
       <src path="rand.c"/>
       <src path="sys.c"/>
       <src path="version.c"/>
@@ -127,17 +128,9 @@
           <src path="keytable_win.c"/>
         </case>
       </switch>
-
     </group>
 
     <group path="src/mixer">
-      <!--
-      <src path="mixer.h"/>
-      <src path="offline.c"/>
-      <src path="queue.c"/>
-      <src path="realtime.c"/>
-      <src path="sample.c"/>
-      -->
       <src path="channel.c"/>
       <src path="mixdown.c"/>
       <src path="mixer.c"/>
