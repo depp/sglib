@@ -1,8 +1,8 @@
 /* Copyright 2009-2013 Dietrich Epp.
-   This file is part of LibPCE.  LibPCE is licensed under the terms of the
+   This file is part of SGLib.  SGLib is licensed under the terms of the
    2-clause BSD license.  For more information, see LICENSE.txt. */
-#ifndef PCE_HASHTABLE_H
-#define PCE_HASHTABLE_H
+#ifndef SG_HASHTABLE_H
+#define SG_HASHTABLE_H
 #include <stddef.h>
 #ifdef __cplusplus
 extern "C" {
@@ -102,7 +102,7 @@ struct pce_hashtable_entry *
 pce_hashtable_insert(struct pce_hashtable *d, char *key);
 
 /**
- * @brief Erase the given entry. 
+ * @brief Erase the given entry.
  */
 void
 pce_hashtable_erase(struct pce_hashtable *d,

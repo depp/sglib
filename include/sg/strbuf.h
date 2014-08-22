@@ -1,8 +1,8 @@
 /* Copyright 2011-2013 Dietrich Epp.
-   This file is part of LibPCE.  LibPCE is licensed under the terms of the
+   This file is part of SGLib.  SGLib is licensed under the terms of the
    2-clause BSD license.  For more information, see LICENSE.txt. */
-#ifndef PCE_STRBUF_H
-#define PCE_STRBUF_H
+#ifndef SG_STRBUF_H
+#define SG_STRBUF_H
 #include <assert.h>
 #include <stdarg.h>
 #include <stddef.h>

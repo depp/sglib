@@ -1,8 +1,11 @@
 /* Copyright 2012-2013 Dietrich Epp.
-   This file is part of LibPCE.  LibPCE is licensed under the terms of the
+   This file is part of SGLib.  SGLib is licensed under the terms of the
    2-clause BSD license.  For more information, see LICENSE.txt. */
-#ifndef PCE_HASH_H
-#define PCE_HASH_H
+#ifndef SG_HASH_H
+#define SG_HASH_H
+#ifdef __cplusplus
+extern "C" {
+#endif
 #include <stddef.h>
 #include "sg/attribute.h"
 
@@ -23,4 +26,7 @@ PCE_ATTR_PURE
 unsigned
 pce_hash(const void *data, size_t len);
 
+#ifdef __cplusplus
+}
+#endif
 #endif

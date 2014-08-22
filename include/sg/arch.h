@@ -1,8 +1,8 @@
 /* Copyright 2012-2013 Dietrich Epp.
-   This file is part of LibPCE.  LibPCE is licensed under the terms of the
+   This file is part of SGLib.  SGLib is licensed under the terms of the
    2-clause BSD license.  For more information, see LICENSE.txt. */
-#ifndef PCE_ARCH_H
-#define PCE_ARCH_H
+#ifndef SG_ARCH_H
+#define SG_ARCH_H
 
 /**
  * @file arch.h

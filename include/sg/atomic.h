@@ -1,8 +1,8 @@
 /* Copyright 2012-2013 Dietrich Epp.
-   This file is part of LibPCE.  LibPCE is licensed under the terms of the
+   This file is part of SGLib.  SGLib is licensed under the terms of the
    2-clause BSD license.  For more information, see LICENSE.txt. */
-#ifndef PCE_ATOMIC_H
-#define PCE_ATOMIC_H
+#ifndef SG_ATOMIC_H
+#define SG_ATOMIC_H
 #include "sg/arch.h"
 #include "sg/attribute.h"
 #ifdef __cplusplus
@@ -374,7 +374,7 @@ PCE_INLINE
 void
 pce_atomic_lwsync(void)
 {
-    __asm__ __volatile__("lwsync" : : : "memory");    
+    __asm__ __volatile__("lwsync" : : : "memory");
 }
 
 PCE_INLINE

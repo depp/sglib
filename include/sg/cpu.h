@@ -1,8 +1,8 @@
 /* Copyright 2012-2013 Dietrich Epp.
-   This file is part of LibPCE.  LibPCE is licensed under the terms of the
+   This file is part of SGLib.  SGLib is licensed under the terms of the
    2-clause BSD license.  For more information, see LICENSE.txt. */
-#ifndef PCE_CPU_H
-#define PCE_CPU_H
+#ifndef SG_CPU_H
+#define SG_CPU_H
 #include "sg/arch.h"
 #ifdef __cplusplus
 extern "C" {

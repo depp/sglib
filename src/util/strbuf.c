@@ -1,5 +1,5 @@
 /* Copyright 2011-2012 Dietrich Epp.
-   This file is part of LibPCE.  LibPCE is licensed under the terms of the
+   This file is part of SGLib.  SGLib is licensed under the terms of the
    2-clause BSD license.  For more information, see LICENSE.txt. */
 #include "sg/strbuf.h"
 #include <stdio.h>

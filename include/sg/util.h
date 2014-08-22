@@ -1,8 +1,8 @@
 /* Copyright 2012-2013 Dietrich Epp.
-   This file is part of LibPCE.  LibPCE is licensed under the terms of the
+   This file is part of SGLib.  SGLib is licensed under the terms of the
    2-clause BSD license.  For more information, see LICENSE.txt. */
-#ifndef PCE_UTIL_H
-#define PCE_UTIL_H
+#ifndef SG_UTIL_H
+#define SG_UTIL_H
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -164,7 +164,7 @@ pce_swap64(unsigned long long x)
         ((unsigned long long) pce_swap32((unsigned) x) << 32);
 }
 #endif
- 
+
 #if PCE_BYTE_ORDER == PCE_LITTLE_ENDIAN
 # define pce_swapbe16(x) pce_swap16(x)
 # define pce_swapbe32(x) pce_swap32(x)

@@ -1,5 +1,8 @@
 extern_c = true
 {
+    + /arch.h
+    + /attribute.h
+    + /byteorder.h
     + /defs.h
     + /opengl.h
     extern_c = false
