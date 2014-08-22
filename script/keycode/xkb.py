@@ -1,6 +1,7 @@
 #!/usr/bin/env python
-# Copyright 2011-2012 Dietrich Epp <depp@zdome.net>
-# See LICENSE.txt for details.
+# Copyright 2011-2012 Dietrich Epp.
+# This file is part of SGLib.  SGLib is licensed under the terms of the
+# 2-clause BSD license.  For more information, see LICENSE.txt.
 import re, sys, os
 
 def getcodes(inpath, outpath):
@@ -36,4 +37,3 @@ def getcodes(inpath, outpath):
         raise
 
 getcodes('evdev', 'evdev.txt')
-    
