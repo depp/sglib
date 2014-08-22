@@ -13,7 +13,8 @@
 #include <getopt.h>
 #include <stdio.h>
 
-static int sg_window_width, sg_window_height;
+static SDL_Window *sg_window;
+static SDL_GLContext sg_context;
 
 __attribute__((noreturn))
 static void
@@ -40,11 +41,12 @@ void
 sg_version_platform(struct sg_logger *lp)
 {
     char v1[16], v2[16];
-    const SDL_version *v = SDL_Linked_Version();
+    SDL_version v;
+    SDL_GetVersion(&v);
     snprintf(v1, sizeof(v1), "%d.%d.%d",
              SDL_MAJOR_VERSION, SDL_MINOR_VERSION, SDL_PATCHLEVEL);
     snprintf(v2, sizeof(v2), "%d.%d.%d",
-             v->major, v->minor, v->patch);
+             v.major, v.minor, v.patch);
     sg_version_lib(lp, "LibSDL", v1, v2);
 }
 
@@ -56,15 +58,13 @@ sdl_error(const char *what)
     sdl_quit(1);
 }
 
-static SDL_Surface *sdl_surface;
-
 static void
 sdl_init(int argc, char *argv[])
 {
     GLenum err;
     union sg_event evt;
     struct sg_game_info gameinfo;
-    int opt;
+    int opt, flags;
 
     while ((opt = getopt(argc, argv, "d:")) != -1) {
         switch (opt) {
@@ -78,21 +78,33 @@ sdl_init(int argc, char *argv[])
         }
     }
 
-    if (SDL_Init(SDL_INIT_VIDEO))
+    flags = SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_EVENTS;
+    if (SDL_Init(flags))
         sdl_error("could not initialize LibSDL");
 
     sg_sys_init();
+    gameinfo = sg_game_info_defaults;
     sg_sys_getinfo(&gameinfo);
-    sdl_surface = SDL_SetVideoMode(
-        gameinfo.default_width, gameinfo.default_height,
-        32, SDL_OPENGL);
-    if (!sdl_surface)
-        sdl_error("could not set video mode");
+
+    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+    sg_window = SDL_CreateWindow(
+        gameinfo.name,
+        SDL_WINDOWPOS_UNDEFINED,
+        SDL_WINDOWPOS_UNDEFINED,
+        gameinfo.default_width,
+        gameinfo.default_height,
+        SDL_WINDOW_OPENGL);
+    if (!sg_window)
+        sdl_error("could not open window");
+
+    sg_context = SDL_GL_CreateContext(sg_window);
+    if (!sg_context)
+        sdl_error("could not create OpenGL context");
+
     err = glewInit();
     if (err)
         sg_sys_abort("could not initialize GLEW");
-    sg_window_width = sdl_surface->w;
-    sg_window_height = sdl_surface->h;
+
     evt.type = SG_EVENT_VIDEO_INIT;
     sg_game_event(&evt);
 }
@@ -101,10 +113,12 @@ static void
 sdl_event_mousemove(SDL_MouseMotionEvent *e)
 {
     struct sg_event_mouse ee;
+    int width, height;
+    SDL_GetWindowSize(sg_window, &width, &height);
     ee.type = SG_EVENT_MMOVE;
     ee.button = -1;
     ee.x = e->x;
-    ee.y = sg_window_height - 1 - e->y;
+    ee.y = height - 1 - e->y;
     sg_game_event((union sg_event *) &ee);
 }
 
@@ -112,6 +126,8 @@ static void
 sdl_event_mousebutton(SDL_MouseButtonEvent *e)
 {
     struct sg_event_mouse ee;
+    int width, height;
+    SDL_GetWindowSize(sg_window, &width, &height);
     ee.type = e->type == SDL_MOUSEBUTTONDOWN ?
         SG_EVENT_MDOWN : SG_EVENT_MUP;
     switch (e->button) {
@@ -123,7 +139,7 @@ sdl_event_mousebutton(SDL_MouseButtonEvent *e)
         break;
     }
     ee.x = e->x;
-    ee.y = sg_window_height - 1 - e->y;
+    ee.y = height - 1 - e->y;
     sg_game_event((union sg_event *) &ee);
 }
 
@@ -138,16 +154,10 @@ sdl_event_key(SDL_KeyboardEvent *e)
 }
 
 static void
-sdl_event_resize(SDL_ResizeEvent *e)
-{
-    sg_window_width = e->w;
-    sg_window_height = e->h;
-}
-
-static void
 sdl_main(void)
 {
     SDL_Event e;
+    int width, height;
     while (1) {
         while (SDL_PollEvent(&e)) {
             switch (e.type) {
@@ -168,17 +178,14 @@ sdl_main(void)
                 sdl_event_key(&e.key);
                 break;
 
-            case SDL_VIDEORESIZE:
-                sdl_event_resize(&e.resize);
-                break;
-
             default:
                 break;
             }
         }
 
-        sg_game_draw(sg_window_width, sg_window_height, sg_clock_get());
-        SDL_GL_SwapBuffers();
+        SDL_GetWindowSize(sg_window, &width, &height);
+        sg_game_draw(width, height, sg_clock_get());
+        SDL_GL_SwapWindow(sg_window);
     }
 }
 

@@ -8,6 +8,20 @@
 #include "private.h"
 #include <stdio.h>
 
+const struct sg_game_info sg_game_info_defaults = {
+    /* minimum width, height */
+    1280 / 4, 720 / 4,
+
+    /* default width, height */
+    1280, 720,
+
+    /* min, max aspect ratio */
+    1.25, 4.0,
+
+    /* name */
+    "Game"
+};
+
 void
 sg_sys_init(void)
 {

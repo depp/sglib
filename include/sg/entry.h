@@ -42,6 +42,9 @@ struct sg_game_info {
     /** @brief The maximum window aspect ratio, width divided by
         height.  */
     double max_aspect;
+
+    /** @brief The name of the game.  */
+    const char *name;
 };
 
 /**

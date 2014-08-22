@@ -5,6 +5,8 @@
 struct sg_game_info;
 union sg_event;
 
+extern const struct sg_game_info sg_game_info_defaults;
+
 /* ===== Subsystem initialization ===== */
 
 /* The initialization funcitons are called in this order, with the
