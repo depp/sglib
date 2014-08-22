@@ -63,7 +63,7 @@ sg_file_readall(struct sg_file *f, size_t maxsize)
     fbuf = malloc(sizeof(*fbuf));
     if (!fbuf)
         goto nomem;
-    pce_atomic_set(&fbuf->refcount, 1);
+    sg_atomic_set(&fbuf->refcount, 1);
     fbuf->data = buf;
     fbuf->length = pos;
     return fbuf;

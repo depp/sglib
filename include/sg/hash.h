@@ -22,9 +22,9 @@ extern "C" {
  * platforms or when using different versions of this library.  If you
  * want consistent output between platforms, use something like CRC.
  */
-PCE_ATTR_PURE
+SG_ATTR_PURE
 unsigned
-pce_hash(const void *data, size_t len);
+sg_hash(const void *data, size_t len);
 
 #ifdef __cplusplus
 }

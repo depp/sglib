@@ -113,7 +113,7 @@ sg_sys_quit(void);
  *
  * @param msg The message to display, a NUL-terminated UTF-8 string.
  */
-PCE_ATTR_NORETURN
+SG_ATTR_NORETURN
 void
 sg_sys_abort(const char *msg);
 
@@ -123,8 +123,8 @@ sg_sys_abort(const char *msg);
  *
  * @param msg The message to display, a NUL-terminated UTF-8 string.
  */
-PCE_ATTR_NORETURN
-PCE_ATTR_FORMAT(printf, 1, 2)
+SG_ATTR_NORETURN
+SG_ATTR_FORMAT(printf, 1, 2)
 void
 sg_sys_abortf(const char *msg, ...);
 
@@ -134,7 +134,7 @@ sg_sys_abortf(const char *msg, ...);
  *
  * @param msg The message to display, a NUL-terminated UTF-8 string.
  */
-PCE_ATTR_NORETURN
+SG_ATTR_NORETURN
 void
 sg_sys_abortv(const char *msg, va_list ap);
 

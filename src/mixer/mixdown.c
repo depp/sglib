@@ -59,13 +59,13 @@ sg_mixer_mixdown_create_live(int samplerate, int bufsz,
     }
     sg_mixer_time_init(&mi->mixdown.time.delayed, samplerate, bufsz);
 
-    pce_lock_acquire(&sg_mixer.lock);
+    sg_lock_acquire(&sg_mixer.lock);
     /* This function is only called by the audio system, so this
        should not happen.  */
     if (sg_mixer.mix_live != NULL)
         abort();
     sg_mixer.mix_live = mi;
-    pce_lock_release(&sg_mixer.lock);
+    sg_lock_release(&sg_mixer.lock);
 
     return mi;
 }
@@ -73,7 +73,7 @@ sg_mixer_mixdown_create_live(int samplerate, int bufsz,
 void
 sg_mixer_mixdown_destroy(struct sg_mixer_mixdowniface *mp)
 {
-    pce_lock_acquire(&sg_mixer.lock);
+    sg_lock_acquire(&sg_mixer.lock);
     if (mp->mixdown.which == SG_MIXER_LIVE) {
         assert(sg_mixer.mix_live == mp);
         sg_mixer.mix_live = NULL;
@@ -81,7 +81,7 @@ sg_mixer_mixdown_destroy(struct sg_mixer_mixdowniface *mp)
         assert(sg_mixer.mix_record == mp);
         sg_mixer.mix_record = NULL;
     }
-    pce_lock_release(&sg_mixer.lock);
+    sg_lock_release(&sg_mixer.lock);
 
     free(mp->mixdown.param_buf);
     free(mp->mixdown.audio_buf);
@@ -403,9 +403,9 @@ int
 sg_mixer_mixdown_process(struct sg_mixer_mixdowniface *mp,
                          unsigned buffertime)
 {
-    pce_lock_acquire(&sg_mixer.lock);
+    sg_lock_acquire(&sg_mixer.lock);
     if (!sg_mixer.is_ready) {
-        pce_lock_release(&sg_mixer.lock);
+        sg_lock_release(&sg_mixer.lock);
         return mp->mixdown.bufsz;
     }
     sg_mixer_mixdown_syncflags(mp);
@@ -415,7 +415,7 @@ sg_mixer_mixdown_process(struct sg_mixer_mixdowniface *mp,
                              sg_mixer.committime, buffertime);
     else
         sg_mixer_timeexact_update(&mp->mixdown.time.exact);
-    pce_lock_release(&sg_mixer.lock);
+    sg_lock_release(&sg_mixer.lock);
 
     sg_mixer_mixdown_render(&mp->mixdown);
 

@@ -133,20 +133,20 @@ sg_audio_writer_close(struct sg_audio_writer *writer,
 
     sz = writer->len;
     memcpy(header, "RIFF", 4);
-    pce_write_lu32(header + 4, sz * 4 + 36);
+    sg_write_lu32(header + 4, sz * 4 + 36);
     memcpy(header + 8, "WAVE", 4);
 
     memcpy(header + 12, "fmt ", 4);
-    pce_write_lu32(header + 16, 16);
-    pce_write_lu16(header + 20, sfloat ? 3 : 1);
-    pce_write_lu16(header + 22, writer->channelcount);
-    pce_write_lu32(header + 24, writer->samplerate);
-    pce_write_lu32(header + 28, writer->samplerate * fsize);
-    pce_write_lu16(header + 32, fsize);
-    pce_write_lu16(header + 34, ssize * 8);
+    sg_write_lu32(header + 16, 16);
+    sg_write_lu16(header + 20, sfloat ? 3 : 1);
+    sg_write_lu16(header + 22, writer->channelcount);
+    sg_write_lu32(header + 24, writer->samplerate);
+    sg_write_lu32(header + 28, writer->samplerate * fsize);
+    sg_write_lu16(header + 32, fsize);
+    sg_write_lu16(header + 34, ssize * 8);
 
     memcpy(header + 36, "data", 4);
-    pce_write_lu32(header + 40, sz * 4);
+    sg_write_lu32(header + 40, sz * 4);
 
     pos = 0;
     while (pos < WAV_HEADER_SIZE) {
@@ -226,7 +226,7 @@ sg_audio_writer_write(struct sg_audio_writer *writer,
         if (writer->tmpalloc < bsize) {
             free(writer->tmp);
             writer->tmp = NULL;
-            nalloc = pce_round_up_pow2(bsize);
+            nalloc = sg_round_up_pow2(bsize);
             if (!nalloc)
                 goto nomem;
             tmp = malloc(nalloc);

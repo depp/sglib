@@ -14,54 +14,54 @@ extern "C" {
  * @brief CPU feature detection.
  *
  * For each CPU feature, there is a corresponding flag starting with
- * @c PCE_CPUF.  The set of features enabled at runtime can be
- * detected by calling @c PCE_CPU_GETFEATURES(), which returns an
- * <tt>unsigned int</tt> with all enabled features ORed together.
+ * @c SG_CPUF.  The set of features enabled at runtime can be detected
+ * by calling @c SG_CPU_GETFEATURES(), which returns an <tt>unsigned
+ * int</tt> with all enabled features ORed together.
  *
  * Note that flags are only defined if the target architecture can
  * support them.
  */
 
-#if defined(PCE_CPU_X86) || defined(DOXYGEN)
+#if defined(SG_CPU_X86) || defined(DOXYGEN)
 /** Defined if this target has any optional features */
-# define PCE_CPU_HASFEATURES 1
+# define SG_CPU_HASFEATURES 1
 /** x86 MMX feature */
-# define PCE_CPUF_MMX       (1u << 0)
+# define SG_CPUF_MMX       (1u << 0)
 /** x86 SSE feature */
-# define PCE_CPUF_SSE       (1u << 1)
+# define SG_CPUF_SSE       (1u << 1)
 /** x86 SSE 2 feature */
-# define PCE_CPUF_SSE2      (1u << 2)
+# define SG_CPUF_SSE2      (1u << 2)
 /** x86 SSE 3 feature */
-# define PCE_CPUF_SSE3      (1u << 3)
+# define SG_CPUF_SSE3      (1u << 3)
 /** x86 SSSE 3 feature */
-# define PCE_CPUF_SSSE3     (1u << 4)
+# define SG_CPUF_SSSE3     (1u << 4)
 /** x86 SSE 4.1 feature */
-# define PCE_CPUF_SSE4_1    (1u << 5)
+# define SG_CPUF_SSE4_1    (1u << 5)
 /** x86 SSE 4.2 feature */
-# define PCE_CPUF_SSE4_2    (1u << 6)
+# define SG_CPUF_SSE4_2    (1u << 6)
 #endif
 
-#if defined(PCE_CPU_PPC) || defined(DOXYGEN)
-# define PCE_CPU_HASFEATURES 1
+#if defined(SG_CPU_PPC) || defined(DOXYGEN)
+# define SG_CPU_HASFEATURES 1
 /** PowerPC AltiVec / VMX feature */
-# define PCE_CPUF_ALTIVEC   (1u << 0)
+# define SG_CPUF_ALTIVEC   (1u << 0)
 #endif
 
 #if defined(DOXYGEN)
 
 /** Get the set of enabled CPU features */
-#define PCE_CPU_FEATURES()
+#define SG_CPU_FEATURES()
 
-#elif defined(PCE_CPU_HASFEATURES)
+#elif defined(SG_CPU_HASFEATURES)
 
-extern unsigned pce_cpufeatures;
+extern unsigned sg_cpufeatures;
 
-unsigned pce_getcpufeatures(void);
+unsigned sg_getcpufeatures(void);
 
-#define PCE_CPU_FEATURES() \
-    (pce_cpufeatures ? \
-     pce_cpufeatures : \
-     (pce_cpufeatures = pce_getcpufeatures()))
+#define SG_CPU_FEATURES() \
+    (sg_cpufeatures ? \
+     sg_cpufeatures : \
+     (sg_cpufeatures = sg_getcpufeatures()))
 
 #else
 
@@ -72,7 +72,7 @@ unsigned pce_getcpufeatures(void);
 /**
  * @brief Information about a CPU feature.
  */
-struct pce_cpufeature {
+struct sg_cpufeature {
     /**
      * @brief Lower-case version of the feature name.
      */
@@ -89,7 +89,7 @@ struct pce_cpufeature {
  *
  * Terminated by a zeroed entry.
  */
-extern const struct pce_cpufeature PCE_CPUFEATURE[];
+extern const struct sg_cpufeature SG_CPUFEATURE[];
 
 /**
  * @brief Set which CPU features are allowed or disallowed.
@@ -101,7 +101,7 @@ extern const struct pce_cpufeature PCE_CPUFEATURE[];
  * intersection of the set of allowed features (the argument) with the
  * set of features that the current CPU actually supports.
  */
-unsigned pce_setcpufeatures(unsigned features);
+unsigned sg_setcpufeatures(unsigned features);
 
 #ifdef __cplusplus
 }

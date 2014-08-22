@@ -129,7 +129,7 @@ sg_vorbis_decoder_packet(void *obj, ogg_packet *op,
         nsamp = vorbis_synthesis_pcmout(&st->v, &pcm);
 
         if ((size_t) nsamp > st->bufalloc - st->buflen) {
-            nalloc = pce_round_up_pow2(st->buflen + nsamp);
+            nalloc = sg_round_up_pow2(st->buflen + nsamp);
             nbuf = realloc(st->buf, sizeof(float) * st->channels * nalloc);
             if (!nbuf) {
                 sg_error_nomem(err);

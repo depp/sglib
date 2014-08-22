@@ -12,7 +12,7 @@
 */
 
 unsigned
-pce_hash(const void *data, size_t len)
+sg_hash(const void *data, size_t len)
 {
     const unsigned c1 = 0xcc9e2d51, c2 = 0x1b873593;
     const unsigned char *p = data;

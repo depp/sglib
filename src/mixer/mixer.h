@@ -194,7 +194,7 @@ struct sg_mixer {
        that use the mixer.  Contention is kept to a minimum: this is
        only locked when committing mixer commands, when receiving
        mixer commands, and when creating or destroying mixers.  */
-    struct pce_lock lock;
+    struct sg_lock lock;
 
     /* Indicates that sg_mixer_commit() has been called at least
        once.  */

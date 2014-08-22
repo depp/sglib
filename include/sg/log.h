@@ -107,7 +107,7 @@ sg_logs(struct sg_logger *logger, sg_log_level_t level,
  * @param msg The message format string, NUL-terminated UTF-8.
  * @param ... The format parameters.
  */
-PCE_ATTR_FORMAT(printf, 3, 4)
+SG_ATTR_FORMAT(printf, 3, 4)
 void
 sg_logf(struct sg_logger *logger, sg_log_level_t level,
         const char *msg, ...);
@@ -144,7 +144,7 @@ sg_logerrs(struct sg_logger *logger, sg_log_level_t level,
  * @param msg The message format string, NUL-terminated UTF-8.
  * @param ... The format parameters.
  */
-PCE_ATTR_FORMAT(printf, 4, 5)
+SG_ATTR_FORMAT(printf, 4, 5)
 void
 sg_logerrf(struct sg_logger *logger, sg_log_level_t level,
            struct sg_error *err, const char *msg, ...);

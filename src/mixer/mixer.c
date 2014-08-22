@@ -14,7 +14,7 @@ sg_mixer_init(void)
     unsigned count;
 
     sg_mixer_system_init();
-    pce_lock_init(&sg_mixer.lock);
+    sg_lock_init(&sg_mixer.lock);
 
     count = 64;
     sg_mixer.channel = calloc(sizeof(*sg_mixer.channel), count);
@@ -109,12 +109,12 @@ sg_mixer_cleanup(void)
 void
 sg_mixer_commit(void)
 {
-    pce_lock_acquire(&sg_mixer.lock);
+    sg_lock_acquire(&sg_mixer.lock);
     sg_mixer_commitflags();
     sg_mixer_commitmsg();
     sg_mixer.is_ready = 1;
     sg_mixer.committime = sg_mixer.time;
-    pce_lock_release(&sg_mixer.lock);
+    sg_lock_release(&sg_mixer.lock);
 
     sg_mixer_cleanup();
 }

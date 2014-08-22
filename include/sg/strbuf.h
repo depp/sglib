@@ -30,7 +30,7 @@ extern "C" {
 /**
  * @brief String buffer
  */
-struct pce_strbuf {
+struct sg_strbuf {
     /**
      * @brief The start of the buffer.
      */
@@ -57,18 +57,18 @@ struct pce_strbuf {
 /**
  * @brief Initialize an empty string buffer.
  */
-PCE_ATTR_NONNULL((1))
+SG_ATTR_NONNULL((1))
 void
-pce_strbuf_init(struct pce_strbuf *b, size_t initsz);
+sg_strbuf_init(struct sg_strbuf *b, size_t initsz);
 
 /**
  * @brief Destroy a string buffer and free associated memory.
  *
  * The strbuf is reset to a zero-length string.
  */
-PCE_ATTR_NONNULL((1))
+SG_ATTR_NONNULL((1))
 void
-pce_strbuf_destroy(struct pce_strbuf *b);
+sg_strbuf_destroy(struct sg_strbuf *b);
 
 /**
  * @brief Initialize a string buffer with preallocated data.
@@ -78,9 +78,9 @@ pce_strbuf_destroy(struct pce_strbuf *b);
  * length must be at least one byte longer than the string, for the
  * NUL byte.
  */
-PCE_ATTR_NONNULL((1, 2))
+SG_ATTR_NONNULL((1, 2))
 void
-pce_strbuf_attach(struct pce_strbuf *b, char *str, size_t len);
+sg_strbuf_attach(struct sg_strbuf *b, char *str, size_t len);
 
 /**
  * @brief Get the string in the buffer, destroying the buffer.
@@ -88,16 +88,16 @@ pce_strbuf_attach(struct pce_strbuf *b, char *str, size_t len);
  * The result must be later freed with free().  The strbuf is reset to
  * a zero-length string.
  */
-PCE_ATTR_NONNULL((1))
+SG_ATTR_NONNULL((1))
 char *
-pce_strbuf_detach(struct pce_strbuf *b);
+sg_strbuf_detach(struct sg_strbuf *b);
 
 /**
  * @brief Get the amount of unused space remaining in the buffer.
  */
-PCE_ATTR_NONNULL((1)) PCE_INLINE
+SG_ATTR_NONNULL((1)) SG_INLINE
 size_t
-pce_strbuf_avail(struct pce_strbuf *b)
+sg_strbuf_avail(struct sg_strbuf *b)
 {
     return b->e - b->p;
 }
@@ -108,23 +108,23 @@ pce_strbuf_avail(struct pce_strbuf *b)
  * Allocate enough space in the buffer so the string can be expanded
  * by the given amount without additional allocations.
  */
-PCE_ATTR_NONNULL((1))
+SG_ATTR_NONNULL((1))
 void
-pce_strbuf_reserve(struct pce_strbuf *b, size_t len);
+sg_strbuf_reserve(struct sg_strbuf *b, size_t len);
 
 /**
  * @brief Shrink the buffer to match the current contents.
  */
-PCE_ATTR_NONNULL((1))
+SG_ATTR_NONNULL((1))
 void
-pce_strbuf_compact(struct pce_strbuf *b);
+sg_strbuf_compact(struct sg_strbuf *b);
 
 /**
  * @brief Set the string to the empty string, but don't free memory.
  */
-PCE_ATTR_NONNULL((1)) PCE_INLINE
+SG_ATTR_NONNULL((1)) SG_INLINE
 void
-pce_strbuf_clear(struct pce_strbuf *b)
+sg_strbuf_clear(struct sg_strbuf *b)
 {
     b->p = b->s;
     *b->p = '\0';
@@ -136,16 +136,16 @@ pce_strbuf_clear(struct pce_strbuf *b)
  * This is equivalent to calling strcmp() on the contained strings,
  * except NUL bytes are handled correctly.
  */
-PCE_ATTR_NONNULL((1, 2))
+SG_ATTR_NONNULL((1, 2))
 int
-pce_strbuf_cmp(struct pce_strbuf *x, struct pce_strbuf *y);
+sg_strbuf_cmp(struct sg_strbuf *x, struct sg_strbuf *y);
 
 /**
  * @brief Get the length of the string in the buffer.
  */
-PCE_ATTR_NONNULL((1)) PCE_INLINE
+SG_ATTR_NONNULL((1)) SG_INLINE
 size_t
-pce_strbuf_len(struct pce_strbuf *b)
+sg_strbuf_len(struct sg_strbuf *b)
 {
     return b->p - b->s;
 }
@@ -155,9 +155,9 @@ pce_strbuf_len(struct pce_strbuf *b)
  *
  * This must not be longer than the current length.
  */
-PCE_ATTR_NONNULL((1)) PCE_INLINE
+SG_ATTR_NONNULL((1)) SG_INLINE
 void
-pce_strbuf_setlen(struct pce_strbuf *b, size_t len)
+sg_strbuf_setlen(struct sg_strbuf *b, size_t len)
 {
     size_t l = b->p - b->s;
     assert(len <= l);
@@ -171,9 +171,9 @@ pce_strbuf_setlen(struct pce_strbuf *b, size_t len)
  * This will expand the string as necessary, and assumes that you have
  * already reserved the space and written the data.
  */
-PCE_ATTR_NONNULL((1)) PCE_INLINE
+SG_ATTR_NONNULL((1)) SG_INLINE
 void
-pce_strbuf_forcelen(struct pce_strbuf *b, size_t len)
+sg_strbuf_forcelen(struct sg_strbuf *b, size_t len)
 {
     size_t l = b->e - b->s;
     assert(len <= l);
@@ -184,19 +184,19 @@ pce_strbuf_forcelen(struct pce_strbuf *b, size_t len)
 /**
  * @brief Write bytes to the buffer.
  */
-PCE_ATTR_NONNULL((1))
+SG_ATTR_NONNULL((1))
 void
-pce_strbuf_write(struct pce_strbuf *b, const char *data, size_t len);
+sg_strbuf_write(struct sg_strbuf *b, const char *data, size_t len);
 
 /**
  * @brief Write a character to the buffer.
  */
-PCE_ATTR_NONNULL((1)) PCE_INLINE
+SG_ATTR_NONNULL((1)) SG_INLINE
 void
-pce_strbuf_putc(struct pce_strbuf *b, int c)
+sg_strbuf_putc(struct sg_strbuf *b, int c)
 {
     if (b->p == b->e)
-        pce_strbuf_reserve(b, 1);
+        sg_strbuf_reserve(b, 1);
     *b->p++ = c;
     *b->p = '\0';
 }
@@ -204,26 +204,26 @@ pce_strbuf_putc(struct pce_strbuf *b, int c)
 /**
  * @brief Write a string to the buffer.
  */
-PCE_ATTR_NONNULL((1, 2)) PCE_INLINE
+SG_ATTR_NONNULL((1, 2)) SG_INLINE
 void
-pce_strbuf_puts(struct pce_strbuf *b, const char *str)
+sg_strbuf_puts(struct sg_strbuf *b, const char *str)
 {
-    pce_strbuf_write(b, str, strlen(str));
+    sg_strbuf_write(b, str, strlen(str));
 }
 
 /**
  * @brief Write a formatted string to the buffer.
  */
-PCE_ATTR_FORMAT(printf, 2, 3) PCE_ATTR_NONNULL((1, 2))
+SG_ATTR_FORMAT(printf, 2, 3) SG_ATTR_NONNULL((1, 2))
 void
-pce_strbuf_printf(struct pce_strbuf *b, const char *fmt, ...);
+sg_strbuf_printf(struct sg_strbuf *b, const char *fmt, ...);
 
 /**
  * @brief Write a formatted string to the buffer.
  */
-PCE_ATTR_NONNULL((1, 2))
+SG_ATTR_NONNULL((1, 2))
 void
-pce_strbuf_vprintf(struct pce_strbuf *b, const char *fmt, va_list ap);
+sg_strbuf_vprintf(struct sg_strbuf *b, const char *fmt, va_list ap);
 
 #ifdef __cplusplus
 }

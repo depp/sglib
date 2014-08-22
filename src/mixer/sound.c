@@ -56,7 +56,7 @@ sg_mixer_sound_load(const char *path, size_t pathlen,
 
     pp = (char *) (sp + 1);
     memcpy(pp, npath, npathlen + 1);
-    pce_atomic_set(&sp->refcount, 1);
+    sg_atomic_set(&sp->refcount, 1);
     sp->path = pp;
     sp->pathlen = npathlen;
     sp->sample.data = sg_audio_buffer_detach(abuf, err);
@@ -93,12 +93,12 @@ void
 sg_mixer_sound_incref(struct sg_mixer_sound *sound)
 {
     if (sound)
-        pce_atomic_inc(&sound->refcount);
+        sg_atomic_inc(&sound->refcount);
 }
 
 void
 sg_mixer_sound_decref(struct sg_mixer_sound *sound)
 {
-    if (sound && pce_atomic_fetch_add(&sound->refcount, -1) == 1)
+    if (sound && sg_atomic_fetch_add(&sound->refcount, -1) == 1)
         sg_mixer_sound_free(sound);
 }

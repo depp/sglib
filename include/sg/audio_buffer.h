@@ -71,7 +71,7 @@ typedef enum {
  * @brief 32-bit floating-point samples, reverse endian
  */
 
-#if PCE_BYTE_ORDER == PCE_BIG_ENDIAN
+#if SG_BYTE_ORDER == SG_BIG_ENDIAN
 # define SG_AUDIO_S16NE SG_AUDIO_S16BE
 # define SG_AUDIO_S16RE SG_AUDIO_S16LE
 # define SG_AUDIO_S24NE SG_AUDIO_S24BE
@@ -95,7 +95,7 @@ extern const unsigned char SG_AUDIO_FORMAT_SIZE[SG_AUDIO_NFMT];
 /**
  * @brief Get the size of a single sample in the given format.
  */
-PCE_INLINE size_t
+SG_INLINE size_t
 sg_audio_format_size(sg_audio_format_t fmt)
 {
     return SG_AUDIO_FORMAT_SIZE[fmt];

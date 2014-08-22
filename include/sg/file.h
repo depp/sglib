@@ -79,7 +79,7 @@ struct sg_buffer {
     /**
      * @private @brief Reference count.
      */
-    pce_atomic_t refcount;
+    sg_atomic_t refcount;
 
     /**
      * @brief Pointer to buffer data.  This buffer also contains one
@@ -103,19 +103,19 @@ sg_buffer_free_(struct sg_buffer *fbuf);
 /**
  * @brief Increment a buffer's reference count.
  */
-PCE_INLINE void
+SG_INLINE void
 sg_buffer_incref(struct sg_buffer *fbuf)
 {
-    pce_atomic_inc(&fbuf->refcount);
+    sg_atomic_inc(&fbuf->refcount);
 }
 
 /**
  * @brief Decrement a buffer's reference count.
  */
-PCE_INLINE void
+SG_INLINE void
 sg_buffer_decref(struct sg_buffer *fbuf)
 {
-    int c = pce_atomic_fetch_add(&fbuf->refcount, -1);
+    int c = sg_atomic_fetch_add(&fbuf->refcount, -1);
     if (c == 1)
         sg_buffer_free_(fbuf);
 }

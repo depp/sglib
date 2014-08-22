@@ -11,13 +11,13 @@
 
 /* Calculate capacity for hash with given number of values.  */
 static size_t
-pce_hashtable_margin(size_t x)
+sg_hashtable_margin(size_t x)
 {
     return x + (x >> 1);
 }
 
 void
-pce_hashtable_init(struct pce_hashtable *d)
+sg_hashtable_init(struct sg_hashtable *d)
 {
     d->contents = NULL;
     d->size = 0;
@@ -25,10 +25,10 @@ pce_hashtable_init(struct pce_hashtable *d)
 }
 
 void
-pce_hashtable_destroy(struct pce_hashtable *d,
-                      void (*vfree)(struct pce_hashtable_entry *))
+sg_hashtable_destroy(struct sg_hashtable *d,
+                     void (*vfree)(struct sg_hashtable_entry *))
 {
-    struct pce_hashtable_entry *es = d->contents;
+    struct sg_hashtable_entry *es = d->contents;
     size_t i, n = d->capacity;
     if (vfree) {
         for (i = 0; i < n; ++i)
@@ -38,13 +38,13 @@ pce_hashtable_destroy(struct pce_hashtable *d,
     free(es);
 }
 
-struct pce_hashtable_entry *
-pce_hashtable_get(struct pce_hashtable *d, char const *key)
+struct sg_hashtable_entry *
+sg_hashtable_get(struct sg_hashtable *d, char const *key)
 {
-    struct pce_hashtable_entry *es = d->contents;
+    struct sg_hashtable_entry *es = d->contents;
     size_t i, pos, n = d->capacity, len = strlen(key);
     unsigned hash;
-    hash = pce_hash(key, len);
+    hash = sg_hash(key, len);
     for (i = 0; i < n; ++i) {
         pos = (i + hash) & (n - 1);
         if (!es[pos].key)
@@ -56,8 +56,8 @@ pce_hashtable_get(struct pce_hashtable *d, char const *key)
 }
 
 static void
-pce_hashtable_xfer(struct pce_hashtable_entry *d, size_t dsz,
-                   struct pce_hashtable_entry *s, size_t ssz)
+sg_hashtable_xfer(struct sg_hashtable_entry *d, size_t dsz,
+                  struct sg_hashtable_entry *s, size_t ssz)
 {
     size_t i, j, pos;
     unsigned hash;
@@ -81,13 +81,13 @@ pce_hashtable_xfer(struct pce_hashtable_entry *d, size_t dsz,
     }
 }
 
-struct pce_hashtable_entry *
-pce_hashtable_insert(struct pce_hashtable *d, char *key)
+struct sg_hashtable_entry *
+sg_hashtable_insert(struct sg_hashtable *d, char *key)
 {
-    struct pce_hashtable_entry *es = d->contents, *nes;
+    struct sg_hashtable_entry *es = d->contents, *nes;
     size_t i, pos = 0, n = d->capacity, len = strlen(key), nn;
     unsigned hash;
-    hash = pce_hash(key, len);
+    hash = sg_hash(key, len);
     for (i = 0; i < n; ++i) {
         pos = (i + hash) & (n - 1);
         if (!es[pos].key)
@@ -95,12 +95,12 @@ pce_hashtable_insert(struct pce_hashtable *d, char *key)
         if (!strcmp(key, es[pos].key))
             return &es[pos];
     }
-    nn = pce_round_up_pow2(pce_hashtable_margin(d->size + 1));
+    nn = sg_round_up_pow2(sg_hashtable_margin(d->size + 1));
     if (nn > n) {
         nes = malloc(sizeof(*nes) * nn);
         if (!nes)
             return NULL;
-        pce_hashtable_xfer(nes, nn, es, n);
+        sg_hashtable_xfer(nes, nn, es, n);
         d->contents = nes;
         d->capacity = nn;
         free(es);
@@ -121,10 +121,10 @@ pce_hashtable_insert(struct pce_hashtable *d, char *key)
 }
 
 void
-pce_hashtable_erase(struct pce_hashtable *d,
-                    struct pce_hashtable_entry *e)
+sg_hashtable_erase(struct sg_hashtable *d,
+                   struct sg_hashtable_entry *e)
 {
-    struct pce_hashtable_entry *es = d->contents;
+    struct sg_hashtable_entry *es = d->contents;
     size_t epos = e - d->contents, ppos, pos, n = d->capacity;
     assert(epos < n);
     for (pos = epos + 1; pos < epos + n; ++pos) {
@@ -144,18 +144,18 @@ pce_hashtable_erase(struct pce_hashtable *d,
 }
 
 static int
-pce_hashtable_resize(struct pce_hashtable *d, size_t size, int shrink)
+sg_hashtable_resize(struct sg_hashtable *d, size_t size, int shrink)
 {
-    struct pce_hashtable_entry *es = d->contents, *nes;
+    struct sg_hashtable_entry *es = d->contents, *nes;
     size_t n = d->capacity, nn, s;
     s = size > d->size ? size : d->size;
-    nn = pce_round_up_pow2(pce_hashtable_margin(s));
+    nn = sg_round_up_pow2(sg_hashtable_margin(s));
     if (nn == n || (!shrink && nn < n))
         return 0;
     nes = malloc(sizeof(*nes) * nn);
     if (!nes)
         return ENOMEM;
-    pce_hashtable_xfer(nes, nn, es, n);
+    sg_hashtable_xfer(nes, nn, es, n);
     free(es);
     d->contents = nes;
     d->capacity = nn;
@@ -163,13 +163,13 @@ pce_hashtable_resize(struct pce_hashtable *d, size_t size, int shrink)
 }
 
 int
-pce_hashtable_compact(struct pce_hashtable *d)
+sg_hashtable_compact(struct sg_hashtable *d)
 {
-    return pce_hashtable_resize(d, d->size, 1);
+    return sg_hashtable_resize(d, d->size, 1);
 }
 
 int
-pce_hashtable_reserve(struct pce_hashtable *d, size_t n)
+sg_hashtable_reserve(struct sg_hashtable *d, size_t n)
 {
-    return pce_hashtable_resize(d, n, 0);
+    return sg_hashtable_resize(d, n, 0);
 }

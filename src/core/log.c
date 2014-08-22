@@ -26,7 +26,7 @@ struct sg_logger_obj {
 
 static struct sg_logger_obj sg_logger_root;
 static struct sg_log_listener *sg_listeners[4];
-static struct pce_lock sg_logger_lock;
+static struct sg_lock sg_logger_lock;
 
 void
 sg_log_listen(struct sg_log_listener *listener)
@@ -65,7 +65,7 @@ void
 sg_log_init(void)
 {
     sg_log_level_t level = sg_logger_conflevel("root");
-    pce_lock_init(&sg_logger_lock);
+    sg_lock_init(&sg_logger_lock);
     sg_logger_root.head.level = level == LOG_INHERIT ? SG_LOG_WARN : level;
     sg_log_console_init();
     sg_log_network_init();
@@ -109,14 +109,14 @@ sg_logger_get(const char *name)
 
     len = strlen(name);
 
-    pce_lock_acquire(&sg_logger_lock);
+    sg_lock_acquire(&sg_logger_lock);
     for (np = &sg_logger_root; np; np = np->next) {
         if (np->namelen == len && !memcmp(np->name, name, len))
             break;
     }
     if (!np)
         np = sg_logger_new(name, len);
-    pce_lock_release(&sg_logger_lock);
+    sg_lock_release(&sg_logger_lock);
 
     return &np->head;
 }
@@ -155,7 +155,7 @@ sg_dologmem(struct sg_logger *logger, sg_log_level_t level,
     m.msglen = len;
     m.levelval = level;
 
-    pce_lock_acquire(&sg_logger_lock);
+    sg_lock_acquire(&sg_logger_lock);
     for (i = 0; i < MAX_LISTENERS; ++i) {
         p = sg_listeners[i];
         if (p) {
@@ -164,7 +164,7 @@ sg_dologmem(struct sg_logger *logger, sg_log_level_t level,
             sg_listeners[i] = p;
         }
     }
-    pce_lock_release(&sg_logger_lock);
+    sg_lock_release(&sg_logger_lock);
 }
 
 /* Be careful because the MSC version of the sprintf family behaves

@@ -30,7 +30,7 @@ struct sg_configfile {
      * The name of each section is also allocated with malloc and is
      * shared with the section structure.
      */
-    struct pce_hashtable sect;
+    struct sg_hashtable sect;
 };
 
 /**
@@ -44,7 +44,7 @@ struct sg_configfile_section {
     /** @brief The section name, owned by the section.  */
     char *name;
     /** @brief The section variables, owned by the section.  */
-    struct pce_hashtable var;
+    struct sg_hashtable var;
 };
 
 /**
@@ -141,7 +141,7 @@ sg_configfile_insert_var(struct sg_configfile_section *section,
  */
 void
 sg_configfile_erase_var(struct sg_configfile_section *section,
-                        struct pce_hashtable_entry *entry);
+                        struct sg_hashtable_entry *entry);
 
 #ifdef __cplusplus
 }

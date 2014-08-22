@@ -36,7 +36,7 @@ sg_mixer_queue_append(struct sg_mixer_queue *SG_RESTRICT queue,
 
     if (count > (unsigned) -1 - queue->msgcount)
         goto nomem;
-    nalloc = pce_round_up_pow2_32(queue->msgcount + count);
+    nalloc = sg_round_up_pow2_32(queue->msgcount + count);
     if (!nalloc || nalloc > (size_t) -1 / sizeof(struct sg_mixer_msg))
         goto nomem;
     msg = realloc(queue->msg, sizeof(struct sg_mixer_msg) * nalloc);

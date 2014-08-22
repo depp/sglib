@@ -20,11 +20,11 @@ extern "C" {
 /**
  * @brief A hash table.
  */
-struct pce_hashtable {
+struct sg_hashtable {
     /**
      * @brief An array of hash table entries.
      */
-    struct pce_hashtable_entry *contents;
+    struct sg_hashtable_entry *contents;
 
     /**
      * @brief The number of entries in the array which have data.
@@ -40,7 +40,7 @@ struct pce_hashtable {
 /**
  * @brief An entry in a hash table.
  */
-struct pce_hashtable_entry {
+struct sg_hashtable_entry {
     /**
      * @brief The key.
      *
@@ -64,7 +64,7 @@ struct pce_hashtable_entry {
  * @brief Initialize a hash table.
  */
 void
-pce_hashtable_init(struct pce_hashtable *d);
+sg_hashtable_init(struct sg_hashtable *d);
 
 /**
  * @brief Destroy a hash table.
@@ -73,8 +73,8 @@ pce_hashtable_init(struct pce_hashtable *d);
  * @c NULL.
  */
 void
-pce_hashtable_destroy(struct pce_hashtable *d,
-                      void (*vfree)(struct pce_hashtable_entry *));
+sg_hashtable_destroy(struct sg_hashtable *d,
+                     void (*vfree)(struct sg_hashtable_entry *));
 
 /**
  * @brief Fetch the entry for the given key.
@@ -83,8 +83,8 @@ pce_hashtable_destroy(struct pce_hashtable *d,
  * the entry's key will be non-NULL and be equal to the search key, as
  * measured by strcmp.
  */
-struct pce_hashtable_entry *
-pce_hashtable_get(struct pce_hashtable *d, char const *key);
+struct sg_hashtable_entry *
+sg_hashtable_get(struct sg_hashtable *d, char const *key);
 
 /**
  * @brief Insert a key into the hash table.
@@ -98,15 +98,15 @@ pce_hashtable_get(struct pce_hashtable *d, char const *key);
  * If the key needs to be copied when it is inserted, you will need to
  * copy the key yourself.
  */
-struct pce_hashtable_entry *
-pce_hashtable_insert(struct pce_hashtable *d, char *key);
+struct sg_hashtable_entry *
+sg_hashtable_insert(struct sg_hashtable *d, char *key);
 
 /**
  * @brief Erase the given entry.
  */
 void
-pce_hashtable_erase(struct pce_hashtable *d,
-                    struct pce_hashtable_entry *e);
+sg_hashtable_erase(struct sg_hashtable *d,
+                    struct sg_hashtable_entry *e);
 
 /**
  * @brief Compact the hash table.
@@ -114,7 +114,7 @@ pce_hashtable_erase(struct pce_hashtable *d,
  * Returns 0 on success or @c ENOMEM if out of memory.
  */
 int
-pce_hashtable_compact(struct pce_hashtable *d);
+sg_hashtable_compact(struct sg_hashtable *d);
 
 /**
  * @brief Reserve space in a hash table.
@@ -123,7 +123,7 @@ pce_hashtable_compact(struct pce_hashtable *d);
  * Returns 0 on success or @c ENOMEM if out of memory.
  */
 int
-pce_hashtable_reserve(struct pce_hashtable *d, size_t n);
+sg_hashtable_reserve(struct sg_hashtable *d, size_t n);
 
 #ifdef __cplusplus
 }

@@ -43,7 +43,7 @@ sg_riff_parse(struct sg_riff *riff, const void *data, size_t length,
         goto fmterr;
     if (memcmp(p, "RIFF", 4))
         goto fmterr;
-    rlength = pce_read_lu32(p + 4);
+    rlength = sg_read_lu32(p + 4);
     if (rlength > length - 8 || rlength < 4)
         goto fmterr;
     memcpy(riff->tag, p + 8, 4);
@@ -59,7 +59,7 @@ sg_riff_parse(struct sg_riff *riff, const void *data, size_t length,
         if (pos > rlength - 8)
             goto fmterr;
         memcpy(&t.tag, p + pos, 4);
-        t.length = pce_read_lu32(p + pos + 4);
+        t.length = sg_read_lu32(p + pos + 4);
         pos += 8;
         if (t.length > rlength - pos)
             goto fmterr;
@@ -153,11 +153,11 @@ sg_audio_file_loadwav(struct sg_audio_buffer *buf,
     if (tag->length < 16)
         goto fmterr;
     p = tag->data;
-    afmt = pce_read_lu16(p + 0);
-    nchan = pce_read_lu16(p + 2);
-    rate = pce_read_lu32(p + 4);
-    /* blkalign = pce_read_lu16(p + 12); */
-    sampbits = pce_read_lu16(p + 14);
+    afmt = sg_read_lu16(p + 0);
+    nchan = sg_read_lu16(p + 2);
+    rate = sg_read_lu32(p + 4);
+    /* blkalign = sg_read_lu16(p + 12); */
+    sampbits = sg_read_lu16(p + 14);
     if (rate < SG_AUDIO_BUFFER_MINRATE || rate > SG_AUDIO_BUFFER_MAXRATE) {
         sg_logf(sg_audio_wav_logger(), SG_LOG_ERROR,
                 "WAVE sample rate too extreme (%u Hz)", rate);

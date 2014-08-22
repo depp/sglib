@@ -5,31 +5,31 @@
 #include "sg/thread.h"
 
 void
-pce_lock_init(struct pce_lock *p)
+sg_lock_init(struct sg_lock *p)
 {
     InitializeCriticalSection(&p->s);
 }
 
 void
-pce_lock_destroy(struct pce_lock *p)
+sg_lock_destroy(struct sg_lock *p)
 {
     DeleteCriticalSection(&p->s);
 }
 
 void
-pce_lock_acquire(struct pce_lock *p)
+sg_lock_acquire(struct sg_lock *p)
 {
     EnterCriticalSection(&p->s);
 }
 
 void
-pce_lock_release(struct pce_lock *p)
+sg_lock_release(struct sg_lock *p)
 {
     LeaveCriticalSection(&p->s);
 }
 
 void
-pce_evt_init(struct pce_evt *p)
+sg_evt_init(struct sg_evt *p)
 {
     p->e = CreateEvent(NULL, FALSE, FALSE, NULL);
     if (!p->e)
@@ -37,14 +37,14 @@ pce_evt_init(struct pce_evt *p)
 }
 
 void
-pce_evt_destroy(struct pce_evt *p)
+sg_evt_destroy(struct sg_evt *p)
 {
     CloseHandle(p->e);
     p->e = NULL;
 }
 
 void
-pce_evt_signal(struct pce_evt *p)
+sg_evt_signal(struct sg_evt *p)
 {
     BOOL r = SetEvent(p->e);
     if (!r)
@@ -52,7 +52,7 @@ pce_evt_signal(struct pce_evt *p)
 }
 
 void
-pce_evt_wait(struct pce_evt *p)
+sg_evt_wait(struct sg_evt *p)
 {
     DWORD r = WaitForSingleObject(p->e, INFINITE);
     if (r)

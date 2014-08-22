@@ -8,7 +8,7 @@
 #include <stdlib.h>
 
 void
-pce_lock_init(struct pce_lock *p)
+sg_lock_init(struct sg_lock *p)
 {
     pthread_mutexattr_t mattr;
     int r;
@@ -27,7 +27,7 @@ err:
 }
 
 void
-pce_lock_destroy(struct pce_lock *p)
+sg_lock_destroy(struct sg_lock *p)
 {
     int r;
     r = pthread_mutex_destroy(&p->m);
@@ -39,7 +39,7 @@ err:
 }
 
 void
-pce_lock_acquire(struct pce_lock *p)
+sg_lock_acquire(struct sg_lock *p)
 {
     int r;
     r = pthread_mutex_lock(&p->m);
@@ -51,7 +51,7 @@ err:
 }
 
 int
-pce_lock_try(struct pce_lock *p)
+sg_lock_try(struct sg_lock *p)
 {
     int r;
     r = pthread_mutex_trylock(&p->m);
@@ -64,7 +64,7 @@ pce_lock_try(struct pce_lock *p)
 }
 
 void
-pce_lock_release(struct pce_lock *p)
+sg_lock_release(struct sg_lock *p)
 {
     int r;
     r = pthread_mutex_unlock(&p->m);
@@ -78,7 +78,7 @@ err:
 /* ======================================== */
 
 void
-pce_rwlock_init(struct pce_rwlock *p)
+sg_rwlock_init(struct sg_rwlock *p)
 {
     pthread_rwlockattr_t lattr;
     int r;
@@ -98,7 +98,7 @@ err:
 }
 
 void
-pce_rwlock_destroy(struct pce_rwlock *p)
+sg_rwlock_destroy(struct sg_rwlock *p)
 {
     int r;
     r = pthread_rwlock_destroy(&p->l);
@@ -110,7 +110,7 @@ err:
 }
 
 void
-pce_rwlock_wracquire(struct pce_rwlock *p)
+sg_rwlock_wracquire(struct sg_rwlock *p)
 {
     int r;
     r = pthread_rwlock_wrlock(&p->l);
@@ -122,7 +122,7 @@ err:
 }
 
 int
-pce_rwlock_wrtry(struct pce_rwlock *p)
+sg_rwlock_wrtry(struct sg_rwlock *p)
 {
     int r;
     r = pthread_rwlock_trywrlock(&p->l);
@@ -135,7 +135,7 @@ pce_rwlock_wrtry(struct pce_rwlock *p)
 }
 
 void
-pce_rwlock_wrrelease(struct pce_rwlock *p)
+sg_rwlock_wrrelease(struct sg_rwlock *p)
 {
     int r;
     r = pthread_rwlock_unlock(&p->l);
@@ -147,7 +147,7 @@ err:
 }
 
 void
-pce_rwlock_rdacquire(struct pce_rwlock *p)
+sg_rwlock_rdacquire(struct sg_rwlock *p)
 {
     int r;
     r = pthread_rwlock_rdlock(&p->l);
@@ -159,7 +159,7 @@ err:
 }
 
 int
-pce_rwlock_rdtry(struct pce_rwlock *p)
+sg_rwlock_rdtry(struct sg_rwlock *p)
 {
     int r;
     r = pthread_rwlock_tryrdlock(&p->l);
@@ -172,15 +172,15 @@ pce_rwlock_rdtry(struct pce_rwlock *p)
 }
 
 void
-pce_rwlock_rdrelease(struct pce_rwlock *p)
+sg_rwlock_rdrelease(struct sg_rwlock *p)
 {
-    pce_rwlock_wrrelease(p);
+    sg_rwlock_wrrelease(p);
 }
 
 /* ======================================== */
 
 void
-pce_evt_init(struct pce_evt *p)
+sg_evt_init(struct sg_evt *p)
 {
     pthread_mutexattr_t mattr;
     int r;
@@ -203,7 +203,7 @@ err:
 }
 
 void
-pce_evt_destroy(struct pce_evt *p)
+sg_evt_destroy(struct sg_evt *p)
 {
     int r;
     r = pthread_mutex_destroy(&p->m);
@@ -217,7 +217,7 @@ err:
 }
 
 void
-pce_evt_signal(struct pce_evt *p)
+sg_evt_signal(struct sg_evt *p)
 {
     int r;
     r = pthread_mutex_lock(&p->m);
@@ -236,7 +236,7 @@ err:
 }
 
 void
-pce_evt_wait(struct pce_evt *p)
+sg_evt_wait(struct sg_evt *p)
 {
     int r;
     r = pthread_mutex_lock(&p->m);

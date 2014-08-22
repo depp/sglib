@@ -133,7 +133,7 @@ sg_opus_decoder_packet(void *obj, ogg_packet *op,
         float *nbuf;
         channels = st->channels;
         if (SG_OPUS_MAXFRAME > st->bufalloc - st->buflen) {
-            nalloc = pce_round_up_pow2(st->buflen + SG_OPUS_MAXFRAME);
+            nalloc = sg_round_up_pow2(st->buflen + SG_OPUS_MAXFRAME);
             nbuf = realloc(st->buf, sizeof(float) * channels * nalloc);
             if (!nbuf) {
                 sg_error_nomem(err);

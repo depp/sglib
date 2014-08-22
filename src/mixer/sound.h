@@ -11,7 +11,7 @@ struct sg_mixer_sample {
 };
 
 struct sg_mixer_sound {
-    pce_atomic_t refcount;
+    sg_atomic_t refcount;
     const char *path;
     size_t pathlen;
     struct sg_mixer_sample sample;

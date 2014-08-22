@@ -193,7 +193,7 @@ sg_textbitmap_allocglyphs(struct sg_textbitmap *bitmap, int count)
 
     if (count > INT_MAX - bitmap->glyphcount)
         return -1;
-    nalloc = pce_round_up_pow2_32((unsigned)bitmap->glyphcount + count);
+    nalloc = sg_round_up_pow2_32((unsigned)bitmap->glyphcount + count);
     if (nalloc == 0 || nalloc > INT_MAX)
         return 0;
 
@@ -269,7 +269,7 @@ sg_textbitmap_shape(struct sg_textbitmap *bitmap,
                 return -1;
         }
         if (maxglyphs == state->visattralloc) {
-            nalloc = pce_round_up_pow2_32((unsigned)maxglyphs + 1);
+            nalloc = sg_round_up_pow2_32((unsigned)maxglyphs + 1);
             if (!nalloc || nalloc > INT_MAX)
                 return -1;
             if (sg_textbitmap_allocvisattr(state, (int)nalloc))
@@ -318,7 +318,7 @@ sg_textbitmap_wrap(struct sg_textbitmap *bitmap,
     if (textcount > state->logattralloc) {
         free(state->logattr);
         state->logattr = NULL;
-        nalloc = pce_round_up_pow2_32(textcount);
+        nalloc = sg_round_up_pow2_32(textcount);
         if (!nalloc || nalloc > INT_MAX ||
             nalloc > (size_t)-1 / sizeof(*state->logattr))
             return -1;
@@ -358,7 +358,7 @@ sg_textbitmap_newline(struct sg_textbitmap *bitmap)
     unsigned nalloc;
     struct sg_textbitmap_line *line;
     if (bitmap->linecount >= bitmap->linealloc) {
-        nalloc = pce_round_up_pow2_32((unsigned)bitmap->linecount + 1);
+        nalloc = sg_round_up_pow2_32((unsigned)bitmap->linecount + 1);
         if (!nalloc || nalloc > INT_MAX ||
             nalloc > (size_t)-1 / sizeof(*line))
             return -1;
@@ -386,7 +386,7 @@ sg_textbitmap_newrun(struct sg_textbitmap *bitmap)
     unsigned nalloc;
     struct sg_textbitmap_run *run;
     if (bitmap->runcount >= bitmap->runalloc) {
-        nalloc = pce_round_up_pow2_32((unsigned)bitmap->runcount + 1);
+        nalloc = sg_round_up_pow2_32((unsigned)bitmap->runcount + 1);
         if (!nalloc || nalloc > INT_MAX || nalloc > (size_t)-1 / sizeof(*run))
             return NULL;
         run = realloc(bitmap->run, sizeof(*run) * nalloc);

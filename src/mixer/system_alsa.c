@@ -18,7 +18,7 @@
 struct sg_mixer_alsa {
     struct sg_logger *logger;
 
-    pce_atomic_t stop_requested;
+    sg_atomic_t stop_requested;
 
     /* Mutex so that only one thread can access the audio state.  */
     pthread_mutex_t mutex;
@@ -104,7 +104,7 @@ sg_audio_loop(void *ptr)
     sg_game_event(&event);
     */
 
-    while (!pce_atomic_get(&alsa->stop_requested)) {
+    while (!sg_atomic_get(&alsa->stop_requested)) {
         snd_pcm_wait(pcm, 1000);
         r = snd_pcm_status(pcm, status);
         if (r < 0) {
@@ -200,7 +200,7 @@ sg_mixer_system_init(void)
     pthread_mutexattr_t mattr;
 
     alsa->logger = sg_logger_get("audio");
-    pce_atomic_set(&alsa->stop_requested, 0);
+    sg_atomic_set(&alsa->stop_requested, 0);
 
     r = pthread_mutexattr_init(&mattr);
     if (r) abort();
@@ -257,7 +257,7 @@ sg_mixer_start(void)
         return;
     }
 
-    pce_atomic_set(&alsa->stop_requested, 0);
+    sg_atomic_set(&alsa->stop_requested, 0);
 
     /* Open ALSA PCM connection */
     r = snd_pcm_open(
@@ -296,7 +296,7 @@ sg_mixer_start(void)
 
     r = snd_pcm_hw_params_set_format(
         alsa->pcm, hwparms,
-        ((PCE_BYTE_ORDER == PCE_LITTLE_ENDIAN) ?
+        ((SG_BYTE_ORDER == SG_LITTLE_ENDIAN) ?
          SND_PCM_FORMAT_FLOAT_LE : SND_PCM_FORMAT_FLOAT_BE));
     if (r < 0) {
         why = "could not set sample format";
@@ -422,7 +422,7 @@ sg_mixer_stop(void)
     r = pthread_mutex_lock(&alsa->mutex);
     if (r) abort();
     if (alsa->is_running) {
-        pce_atomic_set(&alsa->stop_requested, 1);
+        sg_atomic_set(&alsa->stop_requested, 1);
         while (alsa->is_running) {
             r = pthread_cond_wait(&alsa->cond, &alsa->mutex);
             if (r) abort();

@@ -47,8 +47,8 @@ sg_pixbuf_set(struct sg_pixbuf *pbuf, sg_pixbuf_format_t format,
     if (width > MAX_DIM || height > MAX_DIM ||
         width < 0 || height < 0)
         goto toolarge;
-    w = pce_round_up_pow2_32(width);
-    h = pce_round_up_pow2_32(height);
+    w = sg_round_up_pow2_32(width);
+    h = sg_round_up_pow2_32(height);
     if (w > INT_MAX / h)
         goto toolarge;
 
