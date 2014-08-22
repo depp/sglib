@@ -30,8 +30,7 @@ class MakefileTarget(object):
         makefile = gmake.Makefile(cfg)
         makepath = Path('/Makefile', 'builddir')
         makefile.add_build(build, makepath)
-        for item in ('obj', 'exe', 'products'):
-            makefile.add_clean(Path('/build/' + item, 'builddir'))
+        makefile.add_clean(Path('/build', 'builddir'))
         return build
 
     @property

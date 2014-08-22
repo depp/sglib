@@ -11,6 +11,7 @@
 # Build system, GNUMake
 /Makefile
 /SGLib_Test*
+/build
 
 # Build system, Xcode
 /*.xcodeproj

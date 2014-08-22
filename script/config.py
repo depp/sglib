@@ -57,8 +57,8 @@ def gen_info_plist(info, main_nib, icon):
 @data.template('sglib')
 def template_sglib(module, buildinfo, cfg, proj):
     sgroot = cfg.path(os.path.dirname(os.path.dirname(__file__)))
-    moddir = sgroot.join('build/module')
-    rsrcdir = sgroot.join('build/resource')
+    moddir = sgroot.join('script/module')
+    rsrcdir = sgroot.join('script/resource')
 
     src = data.Module(proj.gen_name(), 'source')
     src.group = module.group
@@ -251,6 +251,6 @@ cfg.add_defaults({
 
 cfg.add_path(
     os.path.join(os.path.dirname(os.path.dirname(__file__)),
-                 'build', 'module'))
+                 'script', 'module'))
 
 cfg.run()
