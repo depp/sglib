@@ -1,0 +1,5 @@
+{
+    + /keytable_*.c
+    + /keyid.c
+    ignore
+}

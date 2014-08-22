@@ -2,11 +2,11 @@
    This file is part of SGLib.  SGLib is licensed under the terms of the
    2-clause BSD license.  For more information, see LICENSE.txt. */
 #include "../private.h"
-#include "sg/keytable.h"
 #include "sg/audio_system.h"
 #include "sg/cvar.h"
 #include "sg/entry.h"
 #include "sg/event.h"
+#include "sg/key.h"
 #include "sg/opengl.h"
 #include "sg/version.h"
 #include <Windows.h>
@@ -226,7 +226,7 @@ static void handleKey(int code, sg_event_type_t t)
     int hcode;
     if (code < 0 || code > 255)
         return;
-    hcode = WIN_NATIVE_TO_HID[code];
+    hcode = SG_WIN_NATIVE_TO_HID[code];
     if (hcode == 255)
         return;
     e.type = t;

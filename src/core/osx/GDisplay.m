@@ -7,10 +7,9 @@
 #import "GView.h"
 #import "GWindow.h"
 #import "GController.h"
-#import "sg/entry.h"
 #import "sg/clock.h"
-#import "keycode/keyid.h"
-#import "keycode/keytable.h"
+#import "sg/entry.h"
+#import "sg/key.h"
 
 static int sg_glew_initted;
 
@@ -38,7 +37,7 @@ static bool isWindowedMode(GDisplayMode mode)
 
 void GDisplayKeyEvent(GDisplay *w, NSEvent *e, sg_event_type_t t)
 {
-    int ncode = MAC_NATIVE_TO_HID[[e keyCode] & 0x7F];
+    int ncode = SG_MAC_NATIVE_TO_HID[[e keyCode] & 0x7F];
     union sg_event evt;
     evt.key.type = t;
     evt.key.key = ncode;

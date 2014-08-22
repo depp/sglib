@@ -6,11 +6,11 @@
 #define HAVE_DPUSH 1
 #endif
 
-#include "sg/keytable.h"
 #include "sg/clock.h"
 #include "sg/cvar.h"
 #include "sg/entry.h"
 #include "sg/event.h"
+#include "sg/key.h"
 #include "sg/opengl.h"
 #include "sg/version.h"
 #include "../private.h"
@@ -165,7 +165,7 @@ sg_gtk_handle_key(GdkEventKey *e, sg_event_type_t t)
     }
     if (code < 0 || code > 255)
         return TRUE;
-    hcode = EVDEV_NATIVE_TO_HID[code];
+    hcode = SG_EVDEV_NATIVE_TO_HID[code];
     if (hcode == 255)
         return TRUE;
     evt.key.type = t;

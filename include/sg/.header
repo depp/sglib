@@ -7,3 +7,7 @@ extern_c = true
     + /opengl.h
     extern_c = false
 }
+{
+    + /keycode.h
+    ignore
+}

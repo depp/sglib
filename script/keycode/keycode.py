@@ -85,8 +85,8 @@ def gencodemap(table1, table2, out, size, name):
     f = open(tmp, 'w')
     try:
         print >>f, WARNING
-        ptable(f, out1, '%s_HID_TO_NATIVE' % name, 'const unsigned char')
-        ptable(f, out2, '%s_NATIVE_TO_HID' % name,  'const unsigned char')
+        ptable(f, out1, 'SG_%s_HID_TO_NATIVE' % name, 'const unsigned char')
+        ptable(f, out2, 'SG_%s_NATIVE_TO_HID' % name,  'const unsigned char')
         f.close()
         os.rename(tmp, out)
     except:
@@ -120,8 +120,8 @@ def idents():
     f = open(tmp, 'w')
     try:
         print >>f, WARNING
-        print >>f, "#ifndef KEYCODE_KEYCODE_H"
-        print >>f, "#define KEYCODE_KEYCODE_H"
+        print >>f, "#ifndef SG_KEYCODE_H"
+        print >>f, "#define SG_KEYCODE_H"
         print >>f, 'enum {'
         print >>f, ',\n'.join(['    %s = %d' % (mkid(nn or n), i) for (i, n, nn) in names])
         print >>f, '};'
@@ -139,12 +139,13 @@ def mkid2(n):
     return n.replace(' ', '')
 
 KEYID_HEADER = '''\
-#include "sg/keyid.h"
+#include "sg/key.h"
 #include <string.h>
 '''
 
 KEYID_CODE = '''\
-int keyid_code_from_name(const char *name)
+int
+sg_keyid_code_from_name(const char *name)
 {
     unsigned l = 0, r = %(count)d, m;
     int x, c;
@@ -162,7 +163,8 @@ int keyid_code_from_name(const char *name)
     return -1;
 }
 
-const char *keyid_name_from_code(int code)
+const char *
+sg_keyid_name_from_code(int code)
 {
     int off;
     if (code < 0 || code > 255)

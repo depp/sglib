@@ -39,9 +39,8 @@
       <src path="file.h"/>
       <src path="hash.h"/>
       <src path="hashtable.h"/>
+      <src path="key.h"/>
       <src path="keycode.h"/>
-      <src path="keyid.h"/>
-      <src path="keytable.h"/>
       <src path="log.h"/>
       <src path="net.h"/>
       <src path="opengl.h"/>
