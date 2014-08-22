@@ -222,6 +222,9 @@ func4(unsigned msec)
     struct sg_mixer_sound *snd;
     static struct sg_mixer_channel *chan;
 
+    if (chan && sg_mixer_channel_isdone(chan))
+        sg_mixer_channel_stop(chan);
+
     switch (g_state & 3) {
     case 0:
         if (state) {
