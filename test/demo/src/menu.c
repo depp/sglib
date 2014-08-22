@@ -2,7 +2,7 @@
    This file is part of SGLib.  SGLib is licensed under the terms of the
    2-clause BSD license.  For more information, see LICENSE.txt. */
 #include "defs.h"
-#include "keycode/keycode.h"
+#include "sg/keycode.h"
 #include "sg/event.h"
 #include "sg/opengl.h"
 #include "sg/type.h"

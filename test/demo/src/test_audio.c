@@ -6,7 +6,7 @@
 #include "sg/entry.h"
 #include "sg/event.h"
 #include "sg/opengl.h"
-#include "keycode/keycode.h"
+#include "sg/keycode.h"
 #include <stdlib.h>
 #include <string.h>
 

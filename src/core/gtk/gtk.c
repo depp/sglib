@@ -6,7 +6,7 @@
 #define HAVE_DPUSH 1
 #endif
 
-#include "keycode/keytable.h"
+#include "sg/keytable.h"
 #include "sg/clock.h"
 #include "sg/cvar.h"
 #include "sg/entry.h"

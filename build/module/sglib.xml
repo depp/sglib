@@ -12,7 +12,7 @@
   </module>
 
   <module id="sglib">
-    <require module="keycode glew" public="true"/>
+    <require module="glew" public="true"/>
     <header-path path="include" public="true"/>
 
     <src path="private.h"/>
@@ -39,6 +39,9 @@
       <src path="file.h"/>
       <src path="hash.h"/>
       <src path="hashtable.h"/>
+      <src path="keycode.h"/>
+      <src path="keyid.h"/>
+      <src path="keytable.h"/>
       <src path="log.h"/>
       <src path="net.h"/>
       <src path="opengl.h"/>
@@ -90,6 +93,7 @@
       <src path="error.c"/>
       <src path="file_impl.h"/>
       <src path="file_read.c"/>
+      <src path="keyid.c"/>
       <src path="log.c"/>
       <src path="log_console.c"/>
       <src path="log_impl.h"/>
@@ -110,6 +114,18 @@
         <case value="windows">
           <src path="winutf8.c"/>
           <src path="file_win.c"/>
+        </case>
+      </switch>
+
+      <switch value="$os">
+        <case value="linux">
+          <src path="keytable_evdev.c"/>
+        </case>
+        <case value="osx">
+          <src path="keytable_mac.c"/>
+        </case>
+        <case value="windows">
+          <src path="keytable_win.c"/>
         </case>
       </switch>
 
