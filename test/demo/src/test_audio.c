@@ -7,7 +7,6 @@
 #include "sg/event.h"
 #include "sg/opengl.h"
 #include "keycode/keycode.h"
-#include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -151,7 +150,6 @@ func1(unsigned msec)
         case 1: snd = g_audio.donk;  break;
         case 2: snd = g_audio.tink;  break;
         }
-        assert(snd != NULL);
         g_mod = (g_mod + 1) % 3;
         sg_mixer_channel_play(snd, msec);
     }
@@ -176,7 +174,6 @@ func2(unsigned msec)
         case 1: snd = g_audio.donk;  break;
         case 2: snd = g_audio.tink;  break;
         }
-        assert(snd != NULL);
         switch (g_mod % 3) {
         case 0: pan = 0.0f; break;
         case 1: pan = -1.0f; break;
@@ -208,7 +205,6 @@ func3(unsigned msec)
         case 1: snd = g_audio.left;   pan = -0.75f; break;
         case 2: snd = g_audio.right;  pan = +0.75f; break;
         }
-        assert(snd != NULL);
         g_mod = (g_mod + 1) % 3;
         chan = sg_mixer_channel_play(snd, msec);
         sg_mixer_channel_setparam(chan, SG_MIXER_PARAM_PAN, pan);
@@ -230,7 +226,6 @@ func4(unsigned msec)
     case 0:
         if (state) {
             snd = (g_state & 4) ? g_audio.alien : g_audio.music;
-            assert(chan == NULL);
             chan = sg_mixer_channel_play(snd, msec);
             g_state++;
         }
@@ -238,7 +233,6 @@ func4(unsigned msec)
 
     case 2:
         if (state) {
-            assert(chan != NULL);
             sg_mixer_channel_stop(chan);
             chan = NULL;
             g_state++;
