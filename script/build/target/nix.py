@@ -81,6 +81,8 @@ def cc_cmd(env, output, source, sourcetype, *, depfile=None, external=False):
     if not external:
         cmd.extend(warn)
     cmd.extend(cflags)
+    # FIXME: there is a better way to do this.
+    cmd.append('-pthread')
     return cmd
 
 def ld_cmd(env, output, sources, sourcetypes):
@@ -97,6 +99,8 @@ def ld_cmd(env, output, sources, sourcetypes):
             raise ConfigError('CC is not set')
     cmd = [cc]
     cmd.extend(env.get('LDFLAGS', ()))
+    # FIXME: there is a better way to do this.
+    cmd.append('-pthread')
     cmd.extend(('-o', output))
     cmd.extend(sources)
     cmd.extend('-F' + p for p in env.get('FPATH', ()))
