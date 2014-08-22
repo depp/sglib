@@ -22,6 +22,8 @@ sg_mixer_channel_play(struct sg_mixer_sound *sound,
         return NULL;
 
     chp->lflags = SG_MIXER_LFLAG_START | SG_MIXER_LFLAG_INIT;
+    if (flags & SG_MIXER_FLAG_LOOP)
+        chp->lflags |= SG_MIXER_LFLAG_LOOP;
     if (flags & SG_MIXER_FLAG_DETACHED)
         chp->lflags |= SG_MIXER_LFLAG_DETACHED;
     chp->starttime = timestamp;

@@ -229,7 +229,7 @@ func4(unsigned msec)
     case 0:
         if (state) {
             snd = (g_state & 4) ? g_audio.alien : g_audio.music;
-            chan = sg_mixer_channel_play(snd, msec, 0);
+            chan = sg_mixer_channel_play(snd, msec, SG_MIXER_FLAG_LOOP);
             g_state++;
         }
         break;

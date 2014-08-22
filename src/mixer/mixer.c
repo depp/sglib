@@ -49,6 +49,8 @@ sg_mixer_commitflags(void)
             chp->gflags |= SG_MIXER_GFLAG_START;
         if (chp->lflags & SG_MIXER_LFLAG_STOP)
             chp->gflags |= SG_MIXER_GFLAG_STOP;
+        if (chp->lflags & SG_MIXER_LFLAG_LOOP)
+            chp->gflags |= SG_MIXER_GFLAG_LOOP;
         if ((chp->gflags & endflags) == endflags) {
             chp->lflags |= SG_MIXER_LFLAG_DONE;
             if (chp->lflags & SG_MIXER_LFLAG_DETACHED) {

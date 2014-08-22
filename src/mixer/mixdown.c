@@ -114,6 +114,8 @@ sg_mixer_mixdown_syncflags(struct sg_mixer_mixdowniface *mp)
         mchan[i].flags |= SG_MIXER_LFLAG_START;
         if (gchan[i].gflags & SG_MIXER_GFLAG_STOP)
             mchan[i].flags |= SG_MIXER_LFLAG_STOP;
+        if (gchan[i].gflags & SG_MIXER_GFLAG_LOOP)
+            mchan[i].flags |= SG_MIXER_LFLAG_LOOP;
     }
 }
 
@@ -192,44 +194,75 @@ sg_mixer_mixdown_renderinput(struct sg_mixer_mixdown *SG_RESTRICT mp,
     struct sg_mixer_sample *sample =
         &sg_mixer.channel[ch].sound->sample;
     const short *adata = sample->data;
-    int apos, asz = mp->bufsz;
-    int rem = (int) (sample->length - mp->channel[ch].samplepos);
-    unsigned spos = mp->channel[ch].samplepos;
-    float v, *abuf = mp->audio_buf;
+    int apos, i, n, rem, asz = mp->bufsz;
+    int loop = (mp->channel[ch].flags & SG_MIXER_LFLAG_LOOP) != 0;
+    unsigned spos = mp->channel[ch].samplepos, length = sample->length;
+    float v, *abuf = mp->audio_buf, scale = 1.0f / 32768.0f;
 
-    if (rem <= end - start) {
-        end = start + rem;
-        mp->channel[ch].flags |= SG_MIXER_LFLAG_DONE;
-    }
-
+    /* FIXME: Performance improvement: use SSE.  */
+    /* FIXME: Performance improvement: we don't need to render to two
+       scratch spaces if the sample is mono.  */
     apos = 0;
+
     for (; apos < start; apos++) {
         abuf[apos + asz * 0] = 0.0f;
         abuf[apos + asz * 1] = 0.0f;
     }
-    /* FIXME: Performance improvement: use SSE.  */
+
     if (sample->stereo) {
-        adata += spos * 2;
-        for (; apos < end; apos++, adata += 2) {
-            abuf[apos + asz * 0] = (1.0f / 32768.0f) * (float) adata[0];
-            abuf[apos + asz * 1] = (1.0f / 32768.0f) * (float) adata[1];
+        while (1) {
+            n = end - apos;
+            rem = (int) (length - spos);
+            if (rem <= n) {
+                n = rem;
+                if (!loop) {
+                    end = apos + rem;
+                    mp->channel[ch].flags |= SG_MIXER_LFLAG_DONE;
+                }
+            }
+
+            for (i = 0; i < n; i++) {
+                abuf[apos + i + asz * 0] =
+                    scale * (float) adata[(spos + i) * 2 + 0];
+                abuf[apos + i + asz * 1] =
+                    scale * (float) adata[(spos + i) * 2 + 1];
+            }
+
+            apos += n;
+            if (apos >= end)
+                break;
+            spos = 0;
         }
     } else {
-        /* FIXME: Performance improvement: we don't need to render to
-           two scratch spaces if the sample is mono.  */
-        adata += spos;
-        for (; apos < end; apos++, adata++) {
-            v = (1.0f / 32768.0f) * (float) adata[0];
-            abuf[apos + asz * 0] = v;
-            abuf[apos + asz * 1] = v;
+        while (1) {
+            n = end - apos;
+            rem = (int) (length - spos);
+            if (rem <= n) {
+                n = rem;
+                if (!loop) {
+                    end = apos + rem;
+                    mp->channel[ch].flags |= SG_MIXER_LFLAG_DONE;
+                }
+            }
+
+            for (i = 0; i < n; i++) {
+                v = scale * (float) adata[spos + i];
+                abuf[apos + i + asz * 0] = v;
+                abuf[apos + i + asz * 1] = v;
+            }
+
+            apos += n;
+            if (apos >= end)
+                break;
+            spos = 0;
         }
     }
+    mp->channel[ch].samplepos = spos + n;
+
     for (; apos < asz; apos++) {
         abuf[apos + asz * 0] = 0.0f;
         abuf[apos + asz * 1] = 0.0f;
     }
-
-    mp->channel[ch].samplepos = spos + (end - start);
 }
 
 /* Render the current channel input buffer and parameter buffer to the

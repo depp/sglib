@@ -25,26 +25,30 @@ enum {
     SG_MIXER_LFLAG_START    = 1u << 0,
     /* Control has stopped playback.  */
     SG_MIXER_LFLAG_STOP     = 1u << 1,
+    /* The sound should loop.  */
+    SG_MIXER_LFLAG_LOOP     = 1u << 2,
     /* Mixers have completed playback.  */
-    SG_MIXER_LFLAG_DONE     = 1u << 2,
+    SG_MIXER_LFLAG_DONE     = 1u << 3,
     /* The sound was just started.  */
-    SG_MIXER_LFLAG_INIT     = 1u << 3,
+    SG_MIXER_LFLAG_INIT     = 1u << 4,
     /* This mixer has started playback.  */
-    SG_MIXER_LFLAG_STARTED  = 1u << 4,
+    SG_MIXER_LFLAG_STARTED  = 1u << 5,
     /* This mixer has started stopping playback.  */
-    SG_MIXER_LFLAG_STOPPED  = 1u << 5,
+    SG_MIXER_LFLAG_STOPPED  = 1u << 6,
     /* The channel is detached.  */
-    SG_MIXER_LFLAG_DETACHED = 1u << 6,
+    SG_MIXER_LFLAG_DETACHED = 1u << 7,
 
     /* Global flags, used for communication between threads.  */
     /* Control has started playback.  */
     SG_MIXER_GFLAG_START   = 1u << 0,
     /* Control has stopped playback.  */
     SG_MIXER_GFLAG_STOP    = 1u << 1,
+    /* The sound should loop.  */
+    SG_MIXER_GFLAG_LOOP    = 1u << 2,
     /* The live mixer has completed playback.  */
-    SG_MIXER_GFLAG_DONE1   = 1u << 2,
+    SG_MIXER_GFLAG_DONE1   = 1u << 3,
     /* The recording mixer has completed playback.  */
-    SG_MIXER_GFLAG_DONE2   = 1u << 3
+    SG_MIXER_GFLAG_DONE2   = 1u << 4
 };
 
 struct sg_mixer_channel {
