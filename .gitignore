@@ -10,7 +10,6 @@
 
 # Build system, GNUMake
 /Makefile
-/build
 /SGLib_Test*
 
 # Build system, Xcode
