@@ -23,7 +23,6 @@
       <src path="attribute.h"/>
       <src path="audio_buffer.h"/>
       <src path="audio_file.h"/>
-      <src path="audio_stream.h"/>
       <src path="binary.h"/>
       <src path="byteorder.h"/>
       <src path="clock.h"/>
