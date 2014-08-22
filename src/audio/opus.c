@@ -113,7 +113,7 @@ sg_opus_decoder_packet(void *obj, ogg_packet *op,
                 msg = "Unsupported channel map";
                 goto custom_error;
             }
-            gain = (short) (data[32] | (data[33] << 8));
+            gain = (short) (data[16] | (data[17] << 8));
             st->gain = expf((float) (log(10.0) / (20 * 256)) *
                             (float) gain);
             st->state = 1;
