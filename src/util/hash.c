@@ -1,8 +1,8 @@
 /* Copyright 2012 Dietrich Epp.
    This file is part of LibPCE.  LibPCE is licensed under the terms of the
    2-clause BSD license.  For more information, see LICENSE.txt. */
-#include "libpce/hash.h"
-#include "libpce/util.h"
+#include "sg/hash.h"
+#include "sg/util.h"
 
 /*
   This is an implementation of Austin Appleby's MurmurHash3.  The

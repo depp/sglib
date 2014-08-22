@@ -3,8 +3,8 @@
    2-clause BSD license.  For more information, see LICENSE.txt. */
 #ifndef SG_AUDIO_BUFFER_H
 #define SG_AUDIO_BUFFER_H
-#include "libpce/attribute.h"
-#include "libpce/byteorder.h"
+#include "sg/attribute.h"
+#include "sg/byteorder.h"
 #include <stddef.h>
 #ifdef __cplusplus
 extern "C" {

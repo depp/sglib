@@ -12,32 +12,42 @@
   </module>
 
   <module id="sglib">
-    <require module="keycode libpce glew" public="true"/>
+    <require module="keycode glew" public="true"/>
     <header-path path="include" public="true"/>
 
     <src path="private.h"/>
 
     <group path="include/sg">
+      <src path="arch.h"/>
+      <src path="atomic.h"/>
+      <src path="attribute.h"/>
       <src path="audio_mixdown.h"/>
       <src path="audio_ofile.h"/>
       <src path="audio_pcm.h"/>
       <src path="audio_sample.h"/>
       <src path="audio_source.h"/>
       <src path="audio_system.h"/>
+      <src path="byteorder.h"/>
       <src path="clock.h"/>
       <src path="configfile.h"/>
+      <src path="cpu.h"/>
       <src path="cvar.h"/>
       <src path="defs.h"/>
       <src path="entry.h"/>
       <src path="error.h"/>
       <src path="event.h"/>
       <src path="file.h"/>
+      <src path="hash.h"/>
+      <src path="hashtable.h"/>
       <src path="log.h"/>
       <src path="net.h"/>
       <src path="opengl.h"/>
       <src path="pixbuf.h"/>
       <src path="rand.h"/>
+      <src path="strbuf.h"/>
+      <src path="thread.h"/>
       <src path="type.h"/>
+      <src path="util.h"/>
       <src path="version.h"/>
     </group>
 
@@ -196,6 +206,21 @@
           </case>
         </switch>
       </group>
+    </group>
+
+    <group path="src/util">
+      <src path="cpu.c"/>
+      <src path="hash.c"/>
+      <src path="hashtable.c"/>
+      <src path="strbuf.c"/>
+      <switch value="$os">
+        <case value="linux|osx">
+          <src path="thread_pthread.c"/>
+        </case>
+        <case value="windows">
+          <src path="thread_windows.c"/>
+        </case>
+      </switch>
     </group>
   </module>
 </build>

@@ -3,7 +3,7 @@
    2-clause BSD license.  For more information, see LICENSE.txt. */
 #ifndef SG_LOG_H
 #define SG_LOG_H
-#include "libpce/attribute.h"
+#include "sg/attribute.h"
 #include <stdarg.h>
 #ifdef __cplusplus
 extern "C" {

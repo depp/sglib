@@ -7,7 +7,7 @@
 #include <stdarg.h>
 #include <stddef.h>
 #include <string.h>
-#include "libpce/attribute.h"
+#include "sg/attribute.h"
 #ifdef __cplusplus
 extern "C" {
 #endif

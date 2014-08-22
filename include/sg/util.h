@@ -7,8 +7,8 @@
 extern "C" {
 #endif
 #include <stddef.h>
-#include "libpce/attribute.h"
-#include "libpce/byteorder.h"
+#include "sg/attribute.h"
+#include "sg/byteorder.h"
 
 /**
  * @file util.h

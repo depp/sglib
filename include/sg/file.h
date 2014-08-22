@@ -3,8 +3,8 @@
    2-clause BSD license.  For more information, see LICENSE.txt. */
 #ifndef SG_FILE_H
 #define SG_FILE_H
-#include "libpce/atomic.h"
-#include "libpce/attribute.h"
+#include "sg/atomic.h"
+#include "sg/attribute.h"
 #include <stddef.h>
 #include <stdint.h>
 #ifdef __cplusplus

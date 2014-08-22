@@ -2,7 +2,7 @@
    This file is part of SGLib.  SGLib is licensed under the terms of the
    2-clause BSD license.  For more information, see LICENSE.txt. */
 #include "mixer.h"
-#include "libpce/util.h"
+#include "sg/util.h"
 #include <stdlib.h>
 
 #pragma GCC diagnostic ignored "-Wtype-limits"

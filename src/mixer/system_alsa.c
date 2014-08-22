@@ -5,7 +5,7 @@
 
 #include "../core/clock_impl.h"
 #include "mixer.h"
-#include "libpce/byteorder.h"
+#include "sg/byteorder.h"
 #include "sg/cvar.h"
 #include "sg/entry.h"
 #include "sg/error.h"

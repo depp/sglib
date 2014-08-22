@@ -4,7 +4,7 @@
 #ifndef PCE_BINARY_H
 #define PCE_BINARY_H
 #include <stdint.h>
-#include "libpce/attribute.h"
+#include "sg/attribute.h"
 
 /**
  * @file binary.h

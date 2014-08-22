@@ -2,7 +2,7 @@
    This file is part of LibPCE.  LibPCE is licensed under the terms of the
    2-clause BSD license.  For more information, see LICENSE.txt. */
 #include <stdio.h>
-#include "libpce/thread.h"
+#include "sg/thread.h"
 
 void
 pce_lock_init(struct pce_lock *p)

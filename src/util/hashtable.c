@@ -1,9 +1,9 @@
 /* Copyright 2009-2012 Dietrich Epp.
    This file is part of LibPCE.  LibPCE is licensed under the terms of the
    2-clause BSD license.  For more information, see LICENSE.txt. */
-#include "libpce/hash.h"
-#include "libpce/hashtable.h"
-#include "libpce/util.h"
+#include "sg/hash.h"
+#include "sg/hashtable.h"
+#include "sg/util.h"
 #include <stdlib.h>
 #include <assert.h>
 #include <string.h>

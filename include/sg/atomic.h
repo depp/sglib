@@ -3,8 +3,8 @@
    2-clause BSD license.  For more information, see LICENSE.txt. */
 #ifndef PCE_ATOMIC_H
 #define PCE_ATOMIC_H
-#include "libpce/arch.h"
-#include "libpce/attribute.h"
+#include "sg/arch.h"
+#include "sg/attribute.h"
 #ifdef __cplusplus
 extern "C" {
 #endif

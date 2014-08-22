@@ -3,7 +3,7 @@
    2-clause BSD license.  For more information, see LICENSE.txt. */
 #ifndef SG_CONFIGFILE_H
 #define SG_CONFIGFILE_H
-#include "libpce/hashtable.h"
+#include "sg/hashtable.h"
 #ifdef __cplusplus
 extern "C" {
 #endif

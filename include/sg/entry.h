@@ -4,7 +4,7 @@
 #ifndef SG_ENTRY_H
 #define SG_ENTRY_H
 #include <stdarg.h>
-#include "libpce/attribute.h"
+#include "sg/attribute.h"
 #ifdef __cplusplus
 extern "C" {
 #endif

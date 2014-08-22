@@ -3,7 +3,7 @@
    2-clause BSD license.  For more information, see LICENSE.txt. */
 #define _XOPEN_SOURCE 600
 
-#include "libpce/thread.h"
+#include "sg/thread.h"
 #include <errno.h>
 #include <stdlib.h>
 

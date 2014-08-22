@@ -4,7 +4,7 @@
 #ifndef PCE_HASH_H
 #define PCE_HASH_H
 #include <stddef.h>
-#include "libpce/attribute.h"
+#include "sg/attribute.h"
 
 /**
  * @file hash.h

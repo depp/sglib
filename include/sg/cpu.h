@@ -3,7 +3,7 @@
    2-clause BSD license.  For more information, see LICENSE.txt. */
 #ifndef PCE_CPU_H
 #define PCE_CPU_H
-#include "libpce/arch.h"
+#include "sg/arch.h"
 #ifdef __cplusplus
 extern "C" {
 #endif

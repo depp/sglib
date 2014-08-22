@@ -7,7 +7,7 @@
 #include "sg/error.h"
 #include "sg/pixbuf.h"
 #include "sg/type.h"
-#include "libpce/util.h"
+#include "sg/util.h"
 #include <Windows.h>
 #include <usp10.h>
 #include <math.h>

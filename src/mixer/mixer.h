@@ -3,8 +3,8 @@
    2-clause BSD license.  For more information, see LICENSE.txt. */
 #include "sg/defs.h"
 #include "sg/mixer.h"
-#include "libpce/atomic.h"
-#include "libpce/thread.h"
+#include "sg/atomic.h"
+#include "sg/thread.h"
 #include "time.h"
 
 enum {
