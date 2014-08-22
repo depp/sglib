@@ -13,6 +13,8 @@
 #include <getopt.h>
 #include <stdio.h>
 
+#include "sg/key.h"
+
 static SDL_Window *sg_window;
 static SDL_GLContext sg_context;
 
@@ -149,7 +151,8 @@ sdl_event_key(SDL_KeyboardEvent *e)
     struct sg_event_key ee;
     ee.type = e->type == SDL_KEYDOWN ?
         SG_EVENT_KDOWN : SG_EVENT_KUP;
-    ee.key = -1;
+    /* SDL scancodes are just HID codes, which is what we use.  */
+    ee.key = e->keysym.scancode;
     sg_game_event((union sg_event *) &ee);
 }
 
