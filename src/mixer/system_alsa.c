@@ -174,7 +174,7 @@ done:
     sg_game_event(&event);
     */
 
-    sg_mixer_mixdown_destroy(mp);
+    sg_mixer_mixdown_free(mp);
 
     rr = pthread_mutex_lock(&alsa->mutex);
     if (rr) abort();
@@ -372,7 +372,7 @@ sg_mixer_start(void)
         goto cleanup;
     }
 
-    mp = sg_mixer_mixdown_create_live(rate, periodsize, &err);
+    mp = sg_mixer_mixdown_new_live(rate, periodsize, &err);
     if (!mp) {
         sg_logerrs(alsa->logger, SG_LOG_ERROR, err,
                    "failed to create mixdown");
@@ -409,7 +409,7 @@ cleanup:
     if (alsa->pcm)
         snd_pcm_close(alsa->pcm);
     if (mp)
-        sg_mixer_mixdown_destroy(mp);
+        sg_mixer_mixdown_free(mp);
     r = pthread_mutex_unlock(&alsa->mutex);
     if (r) abort();
 }

@@ -47,8 +47,8 @@ nomem1: free(mp);
 }
 
 struct sg_mixer_mixdowniface *
-sg_mixer_mixdown_create_live(int samplerate, int bufsz,
-                             struct sg_error **err)
+sg_mixer_mixdown_new_live(int samplerate, int bufsz,
+                          struct sg_error **err)
 {
     struct sg_mixer_mixdowniface *mi;
 
@@ -72,7 +72,7 @@ sg_mixer_mixdown_create_live(int samplerate, int bufsz,
 }
 
 void
-sg_mixer_mixdown_destroy(struct sg_mixer_mixdowniface *mp)
+sg_mixer_mixdown_free(struct sg_mixer_mixdowniface *mp)
 {
     sg_lock_acquire(&sg_mixer.lock);
     if (mp->mixdown.which == SG_MIXER_LIVE) {

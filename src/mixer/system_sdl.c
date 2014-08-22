@@ -112,7 +112,7 @@ sg_mixer_start(void)
             "audio sample rate: %d", spec.freq);
     sg_logf(ap->logger, SG_LOG_INFO,
             "audio buffer size: %d", spec.samples);
-    mp = sg_mixer_mixdown_create_live(spec.freq, spec.samples, &err);
+    mp = sg_mixer_mixdown_new_live(spec.freq, spec.samples, &err);
     if (!mp) {
         SDL_CloseAudioDevice(dev);
         sg_logerrs(ap->logger, SG_LOG_ERROR, err,
@@ -134,6 +134,6 @@ sg_mixer_stop(void)
         return;
     SDL_CloseAudioDevice(ap->dev);
     ap->dev = 0;
-    sg_mixer_mixdown_destroy(ap->mixdown);
+    sg_mixer_mixdown_free(ap->mixdown);
     ap->mixdown = NULL;
 }

@@ -161,18 +161,18 @@ struct sg_mixer_mixdowniface {
    should first call create_live(), then repeatedly call process(),
    and eventually call destroy().  */
 struct sg_mixer_mixdowniface *
-sg_mixer_mixdown_create_live(int bufsz, int samplerate,
-                             struct sg_error **err);
+sg_mixer_mixdown_new_live(int bufsz, int samplerate,
+                          struct sg_error **err);
 
 /* Create a new recording mixdown.  The system will automatically
    process the recording mixdown.  */
 int
-sg_mixer_mixdown_create_record(unsigned starttime,
-                               struct sg_error **err);
+sg_mixer_mixdown_new_record(unsigned starttime,
+                            struct sg_error **err);
 
-/* Destroy a mixdown.  */
+/* Free a mixdown.  */
 void
-sg_mixer_mixdown_destroy(struct sg_mixer_mixdowniface *mp);
+sg_mixer_mixdown_free(struct sg_mixer_mixdowniface *mp);
 
 /* Process mixer events and render audio.  The buffertime parameter
    gives the timestamp of the end of the rendered buffer for live
