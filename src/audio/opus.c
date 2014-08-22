@@ -174,7 +174,7 @@ opus_error:
 
 int
 sg_opus_decoder_read(void *obj, struct sg_audio_buffer *pcm,
-                       struct sg_error **err)
+                     struct sg_error **err)
 {
     struct sg_opus_decoder *st = obj;
     float *buf, gain;
