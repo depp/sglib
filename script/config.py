@@ -186,7 +186,8 @@ cfg.add_enable(
     'audio', 'enable audio support',
     [val('alsa', 'ALSA'),
      val('coreaudio', 'Core Audio'),
-     val('directsound', 'DirectSound')])
+     val('directsound', 'DirectSound'),
+     val('sdl', 'LibSDL')])
 cfg.add_enable(
     'jpeg', 'enable JPEG image support',
     [val('libjpeg', 'LibJPEG'),

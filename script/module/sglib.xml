@@ -155,6 +155,10 @@
           <case value="directsound">
             <src path="system_directsound8.c"/>
           </case>
+          <case value="sdl">
+            <require module="sdl"/>
+            <src path="system_sdl.c"/>
+          </case>
         </switch>
       </group>
 
