@@ -14,7 +14,7 @@ load_audio(const char *path)
     struct sg_mixer_sound *snd;
     struct sg_error *err = NULL;
 
-    snd = sg_mixer_sound_load(path, strlen(path), &err);
+    snd = sg_mixer_sound_file(path, strlen(path), &err);
     if (!snd) {
         sg_logf(sg_logger_get(NULL), SG_LOG_ERROR,
                 "could not load audio file: %s", path);

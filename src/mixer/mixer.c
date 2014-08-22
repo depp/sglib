@@ -2,6 +2,7 @@
    This file is part of SGLib.  SGLib is licensed under the terms of the
    2-clause BSD license.  For more information, see LICENSE.txt. */
 #include "mixer.h"
+#include "sound.h"
 #include "../core/private.h"
 #include <stdlib.h>
 #include <string.h>
@@ -14,6 +15,7 @@ sg_mixer_init(void)
     unsigned count;
 
     sg_mixer_system_init();
+    sg_mixer_sound_init();
     sg_lock_init(&sg_mixer.lock);
 
     count = 64;

@@ -137,7 +137,7 @@ sg_mixer_stoprecord(unsigned timestamp,
                     struct sg_error **err);
 
 /**
- * @brief Load a sound from disk into memory, decoding it to PCM.
+ * @brief Get a sound resource for an audio file.
  *
  * This will decode the the entire audio file to PCM before the sound
  * is ready for playback.  This may result in a long delay if the
@@ -149,24 +149,8 @@ sg_mixer_stoprecord(unsigned timestamp,
  * @return A sound, or `NULL` for failure.  The result may be shared.
  */
 struct sg_mixer_sound *
-sg_mixer_sound_load(const char *path, size_t pathlen,
+sg_mixer_sound_file(const char *path, size_t pathlen,
                     struct sg_error **err);
-
-/**
- * @brief Load a sound from disk into memory, preparing it for streaming.
- *
- * This will only load the audio file data into memory.  Upon
- * playback, the data will be decoded, resampled, and converted as
- * necessary.
- *
- * @param path Path to the audio file.
- * @param pathlen Length of the path, in bytes.
- * @param err On failure, the error.
- * @return A sound, or `NULL` for failure.  The result may be shared.
- */
-struct sg_mixer_sound *
-sg_mixer_sound_stream(const char *path, size_t pathlen,
-                      struct sg_error **err);
 
 /**
  * @brief Test whether the sound is ready for playback.

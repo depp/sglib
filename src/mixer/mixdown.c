@@ -65,6 +65,7 @@ sg_mixer_mixdown_create_live(int samplerate, int bufsz,
     if (sg_mixer.mix_live != NULL)
         abort();
     sg_mixer.mix_live = mi;
+    sg_mixer_sound_setrate(samplerate);
     sg_lock_release(&sg_mixer.lock);
 
     return mi;
@@ -198,6 +199,15 @@ sg_mixer_mixdown_renderinput(struct sg_mixer_mixdown *SG_RESTRICT mp,
     int loop = (mp->channel[ch].flags & SG_MIXER_LFLAG_LOOP) != 0;
     unsigned spos = mp->channel[ch].samplepos, length = sample->length;
     float v, *abuf = mp->audio_buf, scale = 1.0f / 32768.0f;
+
+    if (!length) {
+        for (apos = 0; apos < asz; apos++) {
+            abuf[apos + asz * 0] = 0.0f;
+            abuf[apos + asz * 1] = 0.0f;
+        }
+        mp->channel[ch].flags |= SG_MIXER_LFLAG_DONE;
+        return;
+    }
 
     /* FIXME: Performance improvement: use SSE.  */
     /* FIXME: Performance improvement: we don't need to render to two

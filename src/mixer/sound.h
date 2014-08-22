@@ -12,7 +12,18 @@ struct sg_mixer_sample {
 
 struct sg_mixer_sound {
     sg_atomic_t refcount;
+    sg_atomic_t is_loaded;
     const char *path;
-    size_t pathlen;
+    int pathlen;
     struct sg_mixer_sample sample;
 };
+
+/* Initialize the sound subsystem.  */
+void
+sg_mixer_sound_init(void);
+
+/* Set the sample rate for all sounds, or set to zero to unload all
+   sounds.  Sounds will not be loaded into memory until the sample
+   rate is set.  */
+void
+sg_mixer_sound_setrate(int rate);
