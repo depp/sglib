@@ -33,6 +33,8 @@ enum {
     SG_MIXER_LFLAG_STARTED  = 1u << 4,
     /* This mixer has started stopping playback.  */
     SG_MIXER_LFLAG_STOPPED  = 1u << 5,
+    /* The channel is detached.  */
+    SG_MIXER_LFLAG_DETACHED = 1u << 6,
 
     /* Global flags, used for communication between threads.  */
     /* Control has started playback.  */

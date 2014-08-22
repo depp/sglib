@@ -151,7 +151,7 @@ func1(unsigned msec)
         case 2: snd = g_audio.tink;  break;
         }
         g_mod = (g_mod + 1) % 3;
-        sg_mixer_channel_play(snd, msec);
+        sg_mixer_channel_play(snd, msec, SG_MIXER_FLAG_DETACHED);
     }
 
     draw_key(0, state);
@@ -180,7 +180,7 @@ func2(unsigned msec)
         case 2: pan = 1.0f; break;
         }
         g_mod = (g_mod + 1) % 9;
-        chan = sg_mixer_channel_play(snd, msec);
+        chan = sg_mixer_channel_play(snd, msec, SG_MIXER_FLAG_DETACHED);
         sg_mixer_channel_setparam(chan, SG_MIXER_PARAM_PAN, pan);
     }
 
@@ -206,7 +206,7 @@ func3(unsigned msec)
         case 2: snd = g_audio.right;  pan = +0.75f; break;
         }
         g_mod = (g_mod + 1) % 3;
-        chan = sg_mixer_channel_play(snd, msec);
+        chan = sg_mixer_channel_play(snd, msec, SG_MIXER_FLAG_DETACHED);
         sg_mixer_channel_setparam(chan, SG_MIXER_PARAM_PAN, pan);
     }
 
@@ -226,7 +226,7 @@ func4(unsigned msec)
     case 0:
         if (state) {
             snd = (g_state & 4) ? g_audio.alien : g_audio.music;
-            chan = sg_mixer_channel_play(snd, msec);
+            chan = sg_mixer_channel_play(snd, msec, 0);
             g_state++;
         }
         break;

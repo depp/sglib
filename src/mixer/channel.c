@@ -4,7 +4,8 @@
 #include "mixer.h"
 
 struct sg_mixer_channel *
-sg_mixer_channel_play(struct sg_mixer_sound *sound, unsigned timestamp)
+sg_mixer_channel_play(struct sg_mixer_sound *sound,
+                      unsigned timestamp, unsigned flags)
 {
     struct sg_mixer_channel *chp, *che;
     int i;
@@ -18,6 +19,8 @@ sg_mixer_channel_play(struct sg_mixer_sound *sound, unsigned timestamp)
         return NULL;
 
     chp->lflags = SG_MIXER_LFLAG_START | SG_MIXER_LFLAG_INIT;
+    if (flags & SG_MIXER_FLAG_DETACHED)
+        chp->lflags |= SG_MIXER_LFLAG_DETACHED;
     chp->starttime = timestamp;
     chp->sound = sound;
     sg_mixer_sound_incref(sound);
@@ -35,7 +38,7 @@ sg_mixer_channel_stop(struct sg_mixer_channel *channel)
         return;
     /* FIXME: Logging: don't stop a stopped channel.  */
     channel->stoptime = sg_mixer.time;
-    channel->lflags |= SG_MIXER_LFLAG_STOP;
+    channel->lflags |= SG_MIXER_LFLAG_STOP | SG_MIXER_LFLAG_DETACHED;
 }
 
 int

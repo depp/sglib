@@ -20,6 +20,25 @@ struct sg_mixer_sound;
 struct sg_mixer_channel;
 
 /**
+ * @brief Flags for audio playback, passed to sg_mixer_channel_play().
+ */
+enum {
+    /**
+     * @brief Loop the sound until stopped.
+     */
+    SG_MIXER_FLAG_LOOP = 1u << 0,
+
+    /**
+     * @brief Detach the channel, freeing it automatically.
+     *
+     * A sound played on a detached channel will continue playing
+     * until the sound ends.  The channel reference becomes invalid as
+     * soon as the audio state is committed.
+     */
+    SG_MIXER_FLAG_DETACHED = 1u << 1
+};
+
+/**
  * @brief Mixer channel parameters.
  */
 typedef enum {
@@ -180,12 +199,15 @@ sg_mixer_sound_decref(struct sg_mixer_sound *sound);
  *
  * @param sound The sound to play, or `NULL` which has no effect.
  * @param timestamp The timestamp at which playback starts.
+ * @param flags The playback flags, such as ::SG_MIXER_FLAG_LOOP and
+ * ::SG_MIXER_FLAG_DETACHED
  * @return The sound's playback channel, or `NULL` if no channels are
  * available.  A `NULL` channel can be safely passed to the other
  * channel functions, it will have no effect.
  */
 struct sg_mixer_channel *
-sg_mixer_channel_play(struct sg_mixer_sound *sound, unsigned timestamp);
+sg_mixer_channel_play(struct sg_mixer_sound *sound,
+                      unsigned timestamp, unsigned flags);
 
 /**
  * @brief Stop channel playback, invalidating the channel.
