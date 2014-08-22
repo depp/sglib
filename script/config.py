@@ -228,11 +228,11 @@ cfg.add_defaults({
         'opus': 'yes',
     },
     'linux': {
-        'audio': 'alsa',
+        'audio': 'sdl',
         'jpeg': 'libjpeg',
         'png': 'libpng',
         'type': 'pango',
-        'app-gtk': 'yes',
+        'app-sdl': 'yes',
     },
     'osx': {
         'audio': 'coreaudio',
