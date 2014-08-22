@@ -133,6 +133,7 @@ def default_env(cfg, vars, osname):
             'CWARN': tuple(
                 '-Wall -Wextra -Wpointer-arith -Wno-sign-compare '
                 '-Wwrite-strings -Wmissing-prototypes '
+                '-Werror=implicit-function-declaration '
                 .split()),
             'CXXWARN': tuple(
                 '-Wall -Wextra -Wpointer-arith -Wno-sign-compare '
