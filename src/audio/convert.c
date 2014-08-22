@@ -81,7 +81,12 @@ sg_audio_pcm_copy_f32(short *SG_RESTRICT dest, const void *SG_RESTRICT src,
             x.c[1] = sp[i*4+1];
             x.c[2] = sp[i*4+2];
             x.c[3] = sp[i*4+3];
-            dest[i] = (short) (x.f * 32767.0f);
+            if (x.f < -1.0f)
+                dest[i] = -32767;
+            else if (x.f > 1.0f)
+                dest[i] = 32767;
+            else
+                dest[i] = (short) (x.f * 32767.0f);
         }
     } else {
         for (i = 0; i < count; ++i) {
@@ -89,7 +94,12 @@ sg_audio_pcm_copy_f32(short *SG_RESTRICT dest, const void *SG_RESTRICT src,
             x.c[2] = sp[i*4+1];
             x.c[1] = sp[i*4+2];
             x.c[0] = sp[i*4+3];
-            dest[i] = (short) (x.f * 32767.0f);
+            if (x.f < -1.0f)
+                dest[i] = -32767;
+            else if (x.f > 1.0f)
+                dest[i] = 32767;
+            else
+                dest[i] = (short) (x.f * 32767.0f);
         }
     }
 }
