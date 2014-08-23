@@ -31,6 +31,8 @@ typedef enum {
 
 #define SG_PIXBUF_NFORMAT ((int) SG_RGBA + 1)
 
+extern const size_t SG_PIXBUF_FORMATSIZE[SG_PIXBUF_NFORMAT];
+
 struct sg_pixbuf {
     void *data;
     sg_pixbuf_format_t format;
