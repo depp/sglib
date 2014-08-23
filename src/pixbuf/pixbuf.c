@@ -11,6 +11,10 @@ const size_t SG_PIXBUF_FORMATSIZE[SG_PIXBUF_NFORMAT] = {
     1, 2, 3, 4, 4
 };
 
+const char SG_PIXBUF_FORMATNAME[SG_PIXBUF_NFORMAT][5] = {
+    "Y", "YA", "RGB", "RGBX", "RGBA"
+};
+
 #define MAX_DIM 32768
 
 static const struct sg_error_domain SG_ERROR_PIXBUF = { "pixbuf" };

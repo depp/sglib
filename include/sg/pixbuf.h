@@ -33,6 +33,8 @@ typedef enum {
 
 extern const size_t SG_PIXBUF_FORMATSIZE[SG_PIXBUF_NFORMAT];
 
+extern const char SG_PIXBUF_FORMATNAME[SG_PIXBUF_NFORMAT][5];
+
 struct sg_pixbuf {
     void *data;
     sg_pixbuf_format_t format;
