@@ -68,6 +68,8 @@ def cc_cmd(env, output, source, sourcetype, *, depfile=None, external=False):
         except KeyError:
             raise ConfigError('CXX is not set')
         cflags = env.get('CXXFLAGS', ())
+        # FIXME: this is a hack
+        cflags = cflags + ('-std=c++11',)
         warn = env.get('CXXWARN', ())
     else:
         assert False
