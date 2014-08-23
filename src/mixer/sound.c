@@ -55,7 +55,7 @@ sg_mixer_sound_load(struct sg_mixer_sound *sound, int rate)
     size_t abufcount = 0;
     struct sg_buffer *buf = NULL;
     struct sg_error *err = NULL;
-    const char *why;
+    const char *why = NULL;
     int r;
 
     buf = sg_file_get(sound->path, sound->pathlen,
