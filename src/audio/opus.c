@@ -142,8 +142,9 @@ sg_opus_decoder_packet(void *obj, ogg_packet *op,
             st->buf = nbuf;
             st->bufalloc = nalloc;
         }
-        r = opus_decode_float(st->decoder, data, len, st->buf + st->buflen,
-                              SG_OPUS_MAXFRAME, 0);
+        r = opus_decode_float(
+            st->decoder, data, len, st->buf + st->buflen * channels,
+            SG_OPUS_MAXFRAME, 0);
         if (r < 0)
             goto opus_error;
         if (st->preskip > 0) {
