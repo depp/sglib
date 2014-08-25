@@ -179,7 +179,7 @@ sg_mixer_mixdown_renderparam(struct sg_mixer_mixdown *SG_RESTRICT mp)
     for (ppos = 0; ppos < psz; ppos++) {
         vol = pbuf[ppos + psz * 0];
         pan = pbuf[ppos + psz * 1];
-        gain = exp(vol * volscale);
+        gain = expf(vol * volscale);
         if (vol < -60.0f)
             gain *= (vol + 80.0f) * (1.0f / 20.0f);
         pbuf[ppos + psz * 0] = gain * sinf((1.0f - pan) * panscale);

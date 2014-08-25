@@ -3,7 +3,7 @@
    2-clause BSD license.  For more information, see LICENSE.txt. */
 #include "sg/defs.h"
 
-#include "../core/common/private.h"
+#include "../core/private.h"
 #include "sg/error.h"
 #include "sg/pixbuf.h"
 #include "sg/type.h"

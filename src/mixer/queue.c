@@ -5,7 +5,9 @@
 #include "sg/util.h"
 #include <stdlib.h>
 
+#if defined __GNUC__
 #pragma GCC diagnostic ignored "-Wtype-limits"
+#endif
 
 void
 sg_mixer_queue_init(struct sg_mixer_queue *queue)

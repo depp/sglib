@@ -85,7 +85,7 @@ sg_pixbuf_loadwincodec(struct sg_pixbuf *pbuf, const void *data, size_t len,
         break;
 
     default:
-        sg_logf(sg_logger_get("image"), LOG_ERROR,
+        sg_logf(sg_logger_get("image"), SG_LOG_ERROR,
                 "Unsupported channel count: %u", chanCount);
         sg_error_data(err, "Wincodec");
         goto failed;

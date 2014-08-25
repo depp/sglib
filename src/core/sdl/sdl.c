@@ -1,6 +1,7 @@
 /* Copyright 2012-2014 Dietrich Epp.
    This file is part of SGLib.  SGLib is licensed under the terms of the
    2-clause BSD license.  For more information, see LICENSE.txt. */
+#include "sg/attribute.h"
 #include "sg/clock.h"
 #include "sg/cvar.h"
 #include "sg/entry.h"
@@ -10,7 +11,6 @@
 #include "sg/version.h"
 #include "../private.h"
 #include "SDL.h"
-#include <getopt.h>
 #include <stdio.h>
 
 #include "sg/key.h"
@@ -18,7 +18,7 @@
 static SDL_Window *sg_window;
 static SDL_GLContext sg_context;
 
-__attribute__((noreturn))
+SG_ATTR_NORETURN
 static void
 sdl_quit(int status)
 {
@@ -45,14 +45,21 @@ sg_version_platform(struct sg_logger *lp)
     char v1[16], v2[16];
     SDL_version v;
     SDL_GetVersion(&v);
+#if !defined _WIN32
     snprintf(v1, sizeof(v1), "%d.%d.%d",
              SDL_MAJOR_VERSION, SDL_MINOR_VERSION, SDL_PATCHLEVEL);
     snprintf(v2, sizeof(v2), "%d.%d.%d",
              v.major, v.minor, v.patch);
+#else
+    _snprintf_s(v1, sizeof(v1), _TRUNCATE, "%d.%d.%d",
+        SDL_MAJOR_VERSION, SDL_MINOR_VERSION, SDL_PATCHLEVEL);
+    _snprintf_s(v2, sizeof(v2), _TRUNCATE, "%d.%d.%d",
+        v.major, v.minor, v.patch);
+#endif
     sg_version_lib(lp, "LibSDL", v1, v2);
 }
 
-__attribute__((noreturn))
+SG_ATTR_NORETURN
 static void
 sdl_error(const char *what)
 {
@@ -66,20 +73,16 @@ sdl_init(int argc, char *argv[])
     GLenum err;
     union sg_event evt;
     struct sg_game_info gameinfo;
-    int opt, flags;
+    int flags, i;
 
-    while ((opt = getopt(argc, argv, "d:")) != -1) {
-        switch (opt) {
-        case 'd':
-            sg_cvar_addarg(NULL, NULL, optarg);
-            break;
-
-        default:
+    for (i = 1; i < argc; i++) {
+        if (argv[i][0] == '-' && argv[i][1] == 'd') {
+            sg_cvar_addarg(NULL, NULL, argv[i] + 2);
+        } else {
             fputs("Invalid usage\n", stderr);
             exit(1);
         }
     }
-
     flags = SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_EVENTS;
     if (SDL_Init(flags))
         sdl_error("could not initialize LibSDL");
