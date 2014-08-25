@@ -5,7 +5,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#if !defined(_WIN32)
 #include <unistd.h>
+#endif
 
 static char sg_log_prevdate[10];
 static int sg_log_color;
@@ -75,7 +77,9 @@ sg_log_console_init(void)
         abort();
     l->msg = sg_log_console_msg;
     l->destroy = sg_log_console_destroy;
+#if !defined(_WIN32)
     sg_log_color = isatty(STDERR_FILENO) == 1;
+#endif
     sg_log_listen(l);
     sg_log_console_create();
 }

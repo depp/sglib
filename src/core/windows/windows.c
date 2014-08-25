@@ -2,7 +2,7 @@
    This file is part of SGLib.  SGLib is licensed under the terms of the
    2-clause BSD license.  For more information, see LICENSE.txt. */
 #include "../private.h"
-#include "sg/audio_system.h"
+#include "sg/clock.h"
 #include "sg/cvar.h"
 #include "sg/entry.h"
 #include "sg/event.h"
@@ -28,28 +28,13 @@ quit()
 }
 
 void
-sg_platform_quit(void)
+sg_sys_quit(void)
 {
     quit();
 }
 
 void
-sg_platform_faile(struct sg_error *e)
-{
-    abort();
-}
-
-void
-sg_platform_failf(const char *fmt, ...)
-{
-    va_list ap;
-    va_start(ap, fmt);
-    sg_platform_failv(fmt, ap);
-    va_end(ap);
-}
-
-void
-sg_platform_failv(const char *fmt, va_list ap)
+sg_sys_abort(const char *msg)
 {
     abort();
 }
@@ -74,21 +59,7 @@ static void serrorBox(const char *str)
     MessageBoxA(NULL, str, "SHUTDOWN ERROR", MB_OK | MB_ICONINFORMATION);
 }
 
-static int sg_height;
-
-static void handleResize(int width, int height)
-{
-    struct sg_event_resize e;
-    if (!height)
-        height = 1;
-    if (!width)
-        width = 1;
-    e.type = SG_EVENT_RESIZE;
-    e.width = width;
-    e.height = height;
-    sg_height = height;
-    sg_sys_event((union sg_event *) &e);
-}
+static int sg_width, sg_height;
 
 static void killGLWindow()
 {
@@ -215,7 +186,8 @@ BOOL createWindow(int nCmdShow)
     ShowWindow(sg_window, nCmdShow);
     SetForegroundWindow(sg_window);
     SetFocus(sg_window);
-    handleResize(g_info.default_width, g_info.default_height);
+    sg_width = g_info.default_width;
+    sg_height = g_info.default_height;
 
     return TRUE;
 }
@@ -231,7 +203,7 @@ static void handleKey(int code, sg_event_type_t t)
         return;
     e.type = t;
     e.key = hcode;
-    sg_sys_event((union sg_event *) &e);
+    sg_game_event((union sg_event *) &e);
 }
 
 static void handleMouse(int param, sg_event_type_t t, int button)
@@ -241,7 +213,7 @@ static void handleMouse(int param, sg_event_type_t t, int button)
     e.x = LOWORD(param);
     e.y = sg_height - 1 - HIWORD(param);
     e.button = button;
-    sg_sys_event((union sg_event *) &e);
+    sg_game_event((union sg_event *) &e);
 }
 
 static LRESULT CALLBACK wndProc(
@@ -301,7 +273,8 @@ static LRESULT CALLBACK wndProc(
         return 0;
 
     case WM_SIZE:
-        handleResize(LOWORD(lParam), HIWORD(lParam));
+        sg_width = LOWORD(lParam);
+        sg_height = HIWORD(lParam);
         return 0;
 
     case WM_GETMINMAXINFO:
@@ -444,7 +417,6 @@ init(int nCmdShow)
 
     if (!createWindow(nCmdShow))
         exit(0);
-    sg_audio_sys_pstart();
     err = glewInit();
     if (err) {
         errorBox("Could not initialize GLEW.");
@@ -469,7 +441,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
         if (!inactive) {
             glClear(GL_COLOR_BUFFER_BIT);
-            sg_sys_draw();
+            sg_game_draw(sg_width, sg_height, sg_clock_get());
             SwapBuffers(hDC);
         }
     }
