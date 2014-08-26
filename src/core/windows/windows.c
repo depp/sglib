@@ -402,6 +402,7 @@ parseError:
 static void
 init(int nCmdShow)
 {
+    union sg_event evt;
     HRESULT hr;
     GLenum err;
 
@@ -422,6 +423,8 @@ init(int nCmdShow)
         errorBox("Could not initialize GLEW.");
         exit(1);
     }
+    evt.type = SG_EVENT_VIDEO_INIT;
+    sg_game_event(&evt);
 }
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
