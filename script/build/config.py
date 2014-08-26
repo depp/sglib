@@ -22,6 +22,7 @@ PLATFORMS = {
     'Linux': ('linux', 'make'),
     'Windows': ('windows', 'msvc'),
 }
+PROCS = ['git', 'pkg-config', 'sdl-config']
 
 EXISTS_CACHE = {}
 
@@ -63,14 +64,19 @@ class Config(object):
     ARGS = ['bundled_libs', 'verbosity',
             'warnings', 'werror', 'config']
     __slots__ = ARGS + [
-        'srcdir', 'projfile', 'target', 'flags',
-        'srcdir_target', '_sep_target', 'verbosity']
+        'srcdir', 'projfile', 'target', 'flags', 'procs',
+        'srcdir_target', '_sep_target']
 
     def __init__(self, srcdir, projfile, args):
         self.srcdir = srcdir
         self.projfile = projfile
         for arg in self.ARGS:
             setattr(self, arg, getattr(args, arg))
+        self.procs = {}
+        for proc in PROCS:
+            value = getattr(args, 'proc-' + proc)
+            if value is not None:
+                self.procs[proc] = value
 
     def set_target(self, target, flags):
         self.target = target
@@ -159,6 +165,10 @@ class Config(object):
         ec[path] = result
         return result
 
+    def set_procs(self):
+        for k, v in self.procs.items():
+            shell.register_exe(k, v)
+
 Value = collections.namedtuple('Value', 'name help')
 
 class ConfigTool(object):
@@ -239,6 +249,12 @@ class ConfigTool(object):
         buildgroup.add_argument(
             '--target',
             help='select a build target')
+
+        for proc in PROCS:
+            buildgroup.add_argument(
+                '--with-' + proc,
+                default=None, dest='proc-' + proc,
+                help='specify path to {} executable'.format(proc))
 
     def add_enable(self, name, help, values=None):
         if name in self.flaginfo:
@@ -336,6 +352,7 @@ class ConfigTool(object):
 
         args = self.parser.parse_args(sys.argv[3:])
         cfg = Config(srcdir, projfile, args)
+        cfg.set_procs()
 
         target = self.get_target(cfg, args)
 
@@ -371,7 +388,9 @@ class ConfigTool(object):
         redirect_log(append=True)
         logfile.write('\n{}\nReconfigure {}\n'.format(
             '#' * 40, datetime.datetime.now().isoformat()))
-        self.run_config(pickle.loads(self.get_cache()[0]), None)
+        cfg = pickle.loads(self.get_cache()[0])
+        cfg.set_procs()
+        self.run_config(cfg, None)
 
     def build(self, targetpath, target, cfg):
         fp = io.StringIO()
@@ -435,6 +454,7 @@ class ConfigTool(object):
             sys.exit(1)
         cache = self.get_cache()
         cfg = pickle.loads(cache[0])
+        cfg.set_procs()
         cache_gen_sources = pickle.loads(cache[1])
         targetpath = sys.argv[2]
         self.build(targetpath, cache_gen_sources[targetpath], cfg)

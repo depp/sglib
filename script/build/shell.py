@@ -7,9 +7,16 @@ import re
 from build.error import ConfigError, format_block
 
 PROC_CACHE = {}
+
+def register_exe(name, path):
+    """Register a non-standard location for an executable."""
+    abs = os.path.abspath(path)
+    if not os.path.exists(path):
+        raise ConfigError('file not found: {}'.format(path))
+    PROC_CACHE[name] = abs
+
 def find_exe(name):
     """Find the given executable, or return None if not found."""
-    global PROC_CACHE
     try:
         return PROC_CACHE[name]
     except KeyError:
