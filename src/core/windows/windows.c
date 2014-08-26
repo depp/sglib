@@ -443,7 +443,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
         }
 
         if (!inactive) {
-            glClear(GL_COLOR_BUFFER_BIT);
             sg_game_draw(sg_width, sg_height, sg_clock_get());
             SwapBuffers(hDC);
         }
