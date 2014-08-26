@@ -433,6 +433,21 @@ sg_mixer_mixdown_process(struct sg_mixer_mixdowniface *mp,
 }
 
 void
+sg_mixer_mixdown_get_s16(struct sg_mixer_mixdowniface *mp,
+                         short *buffer)
+{
+    int apos, asz = mp->mixdown.bufsz;
+    const float *SG_RESTRICT input = mp->mixdown.audio_buf;
+    short *SG_RESTRICT output = buffer;
+    /* FIXME: Performance improvement: use SSE */
+    /* FIXME: clipping */
+    for (apos = 0; apos < asz; apos++) {
+        output[apos * 2 + 0] = (short) (input[apos + asz * 2] * 32767.0f);
+        output[apos * 2 + 1] = (short) (input[apos + asz * 3] * 32767.0f);
+    }
+}
+
+void
 sg_mixer_mixdown_get_f32(struct sg_mixer_mixdowniface *mp,
                          float *buffer)
 {

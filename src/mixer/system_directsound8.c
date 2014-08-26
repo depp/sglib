@@ -1,13 +1,12 @@
 /* Copyright 2012 Dietrich Epp.
    This file is part of SGLib.  SGLib is licensed under the terms of the
    2-clause BSD license.  For more information, see LICENSE.txt. */
-#include "sg/audio_mixdown.h"
-#include "sg/audio_system.h"
+#include "mixer.h"
 #include "sg/clock.h"
+#include "sg/entry.h"
 #include "sg/error.h"
 #include "sg/log.h"
-#include "sysprivate.h"
-#include "../core/common/clock_impl.h"
+#include "../core/clock_impl.h"
 #include <assert.h>
 #include <string.h>
 
@@ -20,10 +19,12 @@
 extern HWND sg_window;
 
 struct sg_audio_ds8 {
+    struct sg_logger *log;
     IDirectSound8 *ds;
     IDirectSoundBuffer8 *buf;
-    struct sg_audio_mixdown *mix;
+    struct sg_mixer_mixdowniface *mix;
     unsigned buflen;
+    int rate;
 };
 
 static struct sg_audio_ds8 sg_audio_ds8;
@@ -46,7 +47,7 @@ sg_audio_ds8main(void *param)
 {
     IDirectSoundBuffer8 *buf;
     IDirectSoundNotify8 *notp;
-    struct sg_audio_mixdown *mix;
+    struct sg_mixer_mixdowniface *mix;
     HRESULT hr;
     void *p1, *p2;
     DWORD len1, len2, dr, posplay, poswrite;
@@ -55,19 +56,12 @@ sg_audio_ds8main(void *param)
     int line = 0;
     short *obuf;
     DSBPOSITIONNOTIFY notify[2];
-    float *tmpbuf = NULL;
     HANDLE aevt = NULL;
 
     buf = sg_audio_ds8.buf;
     buflen = sg_audio_ds8.buflen;
     framesz = 4;
     mix = sg_audio_ds8.mix;
-
-    tmpbuf = malloc(sizeof(float) * buflen * 2);
-    if (!tmpbuf) {
-        sg_error_nomem(&err);
-        FAIL(error);
-    }
 
     hr = IDirectSoundBuffer8_Lock(
         buf, 0, buflen * framesz * 2,
@@ -76,13 +70,13 @@ sg_audio_ds8main(void *param)
     CHECKERR();
     assert(len1 == buflen * framesz * 2);
 
-    sg_audio_mixdown_read(mix, 0, tmpbuf);
+    sg_mixer_mixdown_process(mix, sg_clock_get());
     obuf = p1;
-    sg_audio_ds8copy(obuf, tmpbuf, buflen);
+    sg_mixer_mixdown_get_s16(mix, obuf);
 
-    sg_audio_mixdown_read(mix, 0, tmpbuf);
+    sg_mixer_mixdown_process(mix, sg_clock_get());
     obuf += buflen * 2;
-    sg_audio_ds8copy(obuf, tmpbuf, buflen);
+    sg_mixer_mixdown_get_s16(mix, obuf);
 
     hr = IDirectSoundBuffer8_Unlock(
         buf, p1, len1, p2, len2);
@@ -129,9 +123,9 @@ sg_audio_ds8main(void *param)
         assert(len1 == buflen * framesz);
         assert(len2 == 0);
 
-        sg_audio_mixdown_read(mix, 0, tmpbuf);
+        sg_mixer_mixdown_process(mix, sg_clock_get());
         obuf = p1;
-        sg_audio_ds8copy(obuf, tmpbuf, buflen);
+        sg_mixer_mixdown_get_s16(mix, obuf);
 
         /* Because the event can be signaled between Wait and Lock */
         ResetEvent(aevt);
@@ -145,7 +139,7 @@ sg_audio_ds8main(void *param)
 
 timeout:
     sg_logs(
-        sg_audio_system_global.log, LOG_WARN,
+        sg_audio_ds8.log, SG_LOG_WARN,
         "audio system timeout");
     goto cleanup;
 
@@ -159,7 +153,7 @@ herror:
 
 error:
     sg_logerrf(
-        sg_audio_system_global.log, LOG_ERROR, err,
+        sg_audio_ds8.log, SG_LOG_ERROR, err,
         "rendering audio (%s:%d)", __FUNCTION__, line);
     sg_error_clear(&err);
     goto cleanup;
@@ -167,19 +161,24 @@ error:
 cleanup:
     if (aevt)
         CloseHandle(notify[i].hEventNotify);
-    free(tmpbuf);
     return 0;
 }
 
 void
-sg_audio_sys_pstart(void)
+sg_mixer_system_init(void)
+{
+    sg_audio_ds8.log = sg_logger_get("audio");
+}
+
+void
+sg_mixer_start(void)
 {
     HRESULT hr;
     IDirectSound8 *ds = NULL;
     IDirectSoundBuffer *dbuf = NULL;
     IDirectSoundBuffer8 *dbuf8 = NULL;
     struct sg_error *err = NULL;
-    struct sg_audio_mixdown *mix = NULL;
+    struct sg_mixer_mixdowniface *mix = NULL;
     int line = 0;
     WAVEFORMATEX wfmt;
     DSBUFFERDESC dfmt;
@@ -222,13 +221,14 @@ sg_audio_sys_pstart(void)
     hr = IUnknown_QueryInterface(dbuf, &IID_IDirectSoundBuffer8, &dbuf8);
     CHECKERR();
 
-    mix = sg_audio_mixdown_new(rate, buflen, &err);
+    mix = sg_mixer_mixdown_new_live(buflen, rate, &err);
     if (!mix) FAIL(error);
 
     sg_audio_ds8.ds = ds;
     sg_audio_ds8.buf = dbuf8;
     sg_audio_ds8.mix = mix;
     sg_audio_ds8.buflen = buflen;
+    sg_audio_ds8.rate = rate;
 
     thread = CreateThread(NULL, 0, sg_audio_ds8main, NULL, 0, NULL);
     if (!thread) FAIL(werror);
@@ -248,14 +248,20 @@ werror:
 
 error:
     sg_logerrf(
-        sg_audio_system_global.log, LOG_ERROR, err,
+        sg_audio_ds8.log, SG_LOG_ERROR, err,
         "initializing audio (%s:%d)", __FUNCTION__, line);
     sg_error_clear(&err);
 
     if (dbuf8) IUnknown_Release(dbuf8);
     if (dbuf) IUnknown_Release(dbuf);
     if (ds) IUnknown_Release(ds);
-    if (mix) sg_audio_mixdown_free(mix);
+    if (mix) sg_mixer_mixdown_free(mix);
     memset(&sg_audio_ds8, 0, sizeof(sg_audio_ds8));
     return;
+}
+
+void
+sg_mixer_stop(void)
+{
+    sg_sys_abort("FIXME: Not implemented.");
 }

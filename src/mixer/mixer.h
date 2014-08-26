@@ -182,6 +182,11 @@ int
 sg_mixer_mixdown_process(struct sg_mixer_mixdowniface *mp,
                          unsigned buffertime);
 
+/* Get the mixer output, as interleaved 16-bit samples.  */
+void
+sg_mixer_mixdown_get_s16(struct sg_mixer_mixdowniface *mp,
+                         short *buffer);
+
 /* Get the mixer output, as interleaved 32-bit floating-point
    samples.  */
 void
