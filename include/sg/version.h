@@ -3,6 +3,7 @@
    2-clause BSD license.  For more information, see LICENSE.txt. */
 #ifndef SG_VERSION_H
 #define SG_VERSION_H
+#include <stddef.h>
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -22,6 +23,15 @@ sg_version_print(void);
 
 /* Log the version number of various libraries to the given logger.
    These must be implemented by the code that uses the library.  */
+
+/* Writes to the buffer, always with a terminating NUL.  */
+void
+sg_version_os(char *verbuf, size_t bufsz);
+
+/* Get the machine ID.  Writes to the buffer, always with a
+   terminating NUL.  */
+void
+sg_version_machineid(char *buf, size_t bufsz);
 
 /* Here, "platform" means GTK, SDL, etc.  The operating system version
    does not need to be logged here.  */

@@ -1,4 +1,4 @@
-/* Copyright 2012 Dietrich Epp.
+/* Copyright 2012-2014 Dietrich Epp.
    This file is part of SGLib.  SGLib is licensed under the terms of the
    2-clause BSD license.  For more information, see LICENSE.txt. */
 #ifdef HAVE_CONFIG_H
@@ -34,7 +34,7 @@ static const char DISTROS[] =
     "SuSE\0turbolinux\0UnitedLinux\0yellowdog\0";
 
 static void
-sg_version_linuxdistro(struct sg_logger *lp)
+sg_version_os_impl(char *verbuf, size_t bufsz)
 {
     DIR *d;
     int r;
@@ -43,6 +43,8 @@ sg_version_linuxdistro(struct sg_logger *lp)
     size_t plen, qlen;
     FILE *f;
     char buf[256], *s;
+
+    snprintf(verbuf, bufsz, "Linux/unknown");
 
     /* Scan for a file of the form x[-_](release|version).
        Check that the "x" matches a distro name above.  */
@@ -83,8 +85,9 @@ next_file:
     /* Read the first line of the version file.  */
     snprintf(buf, sizeof(buf), "/etc/%s", ent.d_name);
     f = fopen(buf, "r");
-    if (!f)
+    if (!f) {
         return;
+    }
     memcpy(buf, q, qlen);
     buf[qlen] = ' ';
     s = fgets(buf + qlen + 1, sizeof(buf) - qlen - 1, f);
@@ -101,47 +104,76 @@ next_file:
         dist = buf;
     else
         dist = buf + qlen + 1;
-    sg_logf(lp, SG_LOG_INFO, "Linux distribution: %s", dist);
+    snprintf(verbuf, bufsz, "Linux/%s", dist);
 }
 
-static void
-sg_version_os(struct sg_logger *lp)
+void
+sg_version_machineid(char *buf, size_t bufsz)
 {
-    sg_version_linuxdistro(lp);
+    (void) bufsz;
+    buf[0] = '\0';
 }
 
 #elif defined(__APPLE__)
 #include <CoreServices/CoreServices.h>
 
 static void
-sg_version_os(struct sg_logger *lp)
+sg_version_os_impl(char *verbuf, size_t bufsz)
 {
     SInt32 major, minor, bugfix;
     Gestalt(gestaltSystemVersionMajor, &major);
     Gestalt(gestaltSystemVersionMinor, &minor);
     Gestalt(gestaltSystemVersionBugFix, &bugfix);
-    sg_logf(lp, SG_LOG_INFO, "Mac OS X: %d.%d.%d", major, minor, bugfix);
+    snprintf(verbuf, bufsz, "OS X/%d.%d.%d", major, minor, bugfix);
+}
+
+void
+sg_version_machineid(char *buf, size_t bufsz)
+{
+    (void) bufsz;
+    buf[0] = '\0';
 }
 
 #elif defined(_WIN32)
 #include <Windows.h>
 
 static void
-sg_version_os(struct sg_logger *lp)
+sg_version_os_impl(char *verbuf, size_t bufsz)
 {
     OSVERSIONINFOW v;
     BOOL br;
     memset(&v, 0, sizeof(v));
     v.dwOSVersionInfoSize = sizeof(v);
     br = GetVersionExW(&v);
-    if (!br) return;
-    sg_logf(lp, SG_LOG_INFO, "Windows: %d.%d",
-            v.dwMajorVersion, v.dwMinorVersion);
+    if (!br) {
+        _snprintf(verbuf, bufsz, _TRUNCATE, "Windows/unknown");
+    } else {
+        _snprintf_s(verbuf, bufsz, _TRUNCATE,
+                    "Windows/%d.%d", v.dwMajorVersion, v.dwMinorVersion);
+    }
+}
+
+void
+sg_version_machineid(char *buf, size_t bufsz)
+{
+    (void) bufsz;
+    buf[0] = '\0';
 }
 
 #else
 
-#define sg_version_os(x) (void)0
+static void
+sg_version_os_impl(char *verbuf, size_t bufsz)
+{
+    snprintf(verbuf, bufsz, "Unknown");
+}
+
+void
+sg_version_machineid(char *buf, size_t bufsz)
+{
+    (void) bufsz;
+    buf[0] = '\0';
+}
 
 #endif
 
@@ -174,16 +206,25 @@ sg_version_os(struct sg_logger *lp)
 #endif
 
 void
+sg_version_os(char *verbuf, size_t bufsz)
+{
+    char tmp[64];
+    sg_version_os_impl(tmp, sizeof(tmp));
+    snprintf(verbuf, bufsz, "%s (%s)", tmp, ARCH);
+}
+
+void
 sg_version_print(void)
 {
+    char buf[256];
     struct sg_logger *log = sg_logger_get("init");
     sg_logf(log, SG_LOG_INFO, "App version: %s (%s)",
             SG_APP_VERSION, SG_APP_COMMIT);
     sg_logf(log, SG_LOG_INFO, "SGLib version: %s (%s)",
             SG_SG_VERSION, SG_SG_COMMIT);
     sg_logf(log, SG_LOG_INFO, "Compiler: " COMPILER);
-    sg_logf(log, SG_LOG_INFO, "Architecture: " ARCH);
-    sg_version_os(log);
+    sg_version_os(buf, sizeof(buf));
+    sg_logs(log, SG_LOG_INFO, buf);
     sg_version_platform(log);
     sg_version_libjpeg(log);
     sg_version_libpng(log);
