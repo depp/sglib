@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module type="multi">
+  <key name="desc">LibCURL</key>
+
+  <key name="pkg-deb">libcurl-dev</key>
+  <key name="pkg-rpm">libcurl-devel</key>
+  <key name="pkg-gentoo">net-misc/curl</key>
+  <key name="pkg-arch">curl</key>
+
+  <module type="pkg-config">
+    <key name="spec">libcurl</key>
+  </module>
+</module>
