@@ -4,6 +4,13 @@
 #include "time.h"
 #include <math.h>
 
+#if defined _WIN32
+# include <float.h>
+# ifndef isfinite
+#  define isfinite _finite
+# endif
+#endif
+
 /*
   There are three things that the realtime mixer tries to accomplish:
 

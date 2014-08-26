@@ -4,6 +4,7 @@
 #include "sg/cvar.h"
 #include "sg/configfile.h"
 
+#include <float.h>
 #include <limits.h>
 #include <math.h>
 #include <stdio.h>
@@ -206,19 +207,25 @@ void
 sg_cvar_setd(const char *section, const char *name, double value)
 {
     char buf[64];
-    if (isfinite(value)) {
-#if !defined(_WIN32)
-        snprintf(buf, sizeof(buf), "%.17g", value);
+#if defined _WIN32
+    if (_finite(value)) {
+        _snprintf_s(buf, sizeof(buf), _TRUNCATE, "%.17g", value);
+        sg_cvar_sets(section, name, buf);
+    } else if (_isnan(value)) {
+        sg_cvar_sets(section, name, "nan");
+    } else {
+        sg_cvar_sets(section, name, value > 0 ? "+inf" : "-inf");
+    }
 #else
-        _snprintf(buf, sizeof(buf), "%.17g", value);
-        buf[sizeof(buf) - 1] = 0;
-#endif
+    if (isfinite(value)) {
+        snprintf(buf, sizeof(buf), "%.17g", value);
         sg_cvar_sets(section, name, buf);
     } else if (isnan(value)) {
         sg_cvar_sets(section, name, "nan");
     } else {
         sg_cvar_sets(section, name, value > 0 ? "+inf" : "-inf");
     }
+#endif
 }
 
 int
