@@ -168,6 +168,7 @@ sdl_main(void)
         while (SDL_PollEvent(&e)) {
             switch (e.type) {
             case SDL_QUIT:
+                sg_game_destroy();
                 return;
 
             case SDL_MOUSEMOTION:
