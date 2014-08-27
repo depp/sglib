@@ -164,6 +164,7 @@ sdl_main(void)
 {
     SDL_Event e;
     int width, height;
+    int last_time = SDL_GetTicks(), new_time;
     while (1) {
         while (SDL_PollEvent(&e)) {
             switch (e.type) {
@@ -192,6 +193,10 @@ sdl_main(void)
         SDL_GetWindowSize(sg_window, &width, &height);
         sg_game_draw(width, height, sg_clock_get());
         SDL_GL_SwapWindow(sg_window);
+        
+        new_time = SDL_GetTicks();
+        if (new_time - last_time < 5)
+            SDL_Delay(5 - (new_time - last_time));
     }
 }
 
