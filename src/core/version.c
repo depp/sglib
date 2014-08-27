@@ -9,6 +9,7 @@
 #include "sg/version.h"
 
 #include <string.h>
+#include <stdio.h>
 
 void
 sg_version_lib(struct sg_logger *lp, const char *libname,
@@ -26,7 +27,6 @@ sg_version_lib(struct sg_logger *lp, const char *libname,
 #if defined(__linux__)
 
 #include <dirent.h>
-#include <stdio.h>
 
 static const char DISTROS[] =
     "arch\0centos\0debian\0fedora\0gentoo\0"
@@ -146,7 +146,7 @@ sg_version_os_impl(char *verbuf, size_t bufsz)
     v.dwOSVersionInfoSize = sizeof(v);
     br = GetVersionExW(&v);
     if (!br) {
-        _snprintf(verbuf, bufsz, _TRUNCATE, "Windows/unknown");
+        _snprintf_s(verbuf, bufsz, _TRUNCATE, "Windows/unknown");
     } else {
         _snprintf_s(verbuf, bufsz, _TRUNCATE,
                     "Windows/%d.%d", v.dwMajorVersion, v.dwMinorVersion);
@@ -210,7 +210,11 @@ sg_version_os(char *verbuf, size_t bufsz)
 {
     char tmp[64];
     sg_version_os_impl(tmp, sizeof(tmp));
+#if defined _WIN32
+    _snprintf_s(verbuf, bufsz, _TRUNCATE, "%s (%s)", tmp, ARCH);
+#else
     snprintf(verbuf, bufsz, "%s (%s)", tmp, ARCH);
+#endif
 }
 
 void
