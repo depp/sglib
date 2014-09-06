@@ -215,6 +215,7 @@
           <case value="uniscribe">
             <src path="uniscribe.c"/>
           </case>
+          <case value="no"/>
         </switch>
       </group>
     </group>
