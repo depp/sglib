@@ -177,12 +177,6 @@ sg_version_machineid(char *buf, size_t bufsz)
 
 #endif
 
-#if defined(_WIN32) || defined(__APPLE__)
-#define sg_version_libjpeg(x) (void)0
-#define sg_version_libpng(x) (void)0
-#define sg_version_pango(x) (void)0
-#endif
-
 #if defined(_MSC_VER)
 #define COMPILER "MSC %d", _MSC_VER
 #elif defined(__clang__)
@@ -230,7 +224,16 @@ sg_version_print(void)
     sg_version_os(buf, sizeof(buf));
     sg_logs(log, SG_LOG_INFO, buf);
     sg_version_platform(log);
+
+#if defined USE_PNG_LIBPNG
     sg_version_libjpeg(log);
+#endif
+
+#if defined USE_JPEG_LIBJPEC
     sg_version_libpng(log);
+#endif
+
+#if defined USE_TYPE_PANGO
     sg_version_pango(log);
+#endif
 }
