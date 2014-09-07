@@ -201,6 +201,11 @@
       <src path="premultiply_alpha.c"/>
     </group>
 
+    <group path="src/record">
+      <src path="cmdargs.c"/>
+      <src path="cmdargs.h"/>
+    </group>
+
     <group path="src/type">
       <group>
         <switch value="$flag.type">
