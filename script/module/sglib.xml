@@ -44,6 +44,7 @@
       <src path="opengl.h"/>
       <src path="pixbuf.h"/>
       <src path="rand.h"/>
+      <src path="record.h"/>
       <src path="strbuf.h"/>
       <src path="thread.h"/>
       <src path="type.h"/>
@@ -204,6 +205,7 @@
     <group path="src/record">
       <src path="cmdargs.c"/>
       <src path="cmdargs.h"/>
+      <src path="record.c"/>
     </group>
 
     <group path="src/type">
