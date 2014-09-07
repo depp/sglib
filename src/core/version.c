@@ -84,7 +84,7 @@ next_file:
 
     /* Read the first line of the version file.  */
     snprintf(buf, sizeof(buf), "/etc/%s", ent.d_name);
-    f = fopen(buf, "r");
+    f = fopen(buf, "re");
     if (!f) {
         return;
     }

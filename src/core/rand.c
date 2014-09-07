@@ -103,12 +103,12 @@ sg_rand_getentropy(unsigned *array, unsigned count)
     int fdes, e;
     ssize_t amt;
 
-    fdes = open("/dev/urandom", O_RDONLY);
+    fdes = open("/dev/urandom", O_RDONLY, O_CLOEXEC);
     if (fdes < 0) {
         e = errno;
         if (e != ENOENT)
             return -1;
-        fdes = open("/dev/random", O_RDONLY);
+        fdes = open("/dev/random", O_RDONLY, O_CLOEXEC);
         if (fdes < 0)
             return -1;
     }

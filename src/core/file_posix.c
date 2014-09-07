@@ -174,7 +174,7 @@ sg_file_tryopen(struct sg_file **f, const char *path, int flags,
     int fdes, ecode;
     struct sg_file_u *u;
     if (flags & SG_WRONLY) {
-        fdes = open(path, O_WRONLY | O_CREAT | O_TRUNC, 0666);
+        fdes = open(path, O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC, 0666);
         if (fdes < 0) {
             ecode = errno;
             if (ecode != ENOENT) {
@@ -183,10 +183,10 @@ sg_file_tryopen(struct sg_file **f, const char *path, int flags,
             }
             if (sg_file_mkpardir(path, e))
                 return -1;
-            fdes = open(path, O_WRONLY | O_CREAT | O_TRUNC, 0666);
+            fdes = open(path, O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC, 0666);
         }
     } else {
-        fdes = open(path, O_RDONLY);
+        fdes = open(path, O_RDONLY | O_CLOEXEC);
     }
     if (fdes < 0) {
         ecode = errno;

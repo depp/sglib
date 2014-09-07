@@ -126,7 +126,11 @@ sg_log_network_init(void)
     addrname = sg_net_getname(&addr, &err);
     if (r) goto error;
     sg_logf(logger, SG_LOG_INFO, "connecting to %s", addrname);
+#if defined SOCKET_CLOEXEC
+    sock = socket(addr.addr.addr.sa_family, SOCK_STREAM | SOCK_CLOEXEC, 0);
+#else
     sock = socket(addr.addr.addr.sa_family, SOCK_STREAM, 0);
+#endif
     if (!SOCKET_VALID(sock)) goto error_errno;
     r = connect(sock, &addr.addr.addr, addr.len);
     if (r < 0) goto error_errno;
