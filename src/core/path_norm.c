@@ -78,18 +78,17 @@ reserved:
 }
 
 /*
-  Table for normalizing characters in pathnames.  All paths are folded
-  to lower case, and special characters are not allowed.  The list of
-  legal characters is very conservative; only alphanumeric characters
-  and "-" "_" "." are allowed.
+  Table for normalizing characters in pathnames.  Special characters
+  are not allowed.  The list of legal characters is very conservative;
+  only alphanumeric characters and "-" "_" "." are allowed.
 */
 static const unsigned char SG_PATH_NORM[256] = {
     0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
     0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
     0,0,0,0,0,0,0,0,0,0,0,0,0,'-','.',0,
     '0','1','2','3','4','5','6','7','8','9',0,0,0,0,0,0,
-    0,'a','b','c','d','e','f','g','h','i','j','k','l','m','n','o',
-    'p','q','r','s','t','u','v','w','x','y','z',0,0,0,0,'_',
+    0,'A','B','C','D','E','F','G','H','I','J','K','L','M','N','O',
+    'P','Q','R','S','T','U','V','W','X','Y','Z',0,0,0,0,'_',
     0,'a','b','c','d','e','f','g','h','i','j','k','l','m','n','o',
     'p','q','r','s','t','u','v','w','x','y','z',0,0,0,0,0,
     0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
