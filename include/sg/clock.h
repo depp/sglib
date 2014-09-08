@@ -19,7 +19,7 @@ sg_clock_get(void);
    number of characters written is returned, not counting the nul
    terminator.  */
 int
-sg_clock_getdate(char *date);
+sg_clock_getdate(char *date, int shortfmt);
 
 /* Sleep for the given number of milliseconds.  */
 void

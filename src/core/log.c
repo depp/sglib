@@ -137,7 +137,7 @@ sg_dologmem(struct sg_logger *logger, sg_log_level_t level,
     int datelen, levellen;
     int i;
 
-    datelen = sg_clock_getdate(date);
+    datelen = sg_clock_getdate(date, 0);
     if ((int) level < 0)
         level = 0;
     else if ((int) level > 3)

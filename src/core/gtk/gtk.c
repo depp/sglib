@@ -27,7 +27,6 @@
 #pragma GCC diagnostic pop
 #endif
 
-#include <signal.h>
 #include <stdlib.h>
 
 struct sg_gtk {
@@ -121,7 +120,7 @@ sg_gtk_handle_expose(GtkWidget *area)
         sg_gtk.init_sent = 1;
     }
 
-    sg_game_draw(sg_gtk.width, sg_gtk.height, sg_clock_get());
+    sg_sys_draw(sg_gtk.width, sg_gtk.height, sg_clock_get());
 
     if (gdk_gl_drawable_is_double_buffered(drawable))
         gdk_gl_drawable_swap_buffers(drawable);
@@ -417,7 +416,6 @@ sg_gtk_init(int argc, char *argv[])
 int
 main(int argc, char *argv[])
 {
-    signal(SIGPIPE, SIG_IGN);
     sg_gtk_init(argc, argv);
     gtk_main();
     return 0;

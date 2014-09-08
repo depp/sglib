@@ -4,9 +4,26 @@
 #include "sg/entry.h"
 #include "sg/log.h"
 #include "sg/rand.h"
+#include "sg/record.h"
 #include "sg/version.h"
+#include "../record/record.h"
 #include "private.h"
 #include <stdio.h>
+
+#if defined __unix__ || defined __APPLE__ && defined __MACH__
+#include <signal.h>
+
+static void
+sg_sys_siginit(void)
+{
+    signal(SIGPIPE, SIG_IGN);
+}
+
+#else
+
+#define sg_sys_siginit() (void)0
+
+#endif
 
 const struct sg_game_info sg_game_info_defaults = {
     /* minimum width, height */
@@ -26,6 +43,7 @@ void
 sg_sys_init(void)
 {
     struct sg_logger *log;
+    sg_sys_siginit();
     sg_log_init();
     log = sg_logger_get("init");
     if (SG_LOG_INFO >= log->level)
@@ -34,6 +52,7 @@ sg_sys_init(void)
     sg_clock_init();
     sg_rand_seed(&sg_rand_global, 1);
     sg_mixer_init();
+    sg_record_init();
     sg_game_init();
 }
 
@@ -59,6 +78,15 @@ sg_sys_getinfo(struct sg_game_info *info)
         info->min_aspect = 0.125;
     if (info->max_aspect > 8.0)
         info->max_aspect = 8.0;
+}
+
+void
+sg_sys_draw(int width, int height, unsigned time)
+{
+    unsigned adjtime = time;
+    sg_record_frame_begin(&adjtime);
+    sg_game_draw(width, height, adjtime);
+    sg_record_frame_end(0, 0, width, height);
 }
 
 void

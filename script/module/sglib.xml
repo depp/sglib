@@ -206,6 +206,15 @@
       <src path="cmdargs.c"/>
       <src path="cmdargs.h"/>
       <src path="record.c"/>
+      <src path="record.h"/>
+      <src path="screenshot.c"/>
+      <src path="screenshot.h"/>
+      <src path="videoio.c"/>
+      <src path="videoio.h"/>
+      <src path="videoproc.c"/>
+      <src path="videoproc.h"/>
+      <src path="videotime.c"/>
+      <src path="videotime.h"/>
     </group>
 
     <group path="src/type">

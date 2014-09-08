@@ -56,6 +56,10 @@ sg_sys_init(void);
 void
 sg_sys_getinfo(struct sg_game_info *info);
 
+/* Draw the current frame.  */
+void
+sg_sys_draw(int width, int height, unsigned time);
+
 /* Perform any cleanup necessary before the process exits.  */
 void
 sg_sys_destroy(void);

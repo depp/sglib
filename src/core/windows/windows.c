@@ -443,7 +443,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
         }
 
         if (!inactive) {
-            sg_game_draw(sg_width, sg_height, sg_clock_get());
+            sg_sys_draw(sg_width, sg_height, sg_clock_get());
             SwapBuffers(hDC);
             Sleep(5);
         }

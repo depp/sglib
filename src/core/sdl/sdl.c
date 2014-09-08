@@ -191,7 +191,7 @@ sdl_main(void)
         }
 
         SDL_GetWindowSize(sg_window, &width, &height);
-        sg_game_draw(width, height, sg_clock_get());
+        sg_sys_draw(width, height, sg_clock_get());
         SDL_GL_SwapWindow(sg_window);
 
         new_time = SDL_GetTicks();

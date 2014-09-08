@@ -6,10 +6,6 @@
 #include "private.h"
 #include <stdio.h>
 
-#if defined(_MSC_VER)
-#define snprintf _snprintf
-#endif
-
 #if defined(SG_CLOCK_APPLE)
 
 uint64_t sg_clock_zero;
@@ -113,22 +109,28 @@ sg_clock_get(void)
 #endif
 
 static int
-sg_clock_fmtdate(char *date, int year, int month, int day,
+sg_clock_fmtdate(char *date, int shortfmt, int year, int month, int day,
                  int hour, int minute, int sec, int msec)
 {
-    return snprintf(
-        date, SG_DATE_LEN, "%04d-%02d-%02dT%02d:%02d:%02d.%03dZ",
-        year, month, day, hour, minute, sec, msec);
+    const char *fmt = shortfmt ?
+        "%04d%02d%02dT%02d%02d%02d%03d" :
+        "%04d-%02d-%02dT%02d:%02d:%02d.%03dZ";
+#define ARGS year, month, day, hour, minute, sec, msec
+#if !defined _WIN32
+    return snprintf(date, SG_DATE_LEN, fmt, ARGS);
+#else
+    return _snprintf_s(date, SG_DATE_LEN, _TRUNCATE, fmt, ARGS);
+#endif
 }
 
 #if defined(_WIN32)
 
 int
-sg_clock_getdate(char *date)
+sg_clock_getdate(char *date, int shortfmt)
 {
     SYSTEMTIME t;
     GetSystemTime(&t);
-    return sg_clock_fmtdate(date, t.wYear, t.wMonth, t.wDay,
+    return sg_clock_fmtdate(date, shortfmt, t.wYear, t.wMonth, t.wDay,
                             t.wHour, t.wMinute, t.wSecond, t.wMilliseconds);
 }
 
@@ -136,7 +138,7 @@ sg_clock_getdate(char *date)
 #include <sys/time.h>
 
 int
-sg_clock_getdate(char *date)
+sg_clock_getdate(char *date, int shortfmt)
 {
     struct timeval tv;
     struct tm tm;
@@ -145,7 +147,7 @@ sg_clock_getdate(char *date)
     t = tv.tv_sec;
     gmtime_r(&t, &tm);
     return sg_clock_fmtdate(
-        date, tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday,
+        date, shortfmt, tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday,
         tm.tm_hour, tm.tm_min, tm.tm_sec, tv.tv_usec / 1000);
 }
 

@@ -409,7 +409,7 @@ error:
     [context_ makeCurrentContext];
     if (frameChanged_)
         [context_ update];
-    sg_game_draw(width_, height_, sg_clock_get());
+    sg_sys_draw(width_, height_, sg_clock_get());
     [context_ flushBuffer];
     [self unlock];
 }
