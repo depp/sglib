@@ -82,7 +82,6 @@ sg_record_buf_read(struct sg_record_buf *buf,
     glBindBuffer(GL_PIXEL_PACK_BUFFER, buf->buf);
     glBufferData(GL_PIXEL_PACK_BUFFER, width * height * 4,
                  NULL, GL_STREAM_READ);
-    glReadBuffer(GL_FRONT);
     glReadPixels(x, y, width, height,
                  GL_RGBA, GL_UNSIGNED_BYTE, NULL);
     glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
@@ -90,7 +89,6 @@ sg_record_buf_read(struct sg_record_buf *buf,
     buf->flags = flags;
     buf->width = width;
     buf->height = height;
-    return;
 
 err:
     sg_opengl_checkerror("sg_record_buf_read");
