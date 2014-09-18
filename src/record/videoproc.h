@@ -3,6 +3,7 @@
    2-clause BSD license.  For more information, see LICENSE.txt. */
 #include <sys/types.h>
 struct sg_error;
+struct sg_videoparam;
 
 /* Video encoder process */
 struct sg_videoproc {
@@ -21,8 +22,10 @@ struct sg_videoproc {
 /* Initialize the video encoder, creating a pipe and running the
    process.  */
 int
-sg_videoproc_init(struct sg_videoproc *pp, const char *path,
-                  int width, int height, struct sg_error **err);
+sg_videoproc_init(struct sg_videoproc *pp,
+                  const struct sg_videoparam *param,
+                  const char *path, int width, int height,
+                  struct sg_error **err);
 
 /* Dispose of the video encoder, closing the pipe and waiting for the
    video encoder to exit.  If do_kill is set, then the video encoder

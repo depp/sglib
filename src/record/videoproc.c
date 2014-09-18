@@ -2,6 +2,7 @@
    This file is part of SGLib.  SGLib is licensed under the terms of the
    2-clause BSD license.  For more information, see LICENSE.txt. */
 #include "cmdargs.h"
+#include "videoparam.h"
 #include "videoproc.h"
 #include "sg/error.h"
 #include "sg/log.h"
@@ -13,7 +14,8 @@
 #include <unistd.h>
 
 static void
-sg_videoproc_child(struct sg_cmdargs *cmd, int video_pipe)
+sg_videoproc_child(const char *command,
+                   struct sg_cmdargs *cmd, int video_pipe)
 {
     int fd, r;
 
@@ -46,12 +48,14 @@ sg_videoproc_child(struct sg_cmdargs *cmd, int video_pipe)
         close(fd);
     }
 
-    execvp("ffmpeg", cmd->arg);
+    execvp(command, cmd->arg);
 }
 
 int
-sg_videoproc_init(struct sg_videoproc *pp, const char *path,
-                  int width, int height, struct sg_error **err)
+sg_videoproc_init(struct sg_videoproc *pp,
+                  const struct sg_videoparam *param,
+                  const char *path, int width, int height,
+                  struct sg_error **err)
 {
     struct sg_cmdargs cmd;
     int r, fdes[2];
@@ -66,19 +70,18 @@ sg_videoproc_init(struct sg_videoproc *pp, const char *path,
         goto error;
     }
 
-    r = sg_cmdargs_push1(&cmd, "ffmpeg");
+    r = sg_cmdargs_push1(&cmd, param->command);
     if (r) goto nomem;
     r = sg_cmdargs_pushf(
         &cmd,
         " -f rawvideo"
         " -pix_fmt rgb0"
-        " -r 30"
+        " -r %d"
         " -s %dx%d"
-        " -i pipe:3"
-        " -codec:v libx264"
-        " -preset fast"
-        " -crf 18",
-        width, height);
+        " -i pipe:3",
+        param->rate_numer, width, height);
+    if (r) goto nomem;
+    r = sg_cmdargs_pushs(&cmd, param->arguments);
     if (r) goto nomem;
     r = sg_cmdargs_push1(&cmd, path);
     if (r) goto nomem;
@@ -86,7 +89,7 @@ sg_videoproc_init(struct sg_videoproc *pp, const char *path,
     pid = fork();
     if (pid == 0) {
         close(fdes[1]);
-        sg_videoproc_child(&cmd, fdes[0]);
+        sg_videoproc_child(param->command, &cmd, fdes[0]);
         abort();
     }
     if (pid < 0) {

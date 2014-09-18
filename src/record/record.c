@@ -4,6 +4,7 @@
 #include "record.h"
 #include "screenshot.h"
 #include "videoio.h"
+#include "videoparam.h"
 #include "videoproc.h"
 #include "videotime.h"
 #include "sg/clock.h"
@@ -283,12 +284,15 @@ sg_record_screenshot(void)
     sg_record.flags |= SG_RECORD_FRAME_SCREENSHOT;
 }
 
+#define MAX_EXTENSION 16
+
 void
 sg_record_start(unsigned timestamp)
 {
-    char path[SG_DATE_LEN + 7];
+    struct sg_videoparam param;
+    char path[SG_DATE_LEN + 4 + MAX_EXTENSION];
     int r, width = sg_record.fwidth, height = sg_record.fheight;
-    size_t framebytes;
+    size_t framebytes, extlen;
     unsigned mask;
     struct sg_error *err = NULL;
 
@@ -300,15 +304,31 @@ sg_record_start(unsigned timestamp)
         return;
     framebytes = (size_t) 4 * width * height;
 
+    sg_videoparam_get(&param);
+
     memcpy(path, "./", 2);
     r = sg_clock_getdate(path + 2, 1);
     assert(r >= 0 && r < SG_DATE_LEN);
     r += 2;
-    memcpy(path + r, ".mp4", 5);
+    extlen = strlen(param.extension);
+    if (extlen > MAX_EXTENSION) {
+        sg_logs(sg_record.log, SG_LOG_ERROR,
+                "video extension too long");
+        return;
+    }
+    if (param.extension[0] != '.') {
+        path[r] = '.';
+        r++;
+    }
+    memcpy(path + r, param.extension, extlen);
+    r += extlen;
+    path[r] = '\0';
 
-    sg_videotime_init(&sg_record.vtime, timestamp, 30, 1000);
+    sg_videotime_init(&sg_record.vtime, timestamp,
+                      param.rate_numer, param.rate_denom);
 
-    r = sg_videoproc_init(&sg_record.vproc, path, width, height, &err);
+    r = sg_videoproc_init(&sg_record.vproc, &param,
+                          path, width, height, &err);
     if (r) {
         sg_logerrs(sg_record.log, SG_LOG_ERROR, err,
                    "could not start video encoder");

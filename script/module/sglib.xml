@@ -211,6 +211,8 @@
       <src path="screenshot.h"/>
       <src path="videoio.c"/>
       <src path="videoio.h"/>
+      <src path="videoparam.c"/>
+      <src path="videoparam.h"/>
       <src path="videoproc.c"/>
       <src path="videoproc.h"/>
       <src path="videotime.c"/>
