@@ -1,12 +1,9 @@
 /* Copyright 2012-2014 Dietrich Epp.
    This file is part of SGLib.  SGLib is licensed under the terms of the
    2-clause BSD license.  For more information, see LICENSE.txt. */
+#include "config.h"
 #include "record.h"
 #include "screenshot.h"
-#include "videoio.h"
-#include "videoparam.h"
-#include "videoproc.h"
-#include "videotime.h"
 #include "sg/clock.h"
 #include "sg/entry.h"
 #include "sg/error.h"
@@ -17,6 +14,13 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
+
+#if defined ENABLE_VIDEO_RECORDING
+# include "videoio.h"
+# include "videoparam.h"
+# include "videoproc.h"
+# include "videotime.h"
+#endif
 
 /* Flags for recording and buffers */
 enum {
@@ -60,11 +64,13 @@ struct sg_record {
     int fwidth, fheight;
     struct sg_record_buf buf[2];
 
+#if defined ENABLE_VIDEO_RECORDING
     int vwidth, vheight;
     size_t framebytes;
     struct sg_videotime vtime;
     struct sg_videoproc vproc;
     struct sg_videoio vio;
+#endif
 };
 
 static struct sg_record sg_record;
@@ -94,6 +100,8 @@ sg_record_buf_read(struct sg_record_buf *buf,
 err:
     sg_opengl_checkerror("sg_record_buf_read");
 }
+
+#if defined ENABLE_VIDEO_RECORDING
 
 static void
 sg_record_stopvio(void)
@@ -145,6 +153,8 @@ sg_record_writevideo(void *mptr, int width, int height)
         sg_record.flags &= ~SG_RECORD_VIDEO;
 }
 
+#endif
+
 static void
 sg_record_buf_process(struct sg_record_buf *buf)
 {
@@ -179,10 +189,12 @@ sg_record_buf_process(struct sg_record_buf *buf)
             if (buf->flags & SG_RECORD_FRAME_SCREENSHOT) {
                 sg_screenshot_write(fptr, buf->width, buf->height);
             }
+#if defined ENABLE_VIDEO_RECORDING
             if (buf->flags & SG_RECORD_FRAME_VIDEO) {
                 sg_record_writevideo(fptr, buf->width, buf->height);
                 fptr = NULL;
             }
+#endif
             free(fptr);
         }
         glUnmapBuffer(GL_PIXEL_PACK_BUFFER);
@@ -216,6 +228,8 @@ sg_record_init(void)
     }
 }
 
+#if defined ENABLE_VIDEO_RECORDING
+
 void
 sg_record_frame_begin(unsigned *time)
 {
@@ -235,6 +249,17 @@ sg_record_frame_begin(unsigned *time)
     }
     sg_record.flags = flags;
 }
+
+#else
+
+void
+sg_record_frame_begin(unsigned *time)
+{
+	(void) time;
+	sg_record.flags |= SG_RECORD_INFRAME;
+}
+
+#endif
 
 void
 sg_record_frame_end(int x, int y, int width, int height)
@@ -261,6 +286,7 @@ sg_record_frame_end(int x, int y, int width, int height)
         sg_record_buf_process(&sg_record.buf[!whichbuf]);
     }
 
+#if defined ENABLE_VIDEO_RECORDING
     flags = sg_record.flags;
     if ((flags & SG_RECORD_VIDEO) == 0 &&
         (flags & (SG_RECORD_HASVIO | SG_RECORD_HASVPROC)) != 0) {
@@ -276,6 +302,7 @@ sg_record_frame_end(int x, int y, int width, int height)
                 sg_record_stopvproc();
         }
     }
+#endif
 }
 
 void
@@ -283,6 +310,8 @@ sg_record_screenshot(void)
 {
     sg_record.flags |= SG_RECORD_FRAME_SCREENSHOT;
 }
+
+#if defined ENABLE_VIDEO_RECORDING
 
 #define MAX_EXTENSION 16
 
@@ -357,3 +386,17 @@ sg_record_stop(void)
 {
     sg_record.flags &= ~SG_RECORD_VIDEO;
 }
+
+#else
+
+void
+sg_record_start(unsigned timestamp)
+{
+	(void) timestamp;
+}
+
+void
+sg_record_stop(void)
+{ }
+
+#endif
