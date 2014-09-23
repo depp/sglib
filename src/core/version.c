@@ -1,10 +1,8 @@
 /* Copyright 2012-2014 Dietrich Epp.
    This file is part of SGLib.  SGLib is licensed under the terms of the
    2-clause BSD license.  For more information, see LICENSE.txt. */
-#ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
-
+#include "sg/defs.h"
 #include "sg/log.h"
 #include "sg/version.h"
 
@@ -137,20 +135,62 @@ sg_version_machineid(char *buf, size_t bufsz)
 #elif defined(_WIN32)
 #include <Windows.h>
 
+/*
+To get the actual system version, we ask for the version of kernel32.dll.
+If we call GetVersionEx() then Windows will lie to us.
+http://msdn.microsoft.com/en-us/library/windows/desktop/ms724429(v=vs.85).aspx
+*/
+
+#pragma comment(lib, "version.lib")
+
 static void
 sg_version_os_impl(char *verbuf, size_t bufsz)
 {
-    OSVERSIONINFOW v;
-    BOOL br;
-    memset(&v, 0, sizeof(v));
-    v.dwOSVersionInfoSize = sizeof(v);
-    br = GetVersionExW(&v);
-    if (!br) {
-        _snprintf_s(verbuf, bufsz, _TRUNCATE, "Windows/unknown");
-    } else {
-        _snprintf_s(verbuf, bufsz, _TRUNCATE,
-                    "Windows/%d.%d", v.dwMajorVersion, v.dwMinorVersion);
-    }
+	static const wchar_t kernel32[] = L"\\kernel32.dll";
+	wchar_t *path = NULL;
+	void *ver = NULL, *block;
+	UINT n;
+	BOOL r;
+	DWORD versz, blocksz;
+	VS_FIXEDFILEINFO *vinfo;
+
+	path = malloc(sizeof(*path) * MAX_PATH);
+	if (!path)
+		goto unknown;
+
+	n = GetSystemDirectory(path, MAX_PATH);
+	if (n >= MAX_PATH || n == 0 ||
+		n > MAX_PATH - sizeof(kernel32) / sizeof(*kernel32))
+		goto unknown;
+	memcpy(path + n, kernel32, sizeof(kernel32));
+
+	versz = GetFileVersionInfoSize(path, NULL);
+	if (versz == 0)
+		goto unknown;
+	ver = malloc(versz);
+	if (!ver)
+		goto unknown;
+	r = GetFileVersionInfo(path, 0, versz, ver);
+	if (!r)
+		goto unknown;
+	r = VerQueryValue(ver, L"\\", &block, &blocksz);
+	if (!r || blocksz < sizeof(VS_FIXEDFILEINFO))
+		goto unknown;
+	vinfo = (VS_FIXEDFILEINFO *) block;
+	_snprintf_s(
+		verbuf, bufsz, _TRUNCATE,
+		"Windows/%d.%d.%d",
+		(int) HIWORD(vinfo->dwProductVersionMS),
+		(int) LOWORD(vinfo->dwProductVersionMS),
+		(int) HIWORD(vinfo->dwProductVersionLS));
+	free(path);
+	free(ver);
+	return;
+
+unknown:
+	_snprintf_s(verbuf, bufsz, _TRUNCATE, "Windows/unknown");
+	free(path);
+	free(ver);
 }
 
 void
