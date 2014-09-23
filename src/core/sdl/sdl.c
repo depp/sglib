@@ -76,12 +76,8 @@ sdl_init(int argc, char *argv[])
     int flags, i;
 
     for (i = 1; i < argc; i++) {
-        if (argv[i][0] == '-' && argv[i][1] == 'd') {
+        if (argv[i][0] == '-' && argv[i][1] == 'd')
             sg_cvar_addarg(NULL, NULL, argv[i] + 2);
-        } else {
-            fputs("Invalid usage\n", stderr);
-            exit(1);
-        }
     }
     flags = SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_EVENTS;
     if (SDL_Init(flags))
