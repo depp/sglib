@@ -136,6 +136,7 @@ sg_clock_getdate(char *date, int shortfmt)
 
 #else
 #include <sys/time.h>
+#include <time.h>
 
 int
 sg_clock_getdate(char *date, int shortfmt)
