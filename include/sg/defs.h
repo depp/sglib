@@ -13,8 +13,10 @@
 /* Target Windows XP */
 # undef WINVER
 # undef _WIN32_WINNT
+# undef UNICODE
 # define WINVER 0x0501
 # define _WIN32_WINNT 0x0501
+# define UNICODE 1
 #elif defined(__linux__) /* Linux */
 # define HAVE_PTHREAD 1
 /* Target SuSv3 */
