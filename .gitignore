@@ -7,6 +7,7 @@
 # Build system
 /config.dat
 /config.log
+/script/resource
 
 # Build system, GNUMake
 /Makefile
