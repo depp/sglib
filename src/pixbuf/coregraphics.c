@@ -67,8 +67,8 @@ imageToPixbuf(struct sg_pixbuf *pbuf, CGImageRef img, struct sg_error **err)
     if (w < pw)
         CGContextFillRect(cxt, CGRectMake(w, 0, pw - w, h));
     if (h < ph)
-        CGContextFillRect(cxt, CGRectMake(0, h, pw, pw - h));
-    CGContextDrawImage(cxt, CGRectMake(0, 0, w, h), img);
+        CGContextFillRect(cxt, CGRectMake(0, 0, pw, pw - h));
+    CGContextDrawImage(cxt, CGRectMake(0, ph - h, w, h), img);
 
     CGImageRelease(img);
     CGContextRelease(cxt);
