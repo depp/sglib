@@ -40,7 +40,7 @@ sg_cmdargs_pushmem(struct sg_cmdargs *cmd, const char *p, size_t len)
     void *narr;
 
     if (len + 1 > cmd->datalloc - cmd->datsize) {
-        nalloc = sg_round_up_pow2_32(cmd->datsize + len + 1);
+        nalloc = sg_round_up_pow2_32((unsigned) (cmd->datsize + len + 1));
         if (nalloc <= cmd->datsize || len + 1 > nalloc - cmd->datsize)
             return -1;
         narr = realloc(cmd->dat, nalloc);
