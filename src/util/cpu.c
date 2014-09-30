@@ -61,12 +61,13 @@ unsigned sg_setcpufeatures(unsigned features)
 
 unsigned sg_getcpufeatures(void)
 {
+    static const char pfx[] = "hw.optional.";
     int enabled, features = 0, r, i, k;
     size_t length;
     char name[32];
-    const char *fname, *pfx = "hw.optional.";
+    const char *fname;
 
-    k = strlen(pfx);
+    k = sizeof(pfx) - 1;
     memcpy(name, pfx, k);
     for (i = 0; SG_CPUFEATURES[i].name[0]; ++i) {
         fname = SG_CPUFEATURES[i].name;
