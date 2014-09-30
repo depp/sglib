@@ -109,7 +109,7 @@ sg_cvar_geti(const char *section, const char *name, int *value)
     else if (l <= INT_MIN)
         *value = INT_MIN;
     else
-        *value = l;
+        *value = (int) l;
     return 1;
 }
 

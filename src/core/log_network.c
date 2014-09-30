@@ -43,7 +43,7 @@ sg_log_network_msg(struct sg_log_listener *llp, struct sg_log_msg *msg)
     struct sg_log_network *lp = (struct sg_log_network *) llp;
     char buf[512];
     size_t len = 0, pos;
-    int r;
+    ssize_t r;
     SOCKET sock = lp->sock;
     struct sg_error *err = NULL;
 

@@ -40,7 +40,7 @@ sg_file_u_read(struct sg_file *f, void *buf, size_t amt)
         amt = INT_MAX;
     r = read(u->fdes, buf, amt);
     if (r >= 0)
-        return r;
+        return (int) r;
     sg_error_errno(&u->h.err, errno);
     return -1;
 }
@@ -54,7 +54,7 @@ sg_file_u_write(struct sg_file *f, const void *buf, size_t amt)
         amt = INT_MAX;
     r = write(u->fdes, buf, amt);
     if (r >= 0)
-        return r;
+        return (int) r;
     sg_error_errno(&u->h.err, errno);
     return -1;
 }

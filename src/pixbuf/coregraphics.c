@@ -28,6 +28,9 @@ imageToPixbuf(struct sg_pixbuf *pbuf, CGImageRef img, struct sg_error **err)
     sg_pixbuf_format_t pfmt;
     int r, alpha;
 
+    /* FIXME: error here.  */
+    assert(w <= INT_MAX && h <= INT_MAX);
+
     switch (alphaInfo) {
     case kCGImageAlphaNone:
     case kCGImageAlphaNoneSkipLast:
@@ -45,7 +48,7 @@ imageToPixbuf(struct sg_pixbuf *pbuf, CGImageRef img, struct sg_error **err)
     }
     pfmt = alpha ? SG_RGBA : SG_RGBX;
 
-    r = sg_pixbuf_set(pbuf, pfmt, w, h, err);
+    r = sg_pixbuf_set(pbuf, pfmt, (int) w, (int) h, err);
     if (r)
         goto error;
     pw = pbuf->pwidth;

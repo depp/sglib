@@ -14,8 +14,9 @@ struct mach_timebase_info sg_clock_info;
 unsigned
 sg_clock_convert(uint64_t mach_time)
 {
-    return (mach_time - sg_clock_zero) * sg_clock_info.numer /
-        ((uint64_t) sg_clock_info.denom * 1000000);
+    return (unsigned)
+        ((mach_time - sg_clock_zero) * sg_clock_info.numer /
+         ((uint64_t) sg_clock_info.denom * 1000000));
 }
 
 void
