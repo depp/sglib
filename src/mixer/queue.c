@@ -39,8 +39,11 @@ sg_mixer_queue_append(struct sg_mixer_queue *SG_RESTRICT queue,
     if (count > (unsigned) -1 - queue->msgcount)
         goto nomem;
     nalloc = sg_round_up_pow2_32(queue->msgcount + count);
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wtautological-compare"
     if (!nalloc || nalloc > (size_t) -1 / sizeof(struct sg_mixer_msg))
         goto nomem;
+#pragma clang diagnostic pop
     msg = realloc(queue->msg, sizeof(struct sg_mixer_msg) * nalloc);
     if (!msg)
         goto nomem;
