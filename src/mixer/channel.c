@@ -64,13 +64,13 @@ sg_mixer_channel_setparam(struct sg_mixer_channel *channel,
 
 void
 sg_mixer_channel_setparams(struct sg_mixer_channel *channel,
-                           struct sg_mixer_param *param, size_t count)
+                           struct sg_mixer_param *param, int count)
 {
     unsigned baseaddr, timestamp;
-    size_t i;
+    int i;
     struct sg_mixer_msg *msg;
 
-    if (!count || !channel)
+    if (count <= 0 || !channel)
         return;
     if (channel->lflags & SG_MIXER_LFLAG_INIT) {
         for (i = 0; i < count; i++) {

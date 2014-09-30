@@ -237,7 +237,7 @@ sg_mixer_channel_setparam(struct sg_mixer_channel *channel,
  */
 void
 sg_mixer_channel_setparams(struct sg_mixer_channel *channel,
-                           struct sg_mixer_param *param, size_t count);
+                           struct sg_mixer_param *param, int count);
 
 #ifdef __cplusplus
 }
