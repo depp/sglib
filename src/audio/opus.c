@@ -6,6 +6,7 @@
 #include "sg/audio_buffer.h"
 #include "sg/error.h"
 #include "sg/log.h"
+#include <limits.h>
 #include <math.h>
 #include <opus.h>
 #include <stdlib.h>
@@ -90,9 +91,14 @@ sg_opus_decoder_packet(void *obj, ogg_packet *op,
 {
     struct sg_opus_decoder *st = obj;
     unsigned char *data = op->packet;
-    size_t len = op->bytes;
     const char *msg;
-    int r;
+    int r, len;
+
+    if (op->bytes > INT_MAX || op->bytes < 0) {
+        msg = "Packet too large";
+        goto custom_error;
+    }
+    len = (int) op->bytes;
 
     if (st->state < 2) {
         if (st->state == 0) {
