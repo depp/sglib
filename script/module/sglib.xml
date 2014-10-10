@@ -42,6 +42,7 @@
       <src path="mixer.h"/>
       <src path="net.h"/>
       <src path="opengl.h"/>
+      <src path="pack.h"/>
       <src path="pixbuf.h"/>
       <src path="rand.h"/>
       <src path="record.h"/>
@@ -99,6 +100,7 @@
       <src path="log_network.c"/>
       <src path="net.c"/>
       <src path="opengl.c"/>
+      <src path="pack.c"/>
       <src path="path.c"/>
       <src path="path_norm.c"/>
       <src path="private.h"/>
