@@ -255,8 +255,8 @@ sg_record_frame_begin(unsigned *time)
 void
 sg_record_frame_begin(unsigned *time)
 {
-	(void) time;
-	sg_record.flags |= SG_RECORD_INFRAME;
+    (void) time;
+    sg_record.flags |= SG_RECORD_INFRAME;
 }
 
 #endif
@@ -392,7 +392,7 @@ sg_record_stop(void)
 void
 sg_record_start(unsigned timestamp)
 {
-	(void) timestamp;
+    (void) timestamp;
 }
 
 void
