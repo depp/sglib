@@ -51,6 +51,66 @@ typedef enum {
 sg_sprite_xform_t
 sg_sprite_xform_compose(sg_sprite_xform_t x, sg_sprite_xform_t y);
 
+/**
+ * @brief An individual sprite in a sprite sheet.
+ *
+ * A sprite is a rectangular region in a sprite sheet, together with a
+ * location marked as the origin of the rectangle.  The origin need
+ * not be within the rectangle.
+ */
+struct sg_sprite {
+    /** @brief Lower left X coordinate, from image lower left.  */
+    short x;
+    /** @brief Lower left Y coordinate, from image lower left.  */
+    short y;
+    /** @brief Width.  */
+    short w;
+    /** @brief Height.  */
+    short h;
+    /** @brief Origin X coordinate, from sprite lower left.  */
+    short cx;
+    /** @brief Origin Y coordinate, from sprite lower left.  */
+    short cy;
+};
+
+/**
+ * @brief Write a sprite to a vertex buffer.
+ *
+ * Writes six vertexes with four shorts each.  The six vertexes form
+ * the two triangles comprising the sprite.  In each vertex, the first
+ * pair is the vertex coordinates, the second pair is the texture
+ * coordinates.
+ *
+ * @brief buffer The location where the sprite will be written.
+ * @brief stride The byte offset between consecutive vertexes.
+ * @brief sp The sprite texture coordinates.
+ * @brief x The output X coordinate of the sprite origin.
+ * @brief y The output Y coordinate of the sprite origin.
+ */
+void
+sg_sprite_write(void *buffer, unsigned stride, struct sg_sprite sp,
+                int x, int y);
+
+/**
+ * @brief Write a transformed sprite to a vertex buffer.
+ *
+ * Writes six vertexes with four shorts each.  The six vertexes form
+ * the two triangles comprising the sprite.  In each vertex, the first
+ * pair is the vertex coordinates, the second pair is the texture
+ * coordinates.
+ *
+ * @brief buffer The location where the sprite will be written.
+ * @brief stride The byte offset between consecutive vertexes.
+ * @brief sp The sprite texture coordinates.
+ * @brief x The output X coordinate of the sprite origin.
+ * @brief y The output Y coordinate of the sprite origin.
+ * @brief xform The transformation to apply to the vertex coordinates
+ * before translation.
+ */
+void
+sg_sprite_write2(void *buffer, unsigned stride, struct sg_sprite sp,
+                 int x, int y, sg_sprite_xform_t xform);
+
 #ifdef __cplusplus
 }
 #endif
