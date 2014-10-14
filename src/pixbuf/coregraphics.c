@@ -3,6 +3,7 @@
    2-clause BSD license.  For more information, see LICENSE.txt. */
 #include "sg/file.h"
 #include "sg/pixbuf.h"
+#include "private.h"
 #include <ApplicationServices/ApplicationServices.h>
 #include <assert.h>
 

@@ -7,6 +7,7 @@
 #include "sg/log.h"
 #include "sg/pixbuf.h"
 #include "sg/version.h"
+#include "private.h"
 #include <stdio.h>
 #include <jpeglib.h>
 

@@ -7,6 +7,7 @@
 #include "sg/error.h"
 #include "sg/file.h"
 #include "sg/pixbuf.h"
+#include "private.h"
 #include <string.h>
 
 const char SG_PIXBUF_IMAGE_EXTENSIONS[] = "png:jpg";

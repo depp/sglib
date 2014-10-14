@@ -202,6 +202,7 @@
       <src path="loadimage.c"/>
       <src path="pixbuf.c"/>
       <src path="premultiply_alpha.c"/>
+      <src path="private.h"/>
     </group>
 
     <group path="src/record">
