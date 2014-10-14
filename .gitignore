@@ -13,6 +13,7 @@
 /Makefile
 /SGLib_Test*
 /build
+/lib
 
 # Build system, Xcode
 /*.xcodeproj
