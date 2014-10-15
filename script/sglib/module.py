@@ -113,13 +113,13 @@ private.h
 wincodec.cpp image_wincodec
 ''')
 
-src.add(base='src/record', sources='''
+src.add(base='src/record', tags=['video_recording'], sources='''
 cmdargs.c
 cmdargs.h
-record.c
-record.h
-screenshot.c
-screenshot.h
+record.c !video_recording
+record.h !video_recording
+screenshot.c !video_recording
+screenshot.h !video_recording
 videoio.c
 videoio.h
 videoparam.c

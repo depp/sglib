@@ -18,17 +18,18 @@ class SourceFile(object):
         if not os.path.isabs(path):
             raise ValueError('path must be absolute')
         self.path = path
-        self.tags = tuple(tags)
+        self.tags = tuple(sorted(tags))
 
     def __repr__(self):
         return 'SourceFile({!r}, {!r})'.format(self.path, self.tags)
 
 class SourceList(object):
     """A collection of source files."""
-    __slots__ = ['sources', '_base']
+    __slots__ = ['sources', 'tags', '_base']
 
     def __init__(self, *, path, base=None, sources=None):
         self.sources = []
+        self.tags = set()
         dirpath = os.path.dirname(path)
         if base is None:
             self._base = dirpath
@@ -42,6 +43,7 @@ class SourceList(object):
 
         The sources are specified as a string, with one file per line.
         """
+        tags = set(tags) if tags else set()
         if base is None:
             base = self._base
         else:
@@ -51,4 +53,12 @@ class SourceList(object):
             if not fields:
                 continue
             path = _join(base, fields[0])
-            self.sources.append(SourceFile(path, fields[1:]))
+            srctags = set(tags)
+            for tag in fields[1:]:
+                if tag.startswith('!'):
+                    tag = tag[1:]
+                    srctags.discard(tag)
+                else:
+                    srctags.add(tag)
+                self.tags.add(tag)
+            self.sources.append(SourceFile(path, srctags))
