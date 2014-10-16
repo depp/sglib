@@ -1,4 +1,4 @@
-from .. import error
+from ..shell import escape
 import sys
 import io
 
