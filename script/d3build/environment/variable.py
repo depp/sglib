@@ -156,15 +156,20 @@ class BuildVariables(object):
         """Create a set of build variables from strings."""
         variables = {}
         for varname, value in vardict.items():
-            vardef = class_.variable_definition(varname)
-            if vardef is None:
-                raise ValueError('unknown variable: {}'.format(varname))
-            try:
-                parse = vardef.parse
-            except AttributeError:
-                raise ValueError('cannot parse variable: {}'.format(varname))
-            variables[varname] = parse(value)
+            variables[varname] = class_.parse_variable(varname, value)
         return class_(**variables)
+
+    @classmethod
+    def parse_variable(class_, varname, value):
+        """Parse a variable."""
+        vardef = class_.variable_definition(varname)
+        if vardef is None:
+            raise ValueError('unknown variable: {}'.format(varname))
+        try:
+            parse = vardef.parse
+        except AttributeError:
+            raise ValueError('cannot parse variable: {}'.format(varname))
+        return parse(value)
 
     @classmethod
     def merge(class_, varsets):
@@ -204,6 +209,75 @@ class BuildVariables(object):
         return 'BuildVariables({})'.format(
             ', '.join('{}={!r}'.format(varname, value)
                       for varname, value in self.variables.items()))
+
+    def __getitem__(self, key):
+        return self.variables[key]
+
+    def __setitem__(self, key, value):
+        if self.variable_definition(key) is None:
+            raise KeyError(repr(key))
+        self.variables[key] = value
+
+    def __delitem__(self, key):
+        del self.variables[key]
+
+    def __iter__(self):
+        return iter(self.variables)
+
+    def __len__(self):
+        return len(self.variables)
+
+    def __contains__(self, key):
+        return key in self.variables
+
+    def keys(self):
+        return self.variables.keys()
+
+    def items(self):
+        return self.variables.items()
+
+    def values(self):
+        return self.variables.values()
+
+    def get(self, key, default=None):
+        return self.variables.get(key, default)
+
+    def __eq__(self, other):
+        return (isinstance(other, BuildVariables) and
+            self.variables == other.variables)
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+    def update(self, **kw):
+        """Update variables with the keyword arguments."""
+        for varname, value2 in kw.items():
+            vardef = self.variable_definition(varname)
+            if vardef is None:
+                raise ValueError('unknown variable: {}'.format(varname))
+            try:
+                value1 = self.variables[varname]
+            except KeyError:
+                self.variables[varname] = value2
+            else:
+                self.variables[varname] = vardef.combine([value1, value2])
+
+    def update_parse(self, variables, *, strict):
+        """Update variables from a dictionary, parsing the values."""
+        for varname, value2 in variables.items():
+            try:
+                value2 = self.parse_variable(varname, value2)
+            except ValueError:
+                if strict:
+                    raise
+                continue
+            try:
+                value1 = self.variables[varname]
+            except KeyError:
+                self.variables[varname] = value2
+            else:
+                vardef = self.variable_definition(varname)
+                self.variables[varname] = vardef.combine([value1, value2])
 
 if __name__ == '__main__':
     x = BuildVariables.parse({

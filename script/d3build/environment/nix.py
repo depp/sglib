@@ -3,8 +3,98 @@ from .variable import BuildVariables
 from ..shell import get_output
 from ..error import ConfigError
 
+def cc_command(varset, output, source, sourcetype, *,
+               depfile=None, external=False):
+    """Get the command to compile the given source file."""
+    if sourcetype in ('c', 'objc'):
+        cc, cflags, cwarn = 'CC', 'CFLAGS', 'CWARN'
+    elif sourcetype in ('c++', 'objc++'):
+        cc, cflags, cwarn = 'CXX', 'CXXFLAGS', 'CXXWARN'
+    else:
+        raise ValueError('invalid source type')
+
+    try:
+        cc = varset[cc]
+    except KeyError:
+        raise ConfigError('{} is not set'.format(cc))
+    cflags = varset.get(cflags, ())
+    if external:
+        cwarn = ()
+    else:
+        cwarn = varset.get(cwarn, ())
+
+    cmd = [cc, '-o', output, source, '-c']
+    if depfile is not None:
+        cmd.extend(('-MF', depfile, '-MMD', '-MP'))
+    cmd.extend(('-I', p) for p in varset.get('CPPPATH', ()))
+    cmd.extend(('-F', p) for p in varset.get('FPATH', ()))
+    cmd.extend(mkdef(k, v) for k, v in varset.get('DEFS', ()))
+    cmd.extend(varset.get('CPPFLAGS', ()))
+    cmd.extend(cwarn)
+    cmd.extend(cflags)
+    return cmd
+
+def ld_command(varset, output, sources, sourcetypes):
+    """Get the command to link the given source."""
+    if 'c++' in sourcetypes or 'objc++' in sourcetypes:
+        cc = 'CXX'
+    else:
+        cc = 'CC'
+    try:
+        cc = varset[cc]
+    except KeyError:
+        raise ConfigError('{} is not set'.format(cc))
+
+    cmd = [cc]
+    cmd.extend(varset.get('LDFLAGS', ()))
+    cmd.extend(('-o', output))
+    cmd.extend(sources)
+    cmd.extend('-F' + p for p in varset.get('FPATH', ()))
+    cmd.extend(varset.get('LIBS', ()))
+    for framework in varset.get('FRAMEWORKS', ()):
+        cmd.extend(('-framework', framework))
+    return cmd
+
 class NixEnvironment(BaseEnvironment):
     """A Unix-like configuration environment."""
+    __slots__ = ['base_vars']
+
+    def __init__(self, config):
+        super(NixEnvironment, self).__init__(config)
+
+        if config.config == 'debug':
+            cflags = ('-O0', '-g')
+        else:
+            cflags = ('-O2', '-g')
+        varset = BuildVariables(
+            CC='cc',
+            CXX='c++',
+            CFLAGS=cflags,
+            CXXFLAGS=cflags,
+        )
+        if config.warnings:
+            varset.update(
+                CWARN=tuple(
+                    '-Wall -Wextra -Wpointer-arith -Wno-sign-compare '
+                    '-Wwrite-strings -Wmissing-prototypes '
+                    '-Werror=implicit-function-declaration '
+                    .split()),
+                CXXWARN=tuple(
+                    '-Wall -Wextra -Wpointer-arith -Wno-sign-compare '
+                    .split()))
+        if config.werror:
+            varset.update(
+                CWARN=('-Werror',),
+                CXXWARN=('-Werror',))
+        if config.platform == 'linux':
+            varset.update(
+                LDFLAGS=('-Wl,--as-needed', '-Wl,--gc-sections'))
+        if config.platform == 'osx':
+            varset.update(
+            LDFLAGS=('-Wl,-dead_strip', '-Wl,-dead_strip_dylibs'))
+
+        varset.update_parse(config.variables, strict=False)
+        self.base_vars = varset
 
     def pkg_config(self, spec):
         """Run the pkg-config tool and return the build variables."""
