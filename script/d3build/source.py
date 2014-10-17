@@ -25,34 +25,34 @@ class SourceFile(object):
 
 class SourceList(object):
     """A collection of source files."""
-    __slots__ = ['sources', 'tags', '_base']
+    __slots__ = ['sources', 'tags', '_path']
 
-    def __init__(self, *, path, base=None, sources=None):
+    def __init__(self, *, base, path=None, sources=None):
         self.sources = []
         self.tags = set()
-        dirpath = os.path.dirname(path)
-        if base is None:
-            self._base = dirpath
+        dirpath = os.path.dirname(base)
+        if path is None:
+            self._path = dirpath
         else:
-            self._base = _join(dirpath, base)
+            self._path = _join(dirpath, path)
         if sources is not None:
             self.add(sources)
 
-    def add(self, sources, *, base=None, tags=None):
+    def add(self, sources, *, path=None, tags=None):
         """Add sources to the source list.
 
         The sources are specified as a string, with one file per line.
         """
         tags = set(tags) if tags else set()
-        if base is None:
-            base = self._base
+        if path is None:
+            path = self._path
         else:
-            base = _join(self._base, base)
+            path = _join(self._path, path)
         for line in sources.splitlines():
             fields = line.split()
             if not fields:
                 continue
-            path = _join(base, fields[0])
+            path = _join(path, fields[0])
             srctags = set(tags)
             for tag in fields[1:]:
                 if tag.startswith('!'):
