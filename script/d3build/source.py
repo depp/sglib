@@ -1,5 +1,28 @@
 import os
 
+_SRCTYPE_EXTS = {
+    'c': 'c',
+    'c++': 'cpp cp cxx',
+    'h': 'h',
+    'h++': 'hpp hxx',
+    'objc': 'm',
+    'objc++': 'mm',
+    'vcxproj': 'vcxproj',
+}
+
+EXT_SRCTYPE = {
+    '.' + ext: type
+    for type, exts in _SRCTYPE_EXTS.items()
+    for ext in exts.split()
+}
+
+SRCTYPE_EXT = {
+    type: '.' + exts.split()[0]
+    for type, exts in _SRCTYPE_EXTS.items()
+}
+
+del _SRCTYPE_EXTS
+
 def _join(base, path):
     for part in path.split('/'):
         if part == '..':

@@ -1,7 +1,11 @@
 from .environment import BaseEnvironment
 from .variable import BuildVariables
-from ..shell import get_output
-from ..error import ConfigError
+from ..shell import get_output, describe_proc
+from ..error import ConfigError, format_block
+from ..source import SRCTYPE_EXT
+import io
+import os
+import tempfile
 
 def cc_command(varset, output, source, sourcetype, *,
                depfile=None, external=False):
@@ -112,3 +116,45 @@ class NixEnvironment(BaseEnvironment):
         varset = BuildVariables.parse(flags)
         varset.CXXFLAGS = varset.CFLAGS
         return varset
+
+    def test_compile_link(self, source, sourcetype, base_varset, varsets):
+        """Try different build variable sets to find one that works."""
+        log = io.StringIO()
+        print('Testing compilation and linking.', file=log)
+        print('Source type: {}'.format(sourcetype), file=log)
+        log.write(format_block(source))
+        print('Base build variables:', file=log)
+        base_varset.dump(log, indent='    ')
+        with tempfile.TemporaryDirectory() as dirpath:
+            file_c = os.path.join(dirpath, 'config' + SRCTYPE_EXT[sourcetype])
+            file_obj = os.path.join(dirpath, 'config.o')
+            file_out = os.path.join(dirpath, 'out')
+            with open(file_c, 'w') as fp:
+                fp.write(source)
+            for varset in varsets:
+                print('Test build variables:', file=log)
+                varset.dump(log, indent='    ')
+                test_varset = BuildVariables.merge([base_varset, varset])
+                cmds = [
+                    cc_command(test_varset, file_obj, file_c,
+                               sourcetype, external=True),
+                    ld_command(test_varset, file_out, [file_obj],
+                               [sourcetype]),
+                ]
+                for cmd in cmds:
+                    try:
+                        stdout, retcode = get_output(
+                            cmd, combine_output=True)
+                    except ConfigError as ex:
+                        print(ex, file=log)
+                        break
+                    else:
+                        log.write(describe_proc(cmd, stdout, retcode))
+                        if retcode:
+                            break
+                else:
+                    print('Success', file=log)
+                    return varset
+        raise ConfigError(
+            'could not compile and link test file',
+            details=log.getvalue())

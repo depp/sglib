@@ -121,7 +121,8 @@ class Config(object):
 if __name__ == '__main__':
     cfg = Config.configure()
     cfg.dump()
-    from.environment import nix
+    from .environment import nix
+    from .environment.variable import BuildVariables
     env = nix.NixEnvironment(cfg)
     print('Environment build variables:')
     env.base_vars.dump(indent='    ')
@@ -129,3 +130,16 @@ if __name__ == '__main__':
         env.base_vars, 'output.o', 'input.c', 'c', depfile='output.d')))
     print('LD command:', ' '.join(nix.ld_command(
         env.base_vars, 'output', ['file1.o', 'file2.o'], {'c'})))
+    source = """\
+#include <stdio.h>
+int main(int argc, char **argv)
+{
+    return 0;
+}
+"""
+    v = env.test_compile_link(source, 'c', env.base_vars, [
+        BuildVariables(CC='gcc-4.2'),
+        BuildVariables(CC='gcc'),
+    ])
+    print("GOT IT:")
+    v.dump(indent='    ')

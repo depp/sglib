@@ -22,7 +22,7 @@ class BaseEnvironment(object):
         """Specify a list of frameworks to use."""
         raise ConfigError('frameworks not available on this target')
 
-    def test_compile_link(self, source, envs):
+    def test_compile_link(self, source, sourcetype, base_varset, varsets):
         """Try different build variable sets to find one that works."""
         raise ConfigError(
             'compile and link tests not available for this target')
