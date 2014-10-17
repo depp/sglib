@@ -2,10 +2,10 @@ from ..error import ConfigError
 
 class BaseEnvironment(object):
     """Base class for all configuration environments."""
-    __slots__ = []
+    __slots__ = ['config']
 
     def __init__(self, config):
-        pass
+        self.config = config
 
     def pkg_config(self, spec):
         """Run the pkg-config tool and return the build variables."""

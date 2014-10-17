@@ -117,6 +117,36 @@ class NixEnvironment(BaseEnvironment):
         varset.CXXFLAGS = varset.CFLAGS
         return varset
 
+    def sdl_config(self, version):
+        """Run the sdl-config tool and return the build variables.
+
+        The version should either be 1 or 2.
+        """
+        if version == 1:
+            cmdname = 'sdl-config'
+        elif version == 2:
+            cmdname = 'sdl2-config'
+        else:
+            raise ValueError('unknown SDL version: {!r}'.format(version))
+        flags = {}
+        for varname, arg in (('LIBS', '--libs'), ('CFLAGS', '--cflags')):
+            stdout, stderr, retcode = get_output([cmdname, arg])
+            if retcode:
+                raise ConfigError('{} failed'.format(cmdname), details=stderr)
+            flags[varname] = stdout
+        varset = BuildVariables.parse(flags)
+        varset.CXXFLAGS = varset.CFLAGS
+        return varset
+
+    def frameworks(self, flist):
+        """Specify a list of frameworks to use."""
+        if self.config.platform != 'osx':
+            return super(NixEnvironment, self).frameworks(flist)
+        flist = tuple(flist)
+        if not all(isinstance(x, str) for x in flist):
+            raise TypeError('expected a list of strings')
+        return BuildVariables(FRAMEWORKS=flist)
+
     def test_compile_link(self, source, sourcetype, base_varset, varsets):
         """Try different build variable sets to find one that works."""
         log = io.StringIO()
