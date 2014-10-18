@@ -59,7 +59,7 @@ class BaseEnvironment(object):
         raise AttributeError(name)
 
     def header_path(self, base, path):
-        return BuildVariables(CPPPATH=(_base(base, path)))
+        return BuildVariables(CPPPATH=(_base(base, path),))
 
     def pkg_config(self, spec):
         """Run the pkg-config tool and return the build variables."""

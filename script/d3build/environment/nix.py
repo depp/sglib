@@ -7,8 +7,12 @@ import io
 import os
 import tempfile
 
+def resolve_path_id(path):
+    return path
+
 def cc_command(varset, output, source, sourcetype, *,
-               depfile=None, external=False):
+               depfile=None, external=False,
+               resolve_path=resolve_path_id):
     """Get the command to compile the given source file."""
     if sourcetype in ('c', 'objc'):
         cc, cflags, cwarn = 'CC', 'CFLAGS', 'CWARN'
@@ -27,18 +31,19 @@ def cc_command(varset, output, source, sourcetype, *,
     else:
         cwarn = varset.get(cwarn, ())
 
-    cmd = [cc, '-o', output, source, '-c']
+    cmd = [cc, '-o', resolve_path(output), resolve_path(source), '-c']
     if depfile is not None:
         cmd.extend(('-MF', depfile, '-MMD', '-MP'))
-    cmd.extend(('-I', p) for p in varset.get('CPPPATH', ()))
-    cmd.extend(('-F', p) for p in varset.get('FPATH', ()))
+    cmd.extend('-I' + resolve_path(p) for p in varset.get('CPPPATH', ()))
+    cmd.extend('-F' + resolve_path(p) for p in varset.get('FPATH', ()))
     cmd.extend(mkdef(k, v) for k, v in varset.get('DEFS', ()))
     cmd.extend(varset.get('CPPFLAGS', ()))
     cmd.extend(cwarn)
     cmd.extend(cflags)
     return cmd
 
-def ld_command(varset, output, sources, sourcetypes):
+def ld_command(varset, output, sources, sourcetypes, *,
+               resolve_path=resolve_path_id):
     """Get the command to link the given source."""
     if 'c++' in sourcetypes or 'objc++' in sourcetypes:
         cc = 'CXX'
@@ -51,9 +56,9 @@ def ld_command(varset, output, sources, sourcetypes):
 
     cmd = [cc]
     cmd.extend(varset.get('LDFLAGS', ()))
-    cmd.extend(('-o', output))
-    cmd.extend(sources)
-    cmd.extend('-F' + p for p in varset.get('FPATH', ()))
+    cmd.extend(('-o', resolve_path(output)))
+    cmd.extend(resolve_path(p) for p in sources)
+    cmd.extend('-F' + resolve_path(p) for p in varset.get('FPATH', ()))
     cmd.extend(varset.get('LIBS', ()))
     for framework in varset.get('FRAMEWORKS', ()):
         cmd.extend(('-framework', framework))

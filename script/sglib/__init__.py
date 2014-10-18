@@ -56,10 +56,14 @@ class App(object):
         mod = SourceModule(
             sources=self.sources,
             configure=self._module_configure)
-        cm = mod.configure(env)
-        print('SOURCES', cm.sources)
-        print('PUBLIC', cm.public)
-        print('PRIVATE', cm.private)
-        print('DEPENDENCIES', cm.dependencies)
-        for err in env.errors:
-            err.write(sys.stderr)
+        if env.platform == 'osx':
+            env.target_application_bundle(
+                name=self.name,
+                module=mod,
+                info_plist=None)
+        else:
+            env.target_executable(
+                name=self.name,
+                module=mod,
+                uuid=self.uuid)
+        env.finalize()

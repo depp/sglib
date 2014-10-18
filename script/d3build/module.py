@@ -6,10 +6,11 @@ from .environment.variable import BuildVariables
 _circular = object()
 
 class _ModuleConfigurator(object):
-    __slots__ = ['env', 'tagdefs', 'modules', '_module_ids']
+    __slots__ = ['env', 'tagdefs', 'has_error', 'modules', '_module_ids']
     def __init__(self, env, tagdefs):
         self.env = env
         self.tagdefs = tagdefs
+        self.has_error = False
         self.modules = []
         self._module_ids = set()
     def resolve_tags(self, tags):
@@ -18,6 +19,8 @@ class _ModuleConfigurator(object):
         module_ids = set()
         new_modules = []
         for tag in tags:
+            if tag == 'exclude':
+                return None
             tagdef = self.tagdefs.get(tag, True)
             if isinstance(tagdef, bool):
                 if not tagdef:
@@ -35,8 +38,6 @@ class _ModuleConfigurator(object):
                         continue
                     module_ids.add(id(item))
                     cfg_m = item.configure(self.env)
-                    if cfg_m is None:
-                        continue
                     if cfg_m is _circular:
                         raise UserError('circular module dependency')
                     new_varsets = cfg_m.public
@@ -81,7 +82,12 @@ class Module(object):
         try:
             m = self._configure(env)
         except ConfigError as ex:
-            m = None
+            m = ConfiguredModule()
+            m.sources = []
+            m.public = []
+            m.private = []
+            m.dependencies = []
+            m.has_error = True
             env.errors.append(ex)
         env.modules[id(self)] = m
         return m
@@ -95,6 +101,7 @@ class Module(object):
         extras = (set(tagdefs).difference(all_tags)
                   .difference(['public', 'private']))
         missing = all_tags.difference(tagdefs)
+        missing.discard('exclude')
         if extras or missing:
             raise UserError(
                 'missing tag configurations: {}; extra tag configurations: {}'
@@ -116,7 +123,12 @@ class Module(object):
         out.public = cfg.resolve_tags(('public',)) or []
         out.private = cfg.resolve_tags(('private',)) or []
         out.dependencies = cfg.modules
+        out.has_error = cfg.has_error
         return out
+
+    def flatten(self, env):
+        """Configure and flatten a module."""
+        return self.configure(env).flatten()
 
 class SourceModule(Module):
     """A module consisting of source code to be compiled."""
@@ -160,4 +172,41 @@ class ExternalModule(Module):
 
 class ConfiguredModule(object):
     """A module which has been configured."""
-    __slots__ = ['sources', 'public', 'private', 'dependencies']
+    __slots__ = ['sources', 'public', 'private', 'dependencies',
+                 'has_error']
+
+    def flatten(self):
+        """Flatten a module, resolving all dependencies."""
+        if self.has_error:
+            return None
+        mod = FlatModule()
+        mod.sources = []
+        mod.varsets = []
+        varset_ids = set()
+        mq = [self]
+        mids = {id(self)}
+        while mq:
+            m = mq.pop()
+            for dep in m.dependencies:
+                if id(dep) in mids:
+                    continue
+                mids.add(id(dep))
+                mq.append(dep)
+            for source in m.sources:
+                mod.sources.append(source)
+                for varset in source.varsets:
+                    if id(varset) in varset_ids:
+                        continue
+                    varset_ids.add(id(varset))
+                    mod.varsets.append(varset)
+            for varsets in (m.public, m.private):
+                for varset in varsets:
+                    if id(varset) in varset_ids:
+                        continue
+                    varset_ids.add(id(varset))
+                    mod.varsets.append(varset)
+        return mod
+
+class FlatModule(object):
+    """A module which has been configured and flattened."""
+    __slots__ = ['sources', 'varsets']

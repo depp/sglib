@@ -4,7 +4,7 @@ from .error import UserError, ConfigError
 
 PLATFORMS = {
     'Darwin': ('osx', 'xcode'),
-    'Linux': ('linux', 'make'),
+    'Linux': ('linux', 'gmake'),
     'Windows': ('windows', 'msvc'),
 }
 
@@ -130,8 +130,12 @@ class Config(object):
             print('    {} = {}'.format(varname, value))
 
     def environment(self):
-        from .environment import nix
-        return nix.NixEnvironment(self)
+        if self.target == 'gmake':
+            from .environment import gmake
+            return gmake.GnuMakeEnvironment(self)
+        else:
+            raise ConfigError(
+                'unknown target: {}'.format(self.target))
 
 if __name__ == '__main__':
     cfg = Config.configure()
