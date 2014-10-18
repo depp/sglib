@@ -81,6 +81,10 @@ class NixEnvironment(BaseEnvironment):
             CFLAGS=cflags,
             CXXFLAGS=cflags,
         )
+        varset.update(
+            CFLAGS=('-pthread',),
+            CXXFLAGS=('-pthread',),
+            LDFLAGS=('-pthread',))
         if config.warnings:
             varset.update(
                 CWARN=tuple(
@@ -100,7 +104,7 @@ class NixEnvironment(BaseEnvironment):
                 LDFLAGS=('-Wl,--as-needed', '-Wl,--gc-sections'))
         if config.platform == 'osx':
             varset.update(
-            LDFLAGS=('-Wl,-dead_strip', '-Wl,-dead_strip_dylibs'))
+                LDFLAGS=('-Wl,-dead_strip', '-Wl,-dead_strip_dylibs'))
 
         varset.update_parse(config.variables, strict=False)
         self.base_vars = varset
