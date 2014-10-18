@@ -71,7 +71,7 @@ log.c
 log_console.c
 log_impl.h
 log_network.c
-logtest.c
+logtest.c exclude
 net.c
 opengl.c
 pack.c

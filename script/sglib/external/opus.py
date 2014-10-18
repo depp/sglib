@@ -1,7 +1,7 @@
 from d3build.module import ExternalModule
 
 def _configure(env):
-    return [], {'public': [env.pkg_config('ogg')]}
+    return [], {'public': [env.pkg_config('opus')]}
 
 module = ExternalModule(
     name='Opus codec library',

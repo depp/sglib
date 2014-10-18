@@ -82,7 +82,7 @@ def configure(env):
         enable_ogg = True
     if env.flags.opus:
         tags['opus'] = [opus.module]
-        enable_opus = True
+        enable_ogg = True
     if enable_ogg:
         tags['ogg'] = [ogg.module]
 
