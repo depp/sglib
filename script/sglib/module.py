@@ -1,146 +1,140 @@
-from d3build.source import SourceList
+from d3build.module import SourceModule
+from . import source
 
-src = SourceList(path=__file__, base='../..')
+TAGS = '''
+frontend_cocoa
+frontend_gtk
+frontend_sdl
+frontend_windows
+audio_alsa
+audio_coreaudio
+audio_directsound
+audio_sdl
+image_coregraphics
+image_libjpeg
+image_libpng
+image_wincodec
+linux
+ogg
+opus
+osx
+posix
+type_coretext
+type_pango
+type_uniscribe
+video_recording
+vorbis
+windows
+'''.split()
 
-src.add(base='include/sg', sources='''
-arch.h
-atomic.h
-attribute.h
-audio_buffer.h
-audio_file.h
-binary.h
-byteorder.h
-clock.h
-configfile.h
-cpu.h
-cvar.h
-defs.h
-entry.h
-error.h
-event.h
-file.h
-hash.h
-hashtable.h
-key.h
-keycode.h
-log.h
-mixer.h
-net.h
-opengl.h
-pack.h
-pixbuf.h
-rand.h
-record.h
-strbuf.h
-thread.h
-type.h
-util.h
-version.h
-''')
+def configure(env):
+    from .external import (
+        ogg, vorbis, opus,
+        sdl, glew,
+        alsa, libjpeg, libpng, pango, gtk, gtkglext,
+    )
 
-src.add('include/config.h')
+    tags = {tag: False for tag in TAGS}
+    tags['public'] = [
+        env.header_path(base=__file__, path='../../include'),
+    ]
 
-src.add(base='src/audio', sources='''
-buffer.c
-convert.c
-file.c
-ogg.c ogg
-ogg.h ogg
-opus.c ogg opus
-resample.c
-vorbis.c ogg vorbis
-wav.c
-writer.c
-''')
+    if env.platform == 'linux':
+        tags['posix'] = True
+        tags['linux'] = True
+    elif env.platform == 'osx':
+        tags['posix'] = True
+        tags['osx'] = True
+    elif env.platform == 'windows':
+        tags['windows'] = True
 
-src.add(base='src/core', sources='''
-clock.c
-clock_impl.h
-configfile.c
-cvar.c
-error.c
-file_impl.h
-file_posix.c posix
-file_read.c
-file_win.c windows
-keyid.c
-keytable_evdev.c linux
-keytable_mac.c osx
-keytable_win.c windows
-log.c
-log_console.c
-log_impl.h
-log_network.c
-logtest.c
-net.c
-opengl.c
-pack.c
-path.c
-path_norm.c
-private.h
-rand.c
-sys.c
-version.c
-version_const.c
-winutf8.c windows
-''')
+    if env.flags.frontend == 'cocoa':
+        tags['frontend_cocoa'] = [env.module.frameworks(
+            ['AppKit', 'Foundation', 'CoreVideo', 'OpenGL', 'Carbon'])]
+    elif env.flags.frontend == 'gtk':
+        tags['frontend_gtk'] = [gtkglext.module, gtk.module]
+    elif env.flags.frontend == 'sdl':
+        tags['frontend_sdl'] = [sdl.version_2]
+    elif env.flags.frontend == 'windows':
+        tags['frontend_windows'] = True
+    else:
+        raise Exception('invalid frontend flag: {!r}'
+                        .format(env.flags.frontend))
 
-src.add(base='src/mixer', sources='''
-channel.c
-mixdown.c
-mixer.c
-mixer.h
-queue.c
-sound.c
-sound.h
-time.c
-time.h
-timeexact.c
-system_alsa.c audio_alsa
-system_coreaudio.c audio_coreaudio
-system_directsound8.c audio_directsound
-system_sdl.c audio_sdl
-''')
+    if env.flags.audio == 'alsa':
+        tags['audio_alsa'] = [alsa.module]
+    elif env.flags.audio == 'coreaudio':
+        tags['audio_coreaudio'] = [env.module.frameworks(
+            ['CoreAudio', 'AudioUnit'])]
+    elif env.flags.audio == 'directsound':
+        tags['audio_directsound'] = True
+    elif env.flags.audio == 'sdl':
+        tags['audio_sdl'] = [sdl.version_2]
+    elif env.flags.audio == 'none':
+        pass
+    else:
+        raise Exception('invalid audio flag: {!r}'
+                        .format(env.flags.audio))
 
-src.add(base='src/pixbuf', sources='''
-coregraphics.c image_coregraphics
-libjpeg.c image_libjpeg
-libpng.c image_libpng
-loadimage.c
-pixbuf.c
-premultiply_alpha.c
-private.h
-wincodec.cpp image_wincodec
-''')
+    enable_ogg = False
+    if env.flags.vorbis:
+        tags['vorbis'] = [vorbis.module]
+        enable_ogg = True
+    if env.flags.opus:
+        tags['opus'] = [opus.module]
+        enable_opus = True
+    if enable_ogg:
+        tags['ogg'] = [ogg.module]
 
-src.add(base='src/record', tags=['video_recording'], sources='''
-cmdargs.c
-cmdargs.h
-record.c !video_recording
-record.h !video_recording
-screenshot.c !video_recording
-screenshot.h !video_recording
-videoio.c
-videoio.h
-videoparam.c
-videoparam.h
-videoproc.c
-videoproc.h
-videotime.c
-videotime.h
-''')
+    enable_coregraphics = False
+    enable_wincodec = False
 
-src.add(base='src/type', sources='''
-coretext.c type_coretext
-pango.c type_pango
-uniscribe.c type_uniscribe
-''')
+    if env.flags.jpeg == 'coregraphics':
+        enable_coregraphics = True
+    elif env.flags.jpeg == 'libjpeg':
+        tags['image_libjpeg'] = [libjpeg.module]
+    elif env.flags.jpeg == 'wincodec':
+        enable_wincodec = True
+    elif env.flags.jpeg == 'none':
+        pass
+    else:
+        raise Exception('invalid jpeg flag: {!r}'
+                        .format(env.flags.jpeg))
 
-src.add(base='src/util', sources='''
-cpu.c
-hash.c
-hashtable.c
-strbuf.c
-thread_pthread.c posix
-thread_windows.c windows
-''')
+    if env.flags.png == 'coregraphics':
+        enable_coregraphics = True
+    elif env.flags.png == 'libpng':
+        tags['image_libpng'] = [libpng.module]
+    elif env.flags.png == 'wincodec':
+        enable_wincodec = True
+    elif env.flags.png == 'none':
+        pass
+    else:
+        raise Exception('invalid png flag: {!r}'
+                        .format(env.flags.png))
+
+    if enable_coregraphics:
+        tags['image_coregraphics'] = [env.module.frameworks(
+            ['ApplicationServices'])]
+    if enable_wincodec:
+        tags['image_wincodec'] = True
+
+    if env.flags.type == 'coretext':
+        tags['type_coretext'] = [env.module.frameworks(
+            ['ApplicationServices'])]
+    elif env.flags.type == 'pango':
+        tags['type_pango'] = [pango.module]
+    elif env.flags.type == 'uniscribe':
+        tags['type_uniscribe'] = True
+    elif env.flags.type == 'none':
+        pass
+    else:
+        raise Exception('invalid type flag: {!r}'
+                        .format(env.flags.type))
+
+    if env.flags.video_recording:
+        tags['video_recording'] = True
+
+    return tags
+
+module = SourceModule(sources=source.src, configure=configure)

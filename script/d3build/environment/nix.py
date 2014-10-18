@@ -109,7 +109,7 @@ class NixEnvironment(BaseEnvironment):
                 [cmdname, '--silence-errors', arg, spec])
             if retcode:
                 stdout, retcode = get_output(
-                    [cmdname, '--print-errors', '--exists', arg, spec],
+                    [cmdname, '--print-errors', '--exists', spec],
                     combine_output=True)
                 raise ConfigError('{} failed'.format(cmdname), details=stdout)
             flags[varname] = stdout
@@ -140,7 +140,7 @@ class NixEnvironment(BaseEnvironment):
 
     def frameworks(self, flist):
         """Specify a list of frameworks to use."""
-        if self.config.platform != 'osx':
+        if self.platform != 'osx':
             return super(NixEnvironment, self).frameworks(flist)
         flist = tuple(flist)
         if not all(isinstance(x, str) for x in flist):

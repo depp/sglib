@@ -16,7 +16,7 @@ class ConfigError(Exception):
                     fp.write('{}  {}\n'.format(indent, line))
                 else:
                     fp.write('\n')
-        if sefl.childerrors is not None:
+        if self.childerrors is not None:
             indent = indent + '  '
             for error in self.childerrors:
                 error.write(fp, indent)

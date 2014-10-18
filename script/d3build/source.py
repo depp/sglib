@@ -33,7 +33,13 @@ def _join(base, path):
             base = os.path.join(base, part)
     return base
 
-class SourceFile(object):
+def _base(base, path):
+    dirpath = os.path.dirname(os.path.abspath(base))
+    if path is None:
+        return dirpath
+    return _join(dirpath, path)
+
+class TagSourceFile(object):
     """A record of an individual source file."""
     __slots__ = ['path', 'tags']
 
@@ -41,10 +47,25 @@ class SourceFile(object):
         if not os.path.isabs(path):
             raise ValueError('path must be absolute')
         self.path = path
-        self.tags = tuple(sorted(tags))
+        self.tags = tuple(tags)
 
     def __repr__(self):
-        return 'SourceFile({!r}, {!r})'.format(self.path, self.tags)
+        return 'TagSourceFile({!r}, {!r})'.format(self.path, self.tags)
+
+class SourceFile(object):
+    """An individual source file with its build variables."""
+    __slots__ = ['path', 'varsets', 'external']
+
+    def __init__(self, path, varsets, external):
+        if not os.path.isabs(path):
+            raise ValueError('path must be absolute')
+        self.path = path
+        self.varsets = varsets
+        self.external = bool(external)
+
+    def __repr__(self):
+        return ('SourceFile({!r}, {!r}, {!r})'
+                .format(self.path, self.varsets, self.external))
 
 class SourceList(object):
     """A collection of source files."""
@@ -53,11 +74,7 @@ class SourceList(object):
     def __init__(self, *, base, path=None, sources=None):
         self.sources = []
         self.tags = set()
-        dirpath = os.path.dirname(os.path.abspath(base))
-        if path is None:
-            self._path = dirpath
-        else:
-            self._path = _join(dirpath, path)
+        self._path = _base(base, path)
         if sources is not None:
             self.add(sources)
 
@@ -84,4 +101,4 @@ class SourceList(object):
                 else:
                     srctags.add(tag)
                 self.tags.add(tag)
-            self.sources.append(SourceFile(path, srctags))
+            self.sources.append(TagSourceFile(path, srctags))

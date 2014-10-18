@@ -1,11 +1,65 @@
 from ..error import ConfigError
+from ..source import _base
+from .variable import BuildVariables
+from .feedback import Feedback
+import io
+import sys
+
+_FORWARD = {'warnings', 'werror', 'platform', 'verbosity'}
+
+class Tee(io.TextIOBase):
+    __slots__ = ['files']
+    def __init__(self, files):
+        super(Tee, self).__init__()
+        self.files = tuple(files)
+    def writable(self):
+        return True
+    def write(self, s):
+        for fp in self.files:
+            fp.write(s)
+
+class Flags(object):
+    __slots__ = ['_vars']
+    def __init__(self, config):
+        self._vars = {key.replace('-', '_'): value
+                      for key, value in config.flags.items()}
+    def __getattr__(self, name):
+        try:
+            return self._vars[name]
+        except KeyError:
+            raise AttributeError(name)
 
 class BaseEnvironment(object):
     """Base class for all configuration environments."""
-    __slots__ = ['config']
+    __slots__ = [
+        '_config', 'flags',
+        'modules', 'errors', 'missing_packages',
+        'console', 'logfile',
+    ]
 
     def __init__(self, config):
-        self.config = config
+        self._config = config
+        self.flags = Flags(config)
+        self.modules = {}
+        self.errors = []
+        self.missing_packages = []
+
+    def redirect_log(self, *, append):
+        self.console = sys.stderr
+        mode = 'a' if append else 'w'
+        self.logfile = open('config.log', mode)
+        sys.stderr = Tee([sys.stderr, self.logfile])
+
+    def feedback(self, msg):
+        return Feedback(self, msg)
+
+    def __getattr__(self, name):
+        if name in _FORWARD:
+            return getattr(self._config, name)
+        raise AttributeError(name)
+
+    def header_path(self, base, path):
+        return BuildVariables(CPPPATH=(_base(base, path)))
 
     def pkg_config(self, spec):
         """Run the pkg-config tool and return the build variables."""

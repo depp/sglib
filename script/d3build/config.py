@@ -10,6 +10,7 @@ PLATFORMS = {
 
 class Config(object):
     __slots__ = [
+        'verbosity',
         'config', 'warnings', 'werror', 'variables',
         'platform', 'target', 'targetparams',
         'flags',
@@ -78,6 +79,7 @@ class Config(object):
         args = class_.argument_parser(options).parse_args()
         obj = class_()
 
+        obj.verbosity = args.verbosity
         obj.config = 'release' if args.config is None else args.config
         obj.warnings = True if args.warnings is None else args.warnings
         obj.werror = (obj.config == 'debug'
@@ -126,6 +128,10 @@ class Config(object):
         print('Build variables:')
         for varname, value in sorted(self.variables.items()):
             print('    {} = {}'.format(varname, value))
+
+    def environment(self):
+        from .environment import nix
+        return nix.NixEnvironment(self)
 
 if __name__ == '__main__':
     cfg = Config.configure()

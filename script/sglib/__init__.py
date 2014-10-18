@@ -1,6 +1,8 @@
 from d3build.source import SourceList
 from d3build.config import Config
 from . import options
+from . import module
+import sys
 
 class App(object):
     __slots__ = [
@@ -35,4 +37,13 @@ class App(object):
                         raise ValueError('unknown flag: {!r}'.format(flag))
                     if cfg.flags[flag] is None:
                         cfg.flags[flag] = value
-        print(cfg.flags)
+        env = cfg.environment()
+        env.redirect_log(append=False)
+        m = module.module
+        cm = m.configure(env)
+        print('SOURCES', cm.sources)
+        print('PUBLIC', cm.public)
+        print('PRIVATE', cm.private)
+        print('DEPENDENCIES', cm.dependencies)
+        for err in env.errors:
+            err.write(sys.stderr)
