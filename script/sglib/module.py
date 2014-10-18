@@ -40,13 +40,13 @@ def configure(env):
     ]
 
     if env.platform == 'linux':
-        tags['posix'] = True
-        tags['linux'] = True
+        tags['posix'] = []
+        tags['linux'] = []
     elif env.platform == 'osx':
-        tags['posix'] = True
-        tags['osx'] = True
+        tags['posix'] = []
+        tags['osx'] = []
     elif env.platform == 'windows':
-        tags['windows'] = True
+        tags['windows'] = []
 
     if env.flags.frontend == 'cocoa':
         tags['frontend_cocoa'] = [env.module.frameworks(
@@ -56,7 +56,7 @@ def configure(env):
     elif env.flags.frontend == 'sdl':
         tags['frontend_sdl'] = [sdl.version_2]
     elif env.flags.frontend == 'windows':
-        tags['frontend_windows'] = True
+        tags['frontend_windows'] = []
     else:
         raise Exception('invalid frontend flag: {!r}'
                         .format(env.flags.frontend))
@@ -67,7 +67,7 @@ def configure(env):
         tags['audio_coreaudio'] = [env.module.frameworks(
             ['CoreAudio', 'AudioUnit'])]
     elif env.flags.audio == 'directsound':
-        tags['audio_directsound'] = True
+        tags['audio_directsound'] = []
     elif env.flags.audio == 'sdl':
         tags['audio_sdl'] = [sdl.version_2]
     elif env.flags.audio == 'none':
@@ -117,7 +117,7 @@ def configure(env):
         tags['image_coregraphics'] = [env.module.frameworks(
             ['ApplicationServices'])]
     if enable_wincodec:
-        tags['image_wincodec'] = True
+        tags['image_wincodec'] = []
 
     if env.flags.type == 'coretext':
         tags['type_coretext'] = [env.module.frameworks(
@@ -125,7 +125,7 @@ def configure(env):
     elif env.flags.type == 'pango':
         tags['type_pango'] = [pango.module]
     elif env.flags.type == 'uniscribe':
-        tags['type_uniscribe'] = True
+        tags['type_uniscribe'] = []
     elif env.flags.type == 'none':
         pass
     else:
@@ -133,7 +133,7 @@ def configure(env):
                         .format(env.flags.type))
 
     if env.flags.video_recording:
-        tags['video_recording'] = True
+        tags['video_recording'] = []
 
     return tags
 

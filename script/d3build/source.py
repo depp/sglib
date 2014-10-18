@@ -1,4 +1,5 @@
 import os
+from .error import UserError
 
 _SRCTYPE_EXTS = {
     'c': 'c',
@@ -41,31 +42,35 @@ def _base(base, path):
 
 class TagSourceFile(object):
     """A record of an individual source file."""
-    __slots__ = ['path', 'tags']
+    __slots__ = ['path', 'tags', 'sourcetype']
 
-    def __init__(self, path, tags):
+    def __init__(self, path, tags, sourcetype):
         if not os.path.isabs(path):
             raise ValueError('path must be absolute')
         self.path = path
         self.tags = tuple(tags)
+        self.sourcetype = sourcetype
 
     def __repr__(self):
-        return 'TagSourceFile({!r}, {!r})'.format(self.path, self.tags)
+        return ('TagSourceFile({!r}, {!r}, {!r})'
+                .format(self.path, self.tags, self.sourcetype))
 
 class SourceFile(object):
     """An individual source file with its build variables."""
-    __slots__ = ['path', 'varsets', 'external']
+    __slots__ = ['path', 'varsets', 'sourcetype', 'external']
 
-    def __init__(self, path, varsets, external):
+    def __init__(self, path, varsets, sourcetype, external):
         if not os.path.isabs(path):
             raise ValueError('path must be absolute')
         self.path = path
         self.varsets = varsets
+        self.sourcetype = sourcetype
         self.external = bool(external)
 
     def __repr__(self):
-        return ('SourceFile({!r}, {!r}, {!r})'
-                .format(self.path, self.varsets, self.external))
+        return ('SourceFile({!r}, {!r}, {!r}, {!r})'
+                .format(self.path, self.varsets,
+                        self.sourcetype, self.external))
 
 class SourceList(object):
     """A collection of source files."""
@@ -92,7 +97,7 @@ class SourceList(object):
             fields = line.split()
             if not fields:
                 continue
-            path = _join(path, fields[0])
+            filepath = _join(path, fields[0])
             srctags = set(tags)
             for tag in fields[1:]:
                 if tag.startswith('!'):
@@ -101,4 +106,10 @@ class SourceList(object):
                 else:
                     srctags.add(tag)
                 self.tags.add(tag)
-            self.sources.append(TagSourceFile(path, srctags))
+            ext = os.path.splitext(filepath)[1]
+            try:
+                sourcetype = EXT_SRCTYPE[ext]
+            except KeyError:
+                raise UserError('unknown file extension: {}'
+                                .format(filepath))
+            self.sources.append(TagSourceFile(filepath, srctags, sourcetype))

@@ -110,7 +110,9 @@ class Module(object):
                     ('public', 'private') + source.tags)
                 if varsets is None:
                     continue
-                out.sources.append(SourceFile(source.path, varsets, external))
+                out.sources.append(
+                    SourceFile(source.path, varsets,
+                               source.sourcetype,external))
         out.public = cfg.resolve_tags(('public',)) or []
         out.private = cfg.resolve_tags(('private',)) or []
         out.dependencies = cfg.modules
@@ -129,6 +131,8 @@ class SourceModule(Module):
         return self._sources.sources
 
     def _get_configs(self, env):
+        if self._tags_func is None:
+            return [], {}
         return [], self._tags_func(env)
 
 class ExternalModule(Module):

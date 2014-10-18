@@ -24,7 +24,7 @@ app = sglib.App(
     copyright='Copyright © 2011-2014 Dietrich Epp',
     identifier='us.moria.sglib-test',
     uuid='8d7f256e-ed27-443c-b350-c375d25a9e54',
-    source=src,
+    sources=src,
 )
 
 if __name__ == '__main__':

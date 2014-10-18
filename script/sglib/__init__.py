@@ -1,26 +1,40 @@
 from d3build.source import SourceList
 from d3build.config import Config
+from d3build.module import SourceModule
 from . import options
 from . import module
 import sys
 
 class App(object):
     __slots__ = [
-        'name', 'source',
+        'name', 'sources',
         'email', 'uri', 'copyright', 'identifier', 'uuid', 'defaults',
+        'configure_func',
     ]
 
-    def __init__(self, *, name, source,
+    def __init__(self, *, name, sources,
                  email=None, uri=None, copyright=None,
-                 identifier=None, uuid=None, defaults=None):
+                 identifier=None, uuid=None, defaults=None,
+                 configure=None):
         self.name = name
-        self.source = source
+        self.sources = sources
         self.email = email
         self.uri = uri
         self.copyright = copyright
         self.identifier = identifier
         self.uuid = uuid
         self.defaults = defaults
+        self.configure_func = configure
+
+    def _module_configure(self, env):
+        if self.configure_func is None:
+            tags = {}
+        else:
+            tags = dict(self.configure_func(env))
+        private = list(tags.get('private', []))
+        private.append(module.module)
+        tags['private'] = private
+        return tags
 
     def configure(self):
         cfg = Config.configure(options=options.flags)
@@ -39,8 +53,10 @@ class App(object):
                         cfg.flags[flag] = value
         env = cfg.environment()
         env.redirect_log(append=False)
-        m = module.module
-        cm = m.configure(env)
+        mod = SourceModule(
+            sources=self.sources,
+            configure=self._module_configure)
+        cm = mod.configure(env)
         print('SOURCES', cm.sources)
         print('PUBLIC', cm.public)
         print('PRIVATE', cm.private)
