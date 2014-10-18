@@ -93,7 +93,7 @@ class GnuMakeEnvironment(NixEnvironment):
         self._add_rule(
             productpath, [exepath, debugpath],
             [['objcopy', '--strip-unneeded',
-              '--add-gnu-debuglink=' + debugpath]],
+              '--add-gnu-debuglink=' + debugpath, exepath, productpath]],
             qname='ObjCopy')
 
         self._all.add(productpath)
