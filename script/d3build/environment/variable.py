@@ -93,7 +93,7 @@ class VarPaths(Var):
 
     @staticmethod
     def show(x):
-        return ' '.join(i.posix for i in x)
+        return ' '.join(i for i in x)
 
 class VarDefs(Var):
     """A build variable which stores preprocessor definitions."""
