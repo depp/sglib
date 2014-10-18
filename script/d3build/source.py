@@ -53,7 +53,7 @@ class SourceList(object):
     def __init__(self, *, base, path=None, sources=None):
         self.sources = []
         self.tags = set()
-        dirpath = os.path.dirname(base)
+        dirpath = os.path.dirname(os.path.abspath(base))
         if path is None:
             self._path = dirpath
         else:
