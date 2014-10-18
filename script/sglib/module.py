@@ -37,6 +37,7 @@ def configure(env):
     tags = {tag: False for tag in TAGS}
     tags['public'] = [
         env.header_path(base=__file__, path='../../include'),
+        glew.module,
     ]
 
     if env.platform == 'linux':
