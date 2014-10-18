@@ -12,7 +12,8 @@ class EnableFlag(object):
         self.requirements = [] if require is None else require
         self.mandatory = mandatory
 
-    def _add_argument(self, g):
+    def add_argument(self, g):
+        """Add the enable flag to an argument parser."""
         dest = 'flag:' + self.name
         if self.options is not None:
             options = list(self.options.keys())
@@ -47,18 +48,6 @@ class EnableFlag(object):
                 default=None,
                 help=argparse.SUPPRESS)
 
-    def _get_value(self, args):
+    def get_value(self, args):
+        """Get the flag value from an argument namespace."""
         return getattr(args, 'flag:' + self.name)
-
-def parse_flags(flags):
-    p = argparse.ArgumentParser()
-    g = p.add_argument_group('features')
-    for flag in flags:
-        flag._add_argument(g)
-
-    args = p.parse_args()
-    flag_dict = {}
-    for flag in flags:
-        flag_dict[flag.name] = flag._get_value(args)
-
-    return flag_dict

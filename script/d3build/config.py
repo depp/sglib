@@ -11,13 +11,15 @@ PLATFORMS = {
 class Config(object):
     __slots__ = [
         'config', 'warnings', 'werror', 'variables',
-        'platform', 'target', 'targetparams'
+        'platform', 'target', 'targetparams',
+        'flags',
     ]
 
     @classmethod
-    def argument_parser(class_):
+    def argument_parser(class_, options):
         p = argparse.ArgumentParser()
         buildgroup = p.add_argument_group('build settings')
+        optgroup = p.add_argument_group('features')
 
         p.add_argument('variables', nargs='*', metavar='VAR=VALUE',
                        help='build variables')
@@ -66,11 +68,14 @@ class Config(object):
             help='treat warnings as errors',
             help_neg='do not treat warnings as errors')
 
+        for option in options:
+            option.add_argument(optgroup)
+
         return p
 
     @classmethod
-    def configure(class_):
-        args = class_.argument_parser().parse_args()
+    def configure(class_, *, options=[]):
+        args = class_.argument_parser(options).parse_args()
         obj = class_()
 
         obj.config = 'release' if args.config is None else args.config
@@ -102,6 +107,10 @@ class Config(object):
                     'invalid target parameter: {!r}'.format(part))
             obj.targetparams[part[:i]] = part[i+1:]
         obj.target = parts[0]
+
+        obj.flags = {}
+        for option in options:
+            obj.flags[option.name] = option.get_value(args)
 
         return obj
 
