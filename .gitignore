@@ -11,7 +11,7 @@
 
 # Build system, GNUMake
 /Makefile
-/SGLib_Test*
+/SGLib_Demo
 /build
 /lib
 
