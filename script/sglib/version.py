@@ -55,6 +55,10 @@ class VersionInfo(GeneratedSource):
         self.git = git
 
     @property
+    def is_regenerated_always(self):
+        return True
+
+    @property
     def target(self):
         return self._target
 

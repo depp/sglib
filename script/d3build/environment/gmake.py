@@ -65,6 +65,18 @@ class GnuMakeEnvironment(NixEnvironment):
         self._optinclude = set()
         self._qnames = {}
 
+    def add_generated_source(self, source):
+        super(GnuMakeEnvironment, self).add_generated_source(source)
+        if source.is_regenerated_always:
+            deps = ['FORCE']
+        else:
+            deps = source.dependencies
+        self._add_rule(
+            source.target, deps,
+            [[sys.executable, self.script,
+              '--action-regenerate', source.target]],
+            qname='Regen')
+
     def target_executable(self, *, name, module, uuid=None):
         """Create an executable target."""
         cm = module.flatten(self)
