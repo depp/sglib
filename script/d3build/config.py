@@ -1,3 +1,6 @@
+# Copyright 2014 Dietrich Epp.
+# This file is part of SGLib.  SGLib is licensed under the terms of the
+# 2-clause BSD license.  For more information, see LICENSE.txt.
 import argparse
 import platform
 from .error import UserError, ConfigError
@@ -24,7 +27,7 @@ class Config(object):
 
         p.add_argument('variables', nargs='*', metavar='VAR=VALUE',
                        help='build variables')
-        
+
         p.add_argument(
             '-q', dest='verbosity', default=1,
             action='store_const', const=0,
