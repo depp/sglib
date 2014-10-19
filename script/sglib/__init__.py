@@ -12,17 +12,18 @@ import os
 
 class App(object):
     __slots__ = [
-        'name', 'sources',
+        'name', 'sources', 'datapath',
         'email', 'uri', 'copyright', 'identifier', 'uuid', 'defaults',
         'configure_func',
     ]
 
-    def __init__(self, *, name, sources,
+    def __init__(self, *, name, sources, datapath,
                  email=None, uri=None, copyright=None,
                  identifier=None, uuid=None, defaults=None,
                  configure=None):
         self.name = name
         self.sources = sources
+        self.datapath = datapath
         self.email = email
         self.uri = uri
         self.copyright = copyright
@@ -71,6 +72,15 @@ class App(object):
         if env.platform == 'linux':
             name = name.replace(' ', '_')
 
+        args = [
+            ('log.level.root', 'debug'),
+            ('path.data', self.datapath),
+            ('path.user', 'user'),
+        ]
+        if env.platform == 'windows':
+            args.append(('log.winconsole', 'yes'))
+        args = ['-d{}={}'.format(*arg) for arg in args]
+
         mod = SourceModule(
             sources=self.sources,
             configure=self._module_configure)
@@ -82,6 +92,7 @@ class App(object):
                 _base(env.script, '.'),
                 _base(__file__, '../..'),
                 'git'))
+
         if env.platform == 'osx':
             target = env.target_application_bundle(
                 name=name,
@@ -92,8 +103,9 @@ class App(object):
                 name=name,
                 module=mod,
                 uuid=self.uuid)
+
         if env.platform == 'linux':
             from .runscript import RunScript
             target = env.add_generated_source(
-                RunScript(name, name, target, []))
+                RunScript(name, name, target, args))
         env.add_default(target)

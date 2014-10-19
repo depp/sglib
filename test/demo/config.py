@@ -19,6 +19,7 @@ text_layout.c
 
 app = sglib.App(
     name='SGLib Demo',
+    datapath=sglib._base(__file__, 'data'),
     email='depp@zdome.net',
     uri='http://www.moria.us/',
     copyright='Copyright © 2011-2014 Dietrich Epp',
