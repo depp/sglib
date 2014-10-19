@@ -28,17 +28,23 @@ SRCTYPE_EXT = {
 del _SRCTYPE_EXTS
 
 def _join(base, path):
+    orig_base = base
     for part in path.split('/'):
         if part == '..':
+            if base == '.' or not base:
+                raise UserError('path outside root: base={}, path={}'
+                                .format(orig_base, path))
             base = os.path.dirname(base)
         elif part == '.' or not part:
             pass
+        elif base == '.':
+            base = part
         else:
             base = os.path.join(base, part)
     return base
 
 def _base(base, path):
-    dirpath = os.path.dirname(os.path.abspath(base))
+    dirpath = os.path.dirname(os.path.relpath(base)) or '.'
     if path is None:
         return dirpath
     return _join(dirpath, path)
@@ -48,8 +54,6 @@ class TagSourceFile(object):
     __slots__ = ['path', 'tags', 'sourcetype']
 
     def __init__(self, path, tags, sourcetype):
-        if not os.path.isabs(path):
-            raise ValueError('path must be absolute')
         self.path = path
         self.tags = tuple(tags)
         self.sourcetype = sourcetype
@@ -63,8 +67,8 @@ class SourceFile(object):
     __slots__ = ['path', 'varsets', 'sourcetype', 'external']
 
     def __init__(self, path, varsets, sourcetype, external):
-        if not os.path.isabs(path):
-            raise ValueError('path must be absolute')
+        if os.path.isabs(path):
+            raise ValueError('path must be relative to the root')
         self.path = path
         self.varsets = varsets
         self.sourcetype = sourcetype

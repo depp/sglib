@@ -10,12 +10,8 @@ import io
 import os
 import tempfile
 
-def resolve_path_id(path):
-    return path
-
 def cc_command(varset, output, source, sourcetype, *,
-               depfile=None, external=False,
-               resolve_path=resolve_path_id):
+               depfile=None, external=False):
     """Get the command to compile the given source file."""
     if sourcetype in ('c', 'objc'):
         cc, cflags, cwarn = 'CC', 'CFLAGS', 'CWARN'
@@ -34,19 +30,18 @@ def cc_command(varset, output, source, sourcetype, *,
     else:
         cwarn = varset.get(cwarn, ())
 
-    cmd = [cc, '-o', resolve_path(output), resolve_path(source), '-c']
+    cmd = [cc, '-o', output, source, '-c']
     if depfile is not None:
         cmd.extend(('-MF', depfile, '-MMD', '-MP'))
-    cmd.extend('-I' + resolve_path(p) for p in varset.get('CPPPATH', ()))
-    cmd.extend('-F' + resolve_path(p) for p in varset.get('FPATH', ()))
+    cmd.extend('-I' + p for p in varset.get('CPPPATH', ()))
+    cmd.extend('-F' + p for p in varset.get('FPATH', ()))
     cmd.extend(mkdef(k, v) for k, v in varset.get('DEFS', ()))
     cmd.extend(varset.get('CPPFLAGS', ()))
     cmd.extend(cwarn)
     cmd.extend(cflags)
     return cmd
 
-def ld_command(varset, output, sources, sourcetypes, *,
-               resolve_path=resolve_path_id):
+def ld_command(varset, output, sources, sourcetypes):
     """Get the command to link the given source."""
     if 'c++' in sourcetypes or 'objc++' in sourcetypes:
         cc = 'CXX'
@@ -59,9 +54,9 @@ def ld_command(varset, output, sources, sourcetypes, *,
 
     cmd = [cc]
     cmd.extend(varset.get('LDFLAGS', ()))
-    cmd.extend(('-o', resolve_path(output)))
-    cmd.extend(resolve_path(p) for p in sources)
-    cmd.extend('-F' + resolve_path(p) for p in varset.get('FPATH', ()))
+    cmd.extend(('-o', output))
+    cmd.extend(sources)
+    cmd.extend('-F' + p for p in varset.get('FPATH', ()))
     cmd.extend(varset.get('LIBS', ()))
     for framework in varset.get('FRAMEWORKS', ()):
         cmd.extend(('-framework', framework))
@@ -111,6 +106,15 @@ class NixEnvironment(BaseEnvironment):
 
         varset.update_parse(config.variables, strict=False)
         self.base_vars = varset
+
+    def log_info(self):
+        """Log basic information about the environment."""
+        super(NixEnvironment, self).log_info()
+
+        out = self.logfile(2)
+        print('Build variables:', file=out)
+        self.base_vars.dump(out, indent='  ')
+        print(file=out)
 
     def pkg_config(self, spec):
         """Run the pkg-config tool and return the build variables."""

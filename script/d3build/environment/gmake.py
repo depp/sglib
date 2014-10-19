@@ -9,6 +9,7 @@ import collections
 import io
 import os
 import re
+import sys
 
 _escape = escape
 def escape(x):
@@ -48,7 +49,6 @@ class GnuMakeEnvironment(NixEnvironment):
     """Environment targeting the GNU Make build system."""
     __slots__ = [
         '_rulefp',      # StringIO with most rules
-        '_mrulefp',     # StringIO with rules that generate makefiles
         '_all',         # What to build by default
         '_clean',       # What to clean
         '_phony',       # List of phony rules
@@ -59,7 +59,6 @@ class GnuMakeEnvironment(NixEnvironment):
     def __init__(self, cfg):
         super(GnuMakeEnvironment, self).__init__(cfg)
         self._rulefp = io.StringIO()
-        self._mrulefp = io.StringIO()
         self._all = set()
         self._clean = {'build'}
         self._phony = {'all', 'clean', 'FORCE'}
@@ -77,7 +76,6 @@ class GnuMakeEnvironment(NixEnvironment):
                 objects.append(self._compile(source))
 
         varset = BuildVariables.merge([self.base_vars] + cm.varsets)
-        varset.dump()
 
         exepath = os.path.join('build', 'exe', name)
         debugpath = os.path.join('build', 'products', name + '.dbg')
@@ -85,8 +83,7 @@ class GnuMakeEnvironment(NixEnvironment):
 
         self._add_rule(
             exepath, objects,
-            [ld_command(varset, exepath, objects, sourcetypes,
-                        resolve_path=self._resolve_path)],
+            [ld_command(varset, exepath, objects, sourcetypes)],
             qname='Link')
         self._add_rule(
             debugpath, [exepath],
@@ -111,7 +108,8 @@ class GnuMakeEnvironment(NixEnvironment):
 
     def _compile(self, source):
         """Create a target that compiles a source file."""
-        src = self._resolve_path(source.path)
+        src = source.path
+        assert not os.path.isabs(src)
         out = os.path.join(
             'build', 'obj', os.path.splitext(src)[0])
         varset = BuildVariables.merge([self.base_vars] + source.varsets)
@@ -119,11 +117,11 @@ class GnuMakeEnvironment(NixEnvironment):
         qname = BUILD_NAMES[source.sourcetype]
         if source.external:
             cmd = cc_command(varset, obj, src, source.sourcetype,
-                             external=True, resolve_path=self._resolve_path)
+                             external=True)
         else:
             dep = out + '.d'
             cmd = cc_command(varset, obj, src, source.sourcetype,
-                             depfile=dep, resolve_path=self._resolve_path)
+                             depfile=dep)
             self._optinclude.add(dep)
         self._add_rule(obj, [source.path], [cmd], qname=qname)
         return obj
@@ -154,8 +152,6 @@ class GnuMakeEnvironment(NixEnvironment):
             self._phony.add(target)
             dirpath = None
         else:
-            if os.path.basename == 'Makefile':
-                write = self._mrulefp.write
             dirpath = os.path.dirname(target)
             target = self._resolve_path(target)
 
@@ -188,7 +184,10 @@ class GnuMakeEnvironment(NixEnvironment):
         """Write the makefile contents to a file."""
         fp.write('all: {}\n'.format(' '.join(
             mk_escape(target) for target in sorted(self._all))))
-        fp.write(self._mrulefp.getvalue())
+        fp.write(
+            'Makefile: {script}\n\t{python} {script} --action-reconfigure\n'
+            .format(python=escape(sys.executable),
+                    script=escape(self._config.script)))
         if self._optinclude:
             fp.write('-include {}\n'.format(
                 ' '.join(mk_escape(x)

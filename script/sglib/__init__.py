@@ -40,8 +40,15 @@ class App(object):
         tags['private'] = private
         return tags
 
-    def configure(self):
-        cfg = Config.configure(options=options.flags)
+    def run(self):
+        Config.run(
+            configure=self.configure,
+            sources=self.sources.sources + module.module.sources,
+            options=options.flags,
+            apply_defaults=self.apply_defaults,
+        )
+
+    def apply_defaults(self, cfg):
         for defaults in (self.defaults, options.defaults):
             if not defaults:
                 continue
@@ -55,8 +62,8 @@ class App(object):
                         raise ValueError('unknown flag: {!r}'.format(flag))
                     if cfg.flags[flag] is None:
                         cfg.flags[flag] = value
-        env = cfg.environment()
-        env.redirect_log(append=False)
+
+    def configure(self, env):
         mod = SourceModule(
             sources=self.sources,
             configure=self._module_configure)
@@ -72,4 +79,3 @@ class App(object):
                 name=self.name,
                 module=mod,
                 uuid=self.uuid)
-        env.finalize()

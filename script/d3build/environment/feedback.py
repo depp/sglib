@@ -25,7 +25,7 @@ class Feedback(object):
         if self.env.verbosity >= 1:
             self.env.console.write(self.msg)
             self.env.console.flush()
-        self.env.logfile.write(self.msg + '\n')
+        self.env.logfile().write(self.msg + '\n')
         return self
     def write(self, msg, success=True):
         global IN_FEEDBACK
@@ -35,7 +35,7 @@ class Feedback(object):
         IN_FEEDBACK = False
         if self.env.verbosity >= 1:
             self.env.console.write(' {}\n'.format(msg))
-        self.env.logfile.write('{} {}\n'.format(self.msg, msg))
+        self.env.logfile().write('{} {}\n'.format(self.msg, msg))
     def __exit__(self, exc_type, exc_value, traceback):
         if not self.active:
             return

@@ -4,6 +4,7 @@
 import argparse
 import platform
 from .error import UserError, ConfigError
+from .shell import escape
 
 PLATFORMS = {
     'Darwin': ('osx', 'xcode'),
@@ -13,10 +14,26 @@ PLATFORMS = {
 
 class Config(object):
     __slots__ = [
+        # Output verbosity: 0, 1, or 2
         'verbosity',
-        'config', 'warnings', 'werror', 'variables',
-        'platform', 'target', 'targetparams',
+        # The configuration: release or debug
+        'config',
+        # Whether to enable extra warnings
+        'warnings',
+        # Whether warnings are treated as errors
+        'werror',
+        # Variables specified on the configuration command line
+        'variables',
+        # The target platform
+        'platform',
+        # The target toolchain
+        'target',
+        # Target toolchain parameters
+        'targetparams',
+        # Optional flags from the command line
         'flags',
+        # The identity of the script being run
+        'script',
     ]
 
     @classmethod
@@ -78,8 +95,8 @@ class Config(object):
         return p
 
     @classmethod
-    def configure(class_, *, options=[]):
-        args = class_.argument_parser(options).parse_args()
+    def parse_config(class_, *, options=[], args, script):
+        args = class_.argument_parser(options).parse_args(args)
         obj = class_()
 
         obj.verbosity = args.verbosity
@@ -117,6 +134,8 @@ class Config(object):
         for option in options:
             obj.flags[option.name] = option.get_value(args)
 
+        obj.script = script
+
         return obj
 
     def dump(self):
@@ -139,6 +158,45 @@ class Config(object):
         else:
             raise ConfigError(
                 'unknown target: {}'.format(self.target))
+
+    @classmethod
+    def run(class_, *, configure, sources, options=[], apply_defaults=None):
+        import sys, pickle
+        args = sys.argv
+        action = args[1] if len(args) >= 2 else None
+        if action == '--action-regenerate':
+            with open('config.dat', 'rb') as fp:
+                _, gensources = pickle.load(fp)
+            if len(args) != 3:
+                print('Invalid arguments', file=sys.stderr)
+                sys.exit(1)
+            try:
+                source = gensources[args[2]]
+            except KeyErorr:
+                print('Unknown generated source file: {}'.format(args[2]))
+                sys.exit(1)
+            source = pickle.loads(source)
+            source.regen()
+            return
+        elif action == '--action-reconfigure':
+            with open('config.dat', 'rb') as fp:
+                args, gensources = pickle.load(fp)
+        cfg = class_.parse_config(options=options, args=args[1:],
+                                  script=sys.argv[0])
+        if apply_defaults is not None:
+            apply_defaults(cfg)
+        env = cfg.environment()
+        print('Arguments: {}'.format(
+            ' '.join(escape(x) for x in args)), file=env.logfile())
+        env.log_info()
+        configure(env)
+        env.finalize()
+        gensources = {
+            s.target: pickle.dumps(s, protocol=pickle.HIGHEST_PROTOCOL)
+            for s in env.generated_sources
+        }
+        with open('config.dat', 'wb') as fp:
+            pickle.dump((args, gensources), fp)
 
 if __name__ == '__main__':
     cfg = Config.configure()

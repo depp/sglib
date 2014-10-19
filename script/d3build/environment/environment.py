@@ -37,7 +37,7 @@ class BaseEnvironment(object):
     __slots__ = [
         '_config', 'flags',
         'modules', 'errors', 'missing_packages',
-        'console', 'logfile',
+        'console', '_logfile',
         'generated_sources',
     ]
 
@@ -49,11 +49,29 @@ class BaseEnvironment(object):
         self.missing_packages = []
         self.generated_sources = []
 
-    def redirect_log(self, *, append):
         self.console = sys.stderr
-        mode = 'a' if append else 'w'
-        self.logfile = open('config.log', mode)
-        sys.stderr = Tee([sys.stderr, self.logfile])
+        mode = 'a' if False else 'w'
+        self._logfile = open('config.log', mode)
+        sys.stderr = Tee([sys.stderr, self._logfile])
+
+    def log_info(self):
+        """Log basic information about the environment."""
+        out = self.logfile(2)
+        print('Platform:', self._config.platform, file=out)
+        print(file=out)
+
+        out = self.logfile(1)
+        print('Flags:', file=out)
+        for k, v in sorted(self._config.flags.items()):
+            if isinstance(v, bool):
+                v = ('no', 'yes')[v]
+            print('  {}: {}'.format(k, v), file=out)
+        print(file=out)
+
+    def logfile(self, verbosity=None):
+        if verbosity is not None and self.verbosity >= verbosity:
+            return sys.stderr
+        return self._logfile
 
     def feedback(self, msg):
         return Feedback(self, msg)

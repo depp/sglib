@@ -28,4 +28,4 @@ app = sglib.App(
 )
 
 if __name__ == '__main__':
-    app.configure()
+    app.run()
