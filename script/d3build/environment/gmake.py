@@ -67,6 +67,8 @@ class GnuMakeEnvironment(NixEnvironment):
 
     def add_generated_source(self, source):
         super(GnuMakeEnvironment, self).add_generated_source(source)
+        if source.is_regenerated_only:
+            self._clean.add(source.target)
         if source.is_regenerated_always:
             deps = ['FORCE']
         else:
@@ -76,6 +78,10 @@ class GnuMakeEnvironment(NixEnvironment):
             [[sys.executable, self.script,
               '--action-regenerate', source.target]],
             qname='Regen')
+        return source.target
+
+    def add_default(self, target):
+        self._all.add(target)
 
     def target_executable(self, *, name, module, uuid=None):
         """Create an executable target."""
@@ -108,7 +114,7 @@ class GnuMakeEnvironment(NixEnvironment):
               '--add-gnu-debuglink=' + debugpath, exepath, productpath]],
             qname='ObjCopy')
 
-        self._all.add(productpath)
+        return productpath
 
     def target_application_bundle(self, name, module, info_plist):
         """Create an OS X application bundle target."""

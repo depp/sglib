@@ -109,6 +109,10 @@ class BaseEnvironment(object):
 
     def add_generated_source(self, source):
         self.generated_sources.append(source)
+        return source.target
+
+    def add_default(self, target):
+        pass
 
     def finalize(self):
         for source in self.generated_sources:

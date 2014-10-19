@@ -66,6 +66,11 @@ class App(object):
 
     def configure(self, env):
         from .version import VersionInfo
+
+        name = self.name
+        if env.platform == 'linux':
+            name = name.replace(' ', '_')
+
         mod = SourceModule(
             sources=self.sources,
             configure=self._module_configure)
@@ -77,20 +82,18 @@ class App(object):
                 _base(env.script, '.'),
                 _base(__file__, '../..'),
                 'git'))
-        if env.platform == 'linux':
-            from .runscript import RunScript
-            env.add_generated_source(RunScript(
-                self.name,
-                self.name,
-                os.path.join('build', 'products', self.name),
-                []))
         if env.platform == 'osx':
-            env.target_application_bundle(
-                name=self.name,
+            target = env.target_application_bundle(
+                name=name,
                 module=mod,
                 info_plist=None)
         else:
-            env.target_executable(
-                name=self.name,
+            target = env.target_executable(
+                name=name,
                 module=mod,
                 uuid=self.uuid)
+        if env.platform == 'linux':
+            from .runscript import RunScript
+            target = env.add_generated_source(
+                RunScript(name, name, target, []))
+        env.add_default(target)
