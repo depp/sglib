@@ -61,7 +61,7 @@ class GnuMakeEnvironment(NixEnvironment):
         self._rulefp = io.StringIO()
         self._all = set()
         self._clean = {'build'}
-        self._phony = {'all', 'clean', 'FORCE'}
+        self._phony = {'all', 'clean', 'FORCE', 'config'}
         self._optinclude = set()
         self._qnames = {}
 
@@ -186,6 +186,7 @@ class GnuMakeEnvironment(NixEnvironment):
             mk_escape(target) for target in sorted(self._all))))
         fp.write(
             'Makefile: {script}\n\t{python} {script} --action-reconfigure\n'
+            'config:\n\t{python} {script} --action-reconfigure\n'
             .format(python=escape(sys.executable),
                     script=escape(self._config.script)))
         if self._optinclude:
