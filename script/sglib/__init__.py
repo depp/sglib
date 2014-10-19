@@ -1,9 +1,10 @@
 # Copyright 2014 Dietrich Epp.
 # This file is part of SGLib.  SGLib is licensed under the terms of the
 # 2-clause BSD license.  For more information, see LICENSE.txt.
-from d3build.source import SourceList
+from d3build.source import SourceList, _base
 from d3build.config import Config
 from d3build.module import SourceModule
+from d3build.target.configheader import ConfigHeader
 from . import options
 from . import module
 import sys
@@ -59,6 +60,8 @@ class App(object):
         mod = SourceModule(
             sources=self.sources,
             configure=self._module_configure)
+        env.add_generated_source(
+            ConfigHeader(_base(__file__, '../../include/config.h'), env))
         if env.platform == 'osx':
             env.target_application_bundle(
                 name=self.name,

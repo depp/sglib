@@ -105,6 +105,7 @@ class GnuMakeEnvironment(NixEnvironment):
         """Create an OS X application bundle target."""
 
     def finalize(self):
+        super(GnuMakeEnvironment, self).finalize()
         with open('Makefile', 'w') as fp:
             self._write(fp)
 

@@ -38,6 +38,7 @@ class BaseEnvironment(object):
         '_config', 'flags',
         'modules', 'errors', 'missing_packages',
         'console', 'logfile',
+        'generated_sources',
     ]
 
     def __init__(self, config):
@@ -46,6 +47,7 @@ class BaseEnvironment(object):
         self.modules = {}
         self.errors = []
         self.missing_packages = []
+        self.generated_sources = []
 
     def redirect_log(self, *, append):
         self.console = sys.stderr
@@ -83,3 +85,13 @@ class BaseEnvironment(object):
         """Try different build variable sets to find one that works."""
         raise ConfigError(
             'compile and link tests not available for this target')
+
+    def add_generated_source(self, source):
+        self.generated_sources.append(source)
+
+    def finalize(self):
+        for source in self.generated_sources:
+            if source.is_regenerated_only:
+                continue
+            with open(source.target, 'w') as fp:
+                source.write(fp)
