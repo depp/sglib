@@ -8,6 +8,7 @@ from d3build.target.configheader import ConfigHeader
 from . import options
 from . import module
 import sys
+import os
 
 class App(object):
     __slots__ = [
@@ -76,6 +77,13 @@ class App(object):
                 _base(env.script, '.'),
                 _base(__file__, '../..'),
                 'git'))
+        if env.platform == 'linux':
+            from .runscript import RunScript
+            env.add_generated_source(RunScript(
+                self.name,
+                self.name,
+                os.path.join('build', 'products', self.name),
+                []))
         if env.platform == 'osx':
             env.target_application_bundle(
                 name=self.name,

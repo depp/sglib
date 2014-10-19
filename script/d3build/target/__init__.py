@@ -10,7 +10,11 @@ class GeneratedSource(object):
     __slots__ = []
 
     @property
-    def _binary(self):
+    def is_binary(self):
+        return False
+
+    @property
+    def is_executable(self):
         return False
 
     @property
@@ -31,7 +35,7 @@ class GeneratedSource(object):
 
     def regen(self):
         """Regenerate the file."""
-        if self._binary:
+        if self.is_binary:
             fp = io.BytesIO()
             self.write(fp)
             value = fp.getvalue()
@@ -51,8 +55,16 @@ class GeneratedSource(object):
                     return
 
         try:
-            with open(self.target + '.tmp', 'wb') as fp:
-                fp.write(value)
+            if self.is_executable:
+                fdes = os.open(
+                    self.target + '.tmp',
+                    os.O_WRONLY | os.O_CREAT | os.O_TRUNC,
+                    0o777)
+                with os.fdopen(fdes, 'wb') as fp:
+                    fp.write(value)
+            else:
+                with open(self.target + '.tmp', 'wb') as fp:
+                    fp.write(value)
             os.rename(self.target + '.tmp', self.target)
         except:
             try:
