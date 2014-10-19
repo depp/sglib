@@ -8,7 +8,7 @@ from .feedback import Feedback
 import io
 import sys
 
-_FORWARD = {'warnings', 'werror', 'platform', 'verbosity'}
+_FORWARD = {'warnings', 'werror', 'platform', 'verbosity', 'script'}
 
 class Tee(io.TextIOBase):
     __slots__ = ['files']
@@ -75,6 +75,9 @@ class BaseEnvironment(object):
 
     def feedback(self, msg):
         return Feedback(self, msg)
+
+    def warn(self, msg):
+        print('warning:', msg, file=self.logfile(1))
 
     def __getattr__(self, name):
         if name in _FORWARD:

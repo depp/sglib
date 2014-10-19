@@ -64,11 +64,18 @@ class App(object):
                         cfg.flags[flag] = value
 
     def configure(self, env):
+        from .version import VersionInfo
         mod = SourceModule(
             sources=self.sources,
             configure=self._module_configure)
         env.add_generated_source(
             ConfigHeader(_base(__file__, '../../include/config.h'), env))
+        env.add_generated_source(
+            VersionInfo(
+                _base(__file__, '../../src/core/version_const.c'),
+                _base(env.script, '.'),
+                _base(__file__, '../..'),
+                'git'))
         if env.platform == 'osx':
             env.target_application_bundle(
                 name=self.name,

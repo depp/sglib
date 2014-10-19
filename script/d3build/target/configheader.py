@@ -19,7 +19,7 @@ class ConfigHeader(GeneratedSource):
 
     def write(self, fp):
         fp.write(
-            '/* {}  */\n'
+            '/* {} */\n'
             '#ifndef CONFIG_H\n'
             '#define CONFIG_H\n'
             '\n'

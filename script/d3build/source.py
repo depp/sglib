@@ -34,7 +34,7 @@ def _join(base, path):
             if base == '.' or not base:
                 raise UserError('path outside root: base={}, path={}'
                                 .format(orig_base, path))
-            base = os.path.dirname(base)
+            base = os.path.dirname(base) or '.'
         elif part == '.' or not part:
             pass
         elif base == '.':

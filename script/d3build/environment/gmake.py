@@ -188,7 +188,7 @@ class GnuMakeEnvironment(NixEnvironment):
             'Makefile: {script}\n\t{python} {script} --action-reconfigure\n'
             'config:\n\t{python} {script} --action-reconfigure\n'
             .format(python=escape(sys.executable),
-                    script=escape(self._config.script)))
+                    script=escape(self.script)))
         if self._optinclude:
             fp.write('-include {}\n'.format(
                 ' '.join(mk_escape(x)
