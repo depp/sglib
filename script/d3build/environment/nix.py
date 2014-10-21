@@ -11,26 +11,24 @@ import io
 import os
 import tempfile
 
-SCHEMA = schema.Schema()
-(SCHEMA
-    .prog ('CC', 'The C compiler')
-    .prog ('CXX', 'The C++ compiler')
-    .prog ('LD', 'The linker')
-    .flags('CPPFLAGS', 'C and C++ preprocessor flags')
-    .paths('CPPPATH', 'C and C++ header search paths')
-    .defs ('DEFS', 'C and C++ preprocessor definitions')
-    .flags('CFLAGS', 'C compilation flags')
-    .flags('CXXFLAGS', 'C++ compilation flags')
-    .flags('CWARN', 'C warning flags')
-    .flags('CXXWARN', 'C++ warning flags')
-    .flags('LDFLAGS', 'Linker flags')
-    .flags('LIBS', 'Linker flags specifying libraries')
+SCHEMA = (schema.Schema()
+    .string('CC', 'The C compiler')
+    .string('CXX', 'The C++ compiler')
+    .string('LD', 'The linker')
+    .list  ('CPPFLAGS', 'C and C++ preprocessor flags')
+    .list  ('CPPPATH', 'C and C++ header search paths', unique=True)
+    .defs  ('DEFS', 'C and C++ preprocessor definitions')
+    .list  ('CFLAGS', 'C compilation flags')
+    .list  ('CXXFLAGS', 'C++ compilation flags')
+    .list  ('CWARN', 'C warning flags')
+    .list  ('CXXWARN', 'C++ warning flags')
+    .list  ('LDFLAGS', 'Linker flags')
+    .list  ('LIBS', 'Linker flags specifying libraries')
 )
 
-SCHEMA_OSX = schema.Schema()
-(SCHEMA_OSX
-    .paths('FPATH', 'Framework search paths')
-    .unique_flags('FRAMEWORKS', 'Frameworks to link in')
+SCHEMA_OSX = (schema.Schema()
+    .list('FPATH', 'Framework search paths', unique=True)
+    .list('FRAMEWORKS', 'Frameworks to link in', unique=True)
 )
 
 class NixEnvironment(BaseEnvironment):
@@ -44,53 +42,56 @@ class NixEnvironment(BaseEnvironment):
 
     def __init__(self, config):
         super(NixEnvironment, self).__init__(config)
-        self.schema.update(SCHEMA)
+        self.schema.update_schema(SCHEMA)
         if config.platform == 'osx':
-            self.schema.update(SCHEMA_OSX)
+            self.schema.update_schema(SCHEMA_OSX)
 
         if config.config == 'debug':
-            cflags = ('-O0', '-g')
+            cflags = ['-O0', '-g']
         else:
-            cflags = ('-O2', '-g')
-        varset = self.varset(
+            cflags = ['-O2', '-g']
+        varset = self.schema.varset(
             CC='cc',
             CXX='c++',
             CFLAGS=cflags,
             CXXFLAGS=cflags,
         )
-        varset.update(
-            CFLAGS=('-pthread',),
-            CXXFLAGS=('-pthread',),
-            LDFLAGS=('-pthread',))
+        self.schema.update(
+            varset,
+            CFLAGS=['-pthread'],
+            CXXFLAGS=['-pthread'],
+            LDFLAGS=['-pthread'])
         if config.warnings:
-            varset.update(
-                CWARN=tuple(
+            self.schema.update(
+                varset,
+                CWARN=
                     '-Wall -Wextra -Wpointer-arith -Wno-sign-compare '
                     '-Wwrite-strings -Wmissing-prototypes '
                     '-Werror=implicit-function-declaration '
-                    .split()),
-                CXXWARN=tuple(
+                    .split(),
+                CXXWARN=
                     '-Wall -Wextra -Wpointer-arith -Wno-sign-compare '
-                    .split()))
+                    .split())
         if config.werror:
-            varset.update(
-                CWARN=('-Werror',),
-                CXXWARN=('-Werror',))
+            self.schema.update(
+                varset,
+                CWARN=['-Werror'],
+                CXXWARN=['-Werror'])
         if config.platform == 'linux':
             varset.update(
-                LDFLAGS=('-Wl,--as-needed', '-Wl,--gc-sections'))
+                LDFLAGS=['-Wl,--as-needed', '-Wl,--gc-sections'])
         if config.platform == 'osx':
             varset.update(
-                LDFLAGS=('-Wl,-dead_strip', '-Wl,-dead_strip_dylibs'))
+                LDFLAGS=['-Wl,-dead_strip', '-Wl,-dead_strip_dylibs'])
 
         self.base_vars = varset
-        self.user_vars = self.varset_parse(config.variables, strict=False)
+        self.user_vars = self.schema.parse(config.variables, strict=False)
 
     @staticmethod
     def cc_command(varset, output, source, sourcetype, *,
                    depfile=None, external=False):
         """Get the command to compile the given source file."""
-        varset = self.varset_merge([self.base_vars, varset, self.user_vars])
+        varset = self.schema.merge([self.base_vars, varset, self.user_vars])
         if sourcetype in ('c', 'objc'):
             cc, cflags, cwarn = 'CC', 'CFLAGS', 'CWARN'
         elif sourcetype in ('c++', 'objc++'):
@@ -122,7 +123,7 @@ class NixEnvironment(BaseEnvironment):
     @staticmethod
     def ld_command(varset, output, sources, sourcetypes):
         """Get the command to link the given source."""
-        varset = self.varset_merge([self.base_vars, varset, self.user_vars])
+        varset = self.schema.merge([self.base_vars, varset, self.user_vars])
         if 'c++' in sourcetypes or 'objc++' in sourcetypes:
             cc = 'CXX'
         else:
@@ -147,14 +148,16 @@ class NixEnvironment(BaseEnvironment):
         super(NixEnvironment, self).dump(file=file)
         file = logfile(2)
         print('Base build variables:', file=file)
-        self.base_vars.dump(file, indent='  ')
+        self.schema.dump(self.base_vars, file=file, indent='  ')
         print('User build variables:', file=file)
-        self.user_vars.dump(file, indent='  ')
+        self.schema.dump(self.user_vars, file=file, indent='  ')
 
     def header_paths(self, *, base, paths):
         """Create build variables that include a header search path."""
-        return self.varset(
-            CPPPATH=tuple(_base(base, path) for path in paths))
+        if not isinstance(paths, list):
+            raise TypeError('paths must be list')
+        return self.schema.varset(
+            CPPPATH=[_base(base, path) for path in paths])
 
     def pkg_config(self, spec):
         """Run the pkg-config tool and return the build variables."""
@@ -169,7 +172,7 @@ class NixEnvironment(BaseEnvironment):
                     combine_output=True)
                 raise ConfigError('{} failed'.format(cmdname), details=stdout)
             flags[varname] = stdout
-        varset = self.varset_parse(flags)
+        varset = self.schema.parse(flags)
         varset['CXXFLAGS'] = varset['CFLAGS']
         return varset
 
@@ -190,7 +193,7 @@ class NixEnvironment(BaseEnvironment):
             if retcode:
                 raise ConfigError('{} failed'.format(cmdname), details=stderr)
             flags[varname] = stdout
-        varset = self.varset_parse(flags)
+        varset = self.schema.parse(flags)
         varset['CXXFLAGS'] = varset['CFLAGS']
         return varset
 
@@ -198,10 +201,12 @@ class NixEnvironment(BaseEnvironment):
         """Specify a list of frameworks to use."""
         if self._config.platform != 'osx':
             return super(NixEnvironment, self).frameworks(flist)
-        flist = tuple(flist)
+        if not isinstance(flist, list):
+            raise TypeError('frameworks must be list')
+        flist = list(flist)
         if not all(isinstance(x, str) for x in flist):
             raise TypeError('expected a list of strings')
-        return self.varset(FRAMEWORKS=flist)
+        return self.schema.varset(FRAMEWORKS=flist)
 
     def test_compile_link(self, source, sourcetype, base_varset, varsets):
         """Try different build variable sets to find one that works."""
@@ -221,7 +226,7 @@ class NixEnvironment(BaseEnvironment):
             for varset in varsets:
                 print('Test build variables:', file=log)
                 varset.dump(log, indent='  ')
-                test_varset = self.varset_merge([base_varset, varset])
+                test_varset = self.schema.merge([base_varset, varset])
                 cmds = [
                     cc_command(test_varset, file_obj, file_c,
                                sourcetype, external=True),

@@ -4,7 +4,6 @@
 from .error import ConfigError, UserError
 from .source import SourceFile
 from .log import Feedback
-from .environment.variable import BuildVariables
 
 class _ModuleConfigurator(object):
     __slots__ = ['build', 'tagdefs', 'has_error', 'modules', '_module_ids']
@@ -32,7 +31,7 @@ class _ModuleConfigurator(object):
                     'tag definitions must be list or bool (tag={})'
                     .format(tag))
             for item in tagdef:
-                if isinstance(item, BuildVariables):
+                if isinstance(item, dict):
                     new_varsets = (item,)
                 elif isinstance(item, Module):
                     if id(item) in module_ids:

@@ -2,7 +2,6 @@
 # This file is part of SGLib.  SGLib is licensed under the terms of the
 # 2-clause BSD license.  For more information, see LICENSE.txt.
 from ..error import ConfigError
-from .variable import BuildVariables
 from .schema import Schema
 import io
 import sys
@@ -24,18 +23,6 @@ class BaseEnvironment(object):
     def dump(self, *, file):
         """Dump information about the environment."""
         pass
-
-    def varset(self, **kw):
-        """Create a set of variables."""
-        return BuildVariables(self.schema, **kw)
-
-    def varset_parse(self, vardict, *, strict):
-        """Parse a set of variables."""
-        return BuildVariables.parse(self.schema, vardict, strict=strict)
-
-    def varset_merge(self, varsets):
-        """Merge sets of variables."""
-        return BuildVariables.merge(self.schema, varsets)
 
     def header_paths(self, *, base, paths):
         """Create build variables that include a header search path."""

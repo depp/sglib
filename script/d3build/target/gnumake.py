@@ -96,7 +96,7 @@ class GnuMakeTarget(Target):
             if source.sourcetype in ('c', 'c++', 'objc', 'objc++'):
                 objects.append(self._compile(source))
 
-        varset = BuildVariables.merge([self.base_vars] + cm.varsets)
+        varset = self.env.schema.merge([self.base_vars] + cm.varsets)
 
         exepath = os.path.join('build', 'exe', name)
         debugpath = os.path.join('build', 'products', name + '.dbg')
@@ -104,7 +104,7 @@ class GnuMakeTarget(Target):
 
         self._add_rule(
             exepath, objects,
-            [ld_command(varset, exepath, objects, sourcetypes)],
+            [self.env.ld_command(varset, exepath, objects, sourcetypes)],
             qname='Link')
         self._add_rule(
             debugpath, [exepath],
@@ -130,16 +130,16 @@ class GnuMakeTarget(Target):
         assert not os.path.isabs(src)
         out = os.path.join(
             'build', 'obj', os.path.splitext(src)[0])
-        varset = BuildVariables.merge([self.base_vars] + source.varsets)
+        varset = self.env.schema.merge([self.base_vars] + source.varsets)
         obj = out + '.o'
         qname = BUILD_NAMES[source.sourcetype]
         if source.external:
-            cmd = cc_command(varset, obj, src, source.sourcetype,
-                             external=True)
+            cmd = self.env.cc_command(
+                varset, obj, src, source.sourcetype, external=True)
         else:
             dep = out + '.d'
-            cmd = cc_command(varset, obj, src, source.sourcetype,
-                             depfile=dep)
+            cmd = self.env.cc_command(
+                varset, obj, src, source.sourcetype, depfile=dep)
             self._optinclude.add(dep)
         self._add_rule(obj, [source.path], [cmd], qname=qname)
         return obj

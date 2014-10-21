@@ -45,7 +45,7 @@ def find_exe(name):
 #        non-special are !+,-./:@]^_`{}
 # We escape some ones that are unnecessary
 _SHELL_SPECIAL = re.compile(r'[^-A-Za-z0-9+,./:@^_]')
-_SHELL_QSPECIAL = re.compile('["\\\\]')
+_SHELL_QSPECIAL = re.compile('[$"\\\\]')
 def escape1(x):
     x = x.group(0)
     i = ord(x)

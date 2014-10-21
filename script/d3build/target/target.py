@@ -6,12 +6,14 @@ from ..error import ConfigError
 class Target(object):
     """Base class for all target buildsystems."""
     __slots__ = [
+        # The environment.
+        'env',
         # List of all generated sources.
         'generated_sources',
     ]
 
     def __init__(self, name, script, config, env):
-        pass
+        self.env = env
 
     def add_generated_source(self, source):
         """Add a generated source to the build system.
