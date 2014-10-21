@@ -2,22 +2,20 @@
 # This file is part of SGLib.  SGLib is licensed under the terms of the
 # 2-clause BSD license.  For more information, see LICENSE.txt.
 from .environment import BaseEnvironment
-from . import schema
+from .schema import Schema
 from ..shell import get_output, describe_proc
 from ..error import ConfigError, format_block
 from ..source import SRCTYPE_EXT, _base
 from ..log import logfile
+from ..util import yesno
 import io
 import os
 import tempfile
 
-SCHEMA = (schema.Schema()
+SCHEMA = (Schema()
     .string('CC', 'The C compiler')
     .string('CXX', 'The C++ compiler')
-    .string('LD', 'The linker')
     .list  ('CPPFLAGS', 'C and C++ preprocessor flags')
-    .list  ('CPPPATH', 'C and C++ header search paths', unique=True)
-    .defs  ('DEFS', 'C and C++ preprocessor definitions')
     .list  ('CFLAGS', 'C compilation flags')
     .list  ('CXXFLAGS', 'C++ compilation flags')
     .list  ('CWARN', 'C warning flags')
@@ -26,44 +24,43 @@ SCHEMA = (schema.Schema()
     .list  ('LIBS', 'Linker flags specifying libraries')
 )
 
-SCHEMA_OSX = (schema.Schema()
-    .list('FPATH', 'Framework search paths', unique=True)
-    .list('FRAMEWORKS', 'Frameworks to link in', unique=True)
-)
-
 class NixEnvironment(BaseEnvironment):
     """A Unix-like configuration environment."""
     __slots__ = [
+        # Configuration variables.
+        '_configuration', '_warnings', '_werror',
         # Base compilation variables in this environment.
         'base_vars',
-        # Additional variables specified by the user.
-        'user_vars',
     ]
 
     def __init__(self, config):
         super(NixEnvironment, self).__init__(config)
         self.schema.update_schema(SCHEMA)
-        if config.platform == 'osx':
-            self.schema.update_schema(SCHEMA_OSX)
 
-        if config.config == 'debug':
+        self._configuration = config.get_variable('CONFIG', 'release')
+        self._warnings = config.get_variable_bool('WARNINGS', True)
+        self._werror = config.get_variable_bool(
+            'WERROR', self._configuration=='debug')
+        if self._configuration == 'debug':
             cflags = ['-O0', '-g']
-        else:
+        elif self._configuration == 'release':
             cflags = ['-O2', '-g']
-        varset = self.schema.varset(
+        else:
+            cflags = []
+        base_vars = self.schema.varset(
             CC='cc',
             CXX='c++',
             CFLAGS=cflags,
             CXXFLAGS=cflags,
         )
         self.schema.update(
-            varset,
+            base_vars,
             CFLAGS=['-pthread'],
             CXXFLAGS=['-pthread'],
             LDFLAGS=['-pthread'])
-        if config.warnings:
+        if self._warnings:
             self.schema.update(
-                varset,
+                base_vars,
                 CWARN=
                     '-Wall -Wextra -Wpointer-arith -Wno-sign-compare '
                     '-Wwrite-strings -Wmissing-prototypes '
@@ -72,26 +69,36 @@ class NixEnvironment(BaseEnvironment):
                 CXXWARN=
                     '-Wall -Wextra -Wpointer-arith -Wno-sign-compare '
                     .split())
-        if config.werror:
+        if self._werror:
             self.schema.update(
-                varset,
+                base_vars,
                 CWARN=['-Werror'],
                 CXXWARN=['-Werror'])
         if config.platform == 'linux':
-            varset.update(
+            self.schema.update(
+                base_vars,
                 LDFLAGS=['-Wl,--as-needed', '-Wl,--gc-sections'])
         if config.platform == 'osx':
-            varset.update(
+            self.schema.update(
+                base_vars,
                 LDFLAGS=['-Wl,-dead_strip', '-Wl,-dead_strip_dylibs'])
 
-        self.base_vars = varset
-        self.user_vars = self.schema.parse(config.variables, strict=False)
+        user_vars = {}
+        for varname, value in config.variable_list:
+            try:
+                vardef = self.schema[varname]
+            except KeyError:
+                continue
+            config.variable_unused.discard(varname)
+            user_vars[varname] = vardef.parse(value)
+
+        self.base_vars = self.schema.merge([base_vars, user_vars])
 
     @staticmethod
     def cc_command(varset, output, source, sourcetype, *,
                    depfile=None, external=False):
         """Get the command to compile the given source file."""
-        varset = self.schema.merge([self.base_vars, varset, self.user_vars])
+        varset = self.schema.merge([self.base_vars, varset])
         if sourcetype in ('c', 'objc'):
             cc, cflags, cwarn = 'CC', 'CFLAGS', 'CWARN'
         elif sourcetype in ('c++', 'objc++'):
@@ -112,9 +119,6 @@ class NixEnvironment(BaseEnvironment):
         cmd = [cc, '-o', output, source, '-c']
         if depfile is not None:
             cmd.extend(('-MF', depfile, '-MMD', '-MP'))
-        cmd.extend('-I' + p for p in varset.get('CPPPATH', ()))
-        cmd.extend('-F' + p for p in varset.get('FPATH', ()))
-        cmd.extend(mkdef(k, v) for k, v in varset.get('DEFS', ()))
         cmd.extend(varset.get('CPPFLAGS', ()))
         cmd.extend(cwarn)
         cmd.extend(cflags)
@@ -123,7 +127,7 @@ class NixEnvironment(BaseEnvironment):
     @staticmethod
     def ld_command(varset, output, sources, sourcetypes):
         """Get the command to link the given source."""
-        varset = self.schema.merge([self.base_vars, varset, self.user_vars])
+        varset = self.schema.merge([self.base_vars, varset])
         if 'c++' in sourcetypes or 'objc++' in sourcetypes:
             cc = 'CXX'
         else:
@@ -137,27 +141,28 @@ class NixEnvironment(BaseEnvironment):
         cmd.extend(varset.get('LDFLAGS', ()))
         cmd.extend(('-o', output))
         cmd.extend(sources)
-        cmd.extend('-F' + p for p in varset.get('FPATH', ()))
         cmd.extend(varset.get('LIBS', ()))
-        for framework in varset.get('FRAMEWORKS', ()):
-            cmd.extend(('-framework', framework))
         return cmd
 
     def dump(self, *, file):
         """Dump information about the environment."""
         super(NixEnvironment, self).dump(file=file)
         file = logfile(2)
-        print('Base build variables:', file=file)
+        print('Configuration:', file=file)
+        print('  CONFIG={}'.format(self._configuration), file=file)
+        print('Enable extra warnings:', file=file)
+        print('  WARNINGS={}'.format(yesno(self._warnings)), file=file)
+        print('Treat warnings as errors:', file=file)
+        print('  WERROR={}'.format(yesno(self._werror)), file=file)
+        print('Compilation flags:', file=file)
         self.schema.dump(self.base_vars, file=file, indent='  ')
-        print('User build variables:', file=file)
-        self.schema.dump(self.user_vars, file=file, indent='  ')
 
     def header_paths(self, *, base, paths):
         """Create build variables that include a header search path."""
         if not isinstance(paths, list):
             raise TypeError('paths must be list')
         return self.schema.varset(
-            CPPPATH=[_base(base, path) for path in paths])
+            CPPFLAGS=['-I' + _base(base, path) for path in paths])
 
     def pkg_config(self, spec):
         """Run the pkg-config tool and return the build variables."""
@@ -203,10 +208,12 @@ class NixEnvironment(BaseEnvironment):
             return super(NixEnvironment, self).frameworks(flist)
         if not isinstance(flist, list):
             raise TypeError('frameworks must be list')
-        flist = list(flist)
-        if not all(isinstance(x, str) for x in flist):
-            raise TypeError('expected a list of strings')
-        return self.schema.varset(FRAMEWORKS=flist)
+        libs = []
+        for framework in flist:
+            if not isinstance(framework, str):
+                raise TypeError('expected a list of strings')
+            libs.extend(('-framework', framework))
+        return self.schema.varset(LIBS=libs)
 
     def test_compile_link(self, source, sourcetype, base_varset, varsets):
         """Try different build variable sets to find one that works."""

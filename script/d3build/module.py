@@ -38,6 +38,7 @@ class _ModuleConfigurator(object):
                         continue
                     module_ids.add(id(item))
                     cfg_m = self.build._configure_module(item)
+                    self.has_error = self.has_error or cfg_m.has_error
                     new_varsets = cfg_m.public
                     new_modules.append(cfg_m)
                 else:

@@ -1,7 +1,7 @@
 # Copyright 2014 Dietrich Epp.
 # This file is part of SGLib.  SGLib is licensed under the terms of the
 # 2-clause BSD license.  For more information, see LICENSE.txt.
-from .target import Target
+from .target import BaseTarget
 from ..error import UserError
 from ..shell import escape
 import collections
@@ -36,7 +36,7 @@ def mk_escape(x):
 # A phony makefile target
 Phony = collections.namedtuple('Phony', 'name')
 
-class GnuMakeTarget(Target):
+class GnuMakeTarget(BaseTarget):
     """Environment targeting the GNU Make build system."""
     __slots__ = [
         # First arguments for running the configuration script.
@@ -88,15 +88,16 @@ class GnuMakeTarget(Target):
 
         Returns the path to the executable.
         """
-        cm = module.flatten(self)
+        if module is None:
+            return ''
 
         objects = []
         sourcetypes = set()
-        for source in cm.sources:
+        for source in module.sources:
             if source.sourcetype in ('c', 'c++', 'objc', 'objc++'):
                 objects.append(self._compile(source))
 
-        varset = self.env.schema.merge([self.base_vars] + cm.varsets)
+        varset = self.env.schema.merge([self.base_vars] + module.varsets)
 
         exepath = os.path.join('build', 'exe', name)
         debugpath = os.path.join('build', 'products', name + '.dbg')
@@ -228,9 +229,3 @@ class GnuMakeTarget(Target):
                 ' '.join(escape(x) for x in sorted(self._clean))))
         fp.write('FORCE:\n')
         fp.write(self._rulefp.getvalue())
-
-class GnuMakeLinuxTarget(GnuMakeTarget):
-    """Environment targeting the GNU Make build system on Linux."""
-
-class GnuMakeOSXTarget(GnuMakeTarget):
-    """Environment targeting the GNU Make build system on OS X."""

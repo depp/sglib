@@ -66,9 +66,9 @@ class Schema(object):
                 else:
                     values.append(value)
         variables = {}
-        for varname, value in variables.items():
-            if len(value) == 1:
-                value = value[0]
+        for varname, values in lists.items():
+            if len(values) == 1:
+                value = values[0]
             else:
                 value = self[varname].combine(values)
             variables[varname] = value

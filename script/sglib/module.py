@@ -43,7 +43,7 @@ def configure(build):
     tags = {tag: False for tag in TAGS}
     tags['public'] = [
         build.env.header_paths(base=__file__, paths=['../../include']),
-        glew.module,
+        # glew.module,
     ]
 
     if platform == 'linux':

@@ -10,6 +10,9 @@ from . import module
 import sys
 import os
 
+def _path(path):
+    return _base(__file__, '../../' + path)
+
 class App(object):
     __slots__ = [
         # Name of the project.
@@ -33,12 +36,14 @@ class App(object):
         'defaults',
         # Function for configuring the main project module (optional).
         'configure_func',
+        # Category in the Apple application store.
+        'apple_category',
     ]
 
     def __init__(self, *, name, sources, datapath,
                  email=None, uri=None, copyright=None,
                  identifier=None, uuid=None, defaults=None,
-                 configure=None):
+                 configure=None, apple_category='public.app-category.games'):
         self.name = name
         self.sources = sources
         self.datapath = datapath
@@ -49,6 +54,7 @@ class App(object):
         self.uuid = uuid
         self.defaults = defaults
         self.configure_func = configure
+        self.apple_category = apple_category
 
     def run(self):
         """Run the configuration script."""
@@ -110,19 +116,31 @@ class App(object):
             configure=self._module_configure)
         mod = build.get_module(mod)
         build.target.add_generated_source(
-            ConfigHeader(_base(__file__, '../../include/config.h'), build))
+            ConfigHeader(_path('include/config.h'), build))
         build.target.add_generated_source(
             VersionInfo(
-                _base(__file__, '../../src/core/version_const.c'),
+                _path('src/core/version_const.c'),
                 _base(build.script, '.'),
-                _base(__file__, '../..'),
+                _path('.'),
                 'git'))
 
         if build.config.platform == 'osx':
+            from d3build.target.template import TemplateFile
+            main_nib = build.target.add_generated_source(
+                TemplateFile(
+                    _path('resources/MainMenu.xib'),
+                    _path('src/core/osx/MainMenu.xib'),
+                    {'EXE_NAME': self.name}))
+            from .infoplist import InfoPropertyList
+            info_plist = build.target.add_generated_source(
+                InfoPropertyList(
+                    _path('resources/Info.plist'),
+                    self,
+                    main_nib))
             target = build.target.add_application_bundle(
                 name=name,
                 module=mod,
-                info_plist=None)
+                info_plist=info_plist)
         else:
             target = build.target.add_executable(
                 name=name,

@@ -3,7 +3,7 @@
 # 2-clause BSD license.  For more information, see LICENSE.txt.
 from ..error import ConfigError
 
-class Target(object):
+class BaseTarget(object):
     """Base class for all target buildsystems."""
     __slots__ = [
         # The environment.
@@ -14,17 +14,18 @@ class Target(object):
 
     def __init__(self, name, script, config, env):
         self.env = env
+        self.generated_sources = []
 
     def add_generated_source(self, source):
         """Add a generated source to the build system.
 
         Returns the path to the generated source.
         """
+        self.generated_sources.append(source)
         return source.target
 
     def add_default(self, target):
         """Set a target to be a default target."""
-        self._all.add(target)
 
     def add_executable(self, *, name, module, uuid=None):
         """Create an executable target.
@@ -46,5 +47,6 @@ class Target(object):
         for source in self.generated_sources:
             if source.is_regenerated_only:
                 continue
-            with open(source.target, 'w') as fp:
+            mode = 'wb' if source.is_binary else 'w'
+            with open(source.target, mode) as fp:
                 source.write(fp)

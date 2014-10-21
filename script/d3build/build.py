@@ -92,7 +92,7 @@ class Build(object):
 
             obj.env = env(config)
             obj.env.dump(file=logfile(1))
-            obj.target = target(name, args[0], config, env)
+            obj.target = target(name, args[0], config, obj.env)
             obj.script = args[0]
             try:
                 build(obj)
@@ -104,11 +104,11 @@ class Build(object):
                 sys.exit(1)
             gensources = {
                 s.target: pickle.dumps(s, protocol=pickle.HIGHEST_PROTOCOL)
-                for s in self.generated_sources
+                for s in obj.target.generated_sources
             }
             with open('config.dat', 'wb') as fp:
                 pickle.dump((args, gensources), fp)
-            env.finalize()
+            obj.target.finalize()
 
     def get_module(self, module):
         """Get the configured and flattened version of a module."""

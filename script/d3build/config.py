@@ -19,14 +19,8 @@ class Config(object):
     __slots__ = [
         # Output verbosity: 0, 1, or 2
         'verbosity',
-        # The configuration: release or debug
-        'config',
-        # Whether to enable extra warnings
-        'warnings',
-        # Whether warnings are treated as errors
-        'werror',
-        # Dictionary of variables specified on the configuration command line
-        'variables',
+        # List of variables specified on the configuration command line
+        'variable_list', 'variable_dict', 'variable_unused',
         # The name of the target platform
         'platform',
         # The name of the target toolchain
@@ -41,12 +35,9 @@ class Config(object):
     def argument_parser(class_, options):
         """Get the argument parser."""
         p = argparse.ArgumentParser()
-        buildgroup = p.add_argument_group('build settings')
-        optgroup = p.add_argument_group('features')
 
         p.add_argument('variables', nargs='*', metavar='VAR=VALUE',
                        help='build variables')
-
         p.add_argument(
             '-q', dest='verbosity', default=1,
             action='store_const', const=0,
@@ -55,42 +46,11 @@ class Config(object):
             '-v', dest='verbosity', default=1,
             action='store_const', const=2,
             help='verbose messages')
-
-        def parse_yesno(name, *, dest=None, default=None, help=None,
-                        help_neg=None):
-            if dest is None:
-                dest = name
-            if help_neg is None:
-                help_neg = argparse.SUPPRESS
-            buildgroup.add_argument(
-                '--' + name,
-                default=default, action='store_true',
-                dest=dest, help=help)
-            buildgroup.add_argument(
-                '--no-' + name,
-                default=default, action='store_false',
-                dest=dest, help=help_neg)
-
-        buildgroup.add_argument(
+        p.add_argument(
             '--target',
             help='select a build target')
-        buildgroup.add_argument(
-            '--debug', dest='config', default='release',
-            action='store_const', const='debug',
-            help='use debug configuration')
-        buildgroup.add_argument(
-            '--release', dest='config', default='release',
-            action='store_const', const='release',
-            help='use release configuration')
-        parse_yesno(
-            'warnings',
-            help='enable extra compiler warnings',
-            help_neg='disable extra compiler warnings')
-        parse_yesno(
-            'werror',
-            help='treat warnings as errors',
-            help_neg='do not treat warnings as errors')
 
+        optgroup = p.add_argument_group('features')
         for option in options:
             option.add_argument(optgroup)
 
@@ -103,18 +63,20 @@ class Config(object):
         obj = class_()
 
         obj.verbosity = args.verbosity
-        obj.config = 'release' if args.config is None else args.config
-        obj.warnings = True if args.warnings is None else args.warnings
-        obj.werror = (obj.config == 'debug'
-                      if args.werror is None else args.werror)
 
-        obj.variables = {}
+        obj.variable_list = []
+        obj.variable_dict = {}
+        obj.variable_unused = set()
         for vardef in args.variables:
             i = vardef.find('=')
             if i < 0:
                 raise UserError(
                     'invalid variable syntax: {!r}'.format(vardef))
-            obj.variables[vardef[:i]] = vardef[i+1:]
+            varname = vardef[:i]
+            value = vardef[i+1:]
+            obj.variable_list.append((varname, value))
+            obj.variable_dict[varname] = value
+            obj.variable_unused.add(varname)
 
         plat = platform.system()
         try:
@@ -149,17 +111,34 @@ class Config(object):
             sorted('{}={}'.format(param, value)
                    for param, value in self.targetparams.items())),
             file=file)
-        print('Configuration:', self.config, file=file)
-        print('Extra warnings:', yesno(self.warnings), file=file)
-        print('Warnings are errors:', yesno(self.werror), file=file)
         print('Build variables:', file=file)
-        for varname, value in sorted(self.variables.items()):
-            print('  {} = {}'.format(varname, value), file=file)
+        for varname, value in sorted(self.variable_list):
+            print('  {}: {}'.format(varname, value), file=file)
         print('Flags:', file=file)
         for k, v in sorted(self.flags.items()):
             if isinstance(v, bool):
                 v = yesno(v)
             print('  {}: {}'.format(k, v), file=file)
+
+    def get_variable(self, name, default):
+        """Get one of build variables."""
+        value = self.variable_dict.get(name, default)
+        self.variable_unused.discard(name)
+        return value
+
+    def get_variable_bool(self, name, default):
+        """Get one of the build variables as a boolean."""
+        value = self.variable_dict.get(name, None)
+        if value is None:
+            return default
+        self.variable_unused.discard(name)
+        uvalue = value.upper()
+        if uvalue in ('YES', 'TRUE', 'ON', 1):
+            return True
+        if uvalue in ('NO', 'FALSE', 'OFF', 0):
+            return False
+        raise ConfigError('invalid value for {}: expecting boolean'
+                          .format(name))
 
 if __name__ == '__main__':
     cfg = Config.configure()
