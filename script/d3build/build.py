@@ -102,6 +102,10 @@ class Build(object):
             if obj._has_error:
                 print('Configuration failed.', file=logfile(0))
                 sys.exit(1)
+            if obj.env.variable_unused:
+                print('Warning: unused variables:',
+                      ' '.join(sorted(obj.env.variable_unused)),
+                      file=logfile(0))
             gensources = {
                 s.target: pickle.dumps(s, protocol=pickle.HIGHEST_PROTOCOL)
                 for s in obj.target.generated_sources
