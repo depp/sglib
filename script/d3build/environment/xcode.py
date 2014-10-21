@@ -101,7 +101,7 @@ class XcodeEnvironment(BaseEnvironment):
     def __init__(self, config):
         super(XcodeEnvironment, self).__init__(config)
         self.schema.update_schema(SCHEMA)
-        self.configurations = config.get_variable(
+        self.configurations = self.get_variable(
             'CONFIGURATIONS', 'Debug Release').split()
         base_vars = {c: dict(BASE_CONFIG) for c in self.configurations}
         if 'Debug' in self.configurations:
@@ -111,7 +111,7 @@ class XcodeEnvironment(BaseEnvironment):
 
         cmap = {c.lower(): c for c in self.configurations}
         user_vars = {c: {} for c in self.configurations}
-        for varname, value in config.variable_list:
+        for varname, value in self.variable_list:
             i = varname.find('.')
             if i < 0:
                 continue
@@ -131,7 +131,7 @@ class XcodeEnvironment(BaseEnvironment):
                     continue
                 varset = user_vars[cname]
                 varset[vname] = value
-            config.variable_used.discand(varname)
+            self.variable_used.discand(varname)
         for c in self.configurations:
             base_vars[c] = self.schema.merge([base_vars[c], user_vars[c]])
 

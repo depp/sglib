@@ -37,9 +37,9 @@ class NixEnvironment(BaseEnvironment):
         super(NixEnvironment, self).__init__(config)
         self.schema.update_schema(SCHEMA)
 
-        self._configuration = config.get_variable('CONFIG', 'release')
-        self._warnings = config.get_variable_bool('WARNINGS', True)
-        self._werror = config.get_variable_bool(
+        self._configuration = self.get_variable('CONFIG', 'release')
+        self._warnings = self.get_variable_bool('WARNINGS', True)
+        self._werror = self.get_variable_bool(
             'WERROR', self._configuration=='debug')
         if self._configuration == 'debug':
             cflags = ['-O0', '-g']
@@ -84,12 +84,12 @@ class NixEnvironment(BaseEnvironment):
                 LDFLAGS=['-Wl,-dead_strip', '-Wl,-dead_strip_dylibs'])
 
         user_vars = {}
-        for varname, value in config.variable_list:
+        for varname, value in self.variable_list:
             try:
                 vardef = self.schema[varname]
             except KeyError:
                 continue
-            config.variable_unused.discard(varname)
+            self.variable_unused.discard(varname)
             user_vars[varname] = vardef.parse(value)
 
         self.base_vars = self.schema.merge([base_vars, user_vars])

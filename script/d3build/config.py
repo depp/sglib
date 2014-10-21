@@ -20,7 +20,7 @@ class Config(object):
         # Output verbosity: 0, 1, or 2
         'verbosity',
         # List of variables specified on the configuration command line
-        'variable_list', 'variable_dict', 'variable_unused',
+        'variables',
         # The name of the target platform
         'platform',
         # The name of the target toolchain
@@ -63,20 +63,7 @@ class Config(object):
         obj = class_()
 
         obj.verbosity = args.verbosity
-
-        obj.variable_list = []
-        obj.variable_dict = {}
-        obj.variable_unused = set()
-        for vardef in args.variables:
-            i = vardef.find('=')
-            if i < 0:
-                raise UserError(
-                    'invalid variable syntax: {!r}'.format(vardef))
-            varname = vardef[:i]
-            value = vardef[i+1:]
-            obj.variable_list.append((varname, value))
-            obj.variable_dict[varname] = value
-            obj.variable_unused.add(varname)
+        obj.variables = args.variables
 
         plat = platform.system()
         try:
@@ -112,33 +99,13 @@ class Config(object):
                    for param, value in self.targetparams.items())),
             file=file)
         print('Build variables:', file=file)
-        for varname, value in sorted(self.variable_list):
-            print('  {}: {}'.format(varname, value), file=file)
+        for variable in self.variables:
+            print('  {}'.format(variable), file=file)
         print('Flags:', file=file)
         for k, v in sorted(self.flags.items()):
             if isinstance(v, bool):
                 v = yesno(v)
-            print('  {}: {}'.format(k, v), file=file)
-
-    def get_variable(self, name, default):
-        """Get one of build variables."""
-        value = self.variable_dict.get(name, default)
-        self.variable_unused.discard(name)
-        return value
-
-    def get_variable_bool(self, name, default):
-        """Get one of the build variables as a boolean."""
-        value = self.variable_dict.get(name, None)
-        if value is None:
-            return default
-        self.variable_unused.discard(name)
-        uvalue = value.upper()
-        if uvalue in ('YES', 'TRUE', 'ON', 1):
-            return True
-        if uvalue in ('NO', 'FALSE', 'OFF', 0):
-            return False
-        raise ConfigError('invalid value for {}: expecting boolean'
-                          .format(name))
+            print('  {}: {}'.format(k, v), file=file)    
 
 if __name__ == '__main__':
     cfg = Config.configure()
