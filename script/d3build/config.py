@@ -105,7 +105,7 @@ class Config(object):
         for k, v in sorted(self.flags.items()):
             if isinstance(v, bool):
                 v = yesno(v)
-            print('  {}: {}'.format(k, v), file=file)    
+            print('  {}: {}'.format(k, v), file=file)
 
 if __name__ == '__main__':
     cfg = Config.configure()

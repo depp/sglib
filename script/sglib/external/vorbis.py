@@ -4,7 +4,7 @@
 from d3build.module import ExternalModule
 
 def _configure(build):
-    return [], {'public': [build.env.pkg_config('vorbis')]}
+    return None, [], {'public': [build.env.pkg_config('vorbis')]}
 
 module = ExternalModule(
     name='Vorbis codec library',

@@ -4,7 +4,7 @@
 from d3build.module import ExternalModule
 
 def _configure(build):
-    return [], {'public': [build.env.pkg_config('libpng12')]}
+    return None, [], {'public': [build.env.pkg_config('libpng12')]}
 
 module = ExternalModule(
     name='LibPNG',

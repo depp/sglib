@@ -7,7 +7,7 @@ def _configure(build):
     varset = build.env.pkg_config('gtkglext-1.0')
     varset['LIBS'] = tuple(flag for flag in varset['LIBS']
                            if flag != '-Wl,--export-dynamic')
-    return [], {'public': [varset]}
+    return None, [], {'public': [varset]}
 
 module = ExternalModule(
     name='Gtk+ OpenGL Extension',

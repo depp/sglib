@@ -4,7 +4,7 @@
 from d3build.module import ExternalModule
 
 def _configure(build):
-    return [], {'public': [build.env.pkg_config('ogg')]}
+    return None, [], {'public': [build.env.pkg_config('ogg')]}
 
 module = ExternalModule(
     name='Ogg bitstream library',

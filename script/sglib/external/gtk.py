@@ -4,7 +4,7 @@
 from d3build.module import ExternalModule
 
 def _configure(build):
-    return [], {'public': [build.env.pkg_config('gtk+-2.0')]}
+    return None, [], {'public': [build.env.pkg_config('gtk+-2.0')]}
 
 module = ExternalModule(
     name='Gtk+ 2.0',

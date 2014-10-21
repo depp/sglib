@@ -4,6 +4,7 @@
 from ..error import ConfigError
 from .schema import Schema
 import io
+import os
 import sys
 
 class BaseEnvironment(object):
@@ -14,10 +15,12 @@ class BaseEnvironment(object):
         # The schema for build variables.
         # This is empty by default, and subclasses should add entries.
         'schema',
+        # Path to bundled libraries.
+        'library_path',
+        # Dictionary mapping {varname: value}.
+        'variables',
         # List of all variables as (varname, value).
         'variable_list',
-        # Dictionary mapping {varname: value}.
-        'variable_dict',
         # Set of unused variables.
         'variable_unused',
     ]
@@ -25,9 +28,10 @@ class BaseEnvironment(object):
     def __init__(self, config):
         self._config = config
         self.schema = Schema()
+        self.library_path = None
 
+        self.variables = {}
         self.variable_list = []
-        self.variable_dict = {}
         self.variable_unused = set()
         for vardef in config.variables:
             i = vardef.find('=')
@@ -36,8 +40,8 @@ class BaseEnvironment(object):
                     'invalid variable syntax: {!r}'.format(vardef))
             varname = vardef[:i]
             value = vardef[i+1:]
+            self.variables[varname] = value
             self.variable_list.append((varname, value))
-            self.variable_dict[varname] = value
             self.variable_unused.add(varname)
 
     def dump(self, *, file):
@@ -46,13 +50,13 @@ class BaseEnvironment(object):
 
     def get_variable(self, name, default):
         """Get one of build variables."""
-        value = self.variable_dict.get(name, default)
+        value = self.variables.get(name, default)
         self.variable_unused.discard(name)
         return value
 
     def get_variable_bool(self, name, default):
         """Get one of the build variables as a boolean."""
-        value = self.variable_dict.get(name, None)
+        value = self.variables.get(name, None)
         if value is None:
             return default
         self.variable_unused.discard(name)
@@ -63,7 +67,31 @@ class BaseEnvironment(object):
             return False
         raise ConfigError('invalid value for {}: expecting boolean'
                           .format(name))
-    def header_paths(self, *, base, paths):
+
+    def find_library(self, pattern):
+        if self.library_path is None:
+            raise ConfigError('library_path is not set')
+        try:
+            filenames = os.listdir(self.library_path)
+        except FileNotFoundError:
+            raise ConfigError('library path does not exist: {}'
+                              .format(self.library_path))
+        import re
+        regex = re.compile(pattern)
+        results = [fname for fname in filenames if regex.match(fname)]
+        if not results:
+            raise ConfigError('could not find library matching /{}/'
+                              .format(pattern))
+        if len(results) > 1:
+            raise ConfigError('found multiple libraries matching /{}/: {}'
+                              .format(pattern, ', '.join(results)))
+        return os.path.join(self.library_path, results[0])
+
+    def define(self, definition):
+        """Create build variables that define a preprocessor variable."""
+        raise NotImplementedError('must be implemented by subclass')
+
+    def header_path(self, path):
         """Create build variables that include a header search path."""
         raise NotImplementedError('must be implemented by subclass')
 

@@ -1,6 +1,7 @@
 # Copyright 2014 Dietrich Epp.
 # This file is part of SGLib.  SGLib is licensed under the terms of the
 # 2-clause BSD license.  For more information, see LICENSE.txt.
+from .log import logfile
 
 class ConfigError(Exception):
     """Configuration failed."""
@@ -33,3 +34,12 @@ def format_block(text):
     for line in text.splitlines():
         a.extend(('  | ', line, '\n'))
     return ''.join(a)
+
+def try_config(args, *funcs):
+    """Try several functions, and return the first successful result."""
+    for func in funcs:
+        try:
+            return func(*args)
+        except ConfigError as ex:
+            ex.write(logfile(2))
+    raise ConfigError('Configuration failed')

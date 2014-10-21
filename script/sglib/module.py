@@ -3,6 +3,7 @@
 # 2-clause BSD license.  For more information, see LICENSE.txt.
 from d3build.module import SourceModule
 from d3build.error import ConfigError
+from d3build.source import _base
 from . import source
 
 TAGS = '''
@@ -42,8 +43,8 @@ def configure(build):
 
     tags = {tag: False for tag in TAGS}
     tags['public'] = [
-        build.env.header_paths(base=__file__, paths=['../../include']),
-        # glew.module,
+        build.env.header_path(_base(__file__, '../../include')),
+        glew.module,
     ]
 
     if platform == 'linux':

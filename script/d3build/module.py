@@ -144,7 +144,10 @@ class ExternalModule(Module):
 
     def _get_configs(self, build):
         with Feedback('Checking for {}...'.format(self.name)) as fb:
-            return self._tags_func(build)
+            status, sources, varsets = self._tags_func(build)
+            if status is not None:
+                fb.write(status)
+            return sources, varsets
 
 class ConfiguredModule(object):
     """A module which has been configured."""

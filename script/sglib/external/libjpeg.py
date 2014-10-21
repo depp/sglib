@@ -20,7 +20,7 @@ def _configure(build):
     varsets = [build.env.varset(LIBS=('-ljpeg',))]
     varset = build.test_compile_link(
         _TEST_SOURCE, 'c', build.base_vars, varsets)
-    return [], {'public': [varset]}
+    return None, [], {'public': [varset]}
 
 module = ExternalModule(
     name='LibJPEG',

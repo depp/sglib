@@ -83,7 +83,7 @@ class SourceList(object):
     """A collection of source files."""
     __slots__ = ['sources', 'tags', '_path']
 
-    def __init__(self, *, base, path=None, sources=None):
+    def __init__(self, *, base='.', path=None, sources=None):
         self.sources = []
         self.tags = set()
         self._path = _base(base, path)

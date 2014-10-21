@@ -151,10 +151,13 @@ class XcodeEnvironment(BaseEnvironment):
             self.schema.dump(
                 self.base_vars[configuration], file=file, indent='    ')
 
-    def header_paths(self, *, base, paths):
+    def define(self, definition):
+        """Create build variables that define a preprocessor variable."""
+        return {'GCC_PREPROCESSOR_DEFINITIONS': [definition]}
+
+    def header_path(self, path):
         """Create build variables that include a header search path."""
-        return self.schema.varset(
-            USER_HEADER_SEARCH_PATHS=[_base(base, path) for path in paths])
+        return {'USER_HEADER_SEARCH_PATHS': [path]}
 
     def frameworks(self, flist):
         """Specify a list of frameworks to use."""

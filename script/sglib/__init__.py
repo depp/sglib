@@ -97,6 +97,7 @@ class App(object):
         """Create the project targets."""
         from .version import VersionInfo
         from d3build.target.configheader import ConfigHeader
+        build.env.library_path = _path('lib')
 
         name = self.name
         if build.config.platform == 'linux':

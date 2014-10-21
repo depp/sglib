@@ -4,7 +4,7 @@
 from d3build.module import ExternalModule
 
 def _configure(build):
-    return [], {'public': [build.env.pkg_config('alsa')]}
+    return None, [], {'public': [build.env.pkg_config('alsa')]}
 
 module = ExternalModule(
     name='ALSA',

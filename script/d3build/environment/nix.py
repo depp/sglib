@@ -157,12 +157,13 @@ class NixEnvironment(BaseEnvironment):
         print('Compilation flags:', file=file)
         self.schema.dump(self.base_vars, file=file, indent='  ')
 
-    def header_paths(self, *, base, paths):
+    def define(self, definition):
+        """Create build variables that define a preprocessor variable."""
+        return {'CPPFLAGS:': ['-D' + definition]}
+
+    def header_path(self, path):
         """Create build variables that include a header search path."""
-        if not isinstance(paths, list):
-            raise TypeError('paths must be list')
-        return self.schema.varset(
-            CPPFLAGS=['-I' + _base(base, path) for path in paths])
+        return {'CPPFLAGS': ['-I' + path]}
 
     def pkg_config(self, spec):
         """Run the pkg-config tool and return the build variables."""
