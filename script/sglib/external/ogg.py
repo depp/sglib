@@ -3,8 +3,8 @@
 # 2-clause BSD license.  For more information, see LICENSE.txt.
 from d3build.module import ExternalModule
 
-def _configure(env):
-    return [], {'public': [env.pkg_config('ogg')]}
+def _configure(build):
+    return [], {'public': [build.env.pkg_config('ogg')]}
 
 module = ExternalModule(
     name='Ogg bitstream library',

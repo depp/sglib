@@ -2,90 +2,43 @@
 # This file is part of SGLib.  SGLib is licensed under the terms of the
 # 2-clause BSD license.  For more information, see LICENSE.txt.
 from ..error import ConfigError
-from ..source import _base
 from .variable import BuildVariables
-from .feedback import Feedback
 import io
 import sys
-
-_FORWARD = {'warnings', 'werror', 'platform', 'verbosity', 'script'}
-
-class Tee(io.TextIOBase):
-    __slots__ = ['files']
-    def __init__(self, files):
-        super(Tee, self).__init__()
-        self.files = tuple(files)
-    def writable(self):
-        return True
-    def write(self, s):
-        for fp in self.files:
-            fp.write(s)
-
-class Flags(object):
-    __slots__ = ['_vars']
-    def __init__(self, config):
-        self._vars = {key.replace('-', '_'): value
-                      for key, value in config.flags.items()}
-    def __getattr__(self, name):
-        try:
-            return self._vars[name]
-        except KeyError:
-            raise AttributeError(name)
 
 class BaseEnvironment(object):
     """Base class for all configuration environments."""
     __slots__ = [
-        '_config', 'flags',
-        'modules', 'errors', 'missing_packages',
-        'console', '_logfile',
-        'generated_sources',
+        # The command-line configuration parameters.
+        '_config',
+        # The schema for build variables.
+        # This is empty by default, and subclasses should add entries.
+        'schema',
     ]
 
     def __init__(self, config):
         self._config = config
-        self.flags = Flags(config)
-        self.modules = {}
-        self.errors = []
-        self.missing_packages = []
-        self.generated_sources = []
+        self.schema = {}
 
-        self.console = sys.stderr
-        mode = 'a' if False else 'w'
-        self._logfile = open('config.log', mode)
-        sys.stderr = Tee([sys.stderr, self._logfile])
+    def dump(self, *, file):
+        """Dump information about the environment."""
+        pass
 
-    def log_info(self):
-        """Log basic information about the environment."""
-        out = self.logfile(2)
-        print('Platform:', self._config.platform, file=out)
-        print(file=out)
+    def varset(self, **kw):
+        """Create a set of variables."""
+        return BuildVariables(self.schema, **kw)
 
-        out = self.logfile(1)
-        print('Flags:', file=out)
-        for k, v in sorted(self._config.flags.items()):
-            if isinstance(v, bool):
-                v = ('no', 'yes')[v]
-            print('  {}: {}'.format(k, v), file=out)
-        print(file=out)
+    def varset_parse(self, vardict, *, strict):
+        """Parse a set of variables."""
+        return BuildVariables.parse(self.schema, vardict, strict=strict)
 
-    def logfile(self, verbosity=None):
-        if verbosity is not None and self.verbosity >= verbosity:
-            return sys.stderr
-        return self._logfile
+    def varset_merge(self, varsets):
+        """Merge sets of variables."""
+        return BuildVariables.merge(self.schema, varsets)
 
-    def feedback(self, msg):
-        return Feedback(self, msg)
-
-    def warn(self, msg):
-        print('warning:', msg, file=self.logfile(1))
-
-    def __getattr__(self, name):
-        if name in _FORWARD:
-            return getattr(self._config, name)
-        raise AttributeError(name)
-
-    def header_path(self, base, path):
-        return BuildVariables(CPPPATH=(_base(base, path),))
+    def header_paths(self, *, base, paths):
+        """Create build variables that include a header search path."""
+        raise NotImplementedError('must be implemented by subclass')
 
     def pkg_config(self, spec):
         """Run the pkg-config tool and return the build variables."""
@@ -106,17 +59,3 @@ class BaseEnvironment(object):
         """Try different build variable sets to find one that works."""
         raise ConfigError(
             'compile and link tests not available for this target')
-
-    def add_generated_source(self, source):
-        self.generated_sources.append(source)
-        return source.target
-
-    def add_default(self, target):
-        pass
-
-    def finalize(self):
-        for source in self.generated_sources:
-            if source.is_regenerated_only:
-                continue
-            with open(source.target, 'w') as fp:
-                source.write(fp)

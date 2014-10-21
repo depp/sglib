@@ -2,9 +2,9 @@
 # This file is part of SGLib.  SGLib is licensed under the terms of the
 # 2-clause BSD license.  For more information, see LICENSE.txt.
 from d3build.source import SourceList, _base
-from d3build.config import Config
+# Note: SourceList is for export
+from d3build.build import Build
 from d3build.module import SourceModule
-from d3build.target.configheader import ConfigHeader
 from . import options
 from . import module
 import sys
@@ -12,8 +12,26 @@ import os
 
 class App(object):
     __slots__ = [
-        'name', 'sources', 'datapath',
-        'email', 'uri', 'copyright', 'identifier', 'uuid', 'defaults',
+        # Name of the project.
+        'name',
+        # SourceList of the project source code.
+        'sources',
+        # Path to the project data files.
+        'datapath',
+        # Contact email address.
+        'email',
+        # Project home page URI.
+        'uri',
+        # Project copyright notice.
+        # Should be "Copyright © YEAR Author".
+        'copyright',
+        # Project identifier reverse domain name notation, for OS X.
+        'identifier',
+        # Project UUID, for emitting Visual Studio projects (optional).
+        'uuid',
+        # Default flag values.
+        'defaults',
+        # Function for configuring the main project module (optional).
         'configure_func',
     ]
 
@@ -32,25 +50,29 @@ class App(object):
         self.defaults = defaults
         self.configure_func = configure
 
-    def _module_configure(self, env):
+    def run(self):
+        """Run the configuration script."""
+        Build.run(
+            name=self.name,
+            build=self._build,
+            sources=self.sources.sources + module.module.sources,
+            options=options.flags,
+            adjust_config=self._adjust_config,
+        )
+
+    def _module_configure(self, build):
+        """Get the configuration for the main application module."""
         if self.configure_func is None:
             tags = {}
         else:
-            tags = dict(self.configure_func(env))
+            tags = dict(self.configure_func(build))
         private = list(tags.get('private', []))
         private.append(module.module)
         tags['private'] = private
         return tags
 
-    def run(self):
-        Config.run(
-            configure=self.configure,
-            sources=self.sources.sources + module.module.sources,
-            options=options.flags,
-            apply_defaults=self.apply_defaults,
-        )
-
-    def apply_defaults(self, cfg):
+    def _adjust_config(self, cfg):
+        """Adjust the configuration."""
         for defaults in (self.defaults, options.defaults):
             if not defaults:
                 continue
@@ -65,11 +87,13 @@ class App(object):
                     if cfg.flags[flag] is None:
                         cfg.flags[flag] = value
 
-    def configure(self, env):
+    def _build(self, build):
+        """Create the project targets."""
         from .version import VersionInfo
+        from d3build.target.configheader import ConfigHeader
 
         name = self.name
-        if env.platform == 'linux':
+        if build.config.platform == 'linux':
             name = name.replace(' ', '_')
 
         args = [
@@ -77,35 +101,36 @@ class App(object):
             ('path.data', self.datapath),
             ('path.user', 'user'),
         ]
-        if env.platform == 'windows':
+        if build.config.platform == 'windows':
             args.append(('log.winconsole', 'yes'))
         args = ['-d{}={}'.format(*arg) for arg in args]
 
         mod = SourceModule(
             sources=self.sources,
             configure=self._module_configure)
-        env.add_generated_source(
-            ConfigHeader(_base(__file__, '../../include/config.h'), env))
-        env.add_generated_source(
+        mod = build.get_module(mod)
+        build.target.add_generated_source(
+            ConfigHeader(_base(__file__, '../../include/config.h'), build))
+        build.target.add_generated_source(
             VersionInfo(
                 _base(__file__, '../../src/core/version_const.c'),
-                _base(env.script, '.'),
+                _base(build.script, '.'),
                 _base(__file__, '../..'),
                 'git'))
 
-        if env.platform == 'osx':
-            target = env.target_application_bundle(
+        if build.config.platform == 'osx':
+            target = build.target.add_application_bundle(
                 name=name,
                 module=mod,
                 info_plist=None)
         else:
-            target = env.target_executable(
+            target = build.target.add_executable(
                 name=name,
                 module=mod,
                 uuid=self.uuid)
 
-        if env.platform == 'linux':
+        if build.config.platform == 'linux':
             from .runscript import RunScript
-            target = env.add_generated_source(
+            target = build.target.add_generated_source(
                 RunScript(name, name, target, args))
-        env.add_default(target)
+        build.target.add_default(target)

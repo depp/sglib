@@ -3,10 +3,10 @@
 # 2-clause BSD license.  For more information, see LICENSE.txt.
 from d3build.module import ExternalModule
 
-def _configure(env):
-    varset = env.pkg_config('gtkglext-1.0')
-    varset.LIBS = tuple(flag for flag in varset.LIBS
-                        if flag != '-Wl,--export-dynamic')
+def _configure(build):
+    varset = build.env.pkg_config('gtkglext-1.0')
+    varset['LIBS'] = tuple(flag for flag in varset['LIBS']
+                           if flag != '-Wl,--export-dynamic')
     return [], {'public': [varset]}
 
 module = ExternalModule(

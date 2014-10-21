@@ -118,55 +118,36 @@ class VarDefs(Var):
 
 class BuildVariables(object):
     """A set of build variables."""
-    __slots__ = ['variables']
+    __slots__ = ['schema', 'variables']
 
-    CC          = VarProg('CC', 'The C compiler')
-    CXX         = VarProg('CXX', 'The C++ compiler')
-    LD          = VarProg('LD', 'The linker')
-    CPPFLAGS    = VarFlags('CPPFLAGS', 'C and C++ preprocessor flags')
-    CPPPATH     = VarPaths('CPPPATH', 'C and C++ header search paths')
-    DEFS        = VarDefs('DEFS', 'C and C++ preprocessor definitions')
-    CFLAGS      = VarFlags('CFLAGS', 'C compilation flags')
-    CXXFLAGS    = VarFlags('CXXFLAGS', 'C++ compilation flags')
-    CWARN       = VarFlags('CWARN', 'C warning flags')
-    CXXWARN     = VarFlags('CXXWARN', 'C++ warning flags')
-    LDFLAGS     = VarFlags('LDFLAGS', 'Linker flags')
-    LIBS        = VarFlags('LIBS', 'Linker flags specifying libraries')
-    FPATH       = VarPaths('FPATH', 'Framework search paths')
-    FRAMEWORKS  = VarUniqueFlags('FRAMEWORKS', 'Frameworks to link in')
-
-    @classmethod
-    def variable_definition(class_, name):
-        """Get the definition for a variable."""
-        try:
-            vardef = getattr(class_, name)
-        except AttributeError:
-            return None
-        if not isinstance(vardef, Var):
-            return None
-        return vardef
-
-    def __init__(self, **kw):
+    def __init__(self, schema, **kw):
         """Create a set of build variables."""
         for varname, value in kw.items():
-            vardef = self.variable_definition(varname)
-            if vardef is None:
+            if varname not in schema:
                 raise ValueError('unknown variable: {}'.format(varname))
+        self.schema = schema
         self.variables = kw
 
     @classmethod
-    def parse(class_, vardict):
+    def parse(class_, schema, vardict, *, strict):
         """Create a set of build variables from strings."""
         variables = {}
         for varname, value in vardict.items():
-            variables[varname] = class_.parse_variable(varname, value)
-        return class_(**variables)
+            try:
+                value = class_.parse_variable(schema, varname, value)
+            except ValueError:
+                if strict:
+                    raise
+            else:
+                variables[varname] = value
+        return class_(schema, **variables)
 
-    @classmethod
-    def parse_variable(class_, varname, value):
+    @staticmethod
+    def parse_variable(schema, varname, value):
         """Parse a variable."""
-        vardef = class_.variable_definition(varname)
-        if vardef is None:
+        try:
+            vardef = schema[varname]
+        except KeyError:
             raise ValueError('unknown variable: {}'.format(varname))
         try:
             parse = vardef.parse
@@ -175,25 +156,29 @@ class BuildVariables(object):
         return parse(value)
 
     @classmethod
-    def merge(class_, varsets):
+    def merge(class_, schema, varsets):
         """Merge a set of build variable sets."""
-        variables = {}
+        lists = {}
         for varset in varsets:
+            if varset is None:
+                continue
+            if varset.schema is not schema:
+                raise ValueError('schema mismatch')
             for varname, value in varset.variables.items():
                 try:
-                    values = variables[varname]
+                    values = lists[varname]
                 except KeyError:
-                    variables[varname] = [value]
+                    lists[varname] = [value]
                 else:
                     values.append(value)
-        obj = class_()
-        for varname, values in variables.items():
-            if len(values) == 1:
-                value = values[0]
+        variables = {}
+        for varname, value in variables.items():
+            if len(value) == 1:
+                value = value[0]
             else:
-                value = getattr(class_, varname).combine(values)
-            obj.variables[varname] = value
-        return obj
+                value = schema[varname].combine(values)
+            variables[varname] = value
+        return class_(schema, **variables)
 
     def dump(self, file=None, *, indent=''):
         """Dump the build variables to a file.
@@ -203,7 +188,7 @@ class BuildVariables(object):
         if file is None:
             file = sys.stdout
         for varname, value in sorted(self.variables.items()):
-            vardef = getattr(self.__class__, varname)
+            vardef = self.schema[varname]
             print('{}{}: {}'
                   .format(indent, varname, vardef.show(value)),
                   file=file)
@@ -217,7 +202,7 @@ class BuildVariables(object):
         return self.variables[key]
 
     def __setitem__(self, key, value):
-        if self.variable_definition(key) is None:
+        if key not in self.schema:
             raise KeyError(repr(key))
         self.variables[key] = value
 
@@ -255,8 +240,9 @@ class BuildVariables(object):
     def update(self, **kw):
         """Update variables with the keyword arguments."""
         for varname, value2 in kw.items():
-            vardef = self.variable_definition(varname)
-            if vardef is None:
+            try:
+                vardef = self.schema[varname]
+            except KeyError:
                 raise ValueError('unknown variable: {}'.format(varname))
             try:
                 value1 = self.variables[varname]
@@ -279,7 +265,7 @@ class BuildVariables(object):
             except KeyError:
                 self.variables[varname] = value2
             else:
-                vardef = self.variable_definition(varname)
+                vardef = self.schema[varname]
                 self.variables[varname] = vardef.combine([value1, value2])
 
 if __name__ == '__main__':

@@ -1,17 +1,15 @@
 # Copyright 2014 Dietrich Epp.
 # This file is part of SGLib.  SGLib is licensed under the terms of the
 # 2-clause BSD license.  For more information, see LICENSE.txt.
-from .error import ConfigError
-from .error import UserError
+from .error import ConfigError, UserError
 from .source import SourceFile
+from .log import Feedback
 from .environment.variable import BuildVariables
 
-_circular = object()
-
 class _ModuleConfigurator(object):
-    __slots__ = ['env', 'tagdefs', 'has_error', 'modules', '_module_ids']
-    def __init__(self, env, tagdefs):
-        self.env = env
+    __slots__ = ['build', 'tagdefs', 'has_error', 'modules', '_module_ids']
+    def __init__(self, build, tagdefs):
+        self.build = build
         self.tagdefs = tagdefs
         self.has_error = False
         self.modules = []
@@ -40,9 +38,7 @@ class _ModuleConfigurator(object):
                     if id(item) in module_ids:
                         continue
                     module_ids.add(id(item))
-                    cfg_m = item.configure(self.env)
-                    if cfg_m is _circular:
-                        raise UserError('circular module dependency')
+                    cfg_m = self.build._configure_module(item)
                     new_varsets = cfg_m.public
                     new_modules.append(cfg_m)
                 else:
@@ -76,31 +72,12 @@ class Module(object):
     """
     __slots__ = []
 
-    def configure(self, env):
-        try:
-            return env.modules[id(self)]
-        except KeyError:
-            pass
-        env.modules[id(self)] = _circular
-        try:
-            m = self._configure(env)
-        except ConfigError as ex:
-            m = ConfiguredModule()
-            m.sources = []
-            m.public = []
-            m.private = []
-            m.dependencies = []
-            m.has_error = True
-            env.errors.append(ex)
-        env.modules[id(self)] = m
-        return m
-
-    def _configure(self, env):
+    def _configure(self, build):
         int_sources = self.sources
         all_tags = set()
         for source in int_sources:
             all_tags.update(source.tags)
-        ext_sources, tagdefs = self._get_configs(env)
+        ext_sources, tagdefs = self._get_configs(build)
         extras = (set(tagdefs).difference(all_tags)
                   .difference(['public', 'private']))
         missing = all_tags.difference(tagdefs)
@@ -110,7 +87,7 @@ class Module(object):
                 'missing tag configurations: {}; extra tag configurations: {}'
                 .format(', '.join(sorted(missing)),
                         ', '.join(sorted(extras))))
-        cfg = _ModuleConfigurator(env, tagdefs)
+        cfg = _ModuleConfigurator(build, tagdefs)
         out = ConfiguredModule()
         out.sources = []
         sourcelists = [(int_sources, False), (ext_sources, True)]
@@ -129,10 +106,6 @@ class Module(object):
         out.has_error = cfg.has_error
         return out
 
-    def flatten(self, env):
-        """Configure and flatten a module."""
-        return self.configure(env).flatten()
-
 class SourceModule(Module):
     """A module consisting of source code to be compiled."""
     __slots__ = ['_sources', '_tags_func']
@@ -145,10 +118,10 @@ class SourceModule(Module):
     def sources(self):
         return self._sources.sources
 
-    def _get_configs(self, env):
+    def _get_configs(self, build):
         if self._tags_func is None:
             return [], {}
-        return [], self._tags_func(env)
+        return [], self._tags_func(build)
 
 class ExternalModule(Module):
     """A module representing an external package.
@@ -169,9 +142,9 @@ class ExternalModule(Module):
     def sources(self):
         return []
 
-    def _get_configs(self, env):
-        with env.feedback('Checking for {}...'.format(self.name)) as fb:
-            return self._tags_func(env)
+    def _get_configs(self, build):
+        with Feedback('Checking for {}...'.format(self.name)) as fb:
+            return self._tags_func(build)
 
 class ConfiguredModule(object):
     """A module which has been configured."""

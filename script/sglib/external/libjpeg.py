@@ -2,7 +2,6 @@
 # This file is part of SGLib.  SGLib is licensed under the terms of the
 # 2-clause BSD license.  For more information, see LICENSE.txt.
 from d3build.module import ExternalModule
-from d3build.environment.variable import BuildVariables
 
 # stdio.h is necessary
 _TEST_SOURCE = '''\
@@ -17,10 +16,10 @@ int main(int argc, char **argv) {
 }
 '''
 
-def _configure(env):
-    varsets = [BuildVariables(LIBS=('-ljpeg',))]
-    varset = env.test_compile_link(
-        _TEST_SOURCE, 'c', env.base_vars, varsets)
+def _configure(build):
+    varsets = [build.env.varset(LIBS=('-ljpeg',))]
+    varset = build.test_compile_link(
+        _TEST_SOURCE, 'c', build.base_vars, varsets)
     return [], {'public': [varset]}
 
 module = ExternalModule(

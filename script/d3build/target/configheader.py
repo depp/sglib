@@ -7,11 +7,12 @@ def macro(x):
     return x.replace('-', '_').upper()
 
 class ConfigHeader(GeneratedSource):
-    __slots__ = ['target', 'flags']
+    __slots__ = ['target', 'flags', 'options']
 
-    def __init__(self, target, env):
+    def __init__(self, target, build):
         self.target = target
-        self.flags = env.flags._vars
+        self.flags = build.config.flags
+        self.options = build.options
 
     @property
     def dependencies(self):

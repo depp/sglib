@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
-import os, sys
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', 'script'))
+# Copyright 2014 Dietrich Epp.
+# This file is part of SGLib.  SGLib is licensed under the terms of the
+# 2-clause BSD license.  For more information, see LICENSE.txt.
+import sys
+from os.path import join, dirname
+sys.path.append(join(dirname(__file__), '..', '..', 'script'))
 import sglib
 
 src = sglib.SourceList(base=__file__, path='src', sources='''

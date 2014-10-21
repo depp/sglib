@@ -3,16 +3,19 @@
 # 2-clause BSD license.  For more information, see LICENSE.txt.
 import argparse
 import platform
+import sys
 from .error import UserError, ConfigError
 from .shell import escape
+from .util import yesno
 
 PLATFORMS = {
     'Darwin': ('osx', 'xcode'),
-    'Linux': ('linux', 'gmake'),
+    'Linux': ('linux', 'gnumake'),
     'Windows': ('windows', 'msvc'),
 }
 
 class Config(object):
+    """Project configuration."""
     __slots__ = [
         # Output verbosity: 0, 1, or 2
         'verbosity',
@@ -22,22 +25,21 @@ class Config(object):
         'warnings',
         # Whether warnings are treated as errors
         'werror',
-        # Variables specified on the configuration command line
+        # Dictionary of variables specified on the configuration command line
         'variables',
-        # The target platform
+        # The name of the target platform
         'platform',
-        # The target toolchain
+        # The name of the target toolchain
         'target',
         # Target toolchain parameters
         'targetparams',
-        # Optional flags from the command line
+        # Dictionary mapping flag names to values
         'flags',
-        # The identity of the script being run
-        'script',
     ]
 
     @classmethod
     def argument_parser(class_, options):
+        """Get the argument parser."""
         p = argparse.ArgumentParser()
         buildgroup = p.add_argument_group('build settings')
         optgroup = p.add_argument_group('features')
@@ -95,7 +97,8 @@ class Config(object):
         return p
 
     @classmethod
-    def parse_config(class_, *, options=[], args, script):
+    def parse_config(class_, *, options=[], args):
+        """Parse the configuration from command-line arguments."""
         args = class_.argument_parser(options).parse_args(args)
         obj = class_()
 
@@ -134,69 +137,29 @@ class Config(object):
         for option in options:
             obj.flags[option.name] = option.get_value(args)
 
-        obj.script = script
-
         return obj
 
-    def dump(self):
-        print('Platform:', self.platform)
+    def dump(self, *, file=None):
+        """Dump information about the configuration."""
+        if file is None:
+            file = sys.stdout
+        print('Platform:', self.platform, file=file)
         print('Target:', ':'.join(
             [self.target] +
             sorted('{}={}'.format(param, value)
-                   for param, value in self.targetparams.items())))
-        print('Configuration:', self.config)
-        print('Extra warnings:', self.warnings)
-        print('Warnings are errors:', self.werror)
-        print('Build variables:')
+                   for param, value in self.targetparams.items())),
+            file=file)
+        print('Configuration:', self.config, file=file)
+        print('Extra warnings:', yesno(self.warnings), file=file)
+        print('Warnings are errors:', yesno(self.werror), file=file)
+        print('Build variables:', file=file)
         for varname, value in sorted(self.variables.items()):
-            print('    {} = {}'.format(varname, value))
-
-    def environment(self):
-        if self.target == 'gmake':
-            from .environment import gmake
-            return gmake.GnuMakeEnvironment(self)
-        else:
-            raise ConfigError(
-                'unknown target: {}'.format(self.target))
-
-    @classmethod
-    def run(class_, *, configure, sources, options=[], apply_defaults=None):
-        import sys, pickle
-        args = sys.argv
-        action = args[1] if len(args) >= 2 else None
-        if action == '--action-regenerate':
-            with open('config.dat', 'rb') as fp:
-                _, gensources = pickle.load(fp)
-            if len(args) != 3:
-                print('Invalid arguments', file=sys.stderr)
-                sys.exit(1)
-            try:
-                source = gensources[args[2]]
-            except KeyErorr:
-                print('Unknown generated source file: {}'.format(args[2]))
-                sys.exit(1)
-            source = pickle.loads(source)
-            source.regen()
-            return
-        elif action == '--action-reconfigure':
-            with open('config.dat', 'rb') as fp:
-                args, gensources = pickle.load(fp)
-        cfg = class_.parse_config(options=options, args=args[1:],
-                                  script=sys.argv[0])
-        if apply_defaults is not None:
-            apply_defaults(cfg)
-        env = cfg.environment()
-        print('Arguments: {}'.format(
-            ' '.join(escape(x) for x in args)), file=env.logfile())
-        env.log_info()
-        configure(env)
-        env.finalize()
-        gensources = {
-            s.target: pickle.dumps(s, protocol=pickle.HIGHEST_PROTOCOL)
-            for s in env.generated_sources
-        }
-        with open('config.dat', 'wb') as fp:
-            pickle.dump((args, gensources), fp)
+            print('  {} = {}'.format(varname, value), file=file)
+        print('Flags:', file=file)
+        for k, v in sorted(self.flags.items()):
+            if isinstance(v, bool):
+                v = yesno(v)
+            print('  {}: {}'.format(k, v), file=file)
 
 if __name__ == '__main__':
     cfg = Config.configure()

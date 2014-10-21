@@ -1,8 +1,7 @@
 # Copyright 2014 Dietrich Epp.
 # This file is part of SGLib.  SGLib is licensed under the terms of the
 # 2-clause BSD license.  For more information, see LICENSE.txt.
-from .nix import NixEnvironment, cc_command, ld_command
-from .variable import BuildVariables
+from .target import Target
 from ..error import UserError
 from ..shell import escape
 import collections
@@ -10,14 +9,6 @@ import io
 import os
 import re
 import sys
-
-_escape = escape
-def escape(x):
-    try:
-        return _escape(x)
-    except:
-        print(repr(x))
-        raise
 
 # What to print out when compiling various source types
 BUILD_NAMES = {
@@ -45,19 +36,28 @@ def mk_escape(x):
 # A phony makefile target
 Phony = collections.namedtuple('Phony', 'name')
 
-class GnuMakeEnvironment(NixEnvironment):
+class GnuMakeTarget(Target):
     """Environment targeting the GNU Make build system."""
     __slots__ = [
-        '_rulefp',      # StringIO with most rules
-        '_all',         # What to build by default
-        '_clean',       # What to clean
-        '_phony',       # List of phony rules
-        '_optinclude',  # Optional makefiles to include
-        '_qnames',      # Map of quiet rule names
+        # First arguments for running the configuration script.
+        '_configure',
+        # StringIO with the rules.
+        '_rulefp',
+        # Set of default targets.
+        '_all',
+        # Set of objects to clean.
+        '_clean',
+        # Set of phony rules (e.g. 'clean', 'all').
+        '_phony',
+        # Optional makefiles to include.
+        '_optinclude',
+        # Map from text printed to quiet rule variables.
+        '_qnames',
     ]
 
-    def __init__(self, cfg):
-        super(GnuMakeEnvironment, self).__init__(cfg)
+    def __init__(self, name, script, config, env):
+        super(GnuMakeTarget, self).__init__(name, script, config, env)
+        self._configure = [sys.executable, script]
         self._rulefp = io.StringIO()
         self._all = set()
         self._clean = {'build'}
@@ -66,7 +66,11 @@ class GnuMakeEnvironment(NixEnvironment):
         self._qnames = {}
 
     def add_generated_source(self, source):
-        super(GnuMakeEnvironment, self).add_generated_source(source)
+        """Add a generated source to the build system.
+
+        Returns the path to the generated source.
+        """
+        super(GnuMakeTarget, self).add_generated_source(source)
         if source.is_regenerated_only:
             self._clean.add(source.target)
         if source.is_regenerated_always:
@@ -75,16 +79,15 @@ class GnuMakeEnvironment(NixEnvironment):
             deps = source.dependencies
         self._add_rule(
             source.target, deps,
-            [[sys.executable, self.script,
-              '--action-regenerate', source.target]],
+            [self._configure + ['--action-regenerate', source.target]],
             qname='Regen')
         return source.target
 
-    def add_default(self, target):
-        self._all.add(target)
+    def add_executable(self, *, name, module, uuid=None):
+        """Create an executable target.
 
-    def target_executable(self, *, name, module, uuid=None):
-        """Create an executable target."""
+        Returns the path to the executable.
+        """
         cm = module.flatten(self)
 
         objects = []
@@ -116,11 +119,8 @@ class GnuMakeEnvironment(NixEnvironment):
 
         return productpath
 
-    def target_application_bundle(self, name, module, info_plist):
-        """Create an OS X application bundle target."""
-
     def finalize(self):
-        super(GnuMakeEnvironment, self).finalize()
+        super(GnuMakeTarget, self).finalize()
         with open('Makefile', 'w') as fp:
             self._write(fp)
 
@@ -205,8 +205,8 @@ class GnuMakeEnvironment(NixEnvironment):
         fp.write(
             'Makefile: {script}\n\t{python} {script} --action-reconfigure\n'
             'config:\n\t{python} {script} --action-reconfigure\n'
-            .format(python=escape(sys.executable),
-                    script=escape(self.script)))
+            .format(python=escape(self._configure[0]),
+                    script=escape(self._configure[1])))
         if self._optinclude:
             fp.write('-include {}\n'.format(
                 ' '.join(mk_escape(x)
@@ -228,3 +228,9 @@ class GnuMakeEnvironment(NixEnvironment):
                 ' '.join(escape(x) for x in sorted(self._clean))))
         fp.write('FORCE:\n')
         fp.write(self._rulefp.getvalue())
+
+class GnuMakeLinuxTarget(GnuMakeTarget):
+    """Environment targeting the GNU Make build system on Linux."""
+
+class GnuMakeOSXTarget(GnuMakeTarget):
+    """Environment targeting the GNU Make build system on OS X."""

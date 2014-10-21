@@ -4,8 +4,8 @@
 from d3build.module import ExternalModule
 
 def _configure(version):
-    def configure(env):
-        return [], {'public': [env.sdl_config(version)]}
+    def configure(build):
+        return [], {'public': [build.env.sdl_config(version)]}
     return configure
 
 version_1 = ExternalModule(

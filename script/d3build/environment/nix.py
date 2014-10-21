@@ -2,78 +2,57 @@
 # This file is part of SGLib.  SGLib is licensed under the terms of the
 # 2-clause BSD license.  For more information, see LICENSE.txt.
 from .environment import BaseEnvironment
-from .variable import BuildVariables
+from . import variable
 from ..shell import get_output, describe_proc
 from ..error import ConfigError, format_block
-from ..source import SRCTYPE_EXT
+from ..source import SRCTYPE_EXT, _base
+from ..log import logfile
 import io
 import os
 import tempfile
 
-def cc_command(varset, output, source, sourcetype, *,
-               depfile=None, external=False):
-    """Get the command to compile the given source file."""
-    if sourcetype in ('c', 'objc'):
-        cc, cflags, cwarn = 'CC', 'CFLAGS', 'CWARN'
-    elif sourcetype in ('c++', 'objc++'):
-        cc, cflags, cwarn = 'CXX', 'CXXFLAGS', 'CXXWARN'
-    else:
-        raise ValueError('invalid source type')
+v = variable
+SCHEMA = {
+    'CC':         v.VarProg('CC', 'The C compiler'),
+    'CXX':        v.VarProg('CXX', 'The C++ compiler'),
+    'LD':         v.VarProg('LD', 'The linker'),
+    'CPPFLAGS':   v.VarFlags('CPPFLAGS', 'C and C++ preprocessor flags'),
+    'CPPPATH':    v.VarPaths('CPPPATH', 'C and C++ header search paths'),
+    'DEFS':       v.VarDefs('DEFS', 'C and C++ preprocessor definitions'),
+    'CFLAGS':     v.VarFlags('CFLAGS', 'C compilation flags'),
+    'CXXFLAGS':   v.VarFlags('CXXFLAGS', 'C++ compilation flags'),
+    'CWARN':      v.VarFlags('CWARN', 'C warning flags'),
+    'CXXWARN':    v.VarFlags('CXXWARN', 'C++ warning flags'),
+    'LDFLAGS':    v.VarFlags('LDFLAGS', 'Linker flags'),
+    'LIBS':       v.VarFlags('LIBS', 'Linker flags specifying libraries'),
+}
 
-    try:
-        cc = varset[cc]
-    except KeyError:
-        raise ConfigError('{} is not set'.format(cc))
-    cflags = varset.get(cflags, ())
-    if external:
-        cwarn = ()
-    else:
-        cwarn = varset.get(cwarn, ())
-
-    cmd = [cc, '-o', output, source, '-c']
-    if depfile is not None:
-        cmd.extend(('-MF', depfile, '-MMD', '-MP'))
-    cmd.extend('-I' + p for p in varset.get('CPPPATH', ()))
-    cmd.extend('-F' + p for p in varset.get('FPATH', ()))
-    cmd.extend(mkdef(k, v) for k, v in varset.get('DEFS', ()))
-    cmd.extend(varset.get('CPPFLAGS', ()))
-    cmd.extend(cwarn)
-    cmd.extend(cflags)
-    return cmd
-
-def ld_command(varset, output, sources, sourcetypes):
-    """Get the command to link the given source."""
-    if 'c++' in sourcetypes or 'objc++' in sourcetypes:
-        cc = 'CXX'
-    else:
-        cc = 'CC'
-    try:
-        cc = varset[cc]
-    except KeyError:
-        raise ConfigError('{} is not set'.format(cc))
-
-    cmd = [cc]
-    cmd.extend(varset.get('LDFLAGS', ()))
-    cmd.extend(('-o', output))
-    cmd.extend(sources)
-    cmd.extend('-F' + p for p in varset.get('FPATH', ()))
-    cmd.extend(varset.get('LIBS', ()))
-    for framework in varset.get('FRAMEWORKS', ()):
-        cmd.extend(('-framework', framework))
-    return cmd
+SCHEMA_OSX = {
+    'FPATH':      v.VarPaths('FPATH', 'Framework search paths'),
+    'FRAMEWORKS': v.VarUniqueFlags('FRAMEWORKS', 'Frameworks to link in'),
+}
+del v
 
 class NixEnvironment(BaseEnvironment):
     """A Unix-like configuration environment."""
-    __slots__ = ['base_vars']
+    __slots__ = [
+        # Base compilation variables in this environment.
+        'base_vars',
+        # Additional variables specified by the user.
+        'user_vars',
+    ]
 
     def __init__(self, config):
         super(NixEnvironment, self).__init__(config)
+        self.schema.update(SCHEMA)
+        if config.platform == 'osx':
+            self.schema.update(SCHEMA_OSX)
 
         if config.config == 'debug':
             cflags = ('-O0', '-g')
         else:
             cflags = ('-O2', '-g')
-        varset = BuildVariables(
+        varset = self.varset(
             CC='cc',
             CXX='c++',
             CFLAGS=cflags,
@@ -104,17 +83,78 @@ class NixEnvironment(BaseEnvironment):
             varset.update(
                 LDFLAGS=('-Wl,-dead_strip', '-Wl,-dead_strip_dylibs'))
 
-        varset.update_parse(config.variables, strict=False)
         self.base_vars = varset
+        self.user_vars = self.varset_parse(config.variables, strict=False)
 
-    def log_info(self):
-        """Log basic information about the environment."""
-        super(NixEnvironment, self).log_info()
+    @staticmethod
+    def cc_command(varset, output, source, sourcetype, *,
+                   depfile=None, external=False):
+        """Get the command to compile the given source file."""
+        varset = self.varset_merge([self.base_vars, varset, self.user_vars])
+        if sourcetype in ('c', 'objc'):
+            cc, cflags, cwarn = 'CC', 'CFLAGS', 'CWARN'
+        elif sourcetype in ('c++', 'objc++'):
+            cc, cflags, cwarn = 'CXX', 'CXXFLAGS', 'CXXWARN'
+        else:
+            raise ValueError('invalid source type')
 
-        out = self.logfile(2)
-        print('Build variables:', file=out)
-        self.base_vars.dump(out, indent='  ')
-        print(file=out)
+        try:
+            cc = varset[cc]
+        except KeyError:
+            raise ConfigError('{} is not set'.format(cc))
+        cflags = varset.get(cflags, ())
+        if external:
+            cwarn = ()
+        else:
+            cwarn = varset.get(cwarn, ())
+
+        cmd = [cc, '-o', output, source, '-c']
+        if depfile is not None:
+            cmd.extend(('-MF', depfile, '-MMD', '-MP'))
+        cmd.extend('-I' + p for p in varset.get('CPPPATH', ()))
+        cmd.extend('-F' + p for p in varset.get('FPATH', ()))
+        cmd.extend(mkdef(k, v) for k, v in varset.get('DEFS', ()))
+        cmd.extend(varset.get('CPPFLAGS', ()))
+        cmd.extend(cwarn)
+        cmd.extend(cflags)
+        return cmd
+
+    @staticmethod
+    def ld_command(varset, output, sources, sourcetypes):
+        """Get the command to link the given source."""
+        varset = self.varset_merge([self.base_vars, varset, self.user_vars])
+        if 'c++' in sourcetypes or 'objc++' in sourcetypes:
+            cc = 'CXX'
+        else:
+            cc = 'CC'
+        try:
+            cc = varset[cc]
+        except KeyError:
+            raise ConfigError('{} is not set'.format(cc))
+
+        cmd = [cc]
+        cmd.extend(varset.get('LDFLAGS', ()))
+        cmd.extend(('-o', output))
+        cmd.extend(sources)
+        cmd.extend('-F' + p for p in varset.get('FPATH', ()))
+        cmd.extend(varset.get('LIBS', ()))
+        for framework in varset.get('FRAMEWORKS', ()):
+            cmd.extend(('-framework', framework))
+        return cmd
+
+    def dump(self, *, file):
+        """Dump information about the environment."""
+        super(NixEnvironment, self).dump(file=file)
+        file = logfile(2)
+        print('Base build variables:', file=file)
+        self.base_vars.dump(file, indent='  ')
+        print('User build variables:', file=file)
+        self.user_vars.dump(file, indent='  ')
+
+    def header_paths(self, *, base, paths):
+        """Create build variables that include a header search path."""
+        return self.varset(
+            CPPPATH=tuple(_base(base, path) for path in paths))
 
     def pkg_config(self, spec):
         """Run the pkg-config tool and return the build variables."""
@@ -129,8 +169,8 @@ class NixEnvironment(BaseEnvironment):
                     combine_output=True)
                 raise ConfigError('{} failed'.format(cmdname), details=stdout)
             flags[varname] = stdout
-        varset = BuildVariables.parse(flags)
-        varset.CXXFLAGS = varset.CFLAGS
+        varset = self.varset_parse(flags)
+        varset['CXXFLAGS'] = varset['CFLAGS']
         return varset
 
     def sdl_config(self, version):
@@ -150,18 +190,18 @@ class NixEnvironment(BaseEnvironment):
             if retcode:
                 raise ConfigError('{} failed'.format(cmdname), details=stderr)
             flags[varname] = stdout
-        varset = BuildVariables.parse(flags)
-        varset.CXXFLAGS = varset.CFLAGS
+        varset = self.varset_parse(flags)
+        varset['CXXFLAGS'] = varset['CFLAGS']
         return varset
 
     def frameworks(self, flist):
         """Specify a list of frameworks to use."""
-        if self.platform != 'osx':
+        if self._config.platform != 'osx':
             return super(NixEnvironment, self).frameworks(flist)
         flist = tuple(flist)
         if not all(isinstance(x, str) for x in flist):
             raise TypeError('expected a list of strings')
-        return BuildVariables(FRAMEWORKS=flist)
+        return self.varset(FRAMEWORKS=flist)
 
     def test_compile_link(self, source, sourcetype, base_varset, varsets):
         """Try different build variable sets to find one that works."""
@@ -169,8 +209,9 @@ class NixEnvironment(BaseEnvironment):
         print('Testing compilation and linking.', file=log)
         print('Source type: {}'.format(sourcetype), file=log)
         log.write(format_block(source))
-        print('Base build variables:', file=log)
-        base_varset.dump(log, indent='    ')
+        if base_varset is not None:
+            print('Base build variables:', file=log)
+            base_varset.dump(log, indent='  ')
         with tempfile.TemporaryDirectory() as dirpath:
             file_c = os.path.join(dirpath, 'config' + SRCTYPE_EXT[sourcetype])
             file_obj = os.path.join(dirpath, 'config.o')
@@ -179,8 +220,8 @@ class NixEnvironment(BaseEnvironment):
                 fp.write(source)
             for varset in varsets:
                 print('Test build variables:', file=log)
-                varset.dump(log, indent='    ')
-                test_varset = BuildVariables.merge([base_varset, varset])
+                varset.dump(log, indent='  ')
+                test_varset = self.varset_merge([base_varset, varset])
                 cmds = [
                     cc_command(test_varset, file_obj, file_c,
                                sourcetype, external=True),
