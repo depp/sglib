@@ -2,7 +2,7 @@
 # This file is part of SGLib.  SGLib is licensed under the terms of the
 # 2-clause BSD license.  For more information, see LICENSE.txt.
 from .environment import BaseEnvironment
-from . import variable
+from . import schema
 from ..shell import get_output, describe_proc
 from ..error import ConfigError, format_block
 from ..source import SRCTYPE_EXT, _base
@@ -11,27 +11,27 @@ import io
 import os
 import tempfile
 
-v = variable
-SCHEMA = {
-    'CC':         v.VarProg('CC', 'The C compiler'),
-    'CXX':        v.VarProg('CXX', 'The C++ compiler'),
-    'LD':         v.VarProg('LD', 'The linker'),
-    'CPPFLAGS':   v.VarFlags('CPPFLAGS', 'C and C++ preprocessor flags'),
-    'CPPPATH':    v.VarPaths('CPPPATH', 'C and C++ header search paths'),
-    'DEFS':       v.VarDefs('DEFS', 'C and C++ preprocessor definitions'),
-    'CFLAGS':     v.VarFlags('CFLAGS', 'C compilation flags'),
-    'CXXFLAGS':   v.VarFlags('CXXFLAGS', 'C++ compilation flags'),
-    'CWARN':      v.VarFlags('CWARN', 'C warning flags'),
-    'CXXWARN':    v.VarFlags('CXXWARN', 'C++ warning flags'),
-    'LDFLAGS':    v.VarFlags('LDFLAGS', 'Linker flags'),
-    'LIBS':       v.VarFlags('LIBS', 'Linker flags specifying libraries'),
-}
+SCHEMA = schema.Schema()
+(SCHEMA
+    .prog ('CC', 'The C compiler')
+    .prog ('CXX', 'The C++ compiler')
+    .prog ('LD', 'The linker')
+    .flags('CPPFLAGS', 'C and C++ preprocessor flags')
+    .paths('CPPPATH', 'C and C++ header search paths')
+    .defs ('DEFS', 'C and C++ preprocessor definitions')
+    .flags('CFLAGS', 'C compilation flags')
+    .flags('CXXFLAGS', 'C++ compilation flags')
+    .flags('CWARN', 'C warning flags')
+    .flags('CXXWARN', 'C++ warning flags')
+    .flags('LDFLAGS', 'Linker flags')
+    .flags('LIBS', 'Linker flags specifying libraries')
+)
 
-SCHEMA_OSX = {
-    'FPATH':      v.VarPaths('FPATH', 'Framework search paths'),
-    'FRAMEWORKS': v.VarUniqueFlags('FRAMEWORKS', 'Frameworks to link in'),
-}
-del v
+SCHEMA_OSX = schema.Schema()
+(SCHEMA_OSX
+    .paths('FPATH', 'Framework search paths')
+    .unique_flags('FRAMEWORKS', 'Frameworks to link in')
+)
 
 class NixEnvironment(BaseEnvironment):
     """A Unix-like configuration environment."""

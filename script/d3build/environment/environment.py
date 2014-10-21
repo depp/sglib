@@ -3,6 +3,7 @@
 # 2-clause BSD license.  For more information, see LICENSE.txt.
 from ..error import ConfigError
 from .variable import BuildVariables
+from .schema import Schema
 import io
 import sys
 
@@ -18,7 +19,7 @@ class BaseEnvironment(object):
 
     def __init__(self, config):
         self._config = config
-        self.schema = {}
+        self.schema = Schema()
 
     def dump(self, *, file):
         """Dump information about the environment."""
