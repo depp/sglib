@@ -250,8 +250,13 @@ class XcodeTarget(BaseTarget):
             return self._frameworks[name]
         except KeyError:
             pass
+        try:
+            fwpath = self.env.find_framework(name)
+        except KeyError:
+            fwpath = name + '.framework'
         framework = obj.FileRef(
-            path=name + '.framework',
+            path=fwpath,
+            name=name + '.framework',
             lastKnownFileType='wrapper.framework',
             sourceTree='<group>')
         self._framework_group.children.append(framework)

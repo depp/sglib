@@ -87,6 +87,28 @@ class BaseEnvironment(object):
                               .format(pattern, ', '.join(results)))
         return os.path.join(self.library_path, results[0])
 
+    def find_framework(self, name):
+        if self._config.platform != 'osx':
+            raise ConfigError('frameworks not available on this platform')
+        try:
+            home = os.environ['HOME']
+        except KeyError:
+            raise ConfigError('missing HOME environment variable')
+        dir_paths = [
+            os.path.join(home, 'Library/Frameworks'),
+            '/Library/Frameworks',
+            '/System/Library/Frameworks']
+        framework_name = name + '.framework'
+        for dir_path in dir_paths:
+            try:
+                fnames = os.listdir(dir_path)
+            except FileNotFoundError:
+                continue
+            if framework_name in fnames:
+                return os.path.join(dir_path, framework_name)
+        raise ConfigError('could not find framework {}'
+                          .format(framework_name))
+
     def define(self, definition):
         """Create build variables that define a preprocessor variable."""
         raise NotImplementedError('must be implemented by subclass')
