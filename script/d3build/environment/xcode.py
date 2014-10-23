@@ -155,9 +155,10 @@ class XcodeEnvironment(BaseEnvironment):
         """Create build variables that define a preprocessor variable."""
         return {'GCC_PREPROCESSOR_DEFINITIONS': [definition]}
 
-    def header_path(self, path):
+    def header_path(self, path, *, system=False):
         """Create build variables that include a header search path."""
-        return {'USER_HEADER_SEARCH_PATHS': [path]}
+        key = 'HEADER_SEARCH_PATHS' if system else 'USER_HEADER_SEARCH_PATHS'
+        return {key: [path]}
 
     def frameworks(self, flist):
         """Specify a list of frameworks to use."""

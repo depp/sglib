@@ -22,7 +22,7 @@ def bundled(build):
     varsets = [
         env.define('GLEW_STATIC'),
         env.define('USE_BUNDLED_GLEW'),
-        env.header_path(os.path.join(path, 'include')),
+        env.header_path(os.path.join(path, 'include'), system=True),
     ]
     # http://stackoverflow.com/questions/22759943/unable-to-build-against-glew-on-os-x-10-9-mavericks
     if build.config.target == 'xcode':

@@ -161,9 +161,10 @@ class NixEnvironment(BaseEnvironment):
         """Create build variables that define a preprocessor variable."""
         return {'CPPFLAGS:': ['-D' + definition]}
 
-    def header_path(self, path):
+    def header_path(self, path, *, system=False):
         """Create build variables that include a header search path."""
-        return {'CPPFLAGS': ['-I' + path]}
+        flag = '-I' if system else '-iquote'
+        return {'CPPFLAGS': [flag + path]}
 
     def pkg_config(self, spec):
         """Run the pkg-config tool and return the build variables."""

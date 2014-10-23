@@ -113,7 +113,7 @@ class BaseEnvironment(object):
         """Create build variables that define a preprocessor variable."""
         raise NotImplementedError('must be implemented by subclass')
 
-    def header_path(self, path):
+    def header_path(self, path, *, system=False):
         """Create build variables that include a header search path."""
         raise NotImplementedError('must be implemented by subclass')
 
