@@ -15,7 +15,7 @@ flags = [
         'coreaudio': 'use Core Audio',
         'directsound': 'use DirectSound',
         'sdl': 'use LibSDL',
-    }, require=['audio']),
+    }),
     EnableFlag('vorbis', 'enable Vorbis decoding'),
     EnableFlag('opus', 'enable Opus decoding'),
     EnableFlag('jpeg', 'enable JPEG decoding', {
@@ -36,31 +36,56 @@ flags = [
     EnableFlag('video-recording', 'enable video recording'),
 ]
 
-defaults = {
-    None: {
-        'vorbis': True,
-        'opus': True,
-        'video-recording': False,
-    },
+DEFAULTS = {
+    'vorbis': True,
+    'opus': True,
+    'video-recording': False,
+}
+
+PLATFORM_DEFAULTS = {
     'linux': {
-        'audio': 'sdl',
         'jpeg': 'libjpeg',
         'png': 'libpng',
         'type': 'pango',
         'frontend': 'sdl',
     },
     'osx': {
-        'audio': 'coreaudio',
         'jpeg': 'coregraphics',
         'png': 'coregraphics',
         'type': 'coretext',
         'frontend': 'cocoa',
     },
     'windows': {
-        'audio': 'directsound',
         'jpeg': 'wincodec',
         'png': 'wincodec',
         'type': 'uniscribe',
         'frontend': 'windows',
     },
 }
+
+AUDIO_DEFAULTS = {
+    'linux': 'alsa',
+    'osx': 'coreaudio',
+    'windows': 'directsound',
+}
+
+def adjust_config(config, defaults):
+    defaults_list = [
+        defaults,
+        PLATFORM_DEFAULTS[config.platform],
+        DEFAULTS,
+    ]
+    for flags in defaults_list:
+        if not flags:
+            continue
+        for flag, value in flags.items():
+            if flag not in config.flags:
+                raise ValueError('unknown flag: {!r}'.format(flag))
+            if config.flags[flag] is None:
+                config.flags[flag] = value
+    if config.flags['audio'] is None:
+        if config.flags['frontend'] == 'sdl':
+            config.flags['audio'] = 'sdl'
+        else:
+            config.flags['audio'] = AUDIO_DEFAULTS[config.platform]
+    print(config.flags)

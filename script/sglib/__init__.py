@@ -79,19 +79,7 @@ class App(object):
 
     def _adjust_config(self, cfg):
         """Adjust the configuration."""
-        for defaults in (self.defaults, options.defaults):
-            if not defaults:
-                continue
-            for platform in (cfg.platform, None):
-                try:
-                    flags = defaults[platform]
-                except KeyError:
-                    continue
-                for flag, value in flags.items():
-                    if flag not in cfg.flags:
-                        raise ValueError('unknown flag: {!r}'.format(flag))
-                    if cfg.flags[flag] is None:
-                        cfg.flags[flag] = value
+        options.adjust_config(cfg, self.defaults)
 
     def _build(self, build):
         """Create the project targets."""
