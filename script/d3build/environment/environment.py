@@ -117,6 +117,10 @@ class BaseEnvironment(object):
         """Create build variables that include a header search path."""
         raise NotImplementedError('must be implemented by subclass')
 
+    def framework_path(self, path):
+        """Create build variables that include a framework search path."""
+        raise NotImplementedError('framework_path not available')
+
     def pkg_config(self, spec):
         """Run the pkg-config tool and return the build variables."""
         raise ConfigError('pkg-config not available for this target')

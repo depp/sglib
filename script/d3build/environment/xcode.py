@@ -160,6 +160,10 @@ class XcodeEnvironment(BaseEnvironment):
         key = 'HEADER_SEARCH_PATHS' if system else 'USER_HEADER_SEARCH_PATHS'
         return {key: [path]}
 
+    def framework_path(self, path):
+        """Create build variables that include a framework search path."""
+        return {'FRAMEWORK_SEARCH_PATHS': [path]}
+
     def frameworks(self, flist):
         """Specify a list of frameworks to use."""
         return {'.FRAMEWORKS': list(flist)}

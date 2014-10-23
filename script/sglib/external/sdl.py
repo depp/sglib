@@ -14,6 +14,7 @@ def framework(build, version):
     path = env.find_framework(name)
     varsets = [
         env.header_path(os.path.join(path, 'Headers')),
+        env.framework_path(os.path.dirname(path)),
         env.frameworks([name])]
     return None, [], {'public': [env.schema.merge(varsets)]}
 

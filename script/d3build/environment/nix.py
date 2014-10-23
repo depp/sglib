@@ -166,6 +166,10 @@ class NixEnvironment(BaseEnvironment):
         flag = '-I' if system else '-iquote'
         return {'CPPFLAGS': [flag + path]}
 
+    def framework_path(self, path):
+        """Create build variables that include a framework search path."""
+        return {'LIBS': ['-F' + path]}
+
     def pkg_config(self, spec):
         """Run the pkg-config tool and return the build variables."""
         cmdname = 'pkg-config'
