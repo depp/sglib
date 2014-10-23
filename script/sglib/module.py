@@ -35,7 +35,7 @@ windows
 def configure(build):
     from .external import (
         ogg, vorbis, opus,
-        sdl, glew,
+        sdl, glew, opengl,
         alsa, libjpeg, libpng, pango, gtk, gtkglext,
     )
     platform = build.config.platform
@@ -44,6 +44,7 @@ def configure(build):
     tags = {tag: False for tag in TAGS}
     tags['public'] = [
         build.env.header_path(_base(__file__, '../../include')),
+        opengl.module,
         glew.module,
     ]
 
