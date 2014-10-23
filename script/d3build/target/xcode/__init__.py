@@ -182,7 +182,7 @@ class XcodeTarget(BaseTarget):
         tobj.add_phase('framework', obj.FrameworksBuildPhase())
         for source in module.sources:
             tobj.add_source(self._add_source(source))
-        for framework in varset.get('.FRAMEWORKS', ()):
+        for framework in set(varset.get('.FRAMEWORKS', ())):
             tobj.add_source(self._add_framework(framework))
 
         exe_args = []
