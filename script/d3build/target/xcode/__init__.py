@@ -250,10 +250,15 @@ class XcodeTarget(BaseTarget):
             return self._frameworks[name]
         except KeyError:
             pass
+        fwname = name + '.framework'
         try:
             fwpath = self.env.find_framework(name)
-        except KeyError:
-            fwpath = name + '.framework'
+        except ConfigError:
+            fwpath = fwname
+        if os.path.dirname(fwpath) == '/System/Library/Frameworks':
+            fwpath = fwname
+        if fwpath == fwname:
+            fwname = None
         framework = obj.FileRef(
             path=fwpath,
             name=name + '.framework',
