@@ -52,16 +52,35 @@ class ConfigureMake(object):
         cmd.extend(self.configure_flags(params))
         os.makedirs(params.builddir, exist_ok=True)
 
+        status = self._read_status(params)
         try:
-            makefile = os.path.join(params.builddir, 'Makefile')
-            if not os.path.isfile(makefile):
+            if status not in ('config', 'build', 'install'):
                 subprocess.check_call(cmd, cwd=params.builddir)
-            subprocess.check_call(
-                ['make', '-j{}'.format(multiprocessing.cpu_count())],
-                cwd=params.builddir)
-            subprocess.check_call(
-                ['make', 'install',
-                 'DESTDIR=' + os.path.abspath(params.destdir)],
-                cwd=params.builddir)
+                self._write_status(params, 'config')
+            if status not in ('build', 'install'):
+                subprocess.check_call(
+                    ['make', '-j{}'.format(multiprocessing.cpu_count())],
+                    cwd=params.builddir)
+                self._write_status(params, 'build')
+            if status != 'install':
+                subprocess.check_call(
+                    ['make', 'install',
+                     'DESTDIR=' + os.path.abspath(params.destdir)],
+                    cwd=params.builddir)
+                self._write_status(params, 'install')
         except subprocess.CalledProcessError:
             return False
+
+    def _status_path(self, params):
+        return os.path.join(params.builddir, 'd3build_status.txt')
+
+    def _read_status(self, params):
+        try:
+            with open(self._status_path(params), 'r') as fp:
+                return fp.read().strip()
+        except FileNotFoundError:
+            return ''
+
+    def _write_status(self, params, status):
+        with open(self._status_path(params), 'w') as fp:
+            fp.write(status)
