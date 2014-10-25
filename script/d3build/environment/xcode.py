@@ -160,6 +160,12 @@ class XcodeEnvironment(BaseEnvironment):
         key = 'HEADER_SEARCH_PATHS' if system else 'USER_HEADER_SEARCH_PATHS'
         return {key: [path]}
 
+    def library(self, path):
+        """Create build variables that link with a library."""
+        # If you add a library to the target normally, Xcode will use
+        # a -l flag, which is often not what you want.
+        return {'OTHER_LDFLAGS': [path]}
+
     def framework_path(self, path):
         """Create build variables that include a framework search path."""
         return {'FRAMEWORK_SEARCH_PATHS': [path]}

@@ -2,7 +2,9 @@
 # This file is part of SGLib.  SGLib is licensed under the terms of the
 # 2-clause BSD license.  For more information, see LICENSE.txt.
 from . import obj
-from ..target import BaseTarget
+from ..target import BaseTarget, ExternalTarget
+from ..external import ExternalBuildParameters
+from ...error import ConfigError, UserError
 import os
 import shutil
 
@@ -35,6 +37,13 @@ EXT_MAP = {
 }
 EXT_MAP.update({ext: 'image' + ext for ext in
                 '.png .jpeg .pdf .git .bmp .pict .ico .icns .tiff'.split()})
+
+class XcodeExternalTarget(ExternalTarget):
+    __slots__ = []
+    def build(self):
+        params = ExternalBuildParameters(
+            builddir=self.builddir, destdir=self.destdir)
+        self.target.build(params)
 
 class Target(object):
     """Object for creating an Xcode target."""
@@ -137,6 +146,14 @@ class XcodeTarget(BaseTarget):
                 self._project.write(
                     pf, uf, objectVersion=self._object_version)
 
+    def external_target(self, obj, name, dependencies=[]):
+        """Create an external target, without adding it to the build."""
+        libbuild = os.path.join(self.env.library_path, 'build')
+        destdir = os.path.join(libbuild, 'products')
+        builddir = os.path.join(libbuild, name)
+        return XcodeExternalTarget(
+            obj, name, dependencies, destdir, builddir)
+
     def add_application_bundle(self, name, module, info_plist):
         """Create an OS X application bundle target."""
         if module is None:
@@ -197,6 +214,10 @@ class XcodeTarget(BaseTarget):
         self._project.executables.append(executable)
 
         return ''
+
+    def external_build_path(self, obj):
+        """Get the build path for an external target."""
+        return os.path.join(self.env.library_path, 'build', 'out')
 
     def _add_directory(self, path):
         """Add a directory to the project, if necessary."""

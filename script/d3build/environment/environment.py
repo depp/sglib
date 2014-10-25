@@ -117,6 +117,10 @@ class BaseEnvironment(object):
         """Create build variables that include a header search path."""
         raise NotImplementedError('must be implemented by subclass')
 
+    def library(self, path):
+        """Create build variables that link with a library."""
+        raise NotImplementedError('library not available')
+
     def framework_path(self, path):
         """Create build variables that include a framework search path."""
         raise NotImplementedError('framework_path not available')

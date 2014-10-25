@@ -3,60 +3,37 @@
 # 2-clause BSD license.  For more information, see LICENSE.txt.
 from d3build.module import ExternalModule
 from d3build.error import try_config
-from d3build.source import SourceList
+from d3build.target.external import ConfigureMake
 import os
-from . import ogg
 
 def pkg_config(build):
     return None, [], {'public': [build.env.pkg_config('vorbis')]}
 
-# Note: should set:
-# -ffast-math
-# -falign-loops=16
-# -D__MACOSX__
+class ConfigureMakeVorbis(ConfigureMake):
+    def configure_flags(self, params):
+        flags = super(ConfigureMakeVorbis, self).configure_flags(params)
+        return flags + ['--with-ogg=' + os.path.abspath(params.destdir)]
 
 def bundled(build):
     env = build.env
     path = env.find_library('^libvorbis-[0-9.]+$')
-    src = SourceList(path=path)
-    src.add(path='lib', sources='''
-    analysis.c
-    bitrate.c
-    block.c
-    codebook.c
-    envelope.c
-    floor0.c
-    floor1.c
-    info.c
-    lookup.c
-    lpc.c
-    lsp.c
-    mapping0.c
-    mdct.c
-    psy.c
-    registry.c
-    res0.c
-    sharedbook.c
-    smallft.c
-    synthesis.c
-    window.c
-    ''')
-    return path, src.sources, {
-        'public': [
-            env.header_path(os.path.join(path, 'include'), system=True),
-        ],
-        'private': [
-            env.header_path(os.path.join(path, 'lib')),
-            ogg.module
-        ],
-    }
+    target = build.target.external_target(
+        ConfigureMakeVorbis(path), 'vorbis', dependencies=['ogg'])
+    varsets = [
+        env.header_path(
+            os.path.join(target.destdir, 'include'),
+            system=True),
+        env.library(os.path.join(target.destdir, 'lib', 'libvorbis.a')),
+    ]
+    build.target.add_external_target(target)
+    return path, [], {'public': [env.schema.merge(varsets)]}
 
-def _configure(build):
+def configure(build):
     return try_config([build], pkg_config, bundled)
 
 module = ExternalModule(
     name='Vorbis codec library',
-    configure=_configure,
+    configure=configure,
     packages={
         'deb': 'libvorbis-dev',
         'rpm': 'libvorbis-devel',
