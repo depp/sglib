@@ -30,6 +30,11 @@ class BaseTarget(object):
         self.generated_sources = []
         self.external_targets = {}
 
+    @property
+    def run_srcroot(self):
+        """The path root of the source tree, at runtime."""
+        raise NotImplementedError('must be implemented by subclass')
+
     def external_target(self, obj, name, dependencies=[]):
         """Create an external target, without adding it to the build."""
         raise ConfigError('this target does not suport external targets')
@@ -45,14 +50,15 @@ class BaseTarget(object):
     def add_default(self, target):
         """Set a target to be a default target."""
 
-    def add_executable(self, *, name, module, uuid=None):
+    def add_executable(self, *, name, module, uuid=None, arguments=[]):
         """Create an executable target.
 
         Returns the path to the executable.
         """
         raise ConfigError('this target does not support executables')
 
-    def add_application_bundle(self, name, module, info_plist):
+    def add_application_bundle(self, *, name, module, info_plist,
+                               arguments=[]):
         """Create an OS X application bundle target.
 
         Returns the path to the application bundle.

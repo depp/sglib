@@ -1,13 +1,16 @@
 # Copyright 2013-2014 Dietrich Epp.
 # This file is part of SGLib.  SGLib is licensed under the terms of the
 # 2-clause BSD license.  For more information, see LICENSE.txt.
-from .target import BaseTarget, ExternalTarget
-from .external import ExternalBuildParameters
-from ..error import ConfigError, UserError
-from ..plist import ascii as plist
+from ..target import BaseTarget, ExternalTarget
+from ..external import ExternalBuildParameters
+from ...error import ConfigError, UserError
+from ...plist import ascii as plist
+from . import scheme
+from xml.sax.saxutils import escape
 import os
 import shutil
 import random
+import io
 
 # Map from file types to phases
 PHASES = {k: v for v, kk in {
@@ -72,6 +75,9 @@ class XcodeTarget(BaseTarget):
         '_products_group',
         # The group containing referenced frameworks.
         '_frameworks_group',
+
+        # Map from target name to scheme data.
+        '_schemes',
     ]
 
     def __init__(self, name, script, config, env):
@@ -141,6 +147,13 @@ class XcodeTarget(BaseTarget):
             'rootObject': project,
         }
 
+        self._schemes = {}
+
+    @property
+    def run_srcroot(self):
+        """The path root of the source tree, at runtime."""
+        return '$(SRCROOT)'
+
     def finalize(self):
         super(XcodeTarget, self).finalize()
         for obj in self._objects.values():
@@ -155,6 +168,14 @@ class XcodeTarget(BaseTarget):
         with open(project_path, 'w') as fp:
             w = plist.Writer(fp)
             w.write_object(self._project_archive)
+        if self._schemes:
+            schemedir = os.path.join(
+                project_name, 'xcshareddata', 'xcschemes')
+            os.makedirs(schemedir)
+            for name, data in self._schemes.items():
+                path = os.path.join(schemedir, name + '.xcscheme')
+                with open(path, 'w') as fp:
+                    fp.write(data)
 
     def external_target(self, obj, name, dependencies=[]):
         """Create an external target, without adding it to the build."""
@@ -164,7 +185,8 @@ class XcodeTarget(BaseTarget):
         return XcodeExternalTarget(
             obj, name, dependencies, destdir, builddir)
 
-    def add_application_bundle(self, name, module, info_plist):
+    def add_application_bundle(self, *, name, module, info_plist,
+                               arguments=[]):
         """Create an OS X application bundle target."""
         if module is None:
             return ''
@@ -233,6 +255,13 @@ class XcodeTarget(BaseTarget):
         for framework in set(varset.get('.FRAMEWORKS', ())):
             sources.append(self._add_framework(framework))
         self._add_target_sources(target, sources)
+
+        if arguments:
+            self._add_scheme(
+                objid=target,
+                name=name,
+                filename=name + '.app',
+                arguments=arguments)
 
         return ''
 
@@ -389,3 +418,15 @@ class XcodeTarget(BaseTarget):
                 'isa': 'PBXBuildFile',
                 'fileRef': sourceid,
             }))
+
+    def _add_scheme(self, *, objid, name, filename, arguments):
+        argio = io.StringIO()
+        for arg in arguments:
+            argio.write(scheme.ARGUMENT.format(escape(arg)))
+        self._schemes[name] = scheme.SCHEME.format(
+            target_id=objid,
+            target_filename=escape(filename),
+            target_name=escape(name),
+            project_name=escape(self._name),
+            arguments=argio.getvalue(),
+        )

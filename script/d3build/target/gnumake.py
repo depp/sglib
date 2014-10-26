@@ -65,6 +65,11 @@ class GnuMakeTarget(BaseTarget):
         self._optinclude = set()
         self._qnames = {}
 
+    @property
+    def run_srcroot(self):
+        """The path root of the source tree, at runtime."""
+        return '.'
+
     def add_generated_source(self, source):
         """Add a generated source to the build system.
 
@@ -83,7 +88,7 @@ class GnuMakeTarget(BaseTarget):
             qname='Regen')
         return source.target
 
-    def add_executable(self, *, name, module, uuid=None):
+    def add_executable(self, *, name, module, uuid=None, arguments=[]):
         """Create an executable target.
 
         Returns the path to the executable.

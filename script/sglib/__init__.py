@@ -93,8 +93,10 @@ class App(object):
 
         args = [
             ('log.level.root', 'debug'),
-            ('path.data', self.datapath),
-            ('path.user', 'user'),
+            ('path.data',
+             os.path.join(build.target.run_srcroot, self.datapath)),
+            ('path.user',
+             os.path.join(build.target.run_srcroot, 'user')),
         ]
         if build.config.platform == 'windows':
             args.append(('log.winconsole', 'yes'))
@@ -129,12 +131,14 @@ class App(object):
             target = build.target.add_application_bundle(
                 name=name,
                 module=mod,
-                info_plist=info_plist)
+                info_plist=info_plist,
+                arguments=args)
         else:
             target = build.target.add_executable(
                 name=name,
                 module=mod,
-                uuid=self.uuid)
+                uuid=self.uuid,
+                arguments=args)
 
         if build.config.platform == 'linux':
             from .runscript import RunScript
