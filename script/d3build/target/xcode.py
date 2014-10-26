@@ -252,7 +252,7 @@ class XcodeTarget(BaseTarget):
             raise ValueError('missing ISA')
         objid = self._idcounter
         self._idcounter = (objid + 1) & ((1 << 96) - 1)
-        objid = '{:24X}'.format(objid)
+        objid = '{:024X}'.format(objid)
         self._objects[objid] = obj
         self._objectids[id(obj)] = objid
         return objid
