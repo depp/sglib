@@ -144,7 +144,7 @@ class Writer(object):
             return
         elif isinstance(obj, list):
             self.start_list()
-            for v in sorted(obj):
+            for v in obj:
                 self.write_object(v)
             self.end_list()
             self._name = newname
