@@ -1,8 +1,8 @@
 # Copyright 2014 Dietrich Epp.
 # This file is part of SGLib.  SGLib is licensed under the terms of the
 # 2-clause BSD license.  For more information, see LICENSE.txt.
-from .environment import BaseEnvironment
-from .schema import Schema
+from ..environment import BaseEnvironment
+from ..schema import Schema
 from ..log import logfile
 from ..source import _base
 import re

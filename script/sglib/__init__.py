@@ -84,7 +84,7 @@ class App(object):
     def _build(self, build):
         """Create the project targets."""
         from .version import VersionInfo
-        from d3build.target.configheader import ConfigHeader
+        from d3build.generatedsource.configheader import ConfigHeader
         build.env.library_path = _path('lib')
 
         name = self.name
@@ -116,7 +116,7 @@ class App(object):
                 'git'))
 
         if build.config.platform == 'osx':
-            from d3build.target.template import TemplateFile
+            from d3build.generatedsource.template import TemplateFile
             main_nib = build.target.add_generated_source(
                 TemplateFile(
                     _path('resources/MainMenu.xib'),

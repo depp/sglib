@@ -1,7 +1,7 @@
 # Copyright 2014 Dietrich Epp.
 # This file is part of SGLib.  SGLib is licensed under the terms of the
 # 2-clause BSD license.  For more information, see LICENSE.txt.
-from ..shell import escape
+from .shell import escape
 
 class Schema(object):
     """A schema is a description of variables affecting a build system."""

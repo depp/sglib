@@ -4,7 +4,7 @@
 import multiprocessing
 import os
 import subprocess
-from ..error import ConfigError
+from .error import ConfigError
 
 class ExternalBuildParameters(object):
     """Parameters for invocation of an external build system."""

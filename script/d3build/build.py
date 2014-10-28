@@ -77,15 +77,15 @@ class Build(object):
             obj.options = list(options)
             obj.config = config
             if config.target == 'gnumake':
-                from .environment import nix
-                env = nix.NixEnvironment
-                from .target import gnumake
-                target = gnumake.GnuMakeTarget
+                from .gnumake import environment
+                from .gnumake import target
+                env = environment.NixEnvironment
+                target = target.GnuMakeTarget
             elif config.target == 'xcode':
-                from .environment import xcode
-                env = xcode.XcodeEnvironment
-                from .target import xcode
-                target = xcode.XcodeTarget
+                from .xcode import environment
+                from .xcode import target
+                env = environment.XcodeEnvironment
+                target = target.XcodeTarget
             else:
                 raise ConfigError(
                     'unknown target: {}'.format(config.target))

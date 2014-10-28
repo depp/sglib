@@ -3,8 +3,8 @@
 # 2-clause BSD license.  For more information, see LICENSE.txt.
 from ..target import BaseTarget, ExternalTarget
 from ..external import ExternalBuildParameters
-from ...error import ConfigError, UserError
-from ...plist import ascii as plist
+from ..error import ConfigError, UserError
+from ..plist import ascii as plist
 from . import scheme
 from xml.sax.saxutils import escape
 import os

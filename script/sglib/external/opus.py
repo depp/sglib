@@ -3,7 +3,7 @@
 # 2-clause BSD license.  For more information, see LICENSE.txt.
 from d3build.module import ExternalModule
 from d3build.error import try_config
-from d3build.target.external import ConfigureMake
+from d3build.external import ConfigureMake
 import os
 
 def pkg_config(build):

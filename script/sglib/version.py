@@ -3,7 +3,7 @@
 # 2-clause BSD license.  For more information, see LICENSE.txt.
 from d3build.shell import get_output
 from d3build.error import format_block
-from d3build.target import GeneratedSource, NOTICE
+from d3build.generatedsource import GeneratedSource, NOTICE
 import sys
 
 def warn(*msg):
