@@ -146,6 +146,6 @@ def configure(build):
     if flags['video-recording']:
         tags['video_recording'] = []
 
-    return tags
+    return [], tags
 
 module = SourceModule(sources=source.src, configure=configure)

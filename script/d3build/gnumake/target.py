@@ -82,10 +82,10 @@ class GnuMakeTarget(BaseTarget):
             deps = ['FORCE']
         else:
             deps = source.dependencies
-        self._add_rule(
-            source.target, deps,
-            [self._configure + ['--action-regenerate', source.target]],
-            qname='Regen')
+        qname, cmds = source.rule()
+        if cmds is None:
+            cmds = [self._configure + ['--action-regenerate', source.target]]
+        self._add_rule(source.target, deps, cmds, qname=qname)
         return source.target
 
     def add_executable(self, *, name, module, uuid=None, arguments=[]):

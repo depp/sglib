@@ -106,22 +106,31 @@ class Module(object):
         out.has_error = cfg.has_error
         return out
 
+    def _get_configs(self, build):
+        """Get the module external sources and tags.
+
+        The default implementation returns no sources or tags.
+        """
+        return [], {}
+
 class SourceModule(Module):
     """A module consisting of source code to be compiled."""
     __slots__ = ['_sources', '_tags_func']
 
-    def __init__(self, *, sources, configure):
+    def __init__(self, *, sources=None, configure=None):
         self._sources = sources
         self._tags_func = configure
 
     @property
     def sources(self):
+        if self._sources is None:
+            return []
         return self._sources.sources
 
     def _get_configs(self, build):
         if self._tags_func is None:
             return [], {}
-        return [], self._tags_func(build)
+        return self._tags_func(build)
 
 class ExternalModule(Module):
     """A module representing an external package.

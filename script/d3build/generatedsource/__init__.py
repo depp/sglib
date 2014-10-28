@@ -33,6 +33,18 @@ class GeneratedSource(object):
     def target(self):
         raise NotImplementedError('must be implemented by subclass')
 
+    def rule(self):
+        return 'Regen', None
+
+    def write(self, fp):
+        """Write the data to a file."""
+        raise NotImplementedError('must be implemented by subclass')
+
+    def makedirs(self):
+        dirpath = os.path.dirname(self.target)
+        if dirpath:
+            os.makedirs(dirpath, exist_ok=True)
+
     def regen(self):
         """Regenerate the file."""
         if self.is_binary:
@@ -49,7 +61,7 @@ class GeneratedSource(object):
                 with open(self.target, 'rb') as fp:
                     oldvalue = fp.read()
             except FileNotFoundError:
-                pass
+                self.makedirs()
             else:
                 if oldvalue == value:
                     return

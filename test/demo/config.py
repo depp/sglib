@@ -21,6 +21,18 @@ test_type.c
 text_layout.c
 ''')
 
+icon = sglib.Icon(base=__file__, path='icon', sources='''
+ico icon.ico
+16 icon16.png
+32 icon32.png
+48 icon48.png
+64 icon64.png
+128 icon128.png
+256 icon256.png
+512 icon512.png
+1024 icon1024.png
+''')
+
 app = sglib.App(
     name='SGLib Demo',
     datapath=sglib._base(__file__, 'data'),
@@ -30,6 +42,7 @@ app = sglib.App(
     identifier='us.moria.sglib-test',
     uuid='8d7f256e-ed27-443c-b350-c375d25a9e54',
     sources=src,
+    icon=icon,
 )
 
 if __name__ == '__main__':

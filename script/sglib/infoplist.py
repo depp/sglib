@@ -7,15 +7,16 @@ from d3build.plist.xml import dump
 class InfoPropertyList(GeneratedSource):
     __slots__ = [
         'target',
-        'copyright', 'identifier', 'apple_category', 'main_nib',
+        'copyright', 'identifier', 'apple_category', 'main_nib', 'icon',
     ]
 
-    def __init__(self, target, app, main_nib):
+    def __init__(self, target, app, main_nib, icon):
         self.target = target
         self.copyright = app.copyright
         self.identifier = app.identifier
         self.apple_category = app.apple_category
         self.main_nib = main_nib
+        self.icon = icon
 
     @property
     def is_binary(self):
@@ -31,10 +32,10 @@ class InfoPropertyList(GeneratedSource):
 
         plist = {
             'CFBundleDevelopmentRegion': 'English',
-            'CFBundleExecutable': '${EXECUTABLE_NAME}',
+            'CFBundleExecutable': '$(EXECUTABLE_NAME)',
             'CFBundleGetInfoString': getinfo,
             # CFBundleName
-            'CFBundleIconFile': '',
+            'CFBundleIconFile': self.icon,
             'CFBundleIdentifier': self.identifier,
             'CFBundleInfoDictionaryVersion': '6.0',
             'CFBundlePackageType': 'APPL',

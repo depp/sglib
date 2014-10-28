@@ -7,11 +7,11 @@ from d3build.build import Build
 from d3build.module import SourceModule
 from . import options
 from . import module
+from .icon import Icon
+from .path import _path
+# Icon is for export
 import sys
 import os
-
-def _path(path):
-    return _base(__file__, '../../' + path)
 
 class App(object):
     __slots__ = [
@@ -38,12 +38,15 @@ class App(object):
         'configure_func',
         # Category in the Apple application store.
         'apple_category',
+        # The application icon, an Icon instance.
+        'icon',
     ]
 
     def __init__(self, *, name, sources, datapath,
                  email=None, uri=None, copyright=None,
                  identifier=None, uuid=None, defaults=None,
-                 configure=None, apple_category='public.app-category.games'):
+                 configure=None, apple_category='public.app-category.games',
+                 icon=None):
         self.name = name
         self.sources = sources
         self.datapath = datapath
@@ -55,6 +58,7 @@ class App(object):
         self.defaults = defaults
         self.configure_func = configure
         self.apple_category = apple_category
+        self.icon = icon
 
     def run(self):
         """Run the configuration script."""
@@ -65,17 +69,6 @@ class App(object):
             options=options.flags,
             adjust_config=self._adjust_config,
         )
-
-    def _module_configure(self, build):
-        """Get the configuration for the main application module."""
-        if self.configure_func is None:
-            tags = {}
-        else:
-            tags = dict(self.configure_func(build))
-        private = list(tags.get('private', []))
-        private.append(module.module)
-        tags['private'] = private
-        return tags
 
     def _adjust_config(self, cfg):
         """Adjust the configuration."""
@@ -102,9 +95,27 @@ class App(object):
             args.append(('log.winconsole', 'yes'))
         args = ['-d{}={}'.format(*arg) for arg in args]
 
+        icon = self.icon.module(build) if self.icon is not None else None
+
+        def module_configure(build):
+            """Get the configuration for the main application module."""
+            if self.configure_func is None:
+                sources = []
+                tags = {}
+            else:
+                sources, tags = self.configure_func(build)
+                sources = list(sources)
+                tags = dict(tags)
+            private = list(tags.get('private', []))
+            private.append(module.module)
+            if icon is not None:
+                private.append(icon)
+            tags['private'] = private
+            return sources, tags
+
         mod = SourceModule(
             sources=self.sources,
-            configure=self._module_configure)
+            configure=module_configure)
         mod = build.get_module(mod)
         build.target.add_generated_source(
             ConfigHeader(_path('include/config.h'), build))
@@ -127,7 +138,8 @@ class App(object):
                 InfoPropertyList(
                     _path('resources/Info.plist'),
                     self,
-                    main_nib))
+                    main_nib,
+                    icon.icon if icon is not None else None))
             target = build.target.add_application_bundle(
                 name=name,
                 module=mod,

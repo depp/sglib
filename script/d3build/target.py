@@ -106,6 +106,4 @@ class BaseTarget(object):
             if source.is_regenerated_only:
                 continue
             print('Creating {}...'.format(source.target))
-            mode = 'wb' if source.is_binary else 'w'
-            with open(source.target, mode) as fp:
-                source.write(fp)
+            source.regen()

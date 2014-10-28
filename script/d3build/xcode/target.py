@@ -14,9 +14,10 @@ import io
 
 # Map from file types to phases
 PHASES = {k: v for v, kk in {
-    'PBXFrameworksBuildPhase': [
+    'PBXResourcesBuildPhase': [
         'file.xib',
         'image.icns',
+        'folder.assetcatalog',
     ],
     'PBXSourcesBuildPhase': [
         'sourcecode.c.c',
@@ -38,6 +39,7 @@ TYPE_MAP = {
 
 EXT_MAP = {
     '.xib': 'file.xib',
+    '.xcassets': 'folder.assetcatalog',
 }
 EXT_MAP.update({ext: 'image' + ext for ext in
                 '.png .jpeg .pdf .git .bmp .pict .ico .icns .tiff'.split()})
@@ -212,9 +214,9 @@ class XcodeTarget(BaseTarget):
         xvarset = {k: v for k, v in varset.items() if not k.startswith('.')}
 
         phases = [
-            'PBXResourcesBuildPhase',
             'PBXSourcesBuildPhase',
             'PBXFrameworksBuildPhase',
+            'PBXResourcesBuildPhase',
         ]
         target = self._add({
             'isa': 'PBXNativeTarget',
@@ -337,11 +339,11 @@ class XcodeTarget(BaseTarget):
             pass
         dirname, basename = os.path.split(source.path)
         parent = self._add_directory(dirname)
-        try:
-            ftype = TYPE_MAP[source.sourcetype]
-        except KeyError:
+        if source.sourcetype is None:
+            ftype = EXT_MAP[os.path.splitext(source.path)[1]]
+        else:
             try:
-                ftype = EXT_MAP[os.path.splitext(source.path)[1]]
+                ftype = TYPE_MAP[source.sourcetype]
             except KeyError:
                 raise ConfigError(
                     'file has unknown type: {}'.format(source.path))
