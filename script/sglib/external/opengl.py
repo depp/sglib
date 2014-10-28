@@ -11,12 +11,16 @@ def pkg_config(build):
 def framework(build):
     return None, [], {'public': [build.env.frameworks(['OpenGL'])]}
 
-def _configure(build):
-    return try_config([build], framework, pkg_config)
+def windows(build):
+    build.env.check_platform('windows')
+    return None, [], {'public': [build.env.library('opengl32.lib')]}
+
+def configure(build):
+    return try_config([build], framework, pkg_config, windows)
 
 module = ExternalModule(
     name='OpenGL',
-    configure=_configure,
+    configure=configure,
     packages={
         'deb': 'libgl-dev',
         'rpm': 'mesa-libGL-devel',

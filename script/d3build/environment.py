@@ -68,6 +68,16 @@ class BaseEnvironment(object):
         raise ConfigError('invalid value for {}: expecting boolean'
                           .format(name))
 
+    def check_platform(self, platforms):
+        if isinstance(platforms, str):
+            if self._config.platform == platforms:
+                return
+        else:
+            if self._config.platform in platforms:
+                return
+            platforms = ', '.join(platforms)
+        raise ConfigureError('only valid on platforms: {}'.format(platforms))
+
     def find_library(self, pattern):
         if self.library_path is None:
             raise ConfigError('library_path is not set')
@@ -144,3 +154,7 @@ class BaseEnvironment(object):
         """Try different build variable sets to find one that works."""
         raise ConfigError(
             'compile and link tests not available for this target')
+
+    def project_reference(self, path):
+        """Create build variables that reference another project."""
+        raise ConfigError('project references not available for this target')

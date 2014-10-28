@@ -86,6 +86,11 @@ class Build(object):
                 from .xcode import target
                 env = environment.XcodeEnvironment
                 target = target.XcodeTarget
+            elif config.target == 'msvc':
+                from .msvc import environment
+                from .msvc import target
+                env = environment.VisualStudioEnvironment
+                target = target.VisualStudioTarget
             else:
                 raise ConfigError(
                     'unknown target: {}'.format(config.target))
