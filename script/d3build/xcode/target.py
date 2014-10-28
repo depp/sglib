@@ -399,6 +399,7 @@ class XcodeTarget(BaseTarget):
         phases = [self._objects[phaseid]
                   for phaseid in self._objects[targetid]['buildPhases']]
         phases = {obj['isa']: obj for obj in phases}
+        phase_types = {k: set() for k in phases}
         for sourceid in sourceids:
             source = self._objects[sourceid]
             if source['isa'] != 'PBXFileReference':
@@ -412,6 +413,7 @@ class XcodeTarget(BaseTarget):
                 phaseisa = PHASES[ftype]
             except KeyError:
                 continue
+            phase_types[phaseisa].add(ftype)
             try:
                 phase = phases[phaseisa]
             except KeyError:
@@ -420,6 +422,33 @@ class XcodeTarget(BaseTarget):
                 'isa': 'PBXBuildFile',
                 'fileRef': sourceid,
             }))
+
+        rtypes = phase_types['PBXResourcesBuildPhase']
+        if 'folder.assetcatalog' in rtypes and len(rtypes) == 1:
+            self._make_resource_dir_shell_script(targetid)
+
+    def _make_resource_dir_shell_script(self, targetid):
+        """Add a script which creates the Resources directory.
+
+        This is a workaround for a bug where Xcode fails to create the
+        directory if no resource files other than the asset catalog exist.
+        """
+        phases = self._objects[targetid]['buildPhases']
+        for n, phase in enumerate(phases):
+            if self._objects[phase]['isa'] == 'PBXResourcesBuildPhase':
+                break
+        else:
+            assert False
+        phases.insert(n, self._add({
+            'isa': 'PBXShellScriptBuildPhase',
+            'buildActionMask': 0x7fffffff,
+            'runOnlyForDeploymentPostprocessing': 0,
+            'files': [],
+            'inputPaths': [],
+            'outputPaths': [],
+            'shellPath': '/bin/sh',
+            'shellScript': MAKE_RESOURCE_DIR,
+        }))
 
     def _add_scheme(self, *, objid, name, filename, arguments):
         argio = io.StringIO()
@@ -432,3 +461,8 @@ class XcodeTarget(BaseTarget):
             project_name=escape(self._name),
             arguments=argio.getvalue(),
         )
+
+MAKE_RESOURCE_DIR = '''
+dirpath="${BUILT_PRODUCTS_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}"
+test -d "${dirpath}" || mkdir "${dirpath}"
+'''
