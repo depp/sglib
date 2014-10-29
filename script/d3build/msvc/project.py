@@ -61,12 +61,20 @@ class UserProject(Project):
     __slots__ = [
         # Contents of the project file.
         '_data_project',
+        # Contents of the filter file.
+        '_data_filter',
+        # Contents of the user file.
+        '_data_user',
     ]
 
     def emit(self):
         """Emit project files if necessary."""
         with open(self.name + '.vcxproj', 'wb') as fp:
             fp.write(self._data_project)
+        with open(self.name + '.vcxproj.filters', 'wb') as fp:
+            fp.write(self._data_filter)
+        with open(self.name + '.vcxproj.user', 'wb') as fp:
+            fp.write(self._data_user)
 
 def read_project(*, path, configs):
     """Read a Visual Studio project."""
@@ -123,7 +131,8 @@ def xml_data(root):
     indent_xml(root)
     return etree.tostring(root, encoding='UTF-8')
 
-def create_project(*, name, sources, uuid, configs, props, project_refs):
+def create_project(*, name, sources, uuid, configs, props, project_refs,
+                      arguments):
     """Create a Visual Studio project.
 
     name: the project name.
@@ -132,6 +141,7 @@ def create_project(*, name, sources, uuid, configs, props, project_refs):
     configs: list of (configuration, platform) pairs.
     props: map from (configuration, platform) to map from group to prop dict.
     project_refs: list of project references to include as dependencies.
+    default_args: default arguments for debugging.
     """
 
     def create_project():
@@ -242,6 +252,55 @@ def create_project(*, name, sources, uuid, configs, props, project_refs):
 
         return root
 
+    def create_filter():
+        filters = set()
+        root = Element('Project', {
+            'xmlns': XMLNS,
+            'ToolsVersion': '12.0',
+        })
+        groups = {}
+        for source in sources:
+            index, tag = SOURCE_TYPES[source.sourcetype]
+            try:
+                group = groups[index]
+            except KeyError:
+                group = Element('ItemGroup')
+                groups[index] = group
+            elt = SubElement(group, tag, {'Include': source.path})
+            dirname, basename = os.path.split(source.path)
+            if not dirname:
+                continue
+            filter = dirname
+            SubElement(elt, 'Filter').text = filter
+            while filter and filter not in filters:
+                filters.add(filter)
+                filter = os.path.dirname(filter)
+        for n, elt in sorted(groups.items()):
+            root.append(elt)
+        fgroup = SubElement(root, 'ItemGroup')
+        for filter in sorted(filters):
+            elt = SubElement(fgroup, 'Filter', {'Include': filter})
+            SubElement(elt, 'UniqueIdentifier').text = \
+                '{{{}}}'.format(str(uuid_module.uuid4()).upper())
+        return root
+
+    def convert_arg(arg):
+        return '"{}"'.format(arg)
+
+    def create_user():
+        root = Element('Project', {
+            'xmlns': XMLNS,
+            'ToolsVersion': '12.0',
+        })
+        args = ' '.join(convert_arg(arg) for arg in arguments)
+        for config in configs:
+            pg = SubElement(root, 'PropertyGroup', {
+                'Condition': condition(*config),
+            })
+            SubElement(pg, 'LocalDebuggerCommandArguments').text = args
+            SubElement(pg, 'DebuggerFlavor').text = 'WindowsLocalDebugger'
+        return root
+
     def create_object():
         obj = UserProject()
         obj.name = name
@@ -250,6 +309,8 @@ def create_project(*, name, sources, uuid, configs, props, project_refs):
         obj.uuid = uuid
         obj.configs = {c: c for c in configs}
         obj._data_project = xml_data(create_project())
+        obj._data_filter = xml_data(create_filter())
+        obj._data_user = xml_data(create_user())
         return obj
 
     return create_object()

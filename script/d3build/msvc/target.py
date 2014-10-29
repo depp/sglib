@@ -47,7 +47,7 @@ class VisualStudioTarget(BaseTarget):
     @property
     def run_srcroot(self):
         """The path root of the source tree, at runtime."""
-        return ''
+        return '$(SolutionDir)'
 
     def add_executable(self, *, name, module, uuid=None, arguments=[]):
         """Create an executable target.
@@ -77,6 +77,7 @@ class VisualStudioTarget(BaseTarget):
                 for k, v in self.env.base_vars.items()
             },
             project_refs=project_refs,
+            arguments=arguments,
         ))
 
     def _add_project(self, project):
