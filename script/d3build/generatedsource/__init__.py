@@ -77,7 +77,7 @@ class GeneratedSource(object):
             else:
                 with open(self.target + '.tmp', 'wb') as fp:
                     fp.write(value)
-            os.rename(self.target + '.tmp', self.target)
+            os.replace(self.target + '.tmp', self.target)
         except:
             try:
                 os.remove(self.target + '.tmp')
