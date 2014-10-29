@@ -93,7 +93,7 @@ class App(object):
         ]
         if build.config.platform == 'windows':
             args.append(('log.winconsole', 'yes'))
-        args = ['-d{}={}'.format(*arg) for arg in args]
+        args = ['{}={}'.format(*arg) for arg in args]
 
         icon = self.icon.module(build) if self.icon is not None else None
 
