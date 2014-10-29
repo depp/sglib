@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<module path="../..">
-  <key name="desc">SGLib Gtk Frontend</key>
-  <require module="sglib gtk gtkglext"/>
-  <group path="src/core/gtk">
-    <src path="gtk.c"/>
-  </group>
-</module>
