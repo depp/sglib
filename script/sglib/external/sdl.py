@@ -8,9 +8,11 @@ import os
 def pkg_config(build, version):
     return None, [], {'public': [build.env.sdl_config(version)]}
 
+SDL_NAME = {1: 'SDL', 2: 'SDL2'}
+
 def framework(build, version):
     env = build.env
-    name = {1: 'SDL', 2: 'SDL2'}[version]
+    name = SDL_NAME[version]
     path = env.find_framework(name)
     varsets = [
         env.header_path(os.path.join(path, 'Headers')),
@@ -18,14 +20,30 @@ def framework(build, version):
         env.frameworks([name])]
     return None, [], {'public': [env.schema.merge(varsets)]}
 
-def _configure(version):
-    def configure(build):
-        return try_config([build, version], pkg_config, framework)
-    return configure
+def windows(build, version):
+    env = build.env
+    env.check_platform('windows')
+    name = SDL_NAME[version]
+    path = env.find_library(
+        '^{}(-[0-9.]+)$'.format(name),
+        varname=name + '_PATH')
+    # FIXME: use per-platform path.
+    varsets = [
+        env.header_path(os.path.join(path, 'include')),
+        env.library_path(os.path.join(path, 'lib', 'x86')),
+        env.library('{}.lib'.format(name)),
+        env.library('{}main.lib'.format(name)),
+    ]
+    return path, [], {'public': [env.schema.merge(varsets)]}
+
+def configure(version):
+    def configure_func(build):
+        return try_config([build, version], pkg_config, framework, windows)
+    return configure_func
 
 version_1 = ExternalModule(
     name='LibSDL',
-    configure=_configure(1),
+    configure=configure(1),
     packages={
         'deb': 'libsdl1.2-dev',
         'rpm': 'SDL-devel',
@@ -36,7 +54,7 @@ version_1 = ExternalModule(
 
 version_2 = ExternalModule(
     name='LibSDL 2',
-    configure=_configure(2),
+    configure=configure(2),
     packages={
         'deb': 'libsdl2-dev',
         'rpm': 'SDL2-devel',

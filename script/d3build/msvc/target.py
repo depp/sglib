@@ -7,9 +7,11 @@ from .project import create_project
 from .solution import solution_data
 import uuid as uuid_module
 
+GROUPS = 'Config', 'VC', 'ClCompile', 'Link', 'Debug'
+
 def group_vars(varset):
     """Group variables by section."""
-    sections = {k: {} for k in ('Config', 'VC', 'ClCompile', 'Link')}
+    sections = {k: {} for k in GROUPS}
     for k, v in varset.items():
         i = k.find('.')
         assert i >= 0
@@ -62,6 +64,7 @@ class VisualStudioTarget(BaseTarget):
             uuid = uuid_module.UUID(uuid)
         varset = self.env.schema.merge(module.varsets)
         varset['Config.ConfigurationType'] = 'Application'
+        varset['Link.SubSystem'] = 'Windows'
         varset['ClCompile.ObjectFileName'] = '$(IntDir)\\%(RelativeDir)'
         project_refs = varset.get('.ProjectReferences', [])
         for project in project_refs:

@@ -300,6 +300,10 @@ def create_project(*, name, sources, uuid, configs, props, project_refs,
             })
             SubElement(pg, 'LocalDebuggerCommandArguments').text = args
             SubElement(pg, 'DebuggerFlavor').text = 'WindowsLocalDebugger'
+            epath = props[config]['Debug'].get('Path', ())
+            if epath:
+                SubElement(pg, 'LocalDebuggerEnvironment').text = \
+                    'PATH=%PATH%;' + ';'.join(epath)
         return root
 
     def create_object():

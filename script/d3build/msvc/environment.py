@@ -39,6 +39,8 @@ SCHEMA = (Schema(sep=';', bool_values=('false', 'true'))
     .bool  ('Link.TreatLinkerWarningAsErrors')
     .string('Link.Version')
 
+    .string('Debug.Path')
+
     .objectlist('.ProjectReferences')
 )
 
@@ -134,6 +136,11 @@ class VisualStudioEnvironment(BaseEnvironment):
     def library(self, path):
         """Create build variables that link with a library."""
         return {'Link.AdditionalDependencies': [path]}
+
+    def library_path(self, path):
+        """Create build variables that include a library search path."""
+        return {'Link.AdditionalLibraryDirectories': [path],
+                'Debug.Path': [path]}
 
     def project_reference(self, path):
         """Create build variables that reference another project."""

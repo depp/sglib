@@ -16,7 +16,7 @@ class BaseEnvironment(object):
         # This is empty by default, and subclasses should add entries.
         'schema',
         # Path to bundled libraries.
-        'library_path',
+        'library_search_path',
         # Dictionary mapping {varname: value}.
         'variables',
         # List of all variables as (varname, value).
@@ -28,7 +28,7 @@ class BaseEnvironment(object):
     def __init__(self, config):
         self._config = config
         self.schema = Schema()
-        self.library_path = None
+        self.library_search_path = None
 
         self.variables = {}
         self.variable_list = []
@@ -78,14 +78,18 @@ class BaseEnvironment(object):
             platforms = ', '.join(platforms)
         raise ConfigureError('only valid on platforms: {}'.format(platforms))
 
-    def find_library(self, pattern):
-        if self.library_path is None:
+    def find_library(self, pattern, *, varname=None):
+        if varname is not None:
+            value = self.get_variable(varname, None)
+            if value is not None:
+                return value
+        if self.library_search_path is None:
             raise ConfigError('library_path is not set')
         try:
-            filenames = os.listdir(self.library_path)
+            filenames = os.listdir(self.library_search_path)
         except FileNotFoundError:
             raise ConfigError('library path does not exist: {}'
-                              .format(self.library_path))
+                              .format(self.library_search_path))
         import re
         regex = re.compile(pattern)
         results = [fname for fname in filenames if regex.match(fname)]
@@ -95,7 +99,7 @@ class BaseEnvironment(object):
         if len(results) > 1:
             raise ConfigError('found multiple libraries matching /{}/: {}'
                               .format(pattern, ', '.join(results)))
-        return os.path.join(self.library_path, results[0])
+        return os.path.join(self.library_search_path, results[0])
 
     def find_framework(self, name):
         if self._config.platform != 'osx':
@@ -130,6 +134,10 @@ class BaseEnvironment(object):
     def library(self, path):
         """Create build variables that link with a library."""
         raise NotImplementedError('library not available')
+
+    def library_path(self, path):
+        """Create build variables that include a library search path."""
+        raise NotImplementedError('library_path not available')
 
     def framework_path(self, path):
         """Create build variables that include a framework search path."""
