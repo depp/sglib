@@ -5,6 +5,7 @@
 #include "config.h"
 #endif
 
+#include "private.h"
 #include "sg/error.h"
 #include "sg/log.h"
 #include <stdio.h>
@@ -44,7 +45,7 @@ sg_error_setv(struct sg_error **err, const struct sg_error_domain *dom,
 #if !defined(_WIN32)
     vsnprintf(buf, sizeof(buf), fmt, ap);
 #else
-    _vsnprintf(buf, sizeof(buf), fmt, ap);
+    _vsnprintf_s(buf, sizeof(buf), _TRUNCATE, fmt, ap);
     buf[sizeof(buf) - 1] = '\0';
 #endif
     sg_error_sets(err, dom, code, buf);
@@ -151,7 +152,7 @@ extern const struct sg_error_domain SG_ERROR_WINDOWS = { "windows" };
 
 static void
 sg_error_setw(struct sg_error **err, const struct sg_error_domain *dom,
-              long code, wchar_t *wtext, int wlen)
+              long code, const wchar_t *wtext, int wlen)
 {
     struct sg_error *e = NULL;
     int alen, r;
@@ -277,11 +278,19 @@ sg_error_errno(struct sg_error **err, int code)
 
 #endif
 
-#if !defined(_WIN32)
-#include <netdb.h>
-#endif
-
 const struct sg_error_domain SG_ERROR_GETADDRINFO = { "getaddrinfo" };
+
+#if defined _WIN32
+
+void
+sg_error_gai(struct sg_error **err, int code)
+{
+    const wchar_t *desc = gai_strerror(code);
+    sg_error_setw(err, &SG_ERROR_GETADDRINFO, code, desc, wcslen(desc));
+}
+
+#else
+#include <netdb.h>
 
 void
 sg_error_gai(struct sg_error **err, int code)
@@ -289,3 +298,5 @@ sg_error_gai(struct sg_error **err, int code)
     const char *desc = gai_strerror(code);
     sg_error_sets(err, &SG_ERROR_GETADDRINFO, code, desc);
 }
+
+#endif

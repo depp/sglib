@@ -15,12 +15,14 @@
 #if defined(_WIN32)
 #define SOCKET_VALID(s) ((s) != SOCKET_ERROR)
 #define NO_SOCKET SOCKET_ERROR
+#define SSIZE_T int
 #else
 #include <unistd.h>
 #define SOCKET int
 #define closesocket close
 #define SOCKET_VALID(s) ((s) >= 0)
 #define NO_SOCKET (-1)
+#define SSIZE_T ssize_t
 #endif
 
 struct sg_log_network {
@@ -43,7 +45,7 @@ sg_log_network_msg(struct sg_log_listener *llp, struct sg_log_msg *msg)
     struct sg_log_network *lp = (struct sg_log_network *) llp;
     char buf[512];
     size_t len = 0, pos;
-    ssize_t r;
+    SSIZE_T r;
     SOCKET sock = lp->sock;
     struct sg_error *err = NULL;
 

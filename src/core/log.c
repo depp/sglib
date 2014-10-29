@@ -180,12 +180,27 @@ sg_dologv(struct sg_logger *logger, sg_log_level_t level,
 {
     char buf[LOG_BUFSZ];
     int r, s;
+#if defined _WIN32
+    r = _vsnprintf_s(buf, sizeof(buf), _TRUNCATE, msg, ap);
+#else
     r = vsnprintf(buf, sizeof(buf), msg, ap);
+#endif
     if (r < 0)
         r = 0;
     else if ((size_t) r >= sizeof(buf))
         r = sizeof(buf) - 1;
     if (err) {
+#if defined _WIN32
+        if (err->code) {
+            s = _snprintf_s(
+                buf + r, sizeof(buf)-r, _TRUNCATE,
+                ": %s (%s %ld)", err->msg, err->domain->name, err->code);
+        } else {
+            s = _snprintf_s(
+                buf + r, sizeof(buf) - r, _TRUNCATE,
+                ": %s (%s)", err->msg, err->domain->name);
+        }
+#else
         if (err->code) {
             s = snprintf(
                 buf + r, sizeof(buf) - r,
@@ -195,6 +210,7 @@ sg_dologv(struct sg_logger *logger, sg_log_level_t level,
                 buf + r, sizeof(buf) - r,
                 ": %s (%s)", err->msg, err->domain->name);
         }
+#endif
         if (s > 0) {
             r += s;
             if ((size_t) r >= sizeof(buf))

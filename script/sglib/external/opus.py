@@ -13,12 +13,11 @@ def bundled(build):
     env = build.env
     path = env.find_library('^opus(?:-[0-9.]+)?$')
     if build.config.target == 'msvc':
-        project = os.path.join(
-            path, 'win32', 'VS2010', 'opus.vcxproj')
-        varsets = [
-            env.project_reference(project),
-            env.header_path(os.path.join(path, 'include'), system=True),
-        ]
+        vs = os.path.join(path, 'win32', 'VS2010')
+        varsets = [env.project_reference(os.path.join(vs, name + '.vcxproj'))
+                   for name in ['opus', 'celt', 'silk_common', 'silk_float']]
+        varsets.append(
+            env.header_path(os.path.join(path, 'include'), system=True))
     else:
         target = build.target.external_target(
             ConfigureMake(path), 'opus')

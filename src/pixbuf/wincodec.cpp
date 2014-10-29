@@ -6,7 +6,9 @@
 #include "sg/error.h"
 #include "sg/log.h"
 #include "sg/pixbuf.h"
+extern "C" {
 #include "private.h"
+}
 #include <wincodec.h>
 
 #pragma comment(lib, "WindowsCodecs.lib")

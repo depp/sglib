@@ -73,4 +73,12 @@ int
 sg_wchar_from_utf8(wchar_t **dest, int *destlen,
                    const char *src, size_t srclen);
 
+/* Reverse of the above conversion. */
+int
+sg_utf8_from_wchar(
+    char **dest,
+    size_t *destlen,
+    const wchar_t *src,
+    size_t srclen);
+
 #endif

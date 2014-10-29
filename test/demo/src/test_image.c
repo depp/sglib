@@ -135,17 +135,6 @@ matrix2_mul(float *x, const float *y, const float *z)
     x[3] = y21 * z12 + y22 * z22;
 }
 
-__attribute__((unused))
-static void
-matrix2_identity(float *x)
-{
-    x[0] = 1.0f;
-    x[1] = 0.0f;
-    x[2] = 0.0f;
-    x[3] = 1.0f;
-}
-
-__attribute__((unused))
 static void
 matrix2_scale(float *x, float scale1, float scale2)
 {
@@ -155,7 +144,6 @@ matrix2_scale(float *x, float scale1, float scale2)
     x[3] = scale2;
 }
 
-__attribute__((unused))
 static void
 matrix2_rotate(float *x, float angle)
 {

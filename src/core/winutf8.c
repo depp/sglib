@@ -41,3 +41,35 @@ sg_wchar_from_utf8(wchar_t **dest, int *destlen,
         *destlen = wlen;
     return 0;
 }
+
+int
+sg_utf8_from_wchar(
+    char **dest,
+    size_t *destlen,
+    const wchar_t *src,
+    size_t srclen)
+{
+    char *text;
+    int len, r;
+
+    if (srclen > INT_MAX)
+        return -1;
+    len = WideCharToMultiByte(
+        CP_UTF8, 0, src, (int)srclen, NULL, 0, NULL, NULL);
+    if (!len)
+        return -1;
+    text = malloc(len);
+    if (!text)
+        return -1;
+    r = WideCharToMultiByte(
+        CP_UTF8, 0, src, (int)srclen, text, len, NULL, NULL);
+    if (!r) {
+        free(text);
+        return -1;
+    }
+
+    *dest = text;
+    if (destlen != NULL)
+        *destlen = len;
+    return 0;
+}
