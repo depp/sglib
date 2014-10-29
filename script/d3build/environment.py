@@ -15,8 +15,8 @@ class BaseEnvironment(object):
         # The schema for build variables.
         # This is empty by default, and subclasses should add entries.
         'schema',
-        # Path to bundled libraries.
-        'library_search_path',
+        # Path to bundled packages.
+        'package_search_path',
         # Dictionary mapping {varname: value}.
         'variables',
         # List of all variables as (varname, value).
@@ -28,7 +28,7 @@ class BaseEnvironment(object):
     def __init__(self, config):
         self._config = config
         self.schema = Schema()
-        self.library_search_path = None
+        self.package_search_path = None
 
         self.variables = {}
         self.variable_list = []
@@ -78,28 +78,41 @@ class BaseEnvironment(object):
             platforms = ', '.join(platforms)
         raise ConfigureError('only valid on platforms: {}'.format(platforms))
 
-    def find_library(self, pattern, *, varname=None):
+    def find_package(self, pattern, *, varname=None):
+        """Find a package matching the given pattern (a regular expression).
+
+        Packages are directories stored in the package search path.  A
+        target can use dependencies stored in the package search path
+        without requiring the package to be installed on the
+        developer's system or requiring the package to be integrated
+        into the project repository.
+
+        Returns the path to a directory in the package search path
+        matching the given pattern.  If varname is not None, then it
+        names a variable which can be used to specify the path to the
+        given package, pre-empting the search process.
+        """
         if varname is not None:
             value = self.get_variable(varname, None)
             if value is not None:
                 return value
-        if self.library_search_path is None:
-            raise ConfigError('library_path is not set')
+        if self.package_search_path is None:
+            raise ConfigError('package_search_path is not set')
         try:
-            filenames = os.listdir(self.library_search_path)
+            filenames = os.listdir(self.package_search_path)
         except FileNotFoundError:
-            raise ConfigError('library path does not exist: {}'
-                              .format(self.library_search_path))
+            raise ConfigError('package search path does not exist: {}'
+                              .format(self.package_search_path))
         import re
         regex = re.compile(pattern)
         results = [fname for fname in filenames if regex.match(fname)]
         if not results:
-            raise ConfigError('could not find library matching /{}/'
+            raise ConfigError('could not find package matching /{}/'
                               .format(pattern))
         if len(results) > 1:
             raise ConfigError('found multiple libraries matching /{}/: {}'
                               .format(pattern, ', '.join(results)))
-        return os.path.join(self.library_search_path, results[0])
+        return os.path.join(self.package_search_path, results[0])
 
     def find_framework(self, name):
         if self._config.platform != 'osx':

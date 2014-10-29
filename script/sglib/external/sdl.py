@@ -24,7 +24,7 @@ def windows(build, version):
     env = build.env
     env.check_platform('windows')
     name = SDL_NAME[version]
-    path = env.find_library(
+    path = env.find_package(
         '^{}(-[0-9.]+)$'.format(name),
         varname=name + '_PATH')
     # FIXME: use per-platform path.

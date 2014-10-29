@@ -11,7 +11,7 @@ def pkg_config(build):
 
 def bundled(build):
     env = build.env
-    path = env.find_library('^glew(:?-[0-9.]+)?$')
+    path = env.find_package('^glew(:?-[0-9.]+)?$')
     src = SourceList(path=path)
     src.add('src/glew.c')
     src.add(path='include/GL', sources='''

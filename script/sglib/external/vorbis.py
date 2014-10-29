@@ -16,7 +16,7 @@ class ConfigureMakeVorbis(ConfigureMake):
 
 def bundled(build):
     env = build.env
-    path = env.find_library('^libvorbis(:?-[0-9.]+)?$')
+    path = env.find_package('^libvorbis(:?-[0-9.]+)?$')
     if build.config.target == 'msvc':
         project = os.path.join(
             path, 'win32', 'VS2010', 'libvorbis', 'libvorbis_static.vcxproj')
