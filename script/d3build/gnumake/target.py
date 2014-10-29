@@ -88,6 +88,11 @@ class GnuMakeTarget(BaseTarget):
         self._add_rule(source.target, deps, cmds, qname=qname)
         return source.target
 
+    def add_default(self, target):
+        """Set a target to be a default target."""
+        super(GnuMakeTarget, self).add_default(target)
+        self._all.add(target)
+
     def add_executable(self, *, name, module, uuid=None, arguments=[]):
         """Create an executable target.
 
@@ -102,7 +107,7 @@ class GnuMakeTarget(BaseTarget):
             if source.sourcetype in ('c', 'c++', 'objc', 'objc++'):
                 objects.append(self._compile(source))
 
-        varset = self.env.schema.merge([self.base_vars] + module.varsets)
+        varset = self.env.schema.merge(module.varsets)
 
         exepath = os.path.join('build', 'exe', name)
         debugpath = os.path.join('build', 'products', name + '.dbg')
@@ -136,7 +141,7 @@ class GnuMakeTarget(BaseTarget):
         assert not os.path.isabs(src)
         out = os.path.join(
             'build', 'obj', os.path.splitext(src)[0])
-        varset = self.env.schema.merge([self.base_vars] + source.varsets)
+        varset = self.env.schema.merge(source.varsets)
         obj = out + '.o'
         qname = BUILD_NAMES[source.sourcetype]
         if source.external:

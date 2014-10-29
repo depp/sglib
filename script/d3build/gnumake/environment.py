@@ -94,8 +94,7 @@ class NixEnvironment(BaseEnvironment):
 
         self.base_vars = self.schema.merge([base_vars, user_vars])
 
-    @staticmethod
-    def cc_command(varset, output, source, sourcetype, *,
+    def cc_command(self, varset, output, source, sourcetype, *,
                    depfile=None, external=False):
         """Get the command to compile the given source file."""
         varset = self.schema.merge([self.base_vars, varset])
@@ -124,8 +123,7 @@ class NixEnvironment(BaseEnvironment):
         cmd.extend(cflags)
         return cmd
 
-    @staticmethod
-    def ld_command(varset, output, sources, sourcetypes):
+    def ld_command(self, varset, output, sources, sourcetypes):
         """Get the command to link the given source."""
         varset = self.schema.merge([self.base_vars, varset])
         if 'c++' in sourcetypes or 'objc++' in sourcetypes:
@@ -166,6 +164,14 @@ class NixEnvironment(BaseEnvironment):
         flag = '-I' if system else '-iquote'
         return {'CPPFLAGS': [flag + path]}
 
+    def library(self, path):
+        """Create build variables that link with a library."""
+        return {'LIBS': [path]}
+
+    def library_path(self, path):
+        """Create build variables that include a library search path."""
+        raise {'LIBS': ['-L' + path]}
+
     def framework_path(self, path):
         """Create build variables that include a framework search path."""
         return {'LIBS': ['-F' + path]}
@@ -183,7 +189,7 @@ class NixEnvironment(BaseEnvironment):
                     combine_output=True)
                 raise ConfigError('{} failed'.format(cmdname), details=stdout)
             flags[varname] = stdout
-        varset = self.schema.parse(flags)
+        varset = self.schema.parse(flags, strict=True)
         varset['CXXFLAGS'] = varset['CFLAGS']
         return varset
 
@@ -204,7 +210,7 @@ class NixEnvironment(BaseEnvironment):
             if retcode:
                 raise ConfigError('{} failed'.format(cmdname), details=stderr)
             flags[varname] = stdout
-        varset = self.schema.parse(flags)
+        varset = self.schema.parse(flags, strict=True)
         varset['CXXFLAGS'] = varset['CFLAGS']
         return varset
 
@@ -229,7 +235,7 @@ class NixEnvironment(BaseEnvironment):
         log.write(format_block(source))
         if base_varset is not None:
             print('Base build variables:', file=log)
-            base_varset.dump(log, indent='  ')
+            self.schema.dump(base_varset, file=log, indent='  ')
         with tempfile.TemporaryDirectory() as dirpath:
             file_c = os.path.join(dirpath, 'config' + SRCTYPE_EXT[sourcetype])
             file_obj = os.path.join(dirpath, 'config.o')
@@ -238,13 +244,13 @@ class NixEnvironment(BaseEnvironment):
                 fp.write(source)
             for varset in varsets:
                 print('Test build variables:', file=log)
-                varset.dump(log, indent='  ')
+                self.schema.dump(varset, file=log, indent='  ')
                 test_varset = self.schema.merge([base_varset, varset])
                 cmds = [
-                    cc_command(test_varset, file_obj, file_c,
-                               sourcetype, external=True),
-                    ld_command(test_varset, file_out, [file_obj],
-                               [sourcetype]),
+                    self.cc_command(test_varset, file_obj, file_c,
+                                    sourcetype, external=True),
+                    self.ld_command(test_varset, file_out, [file_obj],
+                                    [sourcetype]),
                 ]
                 for cmd in cmds:
                     try:

@@ -16,15 +16,15 @@ int main(int argc, char **argv) {
 }
 '''
 
-def _configure(build):
-    varsets = [build.env.varset(LIBS=('-ljpeg',))]
-    varset = build.test_compile_link(
-        _TEST_SOURCE, 'c', build.base_vars, varsets)
+def configure(build):
+    varsets = [build.env.library('-ljpeg')]
+    varset = build.env.test_compile_link(
+        _TEST_SOURCE, 'c', None, varsets)
     return None, [], {'public': [varset]}
 
 module = ExternalModule(
     name='LibJPEG',
-    configure=_configure,
+    configure=configure,
     packages={
         'deb': 'libjpeg-dev',
         'rpm': 'libjpeg-turbo',
