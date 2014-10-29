@@ -65,6 +65,8 @@ class Icon(object):
         """
         if build.config.platform == 'osx':
             return self._module_osx(build)
+        elif build.config.platform == 'windows':
+            return self._module_windows(build)
         return None
 
     def _module_osx(self, build):
@@ -107,3 +109,14 @@ class Icon(object):
             SimpleFile(os.path.join(path, 'Contents.json'),
                        json.dumps(info, indent=2)))
         return IconModule(icon='AppIcon', sources=[source])
+
+    def _module_windows(self, build):
+        from d3build.generatedsource.simplefile import SimpleFile
+        if self.ico is None:
+            return None
+        rcpath = _path('resources/resources.rc')
+        build.target.add_generated_source(
+            SimpleFile(rcpath, '1 ICON "{}"\n'.format(self.ico)))
+        return IconModule(
+            icon=None,
+            sources=[TagSourceFile(rcpath, (), 'rc')])

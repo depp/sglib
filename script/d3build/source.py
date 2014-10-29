@@ -11,7 +11,7 @@ _SRCTYPE_EXTS = {
     'h++': 'hpp hxx',
     'objc': 'm',
     'objc++': 'mm',
-    'vcxproj': 'vcxproj',
+    'rc': 'rc',
 }
 
 EXT_SRCTYPE = {
