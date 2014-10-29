@@ -62,6 +62,7 @@ class VisualStudioTarget(BaseTarget):
             uuid = uuid_module.UUID(uuid)
         varset = self.env.schema.merge(module.varsets)
         varset['Config.ConfigurationType'] = 'Application'
+        varset['ClCompile.ObjectFileName'] = '$(IntDir)\\%(RelativeDir)'
         project_refs = varset.get('.ProjectReferences', [])
         for project in project_refs:
             self._add_project(project)
