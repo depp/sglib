@@ -65,6 +65,8 @@ class GeneratedSource(object):
             else:
                 if oldvalue == value:
                     return
+        else:
+            self.makedirs()
 
         try:
             if self.is_executable:
