@@ -4,6 +4,7 @@
 import uuid as uuid_module
 import xml.etree.ElementTree as etree
 from ..util import indent_xml
+from ..error import ConfigError
 import io
 import os
 Element = etree.Element
