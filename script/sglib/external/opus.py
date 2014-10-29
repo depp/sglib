@@ -11,7 +11,7 @@ def pkg_config(build):
 
 def bundled(build):
     env = build.env
-    path = env.find_library('^opus-[0-9.]+$')
+    path = env.find_library('^opus(?:-[0-9.]+)?$')
     if build.config.target == 'msvc':
         project = os.path.join(
             path, 'win32', 'VS2010', 'opus.vcxproj')
