@@ -47,12 +47,12 @@ class NixEnvironment(BaseEnvironment):
             cflags = ['-O2', '-g']
         else:
             cflags = []
-        base_vars = self.schema.varset(
-            CC='cc',
-            CXX='c++',
-            CFLAGS=cflags,
-            CXXFLAGS=cflags,
-        )
+        base_vars = {
+            'CC': 'cc',
+            'CXX': 'c++',
+            'CFLAGS': cflags,
+            'CXXFLAGS': cflags,
+        }
         self.schema.update(
             base_vars,
             CFLAGS=['-pthread'],
@@ -172,8 +172,16 @@ class NixEnvironment(BaseEnvironment):
         """Create build variables that include a library search path."""
         raise {'LIBS': ['-L' + path]}
 
+    def framework(self, name):
+        """Create build variables that link with a framework."""
+        if self._config.platform != 'osx':
+            return super(NixEnvironment, self).framework(name)
+        return {'LIBS', ['-framework', framework]}
+
     def framework_path(self, path):
         """Create build variables that include a framework search path."""
+        if self._config.platform != 'osx':
+            return super(NixEnvironment, self).framework_path(path)
         return {'LIBS': ['-F' + path]}
 
     def pkg_config(self, spec):
@@ -213,19 +221,6 @@ class NixEnvironment(BaseEnvironment):
         varset = self.schema.parse(flags, strict=True)
         varset['CXXFLAGS'] = varset['CFLAGS']
         return varset
-
-    def frameworks(self, flist):
-        """Specify a list of frameworks to use."""
-        if self._config.platform != 'osx':
-            return super(NixEnvironment, self).frameworks(flist)
-        if not isinstance(flist, list):
-            raise TypeError('frameworks must be list')
-        libs = []
-        for framework in flist:
-            if not isinstance(framework, str):
-                raise TypeError('expected a list of strings')
-            libs.extend(('-framework', framework))
-        return self.schema.varset(LIBS=libs)
 
     def test_compile_link(self, source, sourcetype, base_varset, varsets):
         """Try different build variable sets to find one that works."""

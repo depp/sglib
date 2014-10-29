@@ -166,10 +166,14 @@ class XcodeEnvironment(BaseEnvironment):
         # a -l flag, which is often not what you want.
         return {'OTHER_LDFLAGS': [path]}
 
+    def library_path(self, path):
+        """Create build variables that include a library search path."""
+        return {'LIBRARY_SEARCH_PATHS': [path]}
+
+    def framework(self, name):
+        """Create build variables that link with a framework."""
+        return {'.FRAMEWORKS': [name]}
+
     def framework_path(self, path):
         """Create build variables that include a framework search path."""
         return {'FRAMEWORK_SEARCH_PATHS': [path]}
-
-    def frameworks(self, flist):
-        """Specify a list of frameworks to use."""
-        return {'.FRAMEWORKS': list(flist)}

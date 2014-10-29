@@ -128,41 +128,47 @@ class BaseEnvironment(object):
         raise NotImplementedError('must be implemented by subclass')
 
     def header_path(self, path, *, system=False):
-        """Create build variables that include a header search path."""
+        """Create build variables that include a header search path.
+
+        If system is True, then the header path will be searched for
+        include statements with angle brackets.  Otherwise, the header
+        path will be searched for include statements with double
+        quotes.  Not all targets support the distinction.
+        """
         raise NotImplementedError('must be implemented by subclass')
 
     def library(self, path):
         """Create build variables that link with a library."""
-        raise NotImplementedError('library not available')
+        raise ConfigError('library not available on this target')
 
     def library_path(self, path):
         """Create build variables that include a library search path."""
-        raise NotImplementedError('library_path not available')
+        raise ConfigError('library_path not available on this target')
+
+    def framework(self, name):
+        """Create build variables that link with a framework."""
+        raise ConfigError('framework not available on this target')
 
     def framework_path(self, path):
         """Create build variables that include a framework search path."""
-        raise NotImplementedError('framework_path not available')
+        raise ConfigError('framework_path not available')
 
     def pkg_config(self, spec):
         """Run the pkg-config tool and return the build variables."""
-        raise ConfigError('pkg-config not available for this target')
+        raise ConfigError('pkg_config not available on this target')
 
     def sdl_config(self, version):
         """Run the sdl-config tool and return the build variables.
 
         The version should either be 1 or 2.
         """
-        raise ConfigError('sdl-config not available for this target')
-
-    def frameworks(self, flist):
-        """Specify a list of frameworks to use."""
-        raise ConfigError('frameworks not available on this target')
+        raise ConfigError('sdl_config not available on this target')
 
     def test_compile_link(self, source, sourcetype, base_varset, varsets):
         """Try different build variable sets to find one that works."""
         raise ConfigError(
-            'compile and link tests not available for this target')
+            'test_compile_link not available on this target')
 
     def project_reference(self, path):
         """Create build variables that reference another project."""
-        raise ConfigError('project references not available for this target')
+        raise ConfigError('project_reference not available on this target')

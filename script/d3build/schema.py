@@ -36,10 +36,6 @@ class Schema(object):
         self.lax = self.lax or other.lax
         self.bool_values = other.bool_values
 
-    def varset(self, **kw):
-        self.validate(kw)
-        return kw
-
     def parse(self, vardict, *, strict):
         """Parse variables from strings."""
         variables = {}

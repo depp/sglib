@@ -9,7 +9,7 @@ def pkg_config(build):
     return None, [], {'public': [build.env.pkg_config('gl')]}
 
 def framework(build):
-    return None, [], {'public': [build.env.frameworks(['OpenGL'])]}
+    return None, [], {'public': [build.env.framework(['OpenGL'])]}
 
 def windows(build):
     build.env.check_platform('windows')

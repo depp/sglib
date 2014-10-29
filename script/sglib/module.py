@@ -60,8 +60,9 @@ def configure(build):
         raise ConfigError('unsupported platform')
 
     if flags['frontend'] == 'cocoa':
-        tags['frontend_cocoa'] = [build.env.frameworks(
-            ['AppKit', 'Foundation', 'CoreVideo', 'OpenGL', 'Carbon'])]
+        tags['frontend_cocoa'] = build.env.schema.merge([
+            build.env.framework(name) for name in
+            ['AppKit', 'Foundation', 'CoreVideo', 'OpenGL', 'Carbon']])
     elif flags['frontend'] == 'gtk':
         tags['frontend_gtk'] = [gtkglext.module, gtk.module]
     elif flags['frontend'] == 'sdl':
@@ -75,8 +76,9 @@ def configure(build):
     if flags['audio'] == 'alsa':
         tags['audio_alsa'] = [alsa.module]
     elif flags['audio'] == 'coreaudio':
-        tags['audio_coreaudio'] = [build.env.frameworks(
-            ['CoreAudio', 'AudioUnit'])]
+        tags['audio_coreaudio'] = build.env.schema.merge([
+            build.env.framework(name) for name in
+            ['CoreAudio', 'AudioUnit']])
     elif flags['audio'] == 'directsound':
         tags['audio_directsound'] = []
     elif flags['audio'] == 'sdl':
@@ -125,14 +127,14 @@ def configure(build):
                           .format(flags['png']))
 
     if enable_coregraphics:
-        tags['image_coregraphics'] = [build.env.frameworks(
-            ['ApplicationServices'])]
+        tags['image_coregraphics'] = [
+            build.env.framework('ApplicationServices')]
     if enable_wincodec:
         tags['image_wincodec'] = []
 
     if flags['type'] == 'coretext':
-        tags['type_coretext'] = [build.env.frameworks(
-            ['ApplicationServices'])]
+        tags['type_coretext'] = [
+            build.env.framework('ApplicationServices')]
     elif flags['type'] == 'pango':
         tags['type_pango'] = [pango.module]
     elif flags['type'] == 'uniscribe':

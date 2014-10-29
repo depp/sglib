@@ -17,7 +17,7 @@ def framework(build, version):
     varsets = [
         env.header_path(os.path.join(path, 'Headers')),
         env.framework_path(os.path.dirname(path)),
-        env.frameworks([name])]
+        env.framework(name)]
     return None, [], {'public': [env.schema.merge(varsets)]}
 
 def windows(build, version):
