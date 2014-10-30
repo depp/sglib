@@ -72,7 +72,7 @@ sg_girand(void)
 double
 sg_frand(struct sg_rand_state *s)
 {
-    return (float) sg_irand(s) * (1.0 / 4294967296.0);
+    return (float) sg_irand(s) * (1.0f / 4294967296.0f);
 }
 
 double

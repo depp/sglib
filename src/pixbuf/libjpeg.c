@@ -45,7 +45,7 @@ sg_jpeg_skip(j_decompress_ptr cinfo, long num_bytes)
     struct jpeg_source_mgr *src = cinfo->src;
     if (num_bytes <= 0)
         return;
-    if (num_bytes > src->bytes_in_buffer) {
+    if ((size_t) num_bytes > src->bytes_in_buffer) {
         sg_jpeg_fillinput(cinfo);
     } else {
         src->next_input_byte += num_bytes;

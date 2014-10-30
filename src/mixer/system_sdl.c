@@ -69,7 +69,7 @@ sg_mixer_sdl_callback(void *userdata, Uint8 *stream, int len)
 
     time = sg_clock_get();
     sg_mixer_mixdown_process(mp, time);
-    if (len != sizeof(float) * ap->bufsize * 2) {
+    if ((size_t) len != sizeof(float) * ap->bufsize * 2) {
         if (ap->bufsize)
             sg_logf(ap->logger, SG_LOG_ERROR,
                     "unexpected audio buffer size: %d", len);

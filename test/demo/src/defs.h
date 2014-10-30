@@ -13,8 +13,8 @@ union sg_event;
 
 struct st_iface {
     const char *name;
-    void (*init)();
-    void (*destroy)();
+    void (*init)(void);
+    void (*destroy)(void);
     void (*event)(union sg_event *evt);
     void (*draw)(int width, int height, unsigned msec);
 };
