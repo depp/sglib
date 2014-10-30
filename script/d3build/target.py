@@ -39,6 +39,10 @@ class BaseTarget(object):
         """Create an external target, without adding it to the build."""
         raise ConfigError('this target does not suport external targets')
 
+    def project_reference(self, path):
+        """Create build variables that reference another project."""
+        raise ConfigError('project_reference not available on this target')
+
     def add_generated_source(self, source):
         """Add a generated source to the build system.
 

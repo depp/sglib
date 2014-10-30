@@ -4,7 +4,7 @@
 from d3build.module import ExternalModule
 
 # stdio.h is necessary
-_TEST_SOURCE = '''\
+TEST_SOURCE = '''\
 #include <stdio.h>
 #include "jpeglib.h"
 int main(int argc, char **argv) {
@@ -18,8 +18,8 @@ int main(int argc, char **argv) {
 
 def configure(build):
     varsets = [build.env.library('-ljpeg')]
-    varset = build.env.test_compile_link(
-        _TEST_SOURCE, 'c', None, varsets)
+    varset = build.env.test_compile(
+        TEST_SOURCE, 'c', None, varsets)
     return None, [], {'public': [varset]}
 
 module = ExternalModule(

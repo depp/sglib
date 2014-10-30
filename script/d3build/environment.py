@@ -1,8 +1,7 @@
 # Copyright 2014 Dietrich Epp.
 # This file is part of SGLib.  SGLib is licensed under the terms of the
 # 2-clause BSD license.  For more information, see LICENSE.txt.
-from .error import ConfigError
-from .schema import Schema
+from .error import ConfigError, UserError
 import io
 import os
 import sys
@@ -12,9 +11,6 @@ class BaseEnvironment(object):
     __slots__ = [
         # The command-line configuration parameters.
         '_config',
-        # The schema for build variables.
-        # This is empty by default, and subclasses should add entries.
-        'schema',
         # Path to bundled packages.
         'package_search_path',
         # Dictionary mapping {varname: value}.
@@ -27,7 +23,6 @@ class BaseEnvironment(object):
 
     def __init__(self, config):
         self._config = config
-        self.schema = Schema()
         self.package_search_path = None
 
         self.variables = {}
@@ -43,6 +38,31 @@ class BaseEnvironment(object):
             self.variables[varname] = value
             self.variable_list.append((varname, value))
             self.variable_unused.add(varname)
+
+    @property
+    def schema(self):
+        """The schema for build variables."""
+        raise NotImplementedError('implemented by subclass')
+
+    @property
+    def configs(self):
+        """The list of build configurations."""
+        raise NotImplementedError('implemented by subclass')
+
+    @property
+    def base(self):
+        """The base build variables."""
+        raise NotImplementedError('implemented by subclass')
+
+    @property
+    def platform(self):
+        """The target platform."""
+        return self._config.platform
+
+    @property
+    def target(self):
+        """The target build system."""
+        return self._config.target
 
     def dump(self, *, file):
         """Dump information about the environment."""
@@ -115,6 +135,10 @@ class BaseEnvironment(object):
         return os.path.join(self.package_search_path, results[0])
 
     def find_framework(self, name):
+        """Find an OS X framework.
+
+        Returns the framework's path.
+        """
         if self._config.platform != 'osx':
             raise ConfigError('frameworks not available on this platform')
         try:
@@ -136,11 +160,18 @@ class BaseEnvironment(object):
         raise ConfigError('could not find framework {}'
                           .format(framework_name))
 
-    def define(self, definition):
+    def varset(self, *, configs=None, **kw):
+        """Create a set of build variables manually."""
+        if configs is None:
+            configs = self.configs
+        return {(config, name): value for name, value in kw.items()
+                for config in configs}
+
+    def define(self, definition, *, configs=None):
         """Create build variables that define a preprocessor variable."""
         raise NotImplementedError('must be implemented by subclass')
 
-    def header_path(self, path, *, system=False):
+    def header_path(self, path, *, configs=None, system=False):
         """Create build variables that include a header search path.
 
         If system is True, then the header path will be searched for
@@ -150,38 +181,40 @@ class BaseEnvironment(object):
         """
         raise NotImplementedError('must be implemented by subclass')
 
-    def library(self, path):
+    def library(self, path, *, configs=None):
         """Create build variables that link with a library."""
         raise ConfigError('library not available on this target')
 
-    def library_path(self, path):
+    def library_path(self, path, *, configs=None):
         """Create build variables that include a library search path."""
         raise ConfigError('library_path not available on this target')
 
-    def framework(self, name):
+    def framework(self, name, *, configs=None):
         """Create build variables that link with a framework."""
         raise ConfigError('framework not available on this target')
 
-    def framework_path(self, path):
+    def framework_path(self, path, *, configs=None):
         """Create build variables that include a framework search path."""
         raise ConfigError('framework_path not available')
 
-    def pkg_config(self, spec):
+    def pkg_config(self, spec, *, configs=None):
         """Run the pkg-config tool and return the build variables."""
         raise ConfigError('pkg_config not available on this target')
 
-    def sdl_config(self, version):
+    def sdl_config(self, version, *, configs=None):
         """Run the sdl-config tool and return the build variables.
 
         The version should either be 1 or 2.
         """
         raise ConfigError('sdl_config not available on this target')
 
-    def test_compile_link(self, source, sourcetype, base_varset, varsets):
-        """Try different build variable sets to find one that works."""
+    def test_compile(self, source, sourcetype, base_varset, varsets,
+                     *, configs=None, use_all=False, external=True,
+                     link=True):
+        """Try different build variable sets to find one that works.
+
+        If use_all is specified, then all sets of build variables are
+        tried and the working ones are merged to produce the result.
+        """
         raise ConfigError(
             'test_compile_link not available on this target')
-
-    def project_reference(self, path):
-        """Create build variables that reference another project."""
-        raise ConfigError('project_reference not available on this target')

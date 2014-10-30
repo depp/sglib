@@ -9,12 +9,13 @@ __pycache__
 /config.dat
 /config.log
 /resources
+/lib
 
 # Build system, GNUMake
 /Makefile
-/SGLib_Demo
+/SGLib_Demo_Debug
+/SGLib_Demo_Release
 /build
-/lib
 
 # Build system, Xcode
 /*.xcodeproj

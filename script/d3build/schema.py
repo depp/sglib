@@ -3,17 +3,25 @@
 # 2-clause BSD license.  For more information, see LICENSE.txt.
 from .shell import escape
 from .error import ConfigError, UserError
+import sys
 
 class Schema(object):
-    """A schema is a description of variables affecting a build system."""
-    __slots__ = ['variables', 'lax', 'sep', 'bool_values']
+    """A schema is a description of variables affecting a build system.
 
-    def __init__(self, *, lax=False, sep=None,
-                 bool_values=('False', 'True')):
+    Variable sets (varsets) are maps from (config, varname) to values.
+    The config is a target-specific configuration name, such as
+    'Debug' or 'Release', although the configuration may also specify
+    an architecture on multi-architecture platforms like OS X and
+    Windows (which both support x86 and x64).
+
+    When a function takes a 'configs' argument, that argument
+    specifies which configurations a set of variables applies to.
+    """
+    __slots__ = ['variables', 'lax']
+
+    def __init__(self, *, lax=False):
         self.variables = {}
         self.lax = lax
-        self.sep = sep
-        self.bool_values = bool_values
 
     def __getitem__(self, key):
         try:
@@ -36,7 +44,7 @@ class Schema(object):
         self.lax = self.lax or other.lax
         self.bool_values = other.bool_values
 
-    def parse(self, vardict, *, strict):
+    def parse(self, vardict, *, strict, configs):
         """Parse variables from strings."""
         variables = {}
         for varname, value in vardict.items():
@@ -46,7 +54,9 @@ class Schema(object):
                 if strict:
                     raise
                 continue
-            variables[varname] = vardef.parse(value)
+            value = vardef.parse(value)
+            for c in configs:
+                variables[c, varname] = value
         return variables
 
     def merge(self, varsets):
@@ -59,20 +69,21 @@ class Schema(object):
         for varset in varsets:
             if not varset:
                 continue
-            for varname, value in varset.items():
+            for var, value in varset.items():
                 try:
-                    values = lists[varname]
+                    values = lists[var]
                 except KeyError:
-                    lists[varname] = [value]
+                    lists[var] = [value]
                 else:
                     values.append(value)
         variables = {}
-        for varname, values in lists.items():
+        for var, values in lists.items():
+            config, varname = var
             if len(values) == 1:
                 value = values[0]
             else:
                 value = self[varname].combine(values)
-            variables[varname] = value
+            variables[var] = value
         return variables
 
     def dump(self, varset, *, file=None, indent=''):
@@ -82,13 +93,25 @@ class Schema(object):
         """
         if file is None:
             file = sys.stdout
-        for varname, value in sorted(varset.items()):
+        for var, value in sorted(varset.items()):
+            config, varname = var
             vardef = self[varname]
-            print('{}{}: {}'
-                  .format(indent, varname, vardef.show(value)),
+            print('{}{}.{}: {}'
+                  .format(indent, config, varname, vardef.show(value)),
                   file=file)
 
-    def _update1(self, varset, additions):
+    def update(self, varset, *, configs, **kw):
+        """Modify a variable set by merging new variables.
+
+        The variables are merged for the chosen configurations.
+        """
+        self.update_map(varset, kw, configs=configs)
+
+    def update_map(self, varset, additions, *, configs):
+        """Modify a variable set by merging new variables.
+
+        The variables are merged in fro the chosen configuration.
+        """
         if not additions:
             return
         if not isinstance(additions, dict):
@@ -101,22 +124,41 @@ class Schema(object):
             if not vardef.isvalid(value2):
                 raise ValueError('invalid value: key={}, value={!r}'
                                  .format(varname, value2))
-            try:
-                value1 = varset[varname]
-            except KeyError:
-                varset[varname] = value2
-            else:
-                varset[varname] = vardef.combine([value1, value2])
+            for config in configs:
+                var = config, varname
+                try:
+                    value1 = varset[var]
+                except KeyError:
+                    varset[var] = value2
+                else:
+                    varset[var] = vardef.combine([value1, value2])
 
-    def update(self, varset, *args, **kw):
-        """Modify a variable set by merging new variables."""
-        for arg in args:
-            self._update1(varset, arg)
-        self._update1(varset, kw)
+    def update_varset(self, varset, additions):
+        """Modify a variable set by merging another varset."""
+        if not additions:
+            return
+        if not isinstance(additions, dict):
+            raise TypeError('additional variables must be a dictionary')
+        for var, value2 in additions.items():
+            config, varname = var
+            try:
+                vardef = self[varname]
+            except KeyError:
+                raise ValueError('unknown variable: {!r}'.format(varname))
+            if not vardef.isvalid(value2):
+                raise ValueError('invalid value: key={}, value={!r}'
+                                 .format(varname, value2))
+            try:
+                value1 = varset[var]
+            except KeyError:
+                varset[var] = value2
+            else:
+                varset[var] = vardef.combine([value1, value2])
 
     def validate(self, varset):
         """Validate the types of a set of variables."""
-        for varname, value in varset.items():
+        for var, value in varset.items():
+            config, varname = var
             try:
                 vardef = self[varname]
             except KeyError:
@@ -125,16 +167,41 @@ class Schema(object):
                 raise ValueError('invalid value: key={}, value={!r}'
                                  .format(varname, value))
 
-def _schema(name):
+class SchemaBuilder(object):
+    """Object used for creating new schemas.
+
+    The 'lax' parameter indicates that unknown variables are
+    permissible, and treated as strings.
+
+    The 'sep' parameter determines the separator for list variables,
+    which is ';' for Visual Studio and None for Xcode and Gnu Make.  A
+    value of None indicates that lists are separated with whitespace.
+
+    The 'bool_values' parameter determines how boolean values are
+    printed.
+    """
+    __slots__ = ['_schema', 'sep', 'bool_values']
+
+    def __init__(self, lax=False, sep=None,
+                 bool_values=('False', 'True')):
+        self._schema = Schema(lax=lax)
+        self.sep = sep
+        self.bool_values = bool_values
+
+    def value(self):
+        """Get the schema value being constructed."""
+        return self._schema
+
+def _vartype(name):
     def func(class_):
         def add_var(self, name, doc=None, **kw):
-            self.variables[name] = (class_(self, **kw), doc)
+            self._schema.variables[name] = (class_(self, **kw), doc)
             return self
-        setattr(Schema, name, add_var)
+        setattr(SchemaBuilder, name, add_var)
         return class_
     return func
 
-@_schema('string')
+@_vartype('string')
 class VarString(object):
     """A build variable which stores a string value."""
     __slots__ = []
@@ -158,7 +225,7 @@ class VarString(object):
     def isvalid(value):
         return isinstance(value, str)
 
-@_schema('bool')
+@_vartype('bool')
 class VarBool(object):
     """A build variable which stores a boolean value."""
     __slots__ = ['values']
@@ -205,7 +272,7 @@ class BaseList(object):
         return (isinstance(value, list) and
                 all(isinstance(item, str) for item in value))
 
-@_schema('list')
+@_vartype('list')
 class VarList(BaseList):
     """A build variable which stores a list."""
     __slots__ = ['_unique']
@@ -229,7 +296,7 @@ class VarList(BaseList):
                 result.extend(value)
         return result
 
-@_schema('defs')
+@_vartype('defs')
 class VarDefs(VarList):
     """A build variable which stores preprocessor definitions."""
     __slots__ = []
@@ -249,7 +316,7 @@ class VarDefs(VarList):
         result.reverse()
         return result
 
-@_schema('objectlist')
+@_vartype('objectlist')
 class VarObjectList(object):
     """A build variable which stores a list of Python objects."""
     __slots__ = []

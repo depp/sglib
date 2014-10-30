@@ -4,7 +4,6 @@
 from ..target import BaseTarget
 from ..error import UserError
 from ..shell import escape
-import collections
 import io
 import os
 import re
@@ -32,9 +31,6 @@ def mk_escape(x):
         return MK_SPECIAL.sub(mk_escape1, x)
     except ValueError:
         raise ValueError('invalid character in {!r}'.format(x))
-
-# A phony makefile target
-Phony = collections.namedtuple('Phony', 'name')
 
 class GnuMakeTarget(BaseTarget):
     """Environment targeting the GNU Make build system."""
@@ -93,6 +89,11 @@ class GnuMakeTarget(BaseTarget):
         super(GnuMakeTarget, self).add_default(target)
         self._all.add(target)
 
+    def add_alias(self, target, deps):
+        """Create a target which triggers other targets."""
+        self._phony.add(target)
+        self._add_rule(target, deps, [])
+
     def add_executable(self, *, name, module, uuid=None, arguments=[]):
         """Create an executable target.
 
@@ -101,65 +102,51 @@ class GnuMakeTarget(BaseTarget):
         if module is None:
             return ''
 
-        objects = []
-        sourcetypes = set()
-        for source in module.sources:
-            if source.sourcetype in ('c', 'c++', 'objc', 'objc++'):
-                objects.append(self._compile(source))
+        varset = self.env.schema.merge([self.env.base] + module.varsets)
 
-        varset = self.env.schema.merge(module.varsets)
+        paths = {}
+        for config in self.env.configs:
+            objects = []
+            sourcetypes = set()
+            for source in module.sources:
+                if source.sourcetype in ('c', 'c++', 'objc', 'objc++'):
+                    objects.append(self._compile(source, config))
 
-        exepath = os.path.join('build', 'exe', name)
-        debugpath = os.path.join('build', 'products', name + '.dbg')
-        productpath = os.path.join('build', 'products', name)
+            exepath = os.path.join('build', config, 'products', name)
+            paths[config] = exepath
 
-        self._add_rule(
-            exepath, objects,
-            [self.env.ld_command(varset, exepath, objects, sourcetypes)],
-            qname='Link')
-        self._add_rule(
-            debugpath, [exepath],
-            [['objcopy', '--only-keep-debug', exepath, debugpath],
-             ['chmod', '-x', debugpath]],
-            qname='ObjCopy')
-        self._add_rule(
-            productpath, [exepath, debugpath],
-            [['objcopy', '--strip-unneeded',
-              '--add-gnu-debuglink=' + debugpath, exepath, productpath]],
-            qname='ObjCopy')
+            self._add_rule(
+                exepath, objects,
+                [self.env.ld_command(
+                    config, varset, exepath, objects, sourcetypes)],
+                qname='Link')
 
-        return productpath
+        return paths
 
     def finalize(self):
         super(GnuMakeTarget, self).finalize()
         with open('Makefile', 'w') as fp:
             self._write(fp)
 
-    def _compile(self, source):
+    def _compile(self, source, config):
         """Create a target that compiles a source file."""
         src = source.path
         assert not os.path.isabs(src)
         out = os.path.join(
-            'build', 'obj', os.path.splitext(src)[0])
-        varset = self.env.schema.merge(source.varsets)
+            'build', config, 'obj', os.path.splitext(src)[0])
+        varset = self.env.schema.merge([self.env.base] + source.varsets)
         obj = out + '.o'
         qname = BUILD_NAMES[source.sourcetype]
         if source.external:
             cmd = self.env.cc_command(
-                varset, obj, src, source.sourcetype, external=True)
+                config, varset, obj, src, source.sourcetype, external=True)
         else:
             dep = out + '.d'
             cmd = self.env.cc_command(
-                varset, obj, src, source.sourcetype, depfile=dep)
+                config, varset, obj, src, source.sourcetype, depfile=dep)
             self._optinclude.add(dep)
         self._add_rule(obj, [source.path], [cmd], qname=qname)
         return obj
-
-    def _resolve_path(self, path):
-        result = os.path.relpath(path)
-        if result.startswith('../'):
-            raise UserError('path outside root: {}'.format(path))
-        return result
 
     def _get_qname(self, text):
         try:
@@ -176,21 +163,11 @@ class GnuMakeTarget(BaseTarget):
         a list of arguments.
         """
         write = self._rulefp.write
-        if isinstance(target, Phony):
-            target = target.name
-            self._phony.add(target)
-            dirpath = None
-        else:
-            dirpath = os.path.dirname(target)
-            target = self._resolve_path(target)
+        dirpath = os.path.dirname(target)
 
         write(mk_escape(target))
         write(':')
         for source in sources:
-            if isinstance(source, Phony):
-                source = source.name
-            else:
-                source = self._resolve_path(source)
             write(' ')
             write(mk_escape(source))
         write('\n')

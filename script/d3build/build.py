@@ -79,7 +79,7 @@ class Build(object):
             if config.target == 'gnumake':
                 from .gnumake import environment
                 from .gnumake import target
-                env = environment.NixEnvironment
+                env = environment.GnuMakeEnvironment
                 target = target.GnuMakeTarget
             elif config.target == 'xcode':
                 from .xcode import environment
@@ -99,11 +99,11 @@ class Build(object):
             obj.env.dump(file=logfile(1))
             obj.target = target(name, args[0], config, obj.env)
             obj.script = args[0]
-            try:
-                build(obj)
-            except ConfigError as ex:
-                ex.write(logfile(0), indent='  ')
-                obj._has_error = True
+            #try:
+            build(obj)
+            #except ConfigError as ex:
+            #    ex.write(logfile(0), indent='  ')
+            #    obj._has_error = True
             if obj._has_error:
                 print('Configuration failed.', file=logfile(0))
                 sys.exit(1)

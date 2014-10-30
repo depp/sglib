@@ -80,6 +80,9 @@ class App(object):
         from d3build.generatedsource.configheader import ConfigHeader
         build.env.package_search_path = _path('lib')
 
+        from . import environment
+        environment.update_environment(build.env)
+
         name = self.name
         if build.config.platform == 'linux':
             name = name.replace(' ', '_')
@@ -128,15 +131,21 @@ class App(object):
 
         if build.config.platform == 'osx':
             from d3build.generatedsource.template import TemplateFile
-            main_nib = build.target.add_generated_source(
-                TemplateFile(
-                    _path('resources/MainMenu.xib'),
-                    _path('src/core/osx/MainMenu.xib'),
-                    {'EXE_NAME': self.name}))
+            if build.config.flags['frontend'] == 'cocoa':
+                assert False # broken
+                main_nib = _path('resources/MainMenu.xib')
+                build.target.add_generated_source(
+                    TemplateFile(
+                        main_nib,
+                        _path('src/core/osx/MainMenu.xib'),
+                        {'EXE_NAME': self.name}))
+            else:
+                main_nib = None
             from .infoplist import InfoPropertyList
-            info_plist = build.target.add_generated_source(
+            info_plist = _path('resources/Info.plist'),
+            build.target.add_generated_source(
                 InfoPropertyList(
-                    _path('resources/Info.plist'),
+                    info_plist,
                     self,
                     main_nib,
                     icon.icon if icon is not None else None))
@@ -154,6 +163,10 @@ class App(object):
 
         if build.config.platform == 'linux':
             from .runscript import RunScript
-            target = build.target.add_generated_source(
-                RunScript(name, name, target, args))
-        build.target.add_default(target)
+            default = build.env.get_variable('DEFAULT', 'Release')
+            build.target.add_default(default)
+            for config in build.env.configs:
+                scriptname = '{}_{}'.format(name, config)
+                build.target.add_generated_source(
+                    RunScript(scriptname, scriptname, target[config], args))
+                build.target.add_alias(config, [scriptname])

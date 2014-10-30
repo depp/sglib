@@ -2,17 +2,16 @@
 # This file is part of SGLib.  SGLib is licensed under the terms of the
 # 2-clause BSD license.  For more information, see LICENSE.txt.
 from ..environment import BaseEnvironment
-from ..schema import Schema
+from ..schema import SchemaBuilder
 from ..shell import get_output, describe_proc
 from ..error import ConfigError, format_block
 from ..source import SRCTYPE_EXT, _base
 from ..log import logfile
 from ..util import yesno
-import io
 import os
 import tempfile
 
-SCHEMA = (Schema()
+SCHEMA = (SchemaBuilder()
     .string('CC', 'The C compiler')
     .string('CXX', 'The C++ compiler')
     .list  ('CPPFLAGS', 'C and C++ preprocessor flags')
@@ -22,82 +21,61 @@ SCHEMA = (Schema()
     .list  ('CXXWARN', 'C++ warning flags')
     .list  ('LDFLAGS', 'Linker flags')
     .list  ('LIBS', 'Linker flags specifying libraries')
-)
+    .bool  ('WERROR', 'Treat warnings as errors')
+).value()
 
-class NixEnvironment(BaseEnvironment):
-    """A Unix-like configuration environment."""
-    __slots__ = [
-        # Configuration variables.
-        '_configuration', '_warnings', '_werror',
-        # Base compilation variables in this environment.
-        'base_vars',
-    ]
+CONFIGS = ('Debug', 'Release')
+
+class GnuMakeEnvironment(BaseEnvironment):
+    """A build environment for the Gnu Make target."""
+    __slots__ = ['base']
 
     def __init__(self, config):
-        super(NixEnvironment, self).__init__(config)
-        self.schema.update_schema(SCHEMA)
+        super(GnuMakeEnvironment, self).__init__(config)
 
-        self._configuration = self.get_variable('CONFIG', 'release')
-        self._warnings = self.get_variable_bool('WARNINGS', True)
-        self._werror = self.get_variable_bool(
-            'WERROR', self._configuration=='debug')
-        if self._configuration == 'debug':
-            cflags = ['-O0', '-g']
-        elif self._configuration == 'release':
-            cflags = ['-O2', '-g']
-        else:
-            cflags = []
-        base_vars = {
-            'CC': 'cc',
-            'CXX': 'c++',
-            'CFLAGS': cflags,
-            'CXXFLAGS': cflags,
-        }
+        self.base = {}
         self.schema.update(
-            base_vars,
-            CFLAGS=['-pthread'],
-            CXXFLAGS=['-pthread'],
-            LDFLAGS=['-pthread'])
-        if self._warnings:
-            self.schema.update(
-                base_vars,
-                CWARN=
-                    '-Wall -Wextra -Wpointer-arith -Wno-sign-compare '
-                    '-Wwrite-strings -Wmissing-prototypes '
-                    '-Werror=implicit-function-declaration '
-                    .split(),
-                CXXWARN=
-                    '-Wall -Wextra -Wpointer-arith -Wno-sign-compare '
-                    .split())
-        if self._werror:
-            self.schema.update(
-                base_vars,
-                CWARN=['-Werror'],
-                CXXWARN=['-Werror'])
-        if config.platform == 'linux':
-            self.schema.update(
-                base_vars,
-                LDFLAGS=['-Wl,--as-needed', '-Wl,--gc-sections'])
-        if config.platform == 'osx':
-            self.schema.update(
-                base_vars,
-                LDFLAGS=['-Wl,-dead_strip', '-Wl,-dead_strip_dylibs'])
+            self.base,
+            CC='cc',
+            CXX='c++',
+            configs=CONFIGS)
 
-        user_vars = {}
-        for varname, value in self.variable_list:
-            try:
-                vardef = self.schema[varname]
-            except KeyError:
-                continue
-            self.variable_unused.discard(varname)
-            user_vars[varname] = vardef.parse(value)
+        cflags = ['-O0', '-g']
+        self.schema.update(
+            self.base,
+            CFLAGS=cflags,
+            CXXFLAGS=cflags,
+            configs=['Debug'])
 
-        self.base_vars = self.schema.merge([base_vars, user_vars])
+        cflags = ['-O2', '-g']
+        self.schema.update(
+            self.base,
+            CFLAGS=cflags,
+            CXXFLAGS=cflags,
+            configs=['Release'])
 
-    def cc_command(self, varset, output, source, sourcetype, *,
+        # user_vars = {}
+        # for varname, value in self.variable_list:
+        #     try:
+        #         vardef = self.schema[varname]
+        #     except KeyError:
+        #         continue
+        #     self.variable_unused.discard(varname)
+        #     user_vars[varname] = vardef.parse(value)
+
+        # self.base_vars = self.schema.merge([base_vars, user_vars])
+
+    @property
+    def schema(self):
+        return SCHEMA
+
+    @property
+    def configs(self):
+        return CONFIGS
+
+    def cc_command(self, config, varset, output, source, sourcetype, *,
                    depfile=None, external=False):
         """Get the command to compile the given source file."""
-        varset = self.schema.merge([self.base_vars, varset])
         if sourcetype in ('c', 'objc'):
             cc, cflags, cwarn = 'CC', 'CFLAGS', 'CWARN'
         elif sourcetype in ('c++', 'objc++'):
@@ -106,83 +84,76 @@ class NixEnvironment(BaseEnvironment):
             raise ValueError('invalid source type')
 
         try:
-            cc = varset[cc]
+            cc = varset[config, cc]
         except KeyError:
             raise ConfigError('{} is not set'.format(cc))
-        cflags = varset.get(cflags, ())
+        cflags = varset.get((config, cflags), ())
         if external:
             cwarn = ()
         else:
-            cwarn = varset.get(cwarn, ())
+            cwarn = varset.get((config, cwarn), ())
 
         cmd = [cc, '-o', output, source, '-c']
         if depfile is not None:
             cmd.extend(('-MF', depfile, '-MMD', '-MP'))
-        cmd.extend(varset.get('CPPFLAGS', ()))
+        cmd.extend(varset.get((config, 'CPPFLAGS'), ()))
         cmd.extend(cwarn)
         cmd.extend(cflags)
         return cmd
 
-    def ld_command(self, varset, output, sources, sourcetypes):
+    def ld_command(self, config, varset, output, sources, sourcetypes):
         """Get the command to link the given source."""
-        varset = self.schema.merge([self.base_vars, varset])
         if 'c++' in sourcetypes or 'objc++' in sourcetypes:
             cc = 'CXX'
         else:
             cc = 'CC'
         try:
-            cc = varset[cc]
+            cc = varset[config, cc]
         except KeyError:
-            raise ConfigError('{} is not set'.format(cc))
+            raise ConfigError('{}.{} is not set'.format(config, cc))
 
         cmd = [cc]
-        cmd.extend(varset.get('LDFLAGS', ()))
+        cmd.extend(varset.get((config, 'LDFLAGS'), ()))
         cmd.extend(('-o', output))
         cmd.extend(sources)
-        cmd.extend(varset.get('LIBS', ()))
+        cmd.extend(varset.get((config, 'LIBS'), ()))
         return cmd
 
     def dump(self, *, file):
         """Dump information about the environment."""
-        super(NixEnvironment, self).dump(file=file)
+        super(GnuMakeEnvironment, self).dump(file=file)
         file = logfile(2)
-        print('Configuration:', file=file)
-        print('  CONFIG={}'.format(self._configuration), file=file)
-        print('Enable extra warnings:', file=file)
-        print('  WARNINGS={}'.format(yesno(self._warnings)), file=file)
-        print('Treat warnings as errors:', file=file)
-        print('  WERROR={}'.format(yesno(self._werror)), file=file)
         print('Compilation flags:', file=file)
-        self.schema.dump(self.base_vars, file=file, indent='  ')
+        self.schema.dump(self.base, file=file, indent='  ')
 
     def define(self, definition):
         """Create build variables that define a preprocessor variable."""
         return {'CPPFLAGS:': ['-D' + definition]}
 
-    def header_path(self, path, *, system=False):
+    def header_path(self, path, *, configs=None, system=False):
         """Create build variables that include a header search path."""
         flag = '-I' if system else '-iquote'
-        return {'CPPFLAGS': [flag + path]}
+        return self.varset(CPPFLAGS=[flag + path], configs=configs)
 
-    def library(self, path):
+    def library(self, path, *, configs=None):
         """Create build variables that link with a library."""
-        return {'LIBS': [path]}
+        return self.varset(LIBS=[path], configs=configs)
 
     def library_path(self, path):
         """Create build variables that include a library search path."""
-        raise {'LIBS': ['-L' + path]}
+        return self.varset(LIBS=['-L' + path], configs=configs)
 
     def framework(self, name):
         """Create build variables that link with a framework."""
         if self._config.platform != 'osx':
-            return super(NixEnvironment, self).framework(name)
-        return {'LIBS', ['-framework', framework]}
+            return super(GnuMakeEnvironment, self).framework(name)
+        return self.varset(LIBS=['-framework', name], configs=configs)
 
     def framework_path(self, path):
         """Create build variables that include a framework search path."""
         if self._config.platform != 'osx':
-            return super(NixEnvironment, self).framework_path(path)
-        return {'LIBS': ['-F' + path]}
+            return super(GnuMakeEnvironment, self).framework_path(path)
+        return self.varset(LIBS=['-F', path], configs=configs)
 
     def pkg_config(self, spec):
         """Run the pkg-config tool and return the build variables."""
@@ -197,8 +168,8 @@ class NixEnvironment(BaseEnvironment):
                     combine_output=True)
                 raise ConfigError('{} failed'.format(cmdname), details=stdout)
             flags[varname] = stdout
-        varset = self.schema.parse(flags, strict=True)
-        varset['CXXFLAGS'] = varset['CFLAGS']
+        flags['CXXFLAGS'] = flags['CFLAGS']
+        varset = self.schema.parse(flags, strict=True, configs=self.configs)
         return varset
 
     def sdl_config(self, version):
@@ -218,19 +189,24 @@ class NixEnvironment(BaseEnvironment):
             if retcode:
                 raise ConfigError('{} failed'.format(cmdname), details=stderr)
             flags[varname] = stdout
-        varset = self.schema.parse(flags, strict=True)
-        varset['CXXFLAGS'] = varset['CFLAGS']
+        flags['CXXFLAGS'] = flags['CFLAGS']
+        varset = self.schema.parse(flags, strict=True, configs=self.configs)
         return varset
 
-    def test_compile_link(self, source, sourcetype, base_varset, varsets):
+    def test_compile(self, source, sourcetype, base_varset, varsets,
+                     *, configs=None, use_all=False, external=True,
+                     link=True):
         """Try different build variable sets to find one that works."""
-        log = io.StringIO()
+        if configs is None:
+            configs = self.configs
+        log = logfile(2)
         print('Testing compilation and linking.', file=log)
         print('Source type: {}'.format(sourcetype), file=log)
         log.write(format_block(source))
         if base_varset is not None:
             print('Base build variables:', file=log)
             self.schema.dump(base_varset, file=log, indent='  ')
+        result = {}
         with tempfile.TemporaryDirectory() as dirpath:
             file_c = os.path.join(dirpath, 'config' + SRCTYPE_EXT[sourcetype])
             file_obj = os.path.join(dirpath, 'config.o')
@@ -240,27 +216,38 @@ class NixEnvironment(BaseEnvironment):
             for varset in varsets:
                 print('Test build variables:', file=log)
                 self.schema.dump(varset, file=log, indent='  ')
-                test_varset = self.schema.merge([base_varset, varset])
-                cmds = [
-                    self.cc_command(test_varset, file_obj, file_c,
-                                    sourcetype, external=True),
-                    self.ld_command(test_varset, file_out, [file_obj],
-                                    [sourcetype]),
-                ]
-                for cmd in cmds:
-                    try:
-                        stdout, retcode = get_output(
-                            cmd, combine_output=True)
-                    except ConfigError as ex:
-                        print(ex, file=log)
-                        break
-                    else:
-                        log.write(describe_proc(cmd, stdout, retcode))
-                        if retcode:
+                test_varset = self.schema.merge(
+                    [self.base, base_varset, result, varset])
+                for config in configs:
+                    cmds = [self.cc_command(
+                        config, test_varset, file_obj, file_c,
+                        sourcetype, external=external)]
+                    if link:
+                        cmds.append(self.ld_command(
+                            config, test_varset, file_out, [file_obj],
+                            [sourcetype]))
+                    success = False
+                    for cmd in cmds:
+                        try:
+                            stdout, retcode = get_output(
+                                cmd, combine_output=True)
+                        except ConfigError as ex:
+                            print(ex, file=log)
                             break
+                        else:
+                            log.write(describe_proc(cmd, stdout, retcode))
+                            if retcode:
+                                break
+                    else:
+                        success = True
+                    if not success:
+                        break
                 else:
                     print('Success', file=log)
-                    return varset
-        raise ConfigError(
-            'could not compile and link test file',
-            details=log.getvalue())
+                    if use_all:
+                        self.schema.update_varset(result, varset)
+                    else:
+                        return varset
+        if use_all:
+            return result
+        raise ConfigError('could not compile and link test file')
