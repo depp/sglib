@@ -22,7 +22,6 @@ GCC_C_WARNINGS = '''
 -Werror=implicit-function-declaration
 -Wdouble-promotion
 -Winit-self
--Wconversion
 -Wstrict-prototypes
 '''.split()
 
