@@ -92,6 +92,8 @@ def gnumake_environment(env):
     """Update the GnuMake environment with the standard settings."""
     with Feedback('Checking for threading support...') as fb:
         gnumake_threads(env)
+    with Feedback('Checking for C++11 support...') as fb:
+        gnumake_varset(env, CXXFLAGS=['-std=gnu++11'], langs=('c++',))
     if env.get_variable_bool('WARNINGS', True):
         with Feedback('Checking for warning flags...') as fb:
             gnumake_warnings(env)
