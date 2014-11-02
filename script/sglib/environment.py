@@ -29,7 +29,6 @@ GCC_CXX_WARNINGS = '''
 -Wall
 -Wextra
 -Wpointer-arith
--Wconversion
 '''.split()
 
 def gnumake_varset(env, *, langs=('c', 'c++'), configs=None, **kw):
