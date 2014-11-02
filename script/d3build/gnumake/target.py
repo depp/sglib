@@ -110,6 +110,7 @@ class GnuMakeTarget(BaseTarget):
             sourcetypes = set()
             for source in module.sources:
                 if source.sourcetype in ('c', 'c++', 'objc', 'objc++'):
+                    sourcetypes.add(source.sourcetype)
                     objects.append(self._compile(source, config))
 
             exepath = os.path.join('build', config, 'products', name)
