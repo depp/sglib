@@ -10,7 +10,7 @@
 #endif
 
 #if defined __clang__
-#pragm clang diagnostic ignored "-Wtautological-compare"
+#pragma clang diagnostic ignored "-Wtautological-compare"
 #endif
 
 void
