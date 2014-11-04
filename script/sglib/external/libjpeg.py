@@ -1,7 +1,7 @@
 # Copyright 2014 Dietrich Epp.
 # This file is part of SGLib.  SGLib is licensed under the terms of the
 # 2-clause BSD license.  For more information, see LICENSE.txt.
-from d3build.module import ExternalModule
+from d3build.package import ExternalPackage
 
 # stdio.h is necessary
 TEST_SOURCE = '''\
@@ -16,15 +16,15 @@ int main(int argc, char **argv) {
 }
 '''
 
-def configure(build):
+def test(build):
     varsets = [build.env.library('-ljpeg')]
     varset = build.env.test_compile(
         TEST_SOURCE, 'c', None, varsets)
     return None, [], {'public': [varset]}
 
-module = ExternalModule(
+module = ExternalPackage(
+    [test],
     name='LibJPEG',
-    configure=configure,
     packages={
         'deb': 'libjpeg-dev',
         'rpm': 'libjpeg-turbo',

@@ -1,26 +1,23 @@
 # Copyright 2014 Dietrich Epp.
 # This file is part of SGLib.  SGLib is licensed under the terms of the
 # 2-clause BSD license.  For more information, see LICENSE.txt.
-from d3build.module import ExternalModule
-from d3build.error import ConfigError, try_config
+from d3build.package import ExternalPackage
+from d3build.error import ConfigError
 import os
 
 def pkg_config(build):
-    return None, [], {'public': [build.env.pkg_config('gl')]}
+    return None, build.target.module().add_pkg_config('gl')
 
 def framework(build):
-    return None, [], {'public': [build.env.framework(['OpenGL'])]}
+    return None, build.target.module().add_framework(name='OpenGL')
 
 def windows(build):
     build.env.check_platform('windows')
-    return None, [], {'public': [build.env.library('opengl32.lib')]}
+    return None, build.target.module().add_library('opengl32.lib')
 
-def configure(build):
-    return try_config([build], framework, pkg_config, windows)
-
-module = ExternalModule(
+module = ExternalPackage(
+    [framework, pkg_config, windows],
     name='OpenGL',
-    configure=configure,
     packages={
         'deb': 'libgl-dev',
         'rpm': 'mesa-libGL-devel',

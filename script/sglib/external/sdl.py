@@ -1,49 +1,50 @@
 # Copyright 2014 Dietrich Epp.
 # This file is part of SGLib.  SGLib is licensed under the terms of the
 # 2-clause BSD license.  For more information, see LICENSE.txt.
-from d3build.module import ExternalModule
-from d3build.error import ConfigError, try_config
+from d3build.package import ExternalPackage
+from d3build.error import ConfigError
 import os
 
 def pkg_config(build, version):
-    return None, [], {'public': [build.env.sdl_config(version)]}
+    return None, build.target.module().add_sdl_config(version)
 
 SDL_NAME = {1: 'SDL', 2: 'SDL2'}
 
 def framework(build, version):
-    env = build.env
     name = SDL_NAME[version]
-    path = env.find_framework(name)
-    varsets = [
-        env.header_path(os.path.join(path, 'Headers')),
-        env.framework_path(os.path.dirname(path)),
-        env.framework(name)]
-    return None, [], {'public': [env.schema.merge(varsets)]}
+    path = build.find_framework(name)
+    return None, (build.target.module()
+        .add_header_path(os.path.join(path, 'Headers'))
+        .add_framework(path=path))
 
+WIN_DIR = {'Win32': 'x86', 'x64': 'x64'}
 def windows(build, version):
-    env = build.env
-    env.check_platform('windows')
+    build.check_platform('windows')
     name = SDL_NAME[version]
-    path = env.find_package(
+    path = build.find_package(
         '^{}(-[0-9.]+)$'.format(name),
         varname=name + '_PATH')
     # FIXME: use per-platform path.
-    varsets = [
-        env.header_path(os.path.join(path, 'include')),
-        env.library_path(os.path.join(path, 'lib', 'x86')),
-        env.library('{}.lib'.format(name)),
-        env.library('{}main.lib'.format(name)),
-    ]
-    return path, [], {'public': [env.schema.merge(varsets)]}
+    mod = build.target.module()
+    mod.add_header_path(os.path.join(path, 'include'))
+    libs = ['{}.lib'.format(name), '{}main.lib'.format(name)]
+    for lib in libs:
+        mod.add_library(lib)
+    for platform in build.target.schema.platforms:
+        if platform not in WIN_DIR:
+            raise ConfigError('unknown platform: {}'.format(platform))
+        ppath = os.path.join(path, 'lib', WIN_DIR[platform])
+        for lib in libs:
+            libpath = os.path.join(ppath, lib)
+            if not os.path.exists(libpath):
+                raise ConfigError('library does not exist: {}'
+                                  .format(libpath))
+    return None, mod
 
-def configure(version):
-    def configure_func(build):
-        return try_config([build, version], pkg_config, framework, windows)
-    return configure_func
-
-version_1 = ExternalModule(
+version_1 = ExternalPackage(
+    [pkg_config, framework, windows],
+    args=(1,),
     name='LibSDL',
-    configure=configure(1),
     packages={
         'deb': 'libsdl1.2-dev',
         'rpm': 'SDL-devel',
@@ -52,9 +53,10 @@ version_1 = ExternalModule(
     }
 )
 
-version_2 = ExternalModule(
+version_2 = ExternalPackage(
+    [pkg_config, framework, windows],
+    args=(2,),
     name='LibSDL 2',
-    configure=configure(2),
     packages={
         'deb': 'libsdl2-dev',
         'rpm': 'SDL2-devel',

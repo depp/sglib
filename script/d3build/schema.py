@@ -8,170 +8,59 @@ import sys
 class Schema(object):
     """A schema is a description of variables affecting a build system.
 
-    Variable sets (varsets) are maps from (config, varname) to values.
-    The config is a target-specific configuration name, such as
-    'Debug' or 'Release', although the configuration may also specify
-    an architecture on multi-architecture platforms like OS X and
-    Windows (which both support x86 and x64).
-
-    When a function takes a 'configs' argument, that argument
-    specifies which configurations a set of variables applies to.
+    This is an abstract base class.
     """
-    __slots__ = ['variables', 'lax']
+    __slots__ = [
+        # Map from variable names to definitions.
+        '_variables',
+        # Default variable definition.
+        '_default',
+        # List of target architectures.
+        'archs',
+        # List of build configurations.
+        'configs',
+        # List of build variants.
+        'variants',
+    ]
 
-    def __init__(self, *, lax=False):
-        self.variables = {}
-        self.lax = lax
+    def __init__(self, *, variables, default=None,
+                 archs, configs, variants):
+        self._variables = variables
+        self._default = default
+        self.archs = archs
+        self.configs = configs
+        self.variants = variants
 
-    def __getitem__(self, key):
+    def get_variable(self, name):
+        """Get the definition for a variable.
+
+        Raises ValueError if no variable with that name exists.
+        """
         try:
-            return self.variables[key][0]
+            result = self._variables[name]
         except KeyError:
-            if self.lax:
-                return VarString
-            raise
+            pass
+        else:
+            return result[0]
+        default = self._default
+        if default is None:
+            raise ValueError('unknown variable: {!r}'.format(name))
+        return default
 
-    def __contains__(self, key):
-        if self.lax:
-            return True
-        return key in self.variables
+    def get_variants(self, configs=None, archs=None):
+        """Get a list of variants."""
+        raise NotImplementedError('must be implemented by subclass')
 
-    def update_schema(self, other):
-        """Update this schema by merging another schema."""
-        if not isinstance(other, Schema):
-            raise TypeError('object must be a schema')
-        self.variables.update(other.variables)
-        self.lax = self.lax or other.lax
-        self.bool_values = other.bool_values
+    def parse_name(self, name):
+        """Parse the name of a variable.
 
-    def parse(self, vardict, *, strict, configs):
-        """Parse variables from strings."""
-        variables = {}
-        for varname, value in vardict.items():
-            try:
-                vardef = self[varname]
-            except ValueError:
-                if strict:
-                    raise
-                continue
-            value = vardef.parse(value)
-            for c in configs:
-                variables[c, varname] = value
-        return variables
-
-    def merge(self, varsets):
-        """Merge sets of variables."""
-        if not varsets:
-            return {}
-        if len(varsets) == 1:
-            return varsets[0]
-        lists = {}
-        for varset in varsets:
-            if not varset:
-                continue
-            for var, value in varset.items():
-                try:
-                    values = lists[var]
-                except KeyError:
-                    lists[var] = [value]
-                else:
-                    values.append(value)
-        variables = {}
-        for var, values in lists.items():
-            config, varname = var
-            if len(values) == 1:
-                value = values[0]
-            else:
-                value = self[varname].combine(values)
-            variables[var] = value
-        return variables
-
-    def dump(self, varset, *, file=None, indent=''):
-        """Dump a set of variables.
-
-        This is for human consumption, not for serialization.
+        Returns a sequence of (variant, name) tuples, or returns None if
+        the name is not a valid name.
         """
-        if file is None:
-            file = sys.stdout
-        for var, value in sorted(varset.items()):
-            config, varname = var
-            vardef = self[varname]
-            print('{}{}.{}: {}'
-                  .format(indent, config, varname, vardef.show(value)),
-                  file=file)
-
-    def update(self, varset, *, configs, **kw):
-        """Modify a variable set by merging new variables.
-
-        The variables are merged for the chosen configurations.
-        """
-        self.update_map(varset, kw, configs=configs)
-
-    def update_map(self, varset, additions, *, configs):
-        """Modify a variable set by merging new variables.
-
-        The variables are merged in fro the chosen configuration.
-        """
-        if not additions:
-            return
-        if not isinstance(additions, dict):
-            raise TypeError('additional variables must be a dictionary')
-        for varname, value2 in additions.items():
-            try:
-                vardef = self[varname]
-            except KeyError:
-                raise ValueError('unknown variable: {!r}'.format(varname))
-            if not vardef.isvalid(value2):
-                raise ValueError('invalid value: key={}, value={!r}'
-                                 .format(varname, value2))
-            for config in configs:
-                var = config, varname
-                try:
-                    value1 = varset[var]
-                except KeyError:
-                    varset[var] = value2
-                else:
-                    varset[var] = vardef.combine([value1, value2])
-
-    def update_varset(self, varset, additions):
-        """Modify a variable set by merging another varset."""
-        if not additions:
-            return
-        if not isinstance(additions, dict):
-            raise TypeError('additional variables must be a dictionary')
-        for var, value2 in additions.items():
-            config, varname = var
-            try:
-                vardef = self[varname]
-            except KeyError:
-                raise ValueError('unknown variable: {!r}'.format(varname))
-            if not vardef.isvalid(value2):
-                raise ValueError('invalid value: key={}, value={!r}'
-                                 .format(varname, value2))
-            try:
-                value1 = varset[var]
-            except KeyError:
-                varset[var] = value2
-            else:
-                varset[var] = vardef.combine([value1, value2])
-
-    def validate(self, varset):
-        """Validate the types of a set of variables."""
-        for var, value in varset.items():
-            config, varname = var
-            try:
-                vardef = self[varname]
-            except KeyError:
-                raise ValueError('unknown variable: {!r}'.format(varname))
-            if not vardef.isvalid(value):
-                raise ValueError('invalid value: key={}, value={!r}'
-                                 .format(varname, value))
+        return None
 
 class SchemaBuilder(object):
     """Object used for creating new schemas.
-
-    The 'lax' parameter indicates that unknown variables are
-    permissible, and treated as strings.
 
     The 'sep' parameter determines the separator for list variables,
     which is ';' for Visual Studio and None for Xcode and Gnu Make.  A
@@ -180,22 +69,21 @@ class SchemaBuilder(object):
     The 'bool_values' parameter determines how boolean values are
     printed.
     """
-    __slots__ = ['_schema', 'sep', 'bool_values']
+    __slots__ = ['_variables', 'sep', 'bool_values']
 
-    def __init__(self, lax=False, sep=None,
-                 bool_values=('False', 'True')):
-        self._schema = Schema(lax=lax)
+    def __init__(self, sep=None, bool_values=('False', 'True')):
+        self._variables = {}
         self.sep = sep
         self.bool_values = bool_values
 
     def value(self):
-        """Get the schema value being constructed."""
-        return self._schema
+        """Get the variable definitions."""
+        return self._variables
 
 def _vartype(name):
     def func(class_):
         def add_var(self, name, doc=None, **kw):
-            self._schema.variables[name] = (class_(self, **kw), doc)
+            self._variables[name] = (class_(self, **kw), doc)
             return self
         setattr(SchemaBuilder, name, add_var)
         return class_
@@ -341,3 +229,80 @@ class VarObjectList(object):
     @staticmethod
     def isvalid(value):
         return isinstance(value, list)
+
+class Variables(object):
+    """A set of build variables.
+
+    The variables may have different values for different build variants.
+    """
+    __slots__ = ['_schema', '_varsets']
+
+    def __init__(self, schema, varsets):
+        self._schema = schema
+        self._varsets = varsets
+
+    def get(self, variant, name, default=None):
+        """Get the value of a variable.
+
+        If the default value is None, then an exception will be thrown if
+        the variable is not set.
+        """
+        if variant not in self._schema.variants:
+            raise ValueError('invalid variant: {!r}'.format(variant))
+        vardef = self._schema.get_variable(name)
+        key = variant, name
+        values = []
+        for varset in self._varsets:
+            try:
+                value = varset[key]
+            except KeyError:
+                continue
+            values.append(value)
+        if not values:
+            if default is None:
+                raise ValueError('variable is not set: {!r} (variant={})'
+                                 .format(name, variant))
+            return default
+        if len(values) == 1:
+            return values[0]
+        return vardef.combine(values)
+
+    def get_all(self):
+        """Get a map from variants to the variables for that variant."""
+        lists = {variant: {} for variant in self._schema.variants}
+        for varset in self._varsets:
+            for var, value in varset.items():
+                var_variant, name = var
+                vlists = lists[var_variant]
+                try:
+                    values = vlists[name]
+                except KeyError:
+                    vlists[name] = [value]
+                else:
+                    values.append(value)
+        result = {}
+        for variant, vlists in lists.items():
+            vresult = {}
+            result[variant] = vresult
+            for name, values in vlists.items():
+                if len(values) == 1:
+                    value = values[0]
+                else:
+                    vardef = self._schema.get_variable(name)
+                    value = vardef.combine(values)
+                vresult[name] = value
+        return result
+
+    def dump(self, *, file=None, indent=''):
+        """Dump a set of variables.
+
+        This is for human consumption, not for serialization.
+        """
+        if file is None:
+            file = sys.stdout
+        for variant, vvars in self.get_all().items():
+            print('{}Variant {}:'.format(indent, variant), file=file)
+            for name, value in vvars.items():
+                vardef = self._schema.get_variable(name)
+                text = vardef.show(value)
+                print('{}  {}: {}'.format(indent, name, text), file=file)

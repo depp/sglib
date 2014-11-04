@@ -1,7 +1,6 @@
 # Copyright 2014 Dietrich Epp.
 # This file is part of SGLib.  SGLib is licensed under the terms of the
 # 2-clause BSD license.  For more information, see LICENSE.txt.
-from d3build.module import SourceModule
 from d3build.error import ConfigError
 from d3build.source import _base
 from . import source
@@ -32,7 +31,8 @@ vorbis
 windows
 '''.split()
 
-def configure(build):
+def get_tags(build):
+    module = build.target.module
     from .external import (
         ogg, vorbis, opus,
         sdl, glew, opengl,
@@ -41,11 +41,11 @@ def configure(build):
     platform = build.config.platform
     flags = build.config.flags
 
-    tags = {tag: False for tag in TAGS}
+    tags = {tag: None for tag in TAGS}
     tags['public'] = [
-        build.env.header_path(_base(__file__, '../../include')),
-        opengl.module,
-        glew.module,
+        module().add_header_path(_base(__file__, '../../include')),
+        opengl.module(build),
+        glew.module(build),
     ]
 
     if platform == 'linux':
@@ -60,13 +60,14 @@ def configure(build):
         raise ConfigError('unsupported platform')
 
     if flags['frontend'] == 'cocoa':
-        tags['frontend_cocoa'] = build.env.schema.merge([
-            build.env.framework(name) for name in
-            ['AppKit', 'Foundation', 'CoreVideo', 'OpenGL', 'Carbon']])
+        mod = module()
+        for name in 'AppKit Foundation CoreVideo OpenGL Carbon'.split():
+            mod.add_framework(name=name)
+        tags['frontend_cocoa'] = [mod]
     elif flags['frontend'] == 'gtk':
-        tags['frontend_gtk'] = [gtkglext.module, gtk.module]
+        tags['frontend_gtk'] = [gtkglext.module(build), gtk.module(build)]
     elif flags['frontend'] == 'sdl':
-        tags['frontend_sdl'] = [sdl.version_2]
+        tags['frontend_sdl'] = [sdl.version_2(build)]
     elif flags['frontend'] == 'windows':
         tags['frontend_windows'] = []
     else:
@@ -74,15 +75,16 @@ def configure(build):
                           .format(flags['frontend']))
 
     if flags['audio'] == 'alsa':
-        tags['audio_alsa'] = [alsa.module]
+        tags['audio_alsa'] = [alsa.module(build)]
     elif flags['audio'] == 'coreaudio':
-        tags['audio_coreaudio'] = build.env.schema.merge([
-            build.env.framework(name) for name in
-            ['CoreAudio', 'AudioUnit']])
+        mod = module()
+        for name in 'CoreAudio AudioUnit'.split():
+            mod.add_framework(name=name)
+        tags['audio_coreaudio'] = [mod]
     elif flags['audio'] == 'directsound':
         tags['audio_directsound'] = []
     elif flags['audio'] == 'sdl':
-        tags['audio_sdl'] = [sdl.version_2]
+        tags['audio_sdl'] = [sdl.version_2(build)]
     elif flags['audio'] == 'none':
         pass
     else:
@@ -91,13 +93,13 @@ def configure(build):
 
     enable_ogg = False
     if flags['vorbis']:
-        tags['vorbis'] = [vorbis.module]
+        tags['vorbis'] = [vorbis.module(build)]
         enable_ogg = True
     if flags['opus']:
-        tags['opus'] = [opus.module]
+        tags['opus'] = [opus.module(build)]
         enable_ogg = True
     if enable_ogg:
-        tags['ogg'] = [ogg.module]
+        tags['ogg'] = [ogg.module(build)]
 
     enable_coregraphics = False
     enable_wincodec = False
@@ -105,7 +107,7 @@ def configure(build):
     if flags['jpeg'] == 'coregraphics':
         enable_coregraphics = True
     elif flags['jpeg'] == 'libjpeg':
-        tags['image_libjpeg'] = [libjpeg.module]
+        tags['image_libjpeg'] = [libjpeg.module(build)]
     elif flags['jpeg'] == 'wincodec':
         enable_wincodec = True
     elif flags['jpeg'] == 'none':
@@ -117,7 +119,7 @@ def configure(build):
     if flags['png'] == 'coregraphics':
         enable_coregraphics = True
     elif flags['png'] == 'libpng':
-        tags['image_libpng'] = [libpng.module]
+        tags['image_libpng'] = [libpng.module(build)]
     elif flags['png'] == 'wincodec':
         enable_wincodec = True
     elif flags['png'] == 'none':
@@ -128,15 +130,15 @@ def configure(build):
 
     if enable_coregraphics:
         tags['image_coregraphics'] = [
-            build.env.framework('ApplicationServices')]
+            module().add_framework(name='ApplicationServices')]
     if enable_wincodec:
         tags['image_wincodec'] = []
 
     if flags['type'] == 'coretext':
         tags['type_coretext'] = [
-            build.env.framework('ApplicationServices')]
+            module().add_framework(name='ApplicationServices')]
     elif flags['type'] == 'pango':
-        tags['type_pango'] = [pango.module]
+        tags['type_pango'] = [pango.module(build)]
     elif flags['type'] == 'uniscribe':
         tags['type_uniscribe'] = []
     elif flags['type'] == 'none':
@@ -148,6 +150,7 @@ def configure(build):
     if flags['video-recording']:
         tags['video_recording'] = []
 
-    return [], tags
+    return tags
 
-module = SourceModule(sources=source.src, configure=configure)
+def module(build):
+    return build.target.module().add_sources(source.src, get_tags(build))

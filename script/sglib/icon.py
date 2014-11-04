@@ -2,36 +2,19 @@
 # This file is part of SGLib.  SGLib is licensed under the terms of the
 # 2-clause BSD license.  For more information, see LICENSE.txt.
 from d3build.source import _base, _join, TagSourceFile
-from d3build.module import Module
 from .path import _path
 import os
 
-SIZES = [16, 32, 48, 64, 128, 256, 512, 1024]
+_SIZES = [16, 32, 48, 64, 128, 256, 512, 1024]
 _OSX_SIZES = [16, 32, 128, 256, 512]
-
-class IconModule(Module):
-    """A module consisting of an icon to include."""
-    __slots__ = ['icon', 'sources']
-
-    def __init__(self, *, icon, sources):
-        self.icon = icon
-        self.sources = sources
-
-    def _get_configs(self, build):
-        varsets = []
-        if build.config.target == 'xcode':
-            varsets.append({
-                'ASSETCATALOG_COMPILER_APPICON_NAME': self.icon,
-            })
-        return [], {'private': varsets}
 
 class Icon(object):
     """An icon, consisting of images in various formats and resolutions.
 
-    For Windows, an ico file must be present, and should have square sizes 16,
-    32, 48, and 256.  For OS X, PNG files are needed in square sizes from 16
-    to 1024, covering each power of two.  It is okay if some sizes are
-    missing.
+    For Windows, an ico file must be present, and should have square
+    sizes 16, 32, 48, and 256.  For OS X, PNG files are needed in
+    square sizes from 16 to 1024, covering each power of two.  It is
+    okay if some sizes are missing.
     """
     __slots__ = ['ico', 'png']
 
@@ -54,22 +37,23 @@ class Icon(object):
                 except ValueError:
                     raise ValueError('invalid icon component: {!r}'
                                      .format(fields[0]))
-                if size not in SIZES:
+                if size not in _SIZES:
                     raise ValueError('invalid icon size: {}'.format(size))
                 self.png[size] = fpath
 
     def module(self, build):
-        """Get the icon module.
+        """Convert the icon into a module.
 
-        Returns None if no icon is available for this platform.
+        Returns (name, module), where name is the icon name.
         """
         if build.config.platform == 'osx':
             return self._module_osx(build)
         elif build.config.platform == 'windows':
             return self._module_windows(build)
-        return None
+        return None, None
 
     def _module_osx(self, build):
+        mod = build.target.module()
         from d3build.generatedsource.copyfile import CopyFile
         from d3build.generatedsource.simplefile import SimpleFile
         import json
@@ -93,7 +77,7 @@ class Icon(object):
                 fpath = os.path.join(path, name)
                 if ssize not in ssizes:
                     ssizes.add(ssize)
-                    build.target.add_generated_source(
+                    mod.add_generated_source(
                         CopyFile(self.png[ssize], fpath))
         if not ssizes:
             return None
@@ -104,19 +88,19 @@ class Icon(object):
                 'author': 'sglib'
             }
         }
-        source = TagSourceFile(asset_path, (), None)
-        build.target.add_generated_source(
+        mod.add_generated_source(
             SimpleFile(os.path.join(path, 'Contents.json'),
                        json.dumps(info, indent=2)))
-        return IconModule(icon='AppIcon', sources=[source])
+        mod.add_source(asset_path)
+        return 'AppIcon', mod
 
-    def _module_windows(self, build):
+    def _add_windows(self, build):
+        mod = build.target.module()
         from d3build.generatedsource.simplefile import SimpleFile
         if self.ico is None:
             return None
         rcpath = _path('resources/resources.rc')
-        build.target.add_generated_source(
+        mod.add_generated_source(
             SimpleFile(rcpath, '1 ICON "{}"\n'.format(self.ico)))
-        return IconModule(
-            icon=None,
-            sources=[TagSourceFile(rcpath, (), 'rc')])
+        mod.add_source(rcpath, sourcetype='rc')
+        return self.ico, mod

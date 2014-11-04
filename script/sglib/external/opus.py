@@ -1,41 +1,42 @@
 # Copyright 2014 Dietrich Epp.
 # This file is part of SGLib.  SGLib is licensed under the terms of the
 # 2-clause BSD license.  For more information, see LICENSE.txt.
-from d3build.module import ExternalModule
-from d3build.error import try_config
-from d3build.external import ConfigureMake
+from d3build.error import ConfigError
+from d3build.generatedsource.configuremake import ConfigureMake
+from d3build.package import ExternalPackage
 import os
 
 def pkg_config(build):
-    return None, [], {'public': [build.env.pkg_config('opus')]}
+    return build.target.module().add_pkg_config('opus')
 
 def bundled(build):
-    env = build.env
-    path = env.find_package('^opus(?:-[0-9.]+)?$')
+    path = build.find_package('^opus(?:-[0-9.]+)?$')
     if build.config.target == 'msvc':
         vs = os.path.join(path, 'win32', 'VS2010')
-        varsets = [env.project_reference(os.path.join(vs, name + '.vcxproj'))
-                   for name in ['opus', 'celt', 'silk_common', 'silk_float']]
-        varsets.append(
-            env.header_path(os.path.join(path, 'include'), system=True))
+        mod = build.target.module()
+        for name in ('opus', 'celt', 'silk_common', 'silk_float'):
+            project = os.path.join(vs, name + '.vcxproj')
+            if not os.path.exists(project):
+                raise ConfigError('project file does not exist: {}'
+                                  .format(project))
+            mod.add_source(project)
+        mod.add_header_path(
+            os.path.join(path, 'include'), system=True)
     else:
-        target = build.target.external_target(
-            ConfigureMake(path), 'opus')
-        varsets = [
-            env.header_path(
+        target = ConfigureMake(
+            build, 'opus', path,
+            args=['--prefix=/', '--disable-shared', '--enable-static'])
+        mod = (build.target.module()
+            .add_generated_source(target)
+            .add_header_path(
                 os.path.join(target.destdir, 'include', 'opus'),
-                system=True),
-            env.library(os.path.join(target.destdir, 'lib', 'libopus.a')),
-        ]
-        build.target.add_external_target(target)
-    return path, [], {'public': [env.schema.merge(varsets)]}
+                system=True)
+            .add_library(os.path.join(target.destdir, 'lib', 'libopus.a')))
+    return path, mod
 
-def configure(build):
-    return try_config([build], pkg_config, bundled)
-
-module = ExternalModule(
+module = ExternalPackage(
+    [pkg_config, bundled],
     name='Opus codec library',
-    configure=configure,
     packages={
         'deb': 'libopus-dev',
         'rpm': 'opus',

@@ -1,10 +1,12 @@
 # Copyright 2013-2014 Dietrich Epp.
 # This file is part of SGLib.  SGLib is licensed under the terms of the
 # 2-clause BSD license.  For more information, see LICENSE.txt.
-from ..target import BaseTarget, ExternalTarget
-from ..external import ExternalBuildParameters
+from ..target import BaseTarget
 from ..error import ConfigError, UserError
 from ..plist import ascii as plist
+from .module import XcodeModule
+from .schema import XcodeSchema
+from . import base
 from . import scheme
 from xml.sax.saxutils import escape
 import os
@@ -44,16 +46,14 @@ EXT_MAP = {
 EXT_MAP.update({ext: 'image' + ext for ext in
                 '.png .jpeg .pdf .git .bmp .pict .ico .icns .tiff'.split()})
 
-class XcodeExternalTarget(ExternalTarget):
-    __slots__ = []
-    def build(self):
-        params = ExternalBuildParameters(
-            builddir=self.builddir, destdir=self.destdir)
-        self.target.build(params)
-
 class XcodeTarget(BaseTarget):
     """Object for creating an Xcode project."""
     __slots__ = [
+        # The schema for build variables.
+        'schema',
+        # The base build variables, a module.
+        'base',
+
         # The project name
         '_name',
         # Map from object IDs to objects.
@@ -82,8 +82,13 @@ class XcodeTarget(BaseTarget):
         '_schemes',
     ]
 
-    def __init__(self, name, script, config, env):
-        super(XcodeTarget, self).__init__(name, script, config, env)
+    def __init__(self, build, name):
+        super(XcodeTarget, self).__init__()
+        self.schema = XcodeSchema()
+        self.base = XcodeModule(self.schema)
+        self.base.add_variables(base.BASE_CONFIG)
+        self.base.add_variables(base.DEBUG_CONFIG, configs=['Debug'])
+        self.base.add_variables(base.RELEASE_CONFIG, configs=['Release'])
         self._name = name
         self._objects = {}
         self._objectids = {}
@@ -123,19 +128,6 @@ class XcodeTarget(BaseTarget):
                 ],
                 'sourceTree': '<group>'
             }),
-            'buildConfigurationList': self._add({
-                'isa': 'XCConfigurationList',
-                'defaultConfigurationName': 'Release',
-                'buildConfigurations': [
-                    self._add({
-                        'isa': 'XCBuildConfiguration',
-                        'name': configuration,
-                        'buildSettings': env.base_vars[configuration],
-                        'defaultConfigurationIsVisible': 0,
-                    })
-                    for configuration in env.configurations
-                ]
-            }),
             'productRefGroup': products_group,
             'targets': [],
         }
@@ -156,7 +148,12 @@ class XcodeTarget(BaseTarget):
         """The path root of the source tree, at runtime."""
         return '$(SRCROOT)'
 
+    def module(self):
+        return XcodeModule(self.schema)
+
     def finalize(self):
+        self._project['buildConfigurationList'] = \
+            self._add_build_configuration(self.base.variables())
         super(XcodeTarget, self).finalize()
         for obj in self._objects.values():
             if obj['isa'] != 'PBXGroup':
@@ -179,19 +176,11 @@ class XcodeTarget(BaseTarget):
                 with open(path, 'w') as fp:
                     fp.write(data)
 
-    def external_target(self, obj, name, dependencies=[]):
-        """Create an external target, without adding it to the build."""
-        libbuild = os.path.join(self.env.library_path, 'build')
-        destdir = os.path.join(libbuild, 'products')
-        builddir = os.path.join(libbuild, name)
-        return XcodeExternalTarget(
-            obj, name, dependencies, destdir, builddir)
-
     def add_application_bundle(self, *, name, module, info_plist,
                                arguments=[]):
         """Create an OS X application bundle target."""
-        if module is None:
-            return ''
+        if not self._add_module(module):
+            return
 
         appfile = self._add({
             'isa': 'PBXFileReference',
@@ -202,16 +191,16 @@ class XcodeTarget(BaseTarget):
         })
         self._products_group['children'].append(appfile)
 
-        varset = {
+        mod = self.module()
+        mod.add_variables({
             # 'ASSETCATALOG_COMPILER_APPICON_NAME': icon name,
             'COMBINE_HIDPI_IMAGES': True,
             'INFOPLIST_FILE': info_plist,
             'LD_RUNPATH_SEARCH_PATHS':
                 '$(inherited) @executable_path/../Frameworks',
             'PRODUCT_NAME': '$(TARGET_NAME)',
-        }
-        varset = self.env.schema.merge([varset] + module.varsets)
-        xvarset = {k: v for k, v in varset.items() if not k.startswith('.')}
+        })
+        mod.add_module(module)
 
         phases = [
             'PBXSourcesBuildPhase',
@@ -224,19 +213,8 @@ class XcodeTarget(BaseTarget):
             'name': name,
             'productName': name,
             'productReference': appfile,
-            'buildConfigurationList': self._add({
-                'isa': 'XCConfigurationList',
-                'defaultConfigurationName': 'Release',
-                'buildConfigurations': [
-                    self._add({
-                        'isa': 'XCBuildConfiguration',
-                        'name': configuration,
-                        'buildSettings': xvarset,
-                        'defaultConfigurationIsVisible': 0,
-                    })
-                    for configuration in self.env.configurations
-                ],
-            }),
+            'buildConfigurationList':
+                self._add_build_configuration(mod.variables()),
             'dependencies': [],
             'buildPhases': [
                 self._add({
@@ -252,10 +230,8 @@ class XcodeTarget(BaseTarget):
         self._project['targets'].append(target)
 
         sources = []
-        for source in module.sources:
+        for source in mod.sources:
             sources.append(self._add_source(source))
-        for framework in set(varset.get('.FRAMEWORKS', ())):
-            sources.append(self._add_framework(framework))
         self._add_target_sources(target, sources)
 
         if arguments:
@@ -266,10 +242,6 @@ class XcodeTarget(BaseTarget):
                 arguments=arguments)
 
         return ''
-
-    def external_build_path(self, obj):
-        """Get the build path for an external target."""
-        return os.path.join(self.env.library_path, 'build', 'out')
 
     def _add(self, obj):
         """Add an object to the project, returning the object ID."""
@@ -298,8 +270,26 @@ class XcodeTarget(BaseTarget):
             return obj.get('path') or ''
         return ''
 
+    def _add_build_configuration(self, variables):
+        varset = variables.get_all()
+        return self._add({
+            'isa': 'XCConfigurationList',
+            'defaultConfigurationName': 'Release',
+            'buildConfigurations': [
+                self._add({
+                    'isa': 'XCBuildConfiguration',
+                    'name': config,
+                    'buildSettings': varset[config],
+                    'defaultConfigurationIsVisible': 0,
+                })
+                for config in self.schema.configs
+            ],
+        })
+
     def _add_directory(self, path):
         """Add a directory to the project, if necessary."""
+        if os.path.isabs(path):
+            raise ConfigError('absolute path: {}'.format(path))
         try:
             return self._path_directory[path]
         except KeyError:
@@ -333,6 +323,8 @@ class XcodeTarget(BaseTarget):
 
         Returns the ID of the PBXFileReference.
         """
+        if source.sourcetype == 'framework':
+            return self._add_framework(source.path)
         try:
             return self._path_file[source.path]
         except KeyError:
@@ -360,38 +352,34 @@ class XcodeTarget(BaseTarget):
         self._path_file[source.path] = objid
         return objid
 
-    def _add_framework(self, name):
-        """Add the framework with the given name, if necessary.
+    def _add_framework(self, path):
+        """Add the framework with the given path, if necessary.
 
         Returns the ID of the PBXFileReference.
         """
         try:
-            return self._frameworks[name]
+            return self._frameworks[path]
         except KeyError:
             pass
-        fwname = name + '.framework'
-        try:
-            fwpath = self.env.find_framework(name)
-        except ConfigError:
-            fwpath = fwname
+        name = os.path.basename(path)
         obj = {
             'isa': 'PBXFileReference',
             'lastKnownFileType': 'wrapper.framework',
         }
-        if os.path.dirname(fwpath) == '/System/Library/Frameworks':
+        if os.path.dirname(path) == '/System/Library/Frameworks':
             obj.update({
-                'path': fwname,
+                'path': name,
                 'sourceTree': '<group>',
             })
         else:
             obj.update({
-                'name': fwname,
-                'path': fwpath,
+                'name': name,
+                'path': path,
                 'sourceTree': '<absolute>',
             })
         objid = self._add(obj)
         self._frameworks_group['children'].append(objid)
-        self._frameworks[name] = objid
+        self._frameworks[path] = objid
         return objid
 
     def _add_target_sources(self, targetid, sourceids):

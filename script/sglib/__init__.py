@@ -4,9 +4,9 @@
 from d3build.source import SourceList, _base
 # Note: SourceList is for export
 from d3build.build import Build
-from d3build.module import SourceModule
 from . import options
 from . import module
+from . import source
 from .icon import Icon
 from .path import _path
 # Icon is for export
@@ -47,6 +47,8 @@ class App(object):
                  identifier=None, uuid=None, defaults=None,
                  configure=None, apple_category='public.app-category.games',
                  icon=None):
+        if isinstance(sources, SourceList):
+            sources = sources.sources
         self.name = name
         self.sources = sources
         self.datapath = datapath
@@ -65,9 +67,10 @@ class App(object):
         Build.run(
             name=self.name,
             build=self._build,
-            sources=self.sources.sources + module.module.sources,
+            sources=self.sources + source.src,
             options=options.flags,
             adjust_config=self._adjust_config,
+            package_search_path=_path('lib'),
         )
 
     def _adjust_config(self, cfg):
@@ -78,10 +81,9 @@ class App(object):
         """Create the project targets."""
         from .version import VersionInfo
         from d3build.generatedsource.configheader import ConfigHeader
-        build.env.package_search_path = _path('lib')
 
-        from . import environment
-        environment.update_environment(build.env)
+        from . import base
+        base.update_base(build)
 
         name = self.name
         if build.config.platform == 'linux':
@@ -98,31 +100,23 @@ class App(object):
             args.append(('log.winconsole', 'yes'))
         args = ['{}={}'.format(*arg) for arg in args]
 
-        icon = self.icon.module(build) if self.icon is not None else None
+        mod = build.target.module()
+        if self.configure_func is None:
+            mod.add_sources(
+                self.sources,
+                {'public': [module.module(build)]})
+        else:
+            self.configure_func(mod)
 
-        def module_configure(build):
-            """Get the configuration for the main application module."""
-            if self.configure_func is None:
-                sources = []
-                tags = {}
-            else:
-                sources, tags = self.configure_func(build)
-                sources = list(sources)
-                tags = dict(tags)
-            private = list(tags.get('private', []))
-            private.append(module.module)
-            if icon is not None:
-                private.append(icon)
-            tags['private'] = private
-            return sources, tags
+        if self.icon is not None:
+            icon, iconmod = self.icon.module(build)
+            mod.add_module(iconmod)
+        else:
+            icon = None
 
-        mod = SourceModule(
-            sources=self.sources,
-            configure=module_configure)
-        mod = build.get_module(mod)
-        build.target.add_generated_source(
+        mod.add_generated_source(
             ConfigHeader(_path('include/config.h'), build))
-        build.target.add_generated_source(
+        mod.add_generated_source(
             VersionInfo(
                 _path('src/core/version_const.c'),
                 _base(build.script, '.'),
@@ -132,9 +126,8 @@ class App(object):
         if build.config.platform == 'osx':
             from d3build.generatedsource.template import TemplateFile
             if build.config.flags['frontend'] == 'cocoa':
-                assert False # broken
                 main_nib = _path('resources/MainMenu.xib')
-                build.target.add_generated_source(
+                mod.add_generated_source(
                     TemplateFile(
                         main_nib,
                         _path('src/core/osx/MainMenu.xib'),
@@ -142,13 +135,13 @@ class App(object):
             else:
                 main_nib = None
             from .infoplist import InfoPropertyList
-            info_plist = _path('resources/Info.plist'),
-            build.target.add_generated_source(
+            info_plist = _path('resources/Info.plist')
+            mod.add_generated_source(
                 InfoPropertyList(
                     info_plist,
                     self,
                     main_nib,
-                    icon.icon if icon is not None else None))
+                    icon))
             target = build.target.add_application_bundle(
                 name=name,
                 module=mod,
@@ -167,6 +160,6 @@ class App(object):
             build.target.add_default(default)
             for config in build.env.configs:
                 scriptname = '{}_{}'.format(name, config)
-                build.target.add_generated_source(
+                mod.add_generated_source(
                     RunScript(scriptname, scriptname, target[config], args))
                 build.target.add_alias(config, [scriptname])

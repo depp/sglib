@@ -18,6 +18,10 @@ class GeneratedSource(object):
         return False
 
     @property
+    def is_regenerated(self):
+        return True
+
+    @property
     def is_regenerated_always(self):
         return False
 

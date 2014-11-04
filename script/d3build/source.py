@@ -62,23 +62,6 @@ class TagSourceFile(object):
         return ('TagSourceFile({!r}, {!r}, {!r})'
                 .format(self.path, self.tags, self.sourcetype))
 
-class SourceFile(object):
-    """An individual source file with its build variables."""
-    __slots__ = ['path', 'varsets', 'sourcetype', 'external']
-
-    def __init__(self, path, varsets, sourcetype, external):
-        if os.path.isabs(path):
-            raise ValueError('path must be relative to the root')
-        self.path = path
-        self.varsets = varsets
-        self.sourcetype = sourcetype
-        self.external = bool(external)
-
-    def __repr__(self):
-        return ('SourceFile({!r}, {!r}, {!r}, {!r})'
-                .format(self.path, self.varsets,
-                        self.sourcetype, self.external))
-
 class SourceList(object):
     """A collection of source files."""
     __slots__ = ['sources', 'tags', '_path']
@@ -95,7 +78,14 @@ class SourceList(object):
 
         The sources are specified as a string, with one file per line.
         """
-        tags = set(tags) if tags else set()
+        base_tags = ['public', 'private']
+        if tags is not None:
+            for tag in tags:
+                if tag.startswith('!'):
+                    tag = tag[1:]
+                    base_tags.remove(tag)
+                else:
+                    base_tags.append(tag)
         if path is None:
             path = self._path
         else:
@@ -105,13 +95,13 @@ class SourceList(object):
             if not fields:
                 continue
             filepath = _join(path, fields[0])
-            srctags = set(tags)
+            srctags = list(base_tags)
             for tag in fields[1:]:
                 if tag.startswith('!'):
                     tag = tag[1:]
-                    srctags.discard(tag)
+                    srctags.remove(tag)
                 else:
-                    srctags.add(tag)
+                    srctags.append(tag)
                 self.tags.add(tag)
             ext = os.path.splitext(filepath)[1]
             try:

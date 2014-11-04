@@ -31,7 +31,7 @@ GCC_CXX_WARNINGS = '''
 -Wpointer-arith
 '''.split()
 
-def gnumake_varset(env, *, langs=('c', 'c++'), configs=None, **kw):
+def gnumake_vars(env, *, langs=('c', 'c++'), configs=None, **kw):
     """Test flags and merge them into the default variables."""
     v = env.varset(configs=configs, **kw)
     for lang in ('c', 'c++'):
@@ -39,14 +39,10 @@ def gnumake_varset(env, *, langs=('c', 'c++'), configs=None, **kw):
                          external=False, configs=configs)
     env.schema.update_varset(env.base, v)
 
-def gnumake_threads(env):
-    """Get flags for threading support."""
-    value = ['-pthread']
-    gnumake_varset(env, CFLAGS=value, CXXFLAGS=value, LDFLAGS=value)
-
-def gnumake_warnings(env):
+def gnumake_warnings(build):
     """Test for supported warning flags."""
-    werror = env.get_variable_bool('WERROR', False)
+    werror = build.get_variable_bool('WERROR', False)
+    base = build.target.base()
 
     c_werror = env.test_compile(
         SOURCE, 'c', None,
@@ -72,47 +68,46 @@ def gnumake_warnings(env):
     for v in (c_warnings, cxx_warnings):
         env.schema.update_varset(env.base, v)
 
-def gnumake_lto(env):
-    """Test for link-time optimization."""
-    gnumake_varset(
-        env,
-        CFLAGS=['-g0', '-flto'],
-        CXXFLAGS=['-g0', '-flto'],
-        LDFLAGS=['-flto'],
-        configs=['Release'])
-
-def gnumake_sanitize(env, what):
-    """Test for sanitizer flags."""
-    value = ['-fsanitize=' + what]
-    gnumake_varset(env, CFLAGS=value, CXXFLAGS=value, LDFLAGS=value)
-
 SANITIZERS = ['address', 'leak', 'thread', 'undefined']
 
-def gnumake_environment(env):
+def gnumake_environment(build):
     """Update the GnuMake environment with the standard settings."""
+
     with Feedback('Checking for threading support...') as fb:
-        gnumake_threads(env)
+        value = ['-pthread']
+        gnumake_vars(build, CFLAGS=value, CXXFLAGS=value, LDFLAGS=value)
+
     with Feedback('Checking for C++11 support...') as fb:
-        gnumake_varset(env, CXXFLAGS=['-std=gnu++11'], langs=('c++',))
-    if env.get_variable_bool('WARNINGS', True):
+        gnumake_vars(build, CXXFLAGS=['-std=gnu++11'], langs=('c++',))
+
+    if build.get_variable_bool('WARNINGS', True):
         with Feedback('Checking for warning flags...') as fb:
-            gnumake_warnings(env)
-    if env.get_variable_bool('LTO', True):
+            gnumake_warnings(build)
+
+    if build.get_variable_bool('LTO', True):
         try:
             with Feedback('Checking for link-time optimization...') as fb:
-                gnumake_lto(env)
+                gnumake_vars(
+                    build,
+                    CFLAGS=['-g0', '-flto'],
+                    CXXFLAGS=['-g0', '-flto'],
+                    LDFLAGS=['-flto'],
+                    configs=['Release'])
         except ConfigError:
             pass
+
     for sanitizer in SANITIZERS:
-        if not env.get_variable_bool('SANITIZE_' + sanitizer.upper(), False):
+        varname = 'SANITIZE_' + sanitizer.upper()
+        if not build.get_variable_bool(varname, False):
             continue
         with Feedback('Checking for {} sanitizer...'.format(sanitizer)) as fp:
-            gnumake_sanitize(env, sanitizer)
+            value = ['-fsanitize=' + sanitizer]
+            gnumake_vars(build, CFLAGS=value, CXXFLAGS=value, LDFLAGS=value)
 
     log = logfile(2)
     print('Base build variables:', file=log)
-    env.schema.dump(env.base, file=log, indent='  ')
+    build.target.base.variables().dump(file=log, indent='  ')
 
-def update_environment(env):
-    if env.target == 'gnumake':
-        gnumake_environment(env)
+def update_base(build):
+    if build.config.target == 'gnumake':
+        gnumake_environment(build)

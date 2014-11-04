@@ -2,199 +2,256 @@
 # This file is part of SGLib.  SGLib is licensed under the terms of the
 # 2-clause BSD license.  For more information, see LICENSE.txt.
 from .error import ConfigError, UserError
-from .source import SourceFile
-from .log import Feedback
+from .schema import Variables
 
-class _ModuleConfigurator(object):
-    __slots__ = ['build', 'tagdefs', 'has_error', 'modules', '_module_ids']
-    def __init__(self, build, tagdefs):
-        self.build = build
-        self.tagdefs = tagdefs
-        self.has_error = False
-        self.modules = []
-        self._module_ids = set()
-    def resolve_tags(self, tags):
-        varsets = []
-        varset_ids = set()
-        module_ids = set()
-        new_modules = []
-        for tag in tags:
-            if tag == 'exclude':
-                return None
-            tagdef = self.tagdefs.get(tag, True)
-            if isinstance(tagdef, bool):
-                if not tagdef:
-                    return None
-                continue
-            if not isinstance(tagdef, list):
-                raise TypeError(
-                    'tag definitions must be list or bool (tag={})'
-                    .format(tag))
-            for item in tagdef:
-                if isinstance(item, dict):
-                    new_varsets = (item,)
-                elif isinstance(item, Module):
-                    if id(item) in module_ids:
-                        continue
-                    module_ids.add(id(item))
-                    cfg_m = self.build._configure_module(item)
-                    self.has_error = self.has_error or cfg_m.has_error
-                    new_varsets = cfg_m.public
-                    new_modules.append(cfg_m)
-                else:
-                    raise TypeError(
-                        'tag definitions must contain variable sets '
-                        'and modules (tag={})'.format(tag))
-                for new_varset in new_varsets:
-                    if id(new_varset) in varset_ids:
-                        continue
-                    varset_ids.add(id(new_varset))
-                    varsets.append(new_varset)
-        for new_module in new_modules:
-            if id(new_module) in self._module_ids:
-                continue
-            self._module_ids.add(id(new_module))
-            self.modules.append(new_module)
-        return varsets
+class SourceFile(object):
+    """An individual source file with its build variables."""
+    __slots__ = ['path', 'variables', 'sourcetype', 'external']
+
+    def __init__(self, path, variables, sourcetype, external):
+        self.path = path
+        self.variables = variables
+        self.sourcetype = sourcetype
+        self.external = bool(external)
 
 class Module(object):
-    """A module in a larger object to be compiled.
+    """A collection of source files and build settings."""
+    __slots__ = [
+        # The schema for build variables.
+        'schema',
+        # List of source files (SourceFile objects) in the module.
+        'sources',
+        # List of generated source files.
+        'generated_sources',
+        # Public variables for this module.
+        '_public',
+        # List of public variable sets inherited by source files dependent on
+        # this module.  Contains _public.
+        '_public_varsets',
+        # List of all variable sets used by the module.  Contains _public.
+        '_all_varsets',
+        # List of errors in this module.
+        'errors',
+    ]
 
-    Modules consist of source files and tags.  During configuration,
-    the tags are resolved to build environments.  A build environment
-    can contain header search paths, libraries, build flags, module
-    dependencies, and various other components.  Tags can have any
-    name, each tag only has meaning within the module it is used.
-    There are two special tags.  The 'private' tag applies to all
-    source files in the module.  The 'public' tag applies to all
-    source files in the module, as well as all source files which
-    depend on the module.
-    """
-    __slots__ = []
+    def __init__(self, schema):
+        self.schema = schema
+        self.sources = []
+        self.generated_sources = []
+        self.errors = []
+        self._public = {}
+        self._public_varsets = [self._public]
+        self._all_varsets = [self._public]
 
-    def _configure(self, build):
-        int_sources = self.sources
-        all_tags = set()
-        for source in int_sources:
-            all_tags.update(source.tags)
-        ext_sources, tagdefs = self._get_configs(build)
-        extras = (set(tagdefs).difference(all_tags)
-                  .difference(['public', 'private']))
-        missing = all_tags.difference(tagdefs)
-        missing.discard('exclude')
-        if extras or missing:
-            raise UserError(
-                'missing tag configurations: {}; extra tag configurations: {}'
-                .format(', '.join(sorted(missing)),
-                        ', '.join(sorted(extras))))
-        cfg = _ModuleConfigurator(build, tagdefs)
-        out = ConfiguredModule()
-        out.sources = []
-        sourcelists = [(int_sources, False), (ext_sources, True)]
-        for (sources, external) in sourcelists:
-            for source in sources:
-                varsets = cfg.resolve_tags(
-                    ('public', 'private') + source.tags)
-                if varsets is None:
-                    continue
-                out.sources.append(
-                    SourceFile(source.path, varsets,
-                               source.sourcetype,external))
-        out.public = cfg.resolve_tags(('public',)) or []
-        out.private = cfg.resolve_tags(('private',)) or []
-        out.dependencies = cfg.modules
-        out.has_error = cfg.has_error
-        return out
+    def variables(self):
+        """Get the build variables for this module."""
+        return Variables(self.schema, self._all_varsets)
 
-    def _get_configs(self, build):
-        """Get the module external sources and tags.
+    def add_source(self, path, sourcetype=None, external=True):
+        """Add a single source file with no module dependencies."""
+        src = SourceFile(
+            path,
+            Variables(self.schema, []),
+            sourcetype,
+            external)
+        self.sources.append(src)
+        return self
 
-        The default implementation returns no sources or tags.
+    def add_generated_source(self, source):
+        """Add a generated source file to the module."""
+        self.generated_sources.append(source)
+        return self
+
+    def add_sources(self, sources, tagdefs):
+        """Add source files to the module.
+
+        Each source file is associated with a set of tags.  The tag
+        definitions map each tag to either None or a list of modules.
+        If a tag is mapped to None, then sources with that tag are not
+        included in the module.  If a tag is mapped to a list of
+        modules, then source files with those tags are dependent on
+        those modules.
+
+        Four tags have special meaning.  The 'public' tag contains
+        dependencies which are propagated to files which depend on
+        this module.  The 'private' tag is ignored if it is missing.
+        The 'external' tag marks source files that should be compiled
+        with warnings disabled.  The 'exclude' tag marks source files
+        that should be excluded entirely.
         """
-        return [], {}
 
-class SourceModule(Module):
-    """A module consisting of source code to be compiled."""
-    __slots__ = ['_sources', '_tags_func']
-
-    def __init__(self, *, sources=None, configure=None):
-        self._sources = sources
-        self._tags_func = configure
-
-    @property
-    def sources(self):
-        if self._sources is None:
-            return []
-        return self._sources.sources
-
-    def _get_configs(self, build):
-        if self._tags_func is None:
-            return [], {}
-        return self._tags_func(build)
-
-class ExternalModule(Module):
-    """A module representing an external package.
-
-    If configuration of an external package fails, information about
-    the package is printed for the user.
-    """
-    __slots__ = ['name', '_tags_func', 'packages']
-
-    def __init__(self, *, name, configure, packages):
-        if not callable(configure):
-            raise TypeError('configure is not callable')
-        self.name = name
-        self._tags_func = configure
-        self.packages = packages
-
-    @property
-    def sources(self):
-        return []
-
-    def _get_configs(self, build):
-        with Feedback('Checking for {}...'.format(self.name)) as fb:
-            status, sources, varsets = self._tags_func(build)
-            if status is not None:
-                fb.write(status)
-            return sources, varsets
-
-class ConfiguredModule(object):
-    """A module which has been configured."""
-    __slots__ = ['sources', 'public', 'private', 'dependencies',
-                 'has_error']
-
-    def flatten(self):
-        """Flatten a module, resolving all dependencies."""
-        if self.has_error:
-            return None
-        mod = FlatModule()
-        mod.sources = []
-        mod.varsets = []
-        varset_ids = set()
-        mq = [self]
-        mids = {id(self)}
-        while mq:
-            m = mq.pop()
-            for dep in m.dependencies:
-                if id(dep) in mids:
+        def check_tags():
+            """Check that the tag definitions match the source files."""
+            special = 'public', 'private', 'external', 'exclude'
+            srctags = set()
+            for source in sources:
+                srctags.update(source.tags)
+            srctags.difference_update(special)
+            deftags = set(tagdefs)
+            deftags.difference_update(special)
+            extras = deftags.difference(srctags)
+            missing = srctags.difference(deftags)
+            if extras or missing:
+                msgs = []
+                if missing:
+                    msgs.append(
+                        'missing tags: {}'.format(', '.join(sorted(missing))))
+                if extras:
+                    msgs.append(
+                        'extra tags: {}'.format(', '.join(sorted(extras))))
+                raise UserError('; '.join(msgs))
+            for tag in ('public', 'private'):
+                if tagdefs.get(tag, True) is None:
+                    raise UserError('"{}" tag should not be None'.format(tag))
+            if 'external' in tagdefs:
+                raise UserError('"external" tag should not be defined')
+            for tag, tagdef in tagdefs.items():
+                if tagdef is None:
                     continue
-                mids.add(id(dep))
-                mq.append(dep)
-            for source in m.sources:
-                mod.sources.append(source)
-                for varset in source.varsets:
-                    if id(varset) in varset_ids:
-                        continue
-                    varset_ids.add(id(varset))
-                    mod.varsets.append(varset)
-            for varsets in (m.public, m.private):
-                for varset in varsets:
-                    if id(varset) in varset_ids:
-                        continue
-                    varset_ids.add(id(varset))
-                    mod.varsets.append(varset)
-        return mod
+                if not isinstance(tagdef, list):
+                    raise UserError('"{}" tag definition is not a list'
+                                    .format(tag))
+                if not all(isinstance(x, Module) for x in tagdef):
+                    raise UserError('"{}" tag contains invalid item')
 
-class FlatModule(object):
-    """A module which has been configured and flattened."""
-    __slots__ = ['sources', 'varsets']
+        def resolve_varsets(tags):
+            """Resolve a list of tags to a list of variable sets."""
+            if 'exclude' in tags:
+                return None
+            varsets = []
+            for tag in tags:
+                try:
+                    modules = tagdefs[tag]
+                except KeyError:
+                    continue
+                if modules is None:
+                    return None
+                for module in modules:
+                    for varset in module._public_varsets:
+                        if not varset:
+                            continue
+                        if not any(x is varset for x in varsets):
+                            varsets.append(varset)
+            return varsets
+
+        def add_sources():
+            """Add tagged source files to this module."""
+            all_tags = set()
+            schema = self.schema
+            for source in sources:
+                source_varsets = resolve_varsets(source.tags)
+                if source_varsets is None:
+                    continue
+                all_tags.update(source.tags)
+                self.sources.append(SourceFile(
+                    source.path,
+                    Variables(schema, source_varsets),
+                    source.sourcetype,
+                    'external' in source.tags))
+            all_tags.add('public')
+            for tag in all_tags:
+                modules = tagdefs.get(tag)
+                if not modules:
+                    continue
+                public = tag == 'public'
+                for module in modules:
+                    self.add_module(module, public=public)
+
+        check_tags()
+        add_sources()
+        return self
+
+    def add_variables(self, variables, *, configs=None, archs=None):
+        """Add public variables to this module."""
+        schema = self.schema
+        variants = schema.get_variants(configs, archs)
+        for varname, value2 in variables.items():
+            vardef = schema.get_variable(varname)
+            for variant in variants:
+                try:
+                    value1 = self._public[variant, varname]
+                except KeyError:
+                    value = value2
+                else:
+                    value = vardef.combine([value1, value2])
+                self._public[variant, varname] = value
+        return self
+
+    def add_module(self, module, *, public=True):
+        """Add a module dependency on another module."""
+        if public:
+            for varset in module._public_varsets:
+                if not varset:
+                    continue
+                if not any(x is varset for x in self._public_varsets):
+                    self._public_varsets.append(varset)
+        for varset in module._all_varsets:
+            if not varset:
+                continue
+            if not any(x is varset for x in self._all_varsets):
+                self._all_varsets.append(varset)
+        for source in module.sources:
+            if not any(x is source for x in self.sources):
+                self.sources.append(source)
+        for source in module.generated_sources:
+            if not any(x is source for x in self.generated_sources):
+                self.generated_sources.append(source)
+        for error in module.errors:
+            if not any(x is error for x in self.errors):
+                self.errors.append(error)
+        return self
+
+    def add_define(self, definition, *, configs=None, archs=None):
+        """Add a preprocessor definition."""
+        raise NotImplementedError('must be implemented by subclass')
+
+    def add_header_path(self, path, *,
+                        configs=None, archs=None, system=False):
+        """Add a header search path.
+
+        If system is True, then the header path will be searched for
+        include statements with angle brackets.  Otherwise, the header
+        path will be searched for include statements with double
+        quotes.  Not all targets support the distinction.
+        """
+        raise NotImplementedError('must be implemented by subclass')
+
+    def add_library(self, path, *, configs=None, archs=None):
+        """Add a library."""
+        raise ConfigError('add_library not available on this target')
+
+    def add_library_path(self, path, *, configs=None, archs=None):
+        """Add a library search path."""
+        raise ConfigError('add_library_path not available on this target')
+
+    def add_framework(self, *, name=None, path=None,
+                      configs=None, archs=None):
+        """Add a framework.
+
+        Either the name or the path should be specified (but not both).
+        """
+        raise ConfigError('add_framework not available on this target')
+
+    def add_framework_path(self, path, *, configs=None, archs=None):
+        """Add a framework search path."""
+        raise ConfigError('add_framework_path not available')
+
+    def add_pkg_config(self, spec, *, configs=None, archs=None):
+        """Run the pkg-config tool and add the resulting settings."""
+        raise ConfigError('add_pkg_config not available on this target')
+
+    def add_sdl_config(self, version, *, configs=None, archs=None):
+        """Run the sdl-config tool and add the resulting settings.
+
+        The version should either be 1 or 2.
+        """
+        raise ConfigError('add_sdl_config not available on this target')
+
+    def test_compile(self, source, sourcetype, *,
+                     configs=None, archs=None, external=True, link=True):
+        """Try to compile a source file.
+
+        Returns True if successful, False otherwise.
+        """
+        raise ConfigError(
+            'test_compile not available on this target')

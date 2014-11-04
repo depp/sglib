@@ -3,53 +3,37 @@
 # 2-clause BSD license.  For more information, see LICENSE.txt.
 from .error import ConfigError
 
-class ExternalTarget(object):
-    __slots__ = ['target', 'name', 'dependencies', 'destdir', 'builddir']
-    def __init__(self, target, name, dependencies, destdir, builddir):
-        self.target = target
-        self.name = name
-        self.dependencies = list(dependencies)
-        self.destdir = destdir
-        self.builddir = builddir
-    def build(self):
-        raise NotImplementedError('this should be implemented by subclass')
-
 class BaseTarget(object):
     """Base class for all target buildsystems."""
     __slots__ = [
-        # The environment.
-        'env',
         # List of all generated sources.
         'generated_sources',
-        # Dictionary mapping names to external targets.
-        'external_targets',
+        # List of errors that occurred while creating targets.
+        'errors',
     ]
 
-    def __init__(self, name, script, config, env):
-        self.env = env
+    def __init__(self):
         self.generated_sources = []
-        self.external_targets = {}
+        self.errors = []
 
     @property
     def run_srcroot(self):
         """The path root of the source tree, at runtime."""
         raise NotImplementedError('must be implemented by subclass')
 
-    def external_target(self, obj, name, dependencies=[]):
-        """Create an external target, without adding it to the build."""
-        raise ConfigError('this target does not suport external targets')
-
-    def project_reference(self, path):
-        """Create build variables that reference another project."""
-        raise ConfigError('project_reference not available on this target')
-
-    def add_generated_source(self, source):
-        """Add a generated source to the build system.
-
-        Returns the path to the generated source.
+    def _add_module(self, module):
+        """Add a module's dependencies and errors to the target.
+        
+        Returns True if the module is clean, False if the module has
+        errors.
         """
-        self.generated_sources.append(source)
-        return source.target
+        for source in module.generated_sources:
+            if not any(x is source for x in self.generated_sources):
+                self.generated_sources.append(source)
+        for error in module.errors:
+            if not any(x is error for x in self.errors):
+                self.errors.append(error)
+        return not module.errors
 
     def add_default(self, target):
         """Set a target to be a default target."""
@@ -70,44 +54,17 @@ class BaseTarget(object):
         raise ConfigError(
             'this target does not support application bundles')
 
-    def add_external_target(self, obj):
-        """Add a target built with an external build system."""
-        if not isinstance(obj, ExternalTarget):
-            raise TypeError('external target must be ExternalTarget')
-        if obj.name in self.external_targets:
-            raise UserError('external build name conflict: {}'
-                            .format(obj.name))
-        self.external_targets[obj.name] = obj
-
-    def external_build_path(self, obj):
-        """Get the build path for an external target."""
-        raise ConfigError('not implemented')
-
     def finalize(self):
         """Write the build system files."""
-        self._build_external()
-        self._build_generated()
-
-    def _build_external(self):
-        """Build external targets."""
-        remaining = set(self.external_targets)
+        remaining = set(source.target for source in self.generated_sources)
         while remaining:
             advancing = False
-            for name in tuple(remaining):
-                target = self.external_targets[name]
-                if remaining.intersection(target.dependencies):
+            for source in self.generated_sources:
+                if remaining.intersection(source.dependencies):
                     continue
-                print('Building {}...'.format(name))
-                target.build()
+                print('Creating {}...'.format(source.target))
+                source.regen()
                 advancing = True
-                remaining.discard(name)
+                remaining.discard(source.target)
             if not advancing:
-                raise ConfigError('circular dependency in external targets')
-
-    def _build_generated(self):
-        """Build generated sources."""
-        for source in self.generated_sources:
-            if source.is_regenerated_only:
-                continue
-            print('Creating {}...'.format(source.target))
-            source.regen()
+                raise ConfigError('circular dependency in generated sources')

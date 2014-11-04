@@ -34,12 +34,3 @@ def format_block(text):
     for line in text.splitlines():
         a.extend(('  | ', line, '\n'))
     return ''.join(a)
-
-def try_config(args, *funcs):
-    """Try several functions, and return the first successful result."""
-    for func in funcs:
-        try:
-            return func(*args)
-        except ConfigError as ex:
-            ex.write(logfile(2))
-    raise ConfigError('Configuration failed')

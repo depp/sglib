@@ -88,4 +88,3 @@ def adjust_config(config, defaults):
             config.flags['audio'] = 'sdl'
         else:
             config.flags['audio'] = AUDIO_DEFAULTS[config.platform]
-    print(config.flags)

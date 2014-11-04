@@ -174,3 +174,5 @@ sdl.c
 src.add(path='src/core/windows', tags=['frontend_windows'], sources='''
 windows.c
 ''')
+
+src = src.sources
