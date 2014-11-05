@@ -3,7 +3,6 @@
 # 2-clause BSD license.  For more information, see LICENSE.txt.
 import platform, io
 from .error import ConfigError
-from .module import Module
 from .log import logfile, Feedback
 
 # There is a certain amount of guessing here...
@@ -86,15 +85,15 @@ class ExternalPackage(object):
                     return result
             fb.write('no')
         err = self.get_error()
-        mod = Module()
-        mod.errors.append(mod)
+        mod = build.target.module()
+        mod.errors.append(err)
         build.cache[key] = mod
         return mod
 
     def get_error(self):
         """Get the error for when this module's configuration fails."""
         fp = io.StringIO()
-        msg = '{} could not be found'.format(self.name)
+        print('{} could not be found'.format(self.name), file=fp)
         if self.uri is not None:
             print('Project website: {}'.format(self.uri), file=fp)
         if self.packages is not None:
@@ -105,3 +104,4 @@ class ExternalPackage(object):
                 pass
             else:
                 print('To install, run:', helpstr.format(pkg), file=fp)
+        return fp.getvalue()

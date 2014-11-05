@@ -108,7 +108,9 @@ class Build(object):
                 log = logfile(0)
                 print('Configuration failed.', file=log)
                 for error in obj.target.errors:
-                    print('  {}'.format(obj.reason), file=log)
+                    print(file=log)
+                    for line in error.splitlines():
+                        print(line, file=log)
                 sys.exit(1)
             if obj.variable_unused:
                 print('Warning: unused variables:',
