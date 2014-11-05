@@ -10,6 +10,8 @@ TEST_SOURCE = '''\
 int main(int argc, char **argv) {
     int version;
     struct jpeg_decompress_struct cinfo;
+    (void) argc;
+    (void) argv;
     version = JPEG_LIB_VERSION;
     jpeg_create_decompress(&cinfo);
     return version;
