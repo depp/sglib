@@ -7,7 +7,8 @@ from d3build.source import SourceList
 import os
 
 def pkg_config(build):
-    return None, build.target.module().add_pkg_config('glew')
+    flags = build.pkg_config('glew')
+    return None, build.target.module().add_flags(flags)
 
 def bundled(build):
     path = build.find_package('^glew(:?-[0-9.]+)?$')

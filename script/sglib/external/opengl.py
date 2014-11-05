@@ -6,7 +6,8 @@ from d3build.error import ConfigError
 import os
 
 def pkg_config(build):
-    return None, build.target.module().add_pkg_config('gl')
+    flags = build.pkg_config('gl')
+    return None, build.target.module().add_flags(flags)
 
 def framework(build):
     return None, build.target.module().add_framework(name='OpenGL')

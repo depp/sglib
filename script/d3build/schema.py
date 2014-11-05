@@ -21,15 +21,18 @@ class Schema(object):
         'configs',
         # List of build variants.
         'variants',
+        # Map from flag names to variable names.
+        'flags',
     ]
 
     def __init__(self, *, variables, default=None,
-                 archs, configs, variants):
+                 archs, configs, variants, flags):
         self._variables = variables
         self._default = default
         self.archs = archs
         self.configs = configs
         self.variants = variants
+        self.flags = flags
 
     def get_variable(self, name):
         """Get the definition for a variable.
@@ -203,32 +206,6 @@ class VarDefs(VarList):
                 result.append(item)
         result.reverse()
         return result
-
-@_vartype('objectlist')
-class VarObjectList(object):
-    """A build variable which stores a list of Python objects."""
-    __slots__ = []
-
-    def __init__(self, schema):
-        pass
-
-    @staticmethod
-    def parse(s):
-        raise UserError('this variable cannot be parsed')
-
-    @staticmethod
-    def combine(values):
-        result = []
-        for value in values:
-            result.extend(value)
-        return result
-
-    def show(self, value):
-        raise UserError('this variable cannot be shown')
-
-    @staticmethod
-    def isvalid(value):
-        return isinstance(value, list)
 
 class Variables(object):
     """A set of build variables.

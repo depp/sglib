@@ -74,10 +74,16 @@ class ExternalPackage(object):
         with Feedback('Checking for {}...'.format(self.name)) as fb:
             for func in self._funcs:
                 try:
-                    msg, result = func(build, *args)
+                    result = func(build, *args)
                 except ConfigError as ex:
                     ex.write(logfile(2), indent='  ')
                 else:
+                    try:
+                        msg, result = result
+                    except (TypeError, ValueError):
+                        raise ValueError(
+                            '{!r} gave invalid result: {!r}'
+                            .format(func, result))
                     if msg is None:
                         msg = 'yes'
                     fb.write(msg)

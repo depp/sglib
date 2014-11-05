@@ -31,6 +31,12 @@ _VARIABLES = (SchemaBuilder()
     .list('OTHER_CODE_SIGN_FLAGS')
 ).value()
 
+_FLAGS = {
+    'CFLAGS': 'OTHER_CFLAGS',
+    'CXXFLAGS': 'OTHER_CPLUSPLUSFLAGS',
+    'LIBS': 'OTHER_LDFLAGS',
+}
+
 class XcodeSchema(Schema):
     """A schema for Xcode build variables."""
     __slots__ = []
@@ -42,7 +48,7 @@ class XcodeSchema(Schema):
             archs=['Native'],
             configs=['Debug', 'Release'],
             variants=['Debug', 'Release'],
-        )
+            flags=_FLAGS)
 
     def get_variants(self, configs=None, archs=None):
         """Get a list of variants."""

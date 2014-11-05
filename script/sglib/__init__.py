@@ -110,7 +110,8 @@ class App(object):
 
         if self.icon is not None:
             icon, iconmod = self.icon.module(build)
-            mod.add_module(iconmod)
+            if iconmod is not None:
+                mod.add_module(iconmod)
         else:
             icon = None
 
@@ -142,7 +143,7 @@ class App(object):
                     self,
                     main_nib,
                     icon))
-            target = build.target.add_application_bundle(
+            build.target.add_application_bundle(
                 name=name,
                 module=mod,
                 info_plist=info_plist,
@@ -156,10 +157,10 @@ class App(object):
 
         if build.config.platform == 'linux':
             from .runscript import RunScript
-            default = build.env.get_variable('DEFAULT', 'Release')
+            default = build.get_variable('DEFAULT', 'Release')
             build.target.add_default(default)
-            for config in build.env.configs:
-                scriptname = '{}_{}'.format(name, config)
-                mod.add_generated_source(
-                    RunScript(scriptname, scriptname, target[config], args))
-                build.target.add_alias(config, [scriptname])
+            for variant, path in target.items():
+                scriptname = '{}_{}'.format(name, variant)
+                build.target.add_generated_source(
+                    RunScript(scriptname, scriptname, path, args))
+                build.target.add_alias(variant, [scriptname])

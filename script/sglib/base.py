@@ -13,7 +13,7 @@ int main(int argc, char *argv[])
 }
 '''
 
-GCC_C_WARNINGS = '''
+WARNING_FLAGS = [('c', 'CWARN', '''
 -Wall
 -Wextra
 -Wpointer-arith
@@ -23,50 +23,38 @@ GCC_C_WARNINGS = '''
 -Wdouble-promotion
 -Winit-self
 -Wstrict-prototypes
-'''.split()
-
-GCC_CXX_WARNINGS = '''
+'''.split()),
+('c++', 'CXXWARN', '''
 -Wall
 -Wextra
 -Wpointer-arith
-'''.split()
+'''.split())]
 
-def gnumake_vars(env, *, langs=('c', 'c++'), configs=None, **kw):
+def gnumake_vars(build, *, langs=('c', 'c++'), configs=None, **kw):
     """Test flags and merge them into the default variables."""
-    v = env.varset(configs=configs, **kw)
-    for lang in ('c', 'c++'):
-        env.test_compile(SOURCE, lang, None, [v],
-                         external=False, configs=configs)
-    env.schema.update_varset(env.base, v)
+    mod = build.target.module().add_variables(kw, configs=configs)
+    valid = all(
+        mod.test_compile(SOURCE, sourcetype, configs=configs)
+        for sourcetype in langs)
+    if valid:
+        build.target.base.add_variables(kw, configs=configs)
 
 def gnumake_warnings(build):
     """Test for supported warning flags."""
-    werror = build.get_variable_bool('WERROR', False)
-    base = build.target.base()
-
-    c_werror = env.test_compile(
-        SOURCE, 'c', None,
-        [env.varset(CWARN=['-Werror']), {}],
-        link=False, external=False)
-    c_warnings = env.test_compile(
-        SOURCE, 'c', c_werror,
-        [env.varset(CWARN=[flag]) for flag in GCC_C_WARNINGS],
-        use_all=True, link=False, external=False)
-
-    cxx_werror = env.test_compile(
-        SOURCE, 'c++', None,
-        [env.varset(CXXWARN=['-Werror']), {}],
-        link=False, external=False)
-    cxx_warnings = env.test_compile(
-        SOURCE, 'c++', cxx_werror,
-        [env.varset(CXXWARN=[flag]) for flag in GCC_CXX_WARNINGS],
-        use_all=True, link=False, external=False)
-
-    if werror:
-        for v in (c_werror, cxx_werror):
-            env.schema.update_varset(env.base, v)
-    for v in (c_warnings, cxx_warnings):
-        env.schema.update_varset(env.base, v)
+    want_werror = build.get_variable_bool('WERROR', False)
+    for sourcetype, varname, wflags in WARNING_FLAGS:
+        mod = build.target.module().add_variables({varname: ['-Werror']})
+        has_werror = mod.test_compile(
+            SOURCE, sourcetype, link=False, external=False)
+        for wflag in wflags:
+            flags = ['-Werror', wflag] if has_werror else [wflag]
+            mod = build.target.module().add_variables({varname: flags})
+            valid = mod.test_compile(
+                SOURCE, sourcetype, link=False, external=False)
+            if valid:
+                build.target.base.add_variables({varname: [wflag]})
+        if want_werror and has_werror:
+            build.target.base.add_variables({varname: ['-Werror']})
 
 SANITIZERS = ['address', 'leak', 'thread', 'undefined']
 

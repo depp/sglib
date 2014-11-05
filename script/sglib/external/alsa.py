@@ -4,7 +4,8 @@
 from d3build.package import ExternalPackage
 
 def pkg_config(build):
-    return None, build.target.module().add_pkg_config('alsa')
+    flags = build.pkg_config('alsa')
+    return None, build.target.module().add_flags(flags)
 
 module = ExternalPackage(
     [pkg_config],

@@ -7,7 +7,8 @@ from d3build.package import ExternalPackage
 import os
 
 def pkg_config(build):
-    return None, build.target.module().add_pkg_config('vorbis')
+    flags = build.pkg_config('vorbis')
+    return None, build.target.module().add_flags(flags)
 
 def bundled(build):
     path = build.find_package('^libvorbis(:?-[0-9.]+)?$')

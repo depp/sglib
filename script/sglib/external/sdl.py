@@ -6,7 +6,8 @@ from d3build.error import ConfigError
 import os
 
 def pkg_config(build, version):
-    return None, build.target.module().add_sdl_config(version)
+    flags = build.sdl_config(version)
+    return None, build.target.module().add_flags(flags)
 
 SDL_NAME = {1: 'SDL', 2: 'SDL2'}
 

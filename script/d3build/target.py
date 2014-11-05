@@ -28,12 +28,16 @@ class BaseTarget(object):
         errors.
         """
         for source in module.generated_sources:
-            if not any(x is source for x in self.generated_sources):
-                self.generated_sources.append(source)
+            self.add_generated_source(source)
         for error in module.errors:
             if not any(x is error for x in self.errors):
                 self.errors.append(error)
         return not module.errors
+
+    def add_generated_source(self, source):
+        """Add a generated source to the build system."""
+        if not any(x is source for x in self.generated_sources):
+            self.generated_sources.append(source)
 
     def add_default(self, target):
         """Set a target to be a default target."""
@@ -56,11 +60,13 @@ class BaseTarget(object):
 
     def finalize(self):
         """Write the build system files."""
-        remaining = set(source.target for source in self.generated_sources)
+        remaining = set(source.target for source in self.generated_sources
+                        if not source.is_regenerated_only)
         while remaining:
             advancing = False
             for source in self.generated_sources:
-                if remaining.intersection(source.dependencies):
+                if (source.target not in remaining or
+                    remaining.intersection(source.dependencies)):
                     continue
                 print('Creating {}...'.format(source.target))
                 source.regen()

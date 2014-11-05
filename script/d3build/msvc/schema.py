@@ -38,6 +38,12 @@ _VARIABLES = (SchemaBuilder(sep=';', bool_values=('false', 'true'))
     .string('Debug.Path')
 ).value()
 
+_FLAGS = {
+    #'CFLAGS':
+    #'CXXFLAGS':
+    #'LIBS':
+}
+
 class VisualStudioSchema(Schema):
     """A schema for Visual Studio build variables."""
     __slots__ = []
@@ -50,7 +56,8 @@ class VisualStudioSchema(Schema):
             variables=_VARIABLES,
             archs=archs,
             configs=configs,
-            variants=variants)
+            variants=variants,
+            flags=_FLAGS)
 
     def get_variants(self, configs=None, archs=None):
         """Get a list of variants."""

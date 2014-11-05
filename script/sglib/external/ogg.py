@@ -7,7 +7,8 @@ from d3build.package import ExternalPackage
 import os
 
 def pkg_config(build):
-    return build.target.module().add_pkg_config('ogg')
+    flags = build.pkg_config('ogg')
+    return None, build.target.module().add_flags(flags)
 
 def bundled(build):
     path = build.find_package('^libogg(?:-[0-9.]+)?$')

@@ -1,7 +1,7 @@
 # Copyright 2014 Dietrich Epp.
 # This file is part of SGLib.  SGLib is licensed under the terms of the
 # 2-clause BSD license.  For more information, see LICENSE.txt.
-from .shell import escape
+from .shell import escape, get_output
 from .error import ConfigError
 from .log import Log, logfile
 import sys
@@ -145,6 +145,7 @@ class Build(object):
                           .format(name))
 
     def check_platform(self, platforms):
+        """Throw an exception if the platform is not in the given set."""
         if isinstance(platforms, str):
             if self.config.platform == platforms:
                 return
@@ -152,7 +153,7 @@ class Build(object):
             if self.config.platform in platforms:
                 return
             platforms = ', '.join(platforms)
-        raise ConfigureError('only valid on platforms: {}'.format(platforms))
+        raise ConfigError('only valid on platforms: {}'.format(platforms))
 
     def find_package(self, pattern, *, varname=None):
         """Find a package matching the given pattern (a regular expression).
@@ -223,3 +224,38 @@ class Build(object):
     def external_destdir(self):
         """Get the installation directory for external packages."""
         return os.path.join(self.package_search_path, 'build', 'products')
+
+    def pkg_config(self, spec):
+        """Return flags from the pkg-config tool."""
+        cmdname = 'pkg-config'
+        flags = {}
+        for varname, arg in (('LIBS', '--libs'), ('CFLAGS', '--cflags')):
+            stdout, stderr, retcode = get_output(
+                [cmdname, '--silence-errors', arg, spec])
+            if retcode:
+                stdout, retcode = get_output(
+                    [cmdname, '--print-errors', '--exists', spec],
+                    combine_output=True)
+                raise ConfigError(
+                    '{} failed (spec: {})'.format(cmdname, spec),
+                    details=stdout)
+            flags[varname] = stdout.split()
+        flags['CXXFLAGS'] = flags['CFLAGS']
+        return flags
+
+    def sdl_config(self, version):
+        """Return flags from the sdl-config tool."""
+        if version == 1:
+            cmdname = 'sdl-config'
+        elif version == 2:
+            cmdname = 'sdl2-config'
+        else:
+            raise ValueError('unknown SDL version: {!r}'.format(version))
+        flags = {}
+        for varname, arg in (('LIBS', '--libs'), ('CFLAGS', '--cflags')):
+            stdout, stderr, retcode = get_output([cmdname, arg])
+            if retcode:
+                raise ConfigError('{} failed'.format(cmdname), details=stderr)
+            flags[varname] = stdout.split()
+        flags['CXXFLAGS'] = flags['CFLAGS']
+        return flags

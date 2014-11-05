@@ -17,10 +17,11 @@ int main(int argc, char **argv) {
 '''
 
 def test(build):
-    varsets = [build.env.library('-ljpeg')]
-    varset = build.env.test_compile(
-        TEST_SOURCE, 'c', None, varsets)
-    return None, [], {'public': [varset]}
+    mod = build.target.module()
+    mod.add_library('-ljpeg')
+    if not mod.test_compile(TEST_SOURCE, 'c'):
+        raise ConfigError('Test program failed to compile and link.')
+    return None, mod
 
 module = ExternalPackage(
     [test],

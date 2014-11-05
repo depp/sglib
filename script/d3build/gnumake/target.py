@@ -4,6 +4,8 @@
 from ..target import BaseTarget
 from ..error import UserError
 from ..shell import escape
+from .module import GnuMakeModule, cc_command, ld_command
+from .schema import GnuMakeSchema
 import io
 import os
 import re
@@ -35,6 +37,11 @@ def mk_escape(x):
 class GnuMakeTarget(BaseTarget):
     """Environment targeting the GNU Make build system."""
     __slots__ = [
+        # The schema for build variables.
+        'schema',
+        # The base build variables, a module.
+        'base',
+
         # First arguments for running the configuration script.
         '_configure',
         # StringIO with the rules.
@@ -51,9 +58,17 @@ class GnuMakeTarget(BaseTarget):
         '_qnames',
     ]
 
-    def __init__(self, name, script, config, env):
-        super(GnuMakeTarget, self).__init__(name, script, config, env)
-        self._configure = [sys.executable, script]
+    def __init__(self, build, name):
+        super(GnuMakeTarget, self).__init__()
+        self.schema = GnuMakeSchema()
+        self.base = GnuMakeModule(self.schema)
+        self.base.add_variables({'CC': 'cc', 'CXX': 'c++'})
+        base_vars = [('Debug', '-O0 -g'), ('Release', '-O')]
+        for config, cflags in base_vars:
+            cflags = cflags.split()
+            var = {'CFLAGS': cflags, 'CXXFLAGS': cflags}
+            self.base.add_variables(var, configs=[config])
+        self._configure = [sys.executable, build.script]
         self._rulefp = io.StringIO()
         self._all = set()
         self._clean = {'build'}
@@ -66,23 +81,8 @@ class GnuMakeTarget(BaseTarget):
         """The path root of the source tree, at runtime."""
         return '.'
 
-    def add_generated_source(self, source):
-        """Add a generated source to the build system.
-
-        Returns the path to the generated source.
-        """
-        super(GnuMakeTarget, self).add_generated_source(source)
-        if source.is_regenerated_only:
-            self._clean.add(source.target)
-        if source.is_regenerated_always:
-            deps = ['FORCE']
-        else:
-            deps = source.dependencies
-        qname, cmds = source.rule()
-        if cmds is None:
-            cmds = [self._configure + ['--action-regenerate', source.target]]
-        self._add_rule(source.target, deps, cmds, qname=qname)
-        return source.target
+    def module(self):
+        return GnuMakeModule(self.schema).add_module(self.base)
 
     def add_default(self, target):
         """Set a target to be a default target."""
@@ -99,52 +99,60 @@ class GnuMakeTarget(BaseTarget):
 
         Returns the path to the executable.
         """
-        if module is None:
-            return ''
-
-        varset = self.env.schema.merge([self.env.base] + module.varsets)
-
-        paths = {}
-        for config in self.env.configs:
+        products = {variant: os.path.join('build', variant, 'products', name)
+                    for variant in self.schema.variants}
+        if not self._add_module(module):
+            return products
+        for variant, exepath in products.items():
             objects = []
             sourcetypes = set()
             for source in module.sources:
                 if source.sourcetype in ('c', 'c++', 'objc', 'objc++'):
                     sourcetypes.add(source.sourcetype)
-                    objects.append(self._compile(source, config))
-
-            exepath = os.path.join('build', config, 'products', name)
-            paths[config] = exepath
-
+                    objects.append(self._compile(source, variant))
             self._add_rule(
                 exepath, objects,
-                [self.env.ld_command(
-                    config, varset, exepath, objects, sourcetypes)],
+                [ld_command(
+                    module.variables(), variant, exepath,
+                    objects, sourcetypes)],
                 qname='Link')
-
-        return paths
+        return products
 
     def finalize(self):
         super(GnuMakeTarget, self).finalize()
+        for source in self.generated_sources:
+            if not source.is_regenerated:
+                continue
+            if source.is_regenerated_only:
+                self._clean.add(source.target)
+            if source.is_regenerated_always:
+                deps = ['FORCE']
+            else:
+                deps = source.dependencies
+            qname, cmds = source.rule()
+            if cmds is None:
+                cmds = [self._configure +
+                        ['--action-regenerate', source.target]]
+            self._add_rule(source.target, deps, cmds, qname=qname)
         with open('Makefile', 'w') as fp:
             self._write(fp)
 
-    def _compile(self, source, config):
+    def _compile(self, source, variant):
         """Create a target that compiles a source file."""
         src = source.path
         assert not os.path.isabs(src)
         out = os.path.join(
-            'build', config, 'obj', os.path.splitext(src)[0])
-        varset = self.env.schema.merge([self.env.base] + source.varsets)
+            'build', variant, 'obj', os.path.splitext(src)[0])
         obj = out + '.o'
+        variables = source.variables
         qname = BUILD_NAMES[source.sourcetype]
         if source.external:
-            cmd = self.env.cc_command(
-                config, varset, obj, src, source.sourcetype, external=True)
+            cmd = cc_command(
+                variables, variant, obj, src, source.sourcetype, external=True)
         else:
             dep = out + '.d'
-            cmd = self.env.cc_command(
-                config, varset, obj, src, source.sourcetype, depfile=dep)
+            cmd = cc_command(
+                variables, variant, obj, src, source.sourcetype, depfile=dep)
             self._optinclude.add(dep)
         self._add_rule(obj, [source.path], [cmd], qname=qname)
         return obj

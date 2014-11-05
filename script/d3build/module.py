@@ -43,6 +43,21 @@ class Module(object):
         self._public_varsets = [self._public]
         self._all_varsets = [self._public]
 
+    def copy(self):
+        """Create a copy of this module."""
+        class_ = self.__class__
+        obj = class_.__new__(class_)
+        obj.schema = self.schema
+        obj.sources = list(self.sources)
+        obj.generated_sources = list(self.generated_sources)
+        obj.errors = list(self.errors)
+        obj._public = dict(self.public)
+        obj._public_varsets = list(self._public_varsets)
+        obj._public_varsets[0] = obj._public
+        obj._all_varsets = list(obj._all_varsets)
+        obj._all_varsets[0] = obj._public
+        return obj
+
     def variables(self):
         """Get the build variables for this module."""
         return Variables(self.schema, self._all_varsets)
@@ -167,6 +182,9 @@ class Module(object):
         variants = schema.get_variants(configs, archs)
         for varname, value2 in variables.items():
             vardef = schema.get_variable(varname)
+            if not vardef.isvalid(value2):
+                raise ValueError('invalid value for {}: {!r}'
+                                 .format(varname, value2))
             for variant in variants:
                 try:
                     value1 = self._public[variant, varname]
@@ -176,6 +194,25 @@ class Module(object):
                     value = vardef.combine([value1, value2])
                 self._public[variant, varname] = value
         return self
+
+    def add_flags(self, flags, *, configs=None, archs=None):
+        """Add public flags to this module.
+
+        Flags are like variables, but flags have the same meanings
+        across targets.  Flags are translated into variables.
+        """
+        var = {}
+        for flag, value in flags.items():
+            try:
+                varname = self.schema.flags[flag]
+            except KeyError:
+                raise ValueError('unknown flag: {!r}'.format(flag))
+            var[varname] = value
+        return self.add_variables(var, configs=configs, archs=archs)
+
+    def flag_variable(self, flag):
+        """Get the variable name that correspond to a flag."""
+        raise NotImplementedError('must be implemented by subclass')
 
     def add_module(self, module, *, public=True):
         """Add a module dependency on another module."""
@@ -236,12 +273,12 @@ class Module(object):
         """Add a framework search path."""
         raise ConfigError('add_framework_path not available')
 
-    def add_pkg_config(self, spec, *, configs=None, archs=None):
-        """Run the pkg-config tool and add the resulting settings."""
+    def pkg_config(self, spec, *, configs=None, archs=None):
+        """Run the pkg-config tool and return the resulting flags."""
         raise ConfigError('add_pkg_config not available on this target')
 
-    def add_sdl_config(self, version, *, configs=None, archs=None):
-        """Run the sdl-config tool and add the resulting settings.
+    def sdl_config(self, version, *, configs=None, archs=None):
+        """Run the sdl-config tool and return the resulting flags.
 
         The version should either be 1 or 2.
         """
