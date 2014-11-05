@@ -12,7 +12,7 @@ def framework(build):
     return None, build.target.module().add_framework(name='OpenGL')
 
 def windows(build):
-    build.env.check_platform('windows')
+    build.check_platform('windows')
     return None, build.target.module().add_library('opengl32.lib')
 
 module = ExternalPackage(

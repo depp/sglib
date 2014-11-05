@@ -14,11 +14,8 @@ def bundled(build):
     if build.config.target == 'msvc':
         project = os.path.join(
             path, 'win32', 'VS2010', 'libvorbis', 'libvorbis_static.vcxproj')
-        if not os.path.exists(project):
-            raise ConfigError('project file does not exist: {}'
-                              .format(project))
         mod = (build.target.module()
-            .add_source(path)
+            .add_vcxproj(project)
             .add_header_path(os.path.join(path, 'include'), system=True))
     else:
         target = ConfigureMake(
@@ -32,7 +29,7 @@ def bundled(build):
                 os.path.join(target.destdir, 'include'),
                 system=True)
             .add_library(os.path.join(target.destdir, 'lib', 'libvorbis.a')))
-    return None, mod
+    return path, mod
 
 module = ExternalPackage(
     [pkg_config, bundled],

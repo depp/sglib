@@ -23,7 +23,7 @@ class BaseTarget(object):
 
     def _add_module(self, module):
         """Add a module's dependencies and errors to the target.
-        
+
         Returns True if the module is clean, False if the module has
         errors.
         """

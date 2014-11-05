@@ -94,7 +94,7 @@ class Icon(object):
         mod.add_source(asset_path)
         return 'AppIcon', mod
 
-    def _add_windows(self, build):
+    def _module_windows(self, build):
         mod = build.target.module()
         from d3build.generatedsource.simplefile import SimpleFile
         if self.ico is None:

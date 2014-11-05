@@ -14,11 +14,8 @@ def bundled(build):
     if build.config.target == 'msvc':
         project = os.path.join(
             path, 'win32', 'VS2010', 'libogg_static.vcxproj')
-        if not os.path.exists(project):
-            raise ConfigError('project file does not exist: {}'
-                              .format(project))
         mod = (build.target.module()
-            .add_source(path)
+            .add_vcxproj(project)
             .add_header_path(os.path.join(path, 'include'), system=True))
     else:
         target = ConfigureMake(

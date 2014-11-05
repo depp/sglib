@@ -15,11 +15,7 @@ def bundled(build):
         vs = os.path.join(path, 'win32', 'VS2010')
         mod = build.target.module()
         for name in ('opus', 'celt', 'silk_common', 'silk_float'):
-            project = os.path.join(vs, name + '.vcxproj')
-            if not os.path.exists(project):
-                raise ConfigError('project file does not exist: {}'
-                                  .format(project))
-            mod.add_source(project)
+            mod.add_vcxproj(os.path.join(vs, name + '.vcxproj'))
         mod.add_header_path(
             os.path.join(path, 'include'), system=True)
     else:

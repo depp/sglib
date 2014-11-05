@@ -24,7 +24,7 @@ _PACKAGE_SYSTEMS = [
 _PACKAGE_SYSTEM = None
 
 def get_package_system():
-    """Get the package sytem which this platform uses."""
+    """Get the package system which this platform uses."""
     global _PACKAGE_SYSTEM
     if _PACKAGE_SYSTEM is None:
         if platform.system() == 'Linux':
@@ -79,6 +79,8 @@ class ExternalPackage(object):
                 except ConfigError as ex:
                     ex.write(logfile(2), indent='  ')
                 else:
+                    if msg is None:
+                        msg = 'yes'
                     fb.write(msg)
                     build.cache[key] = result
                     return result

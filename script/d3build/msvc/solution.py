@@ -23,26 +23,27 @@ Global
 EndGlobal
 """
 
-def solution_data(*, configs, projects):
+def solution_data(*, variants, projects):
     configurations = io.StringIO()
     project_refs = io.StringIO()
     project_configs = io.StringIO()
-    for config, platform in configs:
-        print('\t\t{0}|{1} = {0}|{1}'.format(config, platform),
-              file=configurations)
+    for variant in variants:
+        print('\t\t{0} = {0}'.format(variant), file=configurations)
     for project in projects:
         uuid = str(project.uuid).upper()
-        print('Project("{}") = "{}", "{}", "{}"'
+        print('Project("{{{}}}") = "{}", "{}", "{{{}}}"'
               .format(project.type, project.name, project.path, uuid),
               file=project_refs)
         print('EndProject', file=project_refs)
-        for config1 in configs:
+        for variant1 in variants:
+            config1, arch = variant1.split('|')
             config2 = project.configs.get(config1, config1)
-            x = '{}|{}'.format(*config1)
-            y = '{}|{}'.format(*config2)
-            print('\t\t{}.{}.ActiveCfg = {}'.format(uuid, x, y),
+            variant2 = '{}|{}'.format(config2, arch)
+            print('\t\t{{{}}}.{}.ActiveCfg = {}'
+                  .format(uuid, variant1, variant2),
                   file=project_configs)
-            print('\t\t{}.{}.Build.0 = {}'.format(uuid, x, y),
+            print('\t\t{{{}}}.{}.Build.0 = {}'
+                  .format(uuid, variant1, variant2),
                   file=project_configs)
     text = SOLUTION.format(
         project_refs=project_refs.getvalue(),

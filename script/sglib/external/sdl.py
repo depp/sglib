@@ -30,15 +30,16 @@ def windows(build, version):
     libs = ['{}.lib'.format(name), '{}main.lib'.format(name)]
     for lib in libs:
         mod.add_library(lib)
-    for platform in build.target.schema.platforms:
-        if platform not in WIN_DIR:
-            raise ConfigError('unknown platform: {}'.format(platform))
-        ppath = os.path.join(path, 'lib', WIN_DIR[platform])
+    for arch in build.target.schema.archs:
+        if arch not in WIN_DIR:
+            raise ConfigError('unknown platform: {}'.format(arch))
+        ppath = os.path.join(path, 'lib', WIN_DIR[arch])
         for lib in libs:
             libpath = os.path.join(ppath, lib)
             if not os.path.exists(libpath):
                 raise ConfigError('library does not exist: {}'
                                   .format(libpath))
+        mod.add_library_path(ppath, archs=[arch])
     return None, mod
 
 version_1 = ExternalPackage(

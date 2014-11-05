@@ -29,9 +29,6 @@ _VARIABLES = (SchemaBuilder()
     .list('LIBRARY_SEARCH_PATHS')
     .list('OTHER_LDFLAGS')
     .list('OTHER_CODE_SIGN_FLAGS')
-
-    # Our variables
-    .list('.FRAMEWORKS')
 ).value()
 
 class XcodeSchema(Schema):
