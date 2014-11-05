@@ -14,6 +14,14 @@ import shutil
 import random
 import io
 
+def fixup_vars(var):
+    result = {}
+    for name, value in var.items():
+        if isinstance(value, list):
+            value = ['$(inherited)'] + value
+        result[name] = value
+    return result
+
 # Map from file types to phases
 PHASES = {k: v for v, kk in {
     'PBXResourcesBuildPhase': [
@@ -193,11 +201,9 @@ class XcodeTarget(BaseTarget):
 
         mod = self.module()
         mod.add_variables({
-            # 'ASSETCATALOG_COMPILER_APPICON_NAME': icon name,
-            'COMBINE_HIDPI_IMAGES': True,
+            'COMBINE_HIDPI_IMAGES': 'YES',
             'INFOPLIST_FILE': info_plist,
-            'LD_RUNPATH_SEARCH_PATHS':
-                '$(inherited) @executable_path/../Frameworks',
+            'LD_RUNPATH_SEARCH_PATHS': ['@executable_path/../Frameworks'],
             'PRODUCT_NAME': '$(TARGET_NAME)',
         })
         mod.add_module(module)
@@ -279,7 +285,7 @@ class XcodeTarget(BaseTarget):
                 self._add({
                     'isa': 'XCBuildConfiguration',
                     'name': config,
-                    'buildSettings': varset[config],
+                    'buildSettings': fixup_vars(varset[config]),
                     'defaultConfigurationIsVisible': 0,
                 })
                 for config in self.schema.configs
