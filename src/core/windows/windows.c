@@ -370,33 +370,12 @@ cmdline_parse(void)
     char *arg;
     cmdline_init(&c);
     while ((arg = cmdline_next(&c))) {
-        if (arg[0] == '/') {
-            switch (arg[1]) {
-            case 'D':
-                if (!arg[2]) {
-                    arg = cmdline_next(&c);
-                    if (!arg)
-                        goto parseError;
-                } else {
-                    arg += 2;
-                }
-                sg_cvar_addarg(NULL, NULL, arg);
-                break;
-
-            default:
-                goto parseError;
-            }
-        } else {
-            goto parseError;
+        if ((arg[0] >= 'a' && arg[0] <= 'z') ||
+            (arg[0] >= 'A' && arg[0] <= 'Z')) {
+            sg_cvar_addarg(NULL, NULL, arg);
         }
     }
-done:
     cmdline_destroy(&c);
-    return;
-
-parseError:
-    errorBox("Invalid command line options");
-    goto done;
 }
 
 static void

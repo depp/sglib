@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<module path="../../libpce">
-  <header-path path="include" public="true"/>
-  <group path="include/libpce">
-  </group>
-</module>

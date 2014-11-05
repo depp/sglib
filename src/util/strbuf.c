@@ -177,7 +177,7 @@ sg_strbuf_vprintf(struct sg_strbuf *b, const char *fmt, va_list ap)
     len = len < 0 ? 0 : len;
     if ((size_t) len > rem)
         sg_strbuf_reserve(b, len);
-    _vsnprintf(b->p, rem, fmt, ap);
+    _vsnprintf_s(b->p, rem, _TRUNCATE, fmt, ap);
     b->p += len;
     *b->p = '\0';
 }

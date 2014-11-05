@@ -1,5 +1,6 @@
 # Objects and products
 *.pyc
+__pycache__
 
 # Doxygen
 /html
@@ -7,13 +8,14 @@
 # Build system
 /config.dat
 /config.log
-/script/resource
+/resources
+/lib
 
 # Build system, GNUMake
 /Makefile
-/SGLib_Test*
+/SGLib_Demo_Debug
+/SGLib_Demo_Release
 /build
-/lib
 
 # Build system, Xcode
 /*.xcodeproj
@@ -21,6 +23,7 @@
 # Build system, Visual Studio
 /Debug
 /Release
+/Win32
 /x64
 /*.sln
 /*.sdf

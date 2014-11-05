@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<module path="../..">
-  <key name="desc">SGLib SDL Frontend</key>
-  <require module="sglib sdl"/>
-  <group path="src/core/sdl">
-    <src path="sdl.c"/>
-  </group>
-</module>

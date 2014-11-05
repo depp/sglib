@@ -35,7 +35,7 @@ sg_audio_file_load(struct sg_audio_buffer **buf, size_t *bufcount,
         return 0;
     }
 
-#if defined(ENABLE_OGG)
+#if defined ENABLE_OPUS || defined ENABLE_VORBIS
     if (len >= 4 && !memcmp(p, "OggS", 4))
         return sg_audio_file_loadogg(buf, bufcount, data, len, err);
 #endif
