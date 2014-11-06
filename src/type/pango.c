@@ -158,13 +158,13 @@ sg_textbitmap_render(struct sg_textbitmap *bitmap,
 
     surf = cairo_image_surface_create_for_data(
         pixbuf->data, CAIRO_FORMAT_A8,
-        pixbuf->pwidth, pixbuf->pheight, pixbuf->rowbytes);
+        pixbuf->width, pixbuf->height, pixbuf->rowbytes);
     if (!surf)
         abort();
     cr = cairo_create(surf);
     if (!cr)
         abort();
-    cairo_translate(cr, offset.x, pixbuf->pheight - offset.y);
+    cairo_translate(cr, offset.x, pixbuf->height - offset.y);
 
     (void) sg_textbitmap_sharedcontext(cr);
     pango_layout_context_changed(pl);

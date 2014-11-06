@@ -118,9 +118,17 @@ void
 sg_error_invalid(struct sg_error **err,
                  const char *function, const char *argument)
 {
-    sg_error_setf(err, &SG_ERROR_INVALID, 0,
-                  "invalid argument: function=%s argument=%s",
-                  function, argument);
+    if (argument != NULL) {
+        sg_error_setf(
+            err, &SG_ERROR_INVALID, 0,
+            "invalid argument: function=%s argument=%s",
+            function, argument);
+    } else {
+        sg_error_setf(
+            err, &SG_ERROR_INVALID, 0,
+            "invalid argument: function=%s",
+            function);
+    }
 }
 
 void

@@ -21,10 +21,8 @@ sg_screenshot_write(const void *ptr, int width, int height)
 
     pbuf.data = (void *) ptr;
     pbuf.format = SG_RGBX;
-    pbuf.iwidth = width;
-    pbuf.iheight = height;
-    pbuf.pwidth = width;
-    pbuf.pheight = height;
+    pbuf.width = width;
+    pbuf.height = height;
     pbuf.rowbytes = width * 4;
 
     r = sg_clock_getdate(name, 1);

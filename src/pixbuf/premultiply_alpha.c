@@ -1,21 +1,8 @@
-/* Copyright 2012 Dietrich Epp.
+/* Copyright 2012-2014 Dietrich Epp.
    This file is part of SGLib.  SGLib is licensed under the terms of the
    2-clause BSD license.  For more information, see LICENSE.txt. */
 #include "sg/pixbuf.h"
-
-static void
-sg_pixbuf_premultiply_ya(unsigned char *ptr, size_t npix)
-{
-    size_t i;
-    unsigned a, y;
-    for (i = 0; i < npix; ++i) {
-        y = ptr[i*2+0];
-        a = ptr[i*2+1];
-        y = y * a;
-        y = (y + 1 + (y >> 8)) >> 8;
-        ptr[i*2+0] = y;
-    }
-}
+#include "private.h"
 
 static void
 sg_pixbuf_premultiply_rgba(unsigned char *ptr, size_t npix)
@@ -42,12 +29,8 @@ sg_pixbuf_premultiply_rgba(unsigned char *ptr, size_t npix)
 void
 sg_pixbuf_premultiply_alpha(struct sg_pixbuf *pbuf)
 {
-    size_t npix = (size_t) pbuf->pwidth * (size_t) pbuf->pheight;
+    size_t npix = (size_t) pbuf->width * (size_t) pbuf->height;
     switch (pbuf->format) {
-    case SG_YA:
-        sg_pixbuf_premultiply_ya(pbuf->data, npix);
-        break;
-
     case SG_RGBA:
         sg_pixbuf_premultiply_rgba(pbuf->data, npix);
         break;

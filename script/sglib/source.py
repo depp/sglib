@@ -107,9 +107,9 @@ system_sdl.c audio_sdl
 
 src.add(path='src/pixbuf', sources='''
 coregraphics.c image_coregraphics
+image.c
 libjpeg.c image_libjpeg
 libpng.c image_libpng
-loadimage.c
 pixbuf.c
 premultiply_alpha.c
 private.h
