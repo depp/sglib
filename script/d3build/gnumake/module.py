@@ -24,7 +24,7 @@ def cc_command(variables, variant, output, source, sourcetype, *,
         cmd.extend(('-MF', depfile, '-MMD', '-MP'))
     cmd.extend(variables.get(variant, 'CPPFLAGS', ()))
     cmd.extend(variables.get(variant, cflags, ()))
-    if external:
+    if not external:
         cmd.extend(variables.get(variant, cwarn, ()))
     return cmd
 
