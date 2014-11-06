@@ -312,6 +312,20 @@ extern const struct sg_error_domain SG_ERROR_GETADDRINFO;
 void
 sg_error_gai(struct sg_error **err, int code);
 
+/**
+ * @brief Domain for errors for disabled features.
+ */
+extern const struct sg_error_domain SG_ERROR_DISABLED;
+
+/**
+ * @brief Create a disabled feature error.
+ *
+ * @param err The error to initialize, can be null.
+ * @param name The name of the disabled feature.
+ */
+void
+sg_error_disabled(struct sg_error **err, const char *name);
+
 #ifdef __cplusplus
 }
 #endif

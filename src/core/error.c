@@ -308,3 +308,12 @@ sg_error_gai(struct sg_error **err, int code)
 }
 
 #endif
+
+const struct sg_error_domain SG_ERROR_DISABLED = { "disabled" };
+
+void
+sg_error_disabled(struct sg_error **err, const char *name)
+{
+    sg_error_setf(err, &SG_ERROR_DISABLED, 0,
+                  "Feature disabled: %s", name);
+}

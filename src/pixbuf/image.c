@@ -51,6 +51,9 @@ sg_image_buffer(struct sg_buffer *buf, struct sg_error **err)
     const void *data = buf->data;
     size_t len = buf->length;
 
+    (void) data;
+    (void) len;
+
 #if defined ENABLE_PNG
     if (len >= 8 && !memcmp(data, SG_PIXBUF_PNGHEAD, 8))
         return sg_image_png(buf, err);
@@ -64,3 +67,17 @@ sg_image_buffer(struct sg_buffer *buf, struct sg_error **err)
     sg_error_data(err, "image");
     return NULL;
 }
+
+#if !defined ENABLE_PNG
+
+int
+sg_pixbuf_writepng(struct sg_pixbuf *pbuf, struct sg_file *fp,
+                   struct sg_error **err)
+{
+    (void) pbuf;
+    (void) fp;
+    sg_error_disabled(err, "png");
+    return -1;
+}
+
+#endif
