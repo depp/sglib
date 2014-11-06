@@ -35,6 +35,7 @@ class ConfigHeader(GeneratedSource):
                 else:
                     print('/* {} */'.format(e), file=fp)
             else:
+                print('#define ENABLE_{} 1'.format(k), file=fp)
                 print('#define ENABLE_{}_{} 1'.format(k, macro(v)), file=fp)
         fp.write(
             '\n'
