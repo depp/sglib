@@ -148,11 +148,13 @@ class GnuMakeTarget(BaseTarget):
         qname = BUILD_NAMES[source.sourcetype]
         if source.external:
             cmd = cc_command(
-                variables, variant, obj, src, source.sourcetype, external=True)
+                variables, variant, obj, src,
+                source.sourcetype, external=True)
         else:
             dep = out + '.d'
             cmd = cc_command(
-                variables, variant, obj, src, source.sourcetype, depfile=dep)
+                variables, variant, obj, src,
+                source.sourcetype, depfile=dep)
             self._optinclude.add(dep)
         self._add_rule(obj, [source.path], [cmd], qname=qname)
         return obj
