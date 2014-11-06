@@ -1,115 +1,154 @@
-/* Copyright 2012 Dietrich Epp.
+/* Copyright 2012-2014 Dietrich Epp.
    This file is part of SGLib.  SGLib is licensed under the terms of the
    2-clause BSD license.  For more information, see LICENSE.txt. */
+#include "sg/error.h"
 #include "sg/file.h"
 #include "sg/pixbuf.h"
 #include "private.h"
+
 #include <ApplicationServices/ApplicationServices.h>
 #include <assert.h>
 
-static void releaseData(void *info, const void *data, size_t size)
+struct sg_image_cg {
+    struct sg_image img;
+    CGImageRef cgimg;
+};
+
+static void sg_image_cg_freedata(void *info, const void *data, size_t size)
 {
-    (void) info;
+    struct sg_buffer *buf;
     (void) data;
     (void) size;
+    buf = info;
+    sg_buffer_decref(buf);
 }
 
 static CGDataProviderRef
-getDataProvider(const void *data, size_t length)
+sg_image_cg_data(struct sg_buffer *buf)
 {
-    return CGDataProviderCreateWithData(NULL, data, length, releaseData);
+    CGDataProviderRef p = CGDataProviderCreateWithData(
+        buf, buf->data, buf->length, sg_image_cg_freedata);
+    if (!p)
+        abort();
+    sg_buffer_incref(buf);
+    return p;
+}
+
+static void
+sg_image_cg_free(struct sg_image *img)
+{
+    struct sg_image_cg *im = (struct sg_image_cg *) img;
+    CGImageRelease(im->cgimg);
+    free(im);
 }
 
 static int
-imageToPixbuf(struct sg_pixbuf *pbuf, CGImageRef img, struct sg_error **err)
+sg_image_cg_draw(struct sg_image *img, struct sg_pixbuf *pbuf,
+                 int x, int y, struct sg_error **err)
 {
-    // FIXME: We assume here that the image is color.
-    size_t w = CGImageGetWidth(img), h = CGImageGetHeight(img), pw, ph;
-    CGImageAlphaInfo alphaInfo = CGImageGetAlphaInfo(img);
-    sg_pixbuf_format_t pfmt;
-    int r, alpha;
+    struct sg_image_cg *im = (struct sg_image_cg *) img;
+    int iw = im->img.width, ih = im->img.height,
+        pw = pbuf->width, ph = pbuf->height, rb = pbuf->rowbytes;
+    CGColorSpaceRef color_space = CGColorSpaceCreateDeviceRGB();
+    if (!color_space)
+        abort();
+    CGContextRef cxt = CGBitmapContextCreate(
+        pbuf->data, pw, ph, 8, rb,
+        color_space, kCGImageAlphaPremultipliedLast);
+    if (!cxt)
+        abort();
+    CGColorSpaceRelease(color_space);
 
-    /* FIXME: error here.  */
-    assert(w <= INT_MAX && h <= INT_MAX);
+    CGContextSetBlendMode(cxt, kCGBlendModeCopy);
+    CGContextDrawImage(
+        cxt, CGRectMake(0, ph - ih, iw, ih), im->cgimg);
+    CGContextRelease(cxt);
 
-    switch (alphaInfo) {
-    case kCGImageAlphaNone:
-    case kCGImageAlphaNoneSkipLast:
-    case kCGImageAlphaNoneSkipFirst:
-        alpha = 0;
-        break;
+    return 0;
+}
 
+static struct sg_image *
+sg_image_cg_new(CGImageRef img, struct sg_error **err)
+{
+    struct sg_image_cg *im = malloc(sizeof(*im));
+    if (!img) {
+        CGImageRelease(img);
+        sg_error_nomem(err);
+        return NULL;
+    }
+
+    size_t w = CGImageGetWidth(img), h = CGImageGetHeight(img);
+    if (w > INT_MAX || h > INT_MAX)
+        goto invalid;
+
+    unsigned flags = 0;
+    switch (CGImageGetAlphaInfo(img)) {
     case kCGImageAlphaPremultipliedLast:
     case kCGImageAlphaPremultipliedFirst:
     case kCGImageAlphaLast:
     case kCGImageAlphaFirst:
+    case kCGImageAlphaOnly:
+        flags |= SG_IMAGE_ALPHA;
+        break;
     default:
-        alpha = 1;
         break;
     }
-    pfmt = alpha ? SG_RGBA : SG_RGBX;
+    CGColorSpaceRef color_space = CGImageGetColorSpace(img);
+    if (CGColorSpaceGetModel(color_space) != kCGColorSpaceModelMonochrome)
+        flags |= SG_IMAGE_COLOR;
 
-    r = sg_pixbuf_set(pbuf, pfmt, (int) w, (int) h, err);
-    if (r)
-        goto error;
-    pw = pbuf->pwidth;
-    ph = pbuf->pheight;
-    r = sg_pixbuf_alloc(pbuf, err);
-    if (r)
-        goto error;
-    CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
-    assert(colorSpace);
-    CGBitmapInfo info = alpha
-        ? kCGImageAlphaPremultipliedLast : kCGImageAlphaNoneSkipLast;
-    CGContextRef cxt = CGBitmapContextCreate(
-        pbuf->data, pw, ph, 8, pbuf->rowbytes, colorSpace, info);
-    assert(cxt);
-    CGColorSpaceRelease(colorSpace);
+    im->img.width = (int) w;
+    im->img.height = (int) h;
+    im->img.flags = flags;
+    im->img.free = sg_image_cg_free;
+    im->img.draw = sg_image_cg_draw;
+    im->cgimg = img;
+    return &im->img;
 
-    CGContextSetBlendMode(cxt, kCGBlendModeCopy);
-    CGContextSetRGBFillColor(cxt, 0.0f, 0.0f, 0.0f, 0.0f);
-    if (w < pw)
-        CGContextFillRect(cxt, CGRectMake(w, 0, pw - w, h));
-    if (h < ph)
-        CGContextFillRect(cxt, CGRectMake(0, 0, pw, pw - h));
-    CGContextDrawImage(cxt, CGRectMake(0, ph - h, w, h), img);
-
+invalid:
+    sg_error_data(err, "image");
+    free(im);
     CGImageRelease(img);
-    CGContextRelease(cxt);
-    return 0;
-
-error:
-    return -1;
+    return NULL;
 }
 
-int
-sg_pixbuf_loadpng(struct sg_pixbuf *pbuf, const void *data, size_t length,
-                  struct sg_error **err)
+#if defined ENABLE_PNG_COREGRAPHICS
+
+struct sg_image *
+sg_image_png(struct sg_buffer *buf, struct sg_error **err)
 {
-    CGDataProviderRef dp = getDataProvider(data, length);
-    assert(dp);
+    CGDataProviderRef dp = sg_image_cg_data(buf);
     CGImageRef img = CGImageCreateWithPNGDataProvider(
         dp, NULL, false, kCGRenderingIntentDefault);
     CGDataProviderRelease(dp);
-    assert(img);
-    return imageToPixbuf(pbuf, img, err);
+    return sg_image_cg_new(img, err);
 }
 
-int
-sg_pixbuf_loadjpeg(struct sg_pixbuf *pbuf, const void *data, size_t length,
-                   struct sg_error **err)
+#endif
+
+#if defined ENABLE_JPEG_COREGRAPHICS
+
+struct sg_image *
+sg_image_jpeg(struct sg_buffer *buf, struct sg_error **err)
 {
-    CGDataProviderRef dp = getDataProvider(data, length);
-    assert(dp);
+    CGDataProviderRef dp = sg_image_cg_data(buf);
     CGImageRef img = CGImageCreateWithJPEGDataProvider(
         dp, NULL, false, kCGRenderingIntentDefault);
     CGDataProviderRelease(dp);
-    assert(img);
-    return imageToPixbuf(pbuf, img, err);
+    return sg_image_cg_new(img, err);
+}
+
+#endif
+
+static void sg_image_cg_freedata2(void *info, const void *data, size_t size)
+{
+    (void) data;
+    (void) size;
+    (void) info;
 }
 
 static size_t
-sgFilePutBytes(void *info, const void *buffer, size_t count)
+sg_pixbuf_cg_iowrite(void *info, const void *buffer, size_t count)
 {
     struct sg_file *fp = info;
     int r = fp->write(fp, buffer, count);
@@ -117,67 +156,61 @@ sgFilePutBytes(void *info, const void *buffer, size_t count)
 }
 
 static void
-sgFileRelease(void *info)
+sg_pixbuf_cg_iorelease(void *info)
 {
     (void) info;
-}
-
-static CGDataConsumerRef
-getDataConsumer(struct sg_file *fp)
-{
-    CGDataConsumerCallbacks cb;
-    cb.putBytes = sgFilePutBytes;
-    cb.releaseConsumer = sgFileRelease;
-    CGDataConsumerRef dc = CGDataConsumerCreate(fp, &cb);
-    assert(dc != NULL);
-    return dc;
 }
 
 int
 sg_pixbuf_writepng(struct sg_pixbuf *pbuf, struct sg_file *fp,
                    struct sg_error **err)
 {
+    (void) err;
+
     int nchan;
     CGBitmapInfo ifo;
     switch (pbuf->format) {
-        case SG_Y:    nchan = 1; ifo = kCGImageAlphaNone; break;
-        case SG_YA:   nchan = 2; ifo = kCGImageAlphaLast; break;
-        /* SG_RGB not supported */
-        case SG_RGBA: nchan = 4; ifo = kCGImageAlphaNoneSkipLast; break;
-        /* case SG_RGBA: nchan = 4; ifo = kCGImageAlphaPremultipliedLast;
-           break; */
-        default: assert(0);
+    case SG_RGBX: nchan = 4; ifo = kCGImageAlphaNoneSkipLast; break;
+    case SG_RGBA: nchan = 4; ifo = kCGImageAlphaLast; break;
+    default: assert(0);
     }
 
-    CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
-    assert(colorSpace != NULL);
+    CGColorSpaceRef color_space = CGColorSpaceCreateDeviceRGB();
+    assert(color_space != NULL);
 
-    CGDataProviderRef dp = getDataProvider(
-        pbuf->data, (size_t) pbuf->rowbytes * pbuf->iheight);
-    assert(dp != NULL);
+    CGDataProviderRef data =  CGDataProviderCreateWithData(
+        NULL, pbuf->data, (size_t) pbuf->rowbytes * pbuf->height,
+        sg_image_cg_freedata2);
+    if (!data)
+        abort();
 
     CGImageRef img = CGImageCreate(
-        pbuf->iwidth, pbuf->iheight,
+        pbuf->width, pbuf->height,
         8, nchan * 8, pbuf->rowbytes,
-        colorSpace, ifo, dp, NULL, false, kCGRenderingIntentDefault);
-    assert(img != NULL);
+        color_space, ifo, data, NULL, false, kCGRenderingIntentDefault);
+    if (!img)
+        abort();
 
-    CGDataConsumerRef dc = getDataConsumer(fp);
+    CFRelease(color_space);
+    CFRelease(data);
+
+    CGDataConsumerCallbacks cb;
+    cb.putBytes = sg_pixbuf_cg_iowrite;
+    cb.releaseConsumer = sg_pixbuf_cg_iorelease;
+    CGDataConsumerRef consumer = CGDataConsumerCreate(fp, &cb);
 
     CGImageDestinationRef dest = CGImageDestinationCreateWithDataConsumer(
-        dc, kUTTypePNG, 1, NULL);
-    assert(dest != NULL);
-
+        consumer, kUTTypePNG, 1, NULL);
+    if (!dest)
+        abort();
     CGImageDestinationAddImage(dest, img, NULL);
-    bool br = CGImageDestinationFinalize(dest);
-    assert(br);
+    bool success = CGImageDestinationFinalize(dest);
+    if (!success)
+        abort();
 
     CFRelease(dest);
-    CFRelease(dc);
+    CFRelease(consumer);
     CFRelease(img);
-    CFRelease(dp);
-    CFRelease(colorSpace);
 
     return 0;
-    (void) err;
 }
