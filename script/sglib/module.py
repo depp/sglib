@@ -34,6 +34,7 @@ windows
 def get_tags(build):
     module = build.target.module
     from .external import (
+        math,
         ogg, vorbis, opus,
         sdl, glew, opengl,
         alsa, libjpeg, libpng, pango, gtk, gtkglext,
@@ -46,6 +47,7 @@ def get_tags(build):
         module().add_header_path(_base(__file__, '../../include')),
         opengl.module(build),
         glew.module(build),
+        math.module(build),
     ]
 
     if platform == 'linux':
