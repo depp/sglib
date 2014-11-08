@@ -230,14 +230,27 @@ sg_png_flush(png_structp pngp)
 }
 
 int
-sg_pixbuf_writepng(struct sg_pixbuf *pbuf, struct sg_file *fp,
+sg_pixbuf_writepng(struct sg_pixbuf *pbuf, const char *path, size_t pathlen,
                    struct sg_error **err)
 {
+    struct sg_file *fp;
     volatile png_structp pngp = NULL;
     volatile png_infop infop = NULL;
-    int ret, ctype, i;
+    int ret, ctype, i, r;
     png_bytep *rowp;
     void *volatile tmp = NULL;
+
+    switch (pbuf->format) {
+    case SG_RGBX: ctype = PNG_COLOR_TYPE_RGB; break;
+    case SG_RGBA: ctype = PNG_COLOR_TYPE_RGB_ALPHA; break;
+    default:
+        sg_error_invalid(err, __FUNCTION__, "pbuf");
+        return -1;
+    }
+
+    fp = sg_file_open(path, pathlen, SG_WRONLY, NULL, err);
+    if (!fp)
+        return -1;
 
     pngp = png_create_write_struct(
         PNG_LIBPNG_VER_STRING,
@@ -259,12 +272,6 @@ sg_pixbuf_writepng(struct sg_pixbuf *pbuf, struct sg_file *fp,
     }
 
     png_set_write_fn(pngp, fp, sg_png_write, sg_png_flush);
-
-    switch (pbuf->format) {
-    case SG_RGBX: ctype = PNG_COLOR_TYPE_RGB; break;
-    case SG_RGBA: ctype = PNG_COLOR_TYPE_RGB_ALPHA; break;
-    default: assert(0);
-    }
 
     png_set_IHDR(
         pngp, infop,
@@ -294,6 +301,14 @@ sg_pixbuf_writepng(struct sg_pixbuf *pbuf, struct sg_file *fp,
     goto done;
 
 done:
+    if (!ret) {
+        r = fp->close(fp);
+        if (r) {
+            ret = -1;
+            sg_error_move(err, &fp->err);
+        }
+    }
+    fp->free(fp);
     free(tmp);
     png_destroy_write_struct(
         (png_structp *) &pngp, (png_infop *) &infop);

@@ -71,11 +71,12 @@ sg_image_buffer(struct sg_buffer *buf, struct sg_error **err)
 #if !defined ENABLE_PNG
 
 int
-sg_pixbuf_writepng(struct sg_pixbuf *pbuf, struct sg_file *fp,
+sg_pixbuf_writepng(struct sg_pixbuf *pbuf, const char *path, size_t pathlen,
                    struct sg_error **err)
 {
     (void) pbuf;
-    (void) fp;
+    (void) path;
+    (void) pathlen;
     sg_error_disabled(err, "png");
     return -1;
 }
