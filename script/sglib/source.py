@@ -113,7 +113,7 @@ libpng.c image_libpng
 pixbuf.c
 premultiply_alpha.c
 private.h
-wincodec.cpp image_wincodec
+wincodec.c image_wincodec
 ''')
 
 src.add(path='src/record', tags=['video_recording'], sources='''

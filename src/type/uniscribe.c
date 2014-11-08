@@ -783,8 +783,8 @@ sg_textbitmap_render(struct sg_textbitmap *bitmap,
     HDC dc;
     HBITMAP hbitmap;
     void *bitmapdata;
-    int width = pixbuf->pwidth;
-    int height = pixbuf->pheight;
+    int width = pixbuf->width;
+    int height = pixbuf->height;
 
     dc = bitmap->dc;
     SelectObject(dc, bitmap->font);
