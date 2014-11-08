@@ -14,7 +14,8 @@ struct sg_image_cg {
     CGImageRef cgimg;
 };
 
-static void sg_image_cg_freedata(void *info, const void *data, size_t size)
+static void
+sg_image_cg_freedata(void *info, const void *data, size_t size)
 {
     struct sg_buffer *buf;
     (void) data;
@@ -140,7 +141,8 @@ sg_image_jpeg(struct sg_buffer *buf, struct sg_error **err)
 
 #endif
 
-static void sg_image_cg_freedata2(void *info, const void *data, size_t size)
+static void
+sg_image_cg_freedata2(void *info, const void *data, size_t size)
 {
     (void) data;
     (void) size;
