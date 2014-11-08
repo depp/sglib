@@ -9,6 +9,11 @@
 #include <ApplicationServices/ApplicationServices.h>
 #include <assert.h>
 
+/* Core Graphics does not tell us what is wrong when it fails.
+   http://www.red-sweater.com/blog/129/coregraphics-log-jam */
+
+#define FAIL() do { lineno = __LINE__; goto error; } while (0)
+
 struct sg_image_cg {
     struct sg_image img;
     CGImageRef cgimg;
@@ -47,25 +52,35 @@ static int
 sg_image_cg_draw(struct sg_image *img, struct sg_pixbuf *pbuf,
                  int x, int y, struct sg_error **err)
 {
+    int lineno;
     struct sg_image_cg *im = (struct sg_image_cg *) img;
     int iw = im->img.width, ih = im->img.height,
         pw = pbuf->width, ph = pbuf->height, rb = pbuf->rowbytes;
-    CGColorSpaceRef color_space = CGColorSpaceCreateDeviceRGB();
+    CGColorSpaceRef color_space = NULL;
+    CGContextRef cxt = NULL;
+
+    color_space = CGColorSpaceCreateDeviceRGB();
     if (!color_space)
-        abort();
-    CGContextRef cxt = CGBitmapContextCreate(
+        FAIL();
+    cxt = CGBitmapContextCreate(
         pbuf->data, pw, ph, 8, rb,
         color_space, kCGImageAlphaPremultipliedLast);
     if (!cxt)
-        abort();
-    CGColorSpaceRelease(color_space);
-
+        FAIL();
     CGContextSetBlendMode(cxt, kCGBlendModeCopy);
     CGContextDrawImage(
         cxt, CGRectMake(0, ph - ih, iw, ih), im->cgimg);
-    CGContextRelease(cxt);
 
+    CGContextRelease(cxt);
+    CGColorSpaceRelease(color_space);
     return 0;
+
+error:
+    if (cxt) CGContextRelease(cxt);
+    if (color_space) CGColorSpaceRelease(color_space);
+    sg_error_setf(err, &SG_ERROR_GENERIC, 0,
+                  "could not read image (%s: %d)", __FUNCTION__, lineno);
+    return -1;
 }
 
 static struct sg_image *
@@ -167,55 +182,84 @@ int
 sg_pixbuf_writepng(struct sg_pixbuf *pbuf, const char *path, size_t pathlen,
                    struct sg_error **err)
 {
+    int ret, nchan, lineno, r;
+    bool success;
+    CGBitmapInfo info;
+    CGDataConsumerCallbacks cb;
+    CGColorSpaceRef color_space = NULL;
+    CGDataProviderRef data = NULL;
+    CGDataConsumerRef consumer = NULL;
+    CGImageDestinationRef dest = NULL;
+    CGImageRef img;
     struct sg_file *fp;
+
+    switch (pbuf->format) {
+    case SG_RGBX: nchan = 4; info = kCGImageAlphaNoneSkipLast; break;
+    case SG_RGBA: nchan = 4; info = kCGImageAlphaLast; break;
+    default:
+        sg_error_invalid(err, __FUNCTION__, "pbuf");
+        return -1;
+    }
+
     fp = sg_file_open(path, pathlen, SG_WRONLY, NULL, err);
     if (!fp)
         return -1;
 
-    int nchan;
-    CGBitmapInfo ifo;
-    switch (pbuf->format) {
-    case SG_RGBX: nchan = 4; ifo = kCGImageAlphaNoneSkipLast; break;
-    case SG_RGBA: nchan = 4; ifo = kCGImageAlphaLast; break;
-    default: assert(0);
-    }
+    color_space = CGColorSpaceCreateDeviceRGB();
+    if (!color_space)
+        FAIL();
 
-    CGColorSpaceRef color_space = CGColorSpaceCreateDeviceRGB();
-    assert(color_space != NULL);
-
-    CGDataProviderRef data =  CGDataProviderCreateWithData(
+    data = CGDataProviderCreateWithData(
         NULL, pbuf->data, (size_t) pbuf->rowbytes * pbuf->height,
         sg_image_cg_freedata2);
     if (!data)
-        abort();
+        FAIL();
 
-    CGImageRef img = CGImageCreate(
+    img = CGImageCreate(
         pbuf->width, pbuf->height,
         8, nchan * 8, pbuf->rowbytes,
-        color_space, ifo, data, NULL, false, kCGRenderingIntentDefault);
+        color_space, info, data, NULL, false, kCGRenderingIntentDefault);
     if (!img)
-        abort();
+        FAIL();
 
-    CFRelease(color_space);
-    CFRelease(data);
-
-    CGDataConsumerCallbacks cb;
     cb.putBytes = sg_pixbuf_cg_iowrite;
     cb.releaseConsumer = sg_pixbuf_cg_iorelease;
-    CGDataConsumerRef consumer = CGDataConsumerCreate(fp, &cb);
+    consumer = CGDataConsumerCreate(fp, &cb);
 
-    CGImageDestinationRef dest = CGImageDestinationCreateWithDataConsumer(
+    dest = CGImageDestinationCreateWithDataConsumer(
         consumer, kUTTypePNG, 1, NULL);
     if (!dest)
-        abort();
+        FAIL();
     CGImageDestinationAddImage(dest, img, NULL);
-    bool success = CGImageDestinationFinalize(dest);
+    success = CGImageDestinationFinalize(dest);
     if (!success)
-        abort();
+        FAIL();
 
-    CFRelease(dest);
-    CFRelease(consumer);
-    CFRelease(img);
+    r = fp->close(fp);
+    if (!r)
+        goto fileerror;
 
-    return 0;
+    ret = 0;
+    goto done;
+
+done:
+    if (dest) CFRelease(dest);
+    if (consumer) CFRelease(consumer);
+    if (data) CFRelease(data);
+    if (color_space) CFRelease(color_space);
+    fp->free(fp);
+    return ret;
+
+error:
+    if (fp->err)
+        goto fileerror;
+    sg_error_setf(err, &SG_ERROR_GENERIC, 0,
+                  "could not write PNG (%s:%d)", __FUNCTION__, lineno);
+    ret = -1;
+    goto done;
+
+fileerror:
+    sg_error_move(err, &fp->err);
+    ret = -1;
+    goto done;
 }

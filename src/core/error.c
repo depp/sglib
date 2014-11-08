@@ -107,6 +107,7 @@ sg_error_clear(struct sg_error **err)
     }
 }
 
+const struct sg_error_domain SG_ERROR_GENERIC = { "generic" };
 const struct sg_error_domain SG_ERROR_INVALID = { "invalid" };
 const struct sg_error_domain SG_ERROR_INVALPATH = { "invalpath" };
 const struct sg_error_domain SG_ERROR_NOTFOUND = { "notfound" };

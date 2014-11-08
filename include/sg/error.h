@@ -187,6 +187,11 @@ void
 sg_error_clear(struct sg_error **err);
 
 /**
+ * @brief A generic error domain.
+ */
+extern const struct sg_error_domain SG_ERROR_GENERIC;
+
+/**
  * @brief Error domain for out of memory errors.
  */
 extern const struct sg_error_domain SG_ERROR_NOMEM;
