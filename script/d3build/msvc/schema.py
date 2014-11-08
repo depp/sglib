@@ -35,7 +35,7 @@ _VARIABLES = (SchemaBuilder(sep=';', bool_values=('false', 'true'))
     .bool  ('Link.TreatLinkerWarningAsErrors')
     .string('Link.Version')
 
-    .string('Debug.Path')
+    .list  ('Debug.Path')
 ).value()
 
 _FLAGS = {

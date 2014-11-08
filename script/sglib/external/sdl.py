@@ -3,6 +3,7 @@
 # 2-clause BSD license.  For more information, see LICENSE.txt.
 from d3build.package import ExternalPackage
 from d3build.error import ConfigError
+from ..libs import binary_lib
 import os
 
 def pkg_config(build, version):
@@ -18,33 +19,17 @@ def framework(build, version):
         .add_header_path(os.path.join(path, 'Headers'))
         .add_framework(path=path))
 
-WIN_DIR = {'Win32': 'x86', 'x64': 'x64'}
-def windows(build, version):
+def bundled_bin(build, version):
     build.check_platform('windows')
     name = SDL_NAME[version]
     path = build.find_package(
         '^{}(-[0-9.]+)$'.format(name),
         varname=name + '_PATH')
-    # FIXME: use per-platform path.
-    mod = build.target.module()
-    mod.add_header_path(os.path.join(path, 'include'))
     libs = ['{}.lib'.format(name), '{}main.lib'.format(name)]
-    for lib in libs:
-        mod.add_library(lib)
-    for arch in build.target.schema.archs:
-        if arch not in WIN_DIR:
-            raise ConfigError('unknown platform: {}'.format(arch))
-        ppath = os.path.join(path, 'lib', WIN_DIR[arch])
-        for lib in libs:
-            libpath = os.path.join(ppath, lib)
-            if not os.path.exists(libpath):
-                raise ConfigError('library does not exist: {}'
-                                  .format(libpath))
-        mod.add_library_path(ppath, archs=[arch])
-    return None, mod
+    return binary_lib(build, path, libs)
 
 version_1 = ExternalPackage(
-    [pkg_config, framework, windows],
+    [pkg_config, framework, bundled_bin],
     args=(1,),
     name='LibSDL',
     packages={
@@ -56,7 +41,7 @@ version_1 = ExternalPackage(
 )
 
 version_2 = ExternalPackage(
-    [pkg_config, framework, windows],
+    [pkg_config, framework, bundled_bin],
     args=(2,),
     name='LibSDL 2',
     packages={
