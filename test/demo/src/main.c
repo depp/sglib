@@ -6,6 +6,7 @@
 #include "sg/entry.h"
 #include "sg/event.h"
 #include "sg/mixer.h"
+#include "sg/record.h"
 
 const struct st_iface *st_screen;
 
@@ -57,6 +58,8 @@ sg_game_event(union sg_event *evt)
                 escape_down = 1;
             }
             return;
+        } else if (evt->key.key == KEY_Backslash) {
+            sg_record_screenshot();
         }
         break;
 
