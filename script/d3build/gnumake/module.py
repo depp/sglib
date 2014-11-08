@@ -52,7 +52,7 @@ class GnuMakeModule(Module):
 
     def add_define(self, definition, *, configs=None, archs=None):
         """Add a preprocessor definition."""
-        var = {'CPPFLAGS:': ['-D' + definition]}
+        var = {'CPPFLAGS': ['-D' + definition]}
         return self.add_variables(var, configs=configs, archs=archs)
 
     def add_header_path(self, path, *,
