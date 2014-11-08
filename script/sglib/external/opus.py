@@ -4,14 +4,24 @@
 from d3build.error import ConfigError
 from d3build.generatedsource.configuremake import ConfigureMake
 from d3build.package import ExternalPackage
+from ..libs import  binary_lib
 import os
 
 def pkg_config(build):
     flags = build.pkg_config('opus')
     return None, build.target.module().add_flags(flags)
 
-def bundled(build):
-    path = build.find_package('^opus(?:-[0-9.]+)?$')
+WIN_LIBNAMES = ['opus', 'celt', 'silk_common', 'silk_float']
+
+def find_package(build):
+    return build.find_package('^opus(?:-[0-9.]+)?$')
+
+def bundled_bin(build):
+    return binary_lib(build, find_package(build),
+                      [name + '.lib' for name in WIN_LIBNAMES])
+
+def bundled_src(build):
+    path = find_package(build)
     if build.config.target == 'msvc':
         vs = os.path.join(path, 'win32', 'VS2010')
         mod = build.target.module()
@@ -32,7 +42,7 @@ def bundled(build):
     return path, mod
 
 module = ExternalPackage(
-    [pkg_config, bundled],
+    [pkg_config, bundled_bin, bundled_src],
     name='Opus codec library',
     packages={
         'deb': 'libopus-dev',

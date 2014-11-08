@@ -44,7 +44,9 @@ def get_tags(build):
 
     tags = {tag: None for tag in TAGS}
     tags['public'] = [
-        module().add_header_path(_base(__file__, '../../include')),
+        module()
+            .add_header_path(_base(__file__, '../../include'))
+            .add_define('USE_BUNDLED_GLEW'),
         opengl.module(build),
         glew.module(build),
         math.module(build),
