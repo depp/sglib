@@ -81,6 +81,8 @@ class App(object):
         """Create the project targets."""
         from .version import VersionInfo
         from d3build.generatedsource.configheader import ConfigHeader
+        from d3build.module import Module
+        from d3build.error import UserError
 
         from . import base
         base.update_base(build)
@@ -100,13 +102,15 @@ class App(object):
             args.append(('log.winconsole', 'yes'))
         args = ['{}={}'.format(*arg) for arg in args]
 
-        mod = build.target.module()
         if self.configure_func is None:
+            mod = build.target.module()
             mod.add_sources(
                 self.sources,
                 {'public': [module.module(build)]})
         else:
-            self.configure_func(mod)
+            mod = self.configure_func(build, module.module(build))
+            if not isinstance(mod, Module):
+                raise UserError('configure function must return module')
 
         if self.icon is not None:
             icon, iconmod = self.icon.module(build)
