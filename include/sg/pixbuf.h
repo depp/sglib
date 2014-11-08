@@ -106,12 +106,13 @@ sg_pixbuf_calloc(struct sg_pixbuf *pbuf, sg_pixbuf_format_t format,
  * @brief Write an image to a file using the PNG format.
  *
  * @param pbuf The pixel buffer to write.
- * @param fp The file to write the image to.
+ * @param path The path to the file to write the image to.
+ * @param pathlen The length of the path.
  * @param err On failure, the error.
  * @return Zero for success, nonzero for failure.
  */
 int
-sg_pixbuf_writepng(struct sg_pixbuf *pbuf, struct sg_file *fp,
+sg_pixbuf_writepng(struct sg_pixbuf *pbuf, const char *path, size_t pathlen,
                    struct sg_error **err);
 
 /**

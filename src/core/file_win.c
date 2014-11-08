@@ -107,8 +107,7 @@ sg_file_w_seek(struct sg_file *f, int64_t off, int whence)
     return ((int64_t) hi << 32) | lo;
 }
 
-/* Make the parent directory for a file, recursively.  */
-static int
+int
 sg_file_mkpardir(const wchar_t *path, struct sg_error **err)
 {
     wchar_t *buf;
@@ -133,6 +132,8 @@ sg_file_mkpardir(const wchar_t *path, struct sg_error **err)
             break;
         ecode = GetLastError();
         if (ecode != ERROR_PATH_NOT_FOUND) {
+            if (ecode == ERROR_ALREADY_EXISTS)
+                break;
             sg_error_win32(err, ecode);
             free(buf);
             return -1;
@@ -152,9 +153,11 @@ sg_file_mkpardir(const wchar_t *path, struct sg_error **err)
             i++;
         if (!CreateDirectory(buf, NULL)) {
             ecode = GetLastError();
-            sg_error_win32(err, ecode);
-            free(buf);
-            return -1;
+            if (ecode != ERROR_ALREADY_EXISTS) {
+                sg_error_win32(err, ecode);
+                free(buf);
+                return -1;
+            }
         }
     }
     free(buf);

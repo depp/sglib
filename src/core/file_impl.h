@@ -22,6 +22,22 @@ typedef char pchar;
 
 #endif
 
+/* Create the parent directory containing a file, recursively if
+   necessary.  Returns 0 if the directory was created or if it already
+   exists.  Returns -1 if an error occurred.  */
+int
+sg_file_mkpardir(const pchar *path, struct sg_error **err);
+
+/* Get the path where a new file would be created.  Create the
+   directory containing the file, if necessary.  The resulting buffer
+   must be freed with free() afterwards.  Returns NULL on error.
+
+   This is used to interact with APIs that create files, but where
+   it's more convenient to pass a filename rather than callbacks.  */
+pchar *
+sg_file_createpath(const char *path, size_t pathlen,
+                   struct sg_error **err);
+
 /* Open a file on the computer's filesystem.
 
    f: On return, if successful, an open file.

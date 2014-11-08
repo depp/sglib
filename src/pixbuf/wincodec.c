@@ -6,6 +6,7 @@
 #include "sg/file.h"
 #include "sg/log.h"
 #include "sg/pixbuf.h"
+#include "../core/file_impl.h"
 #include "private.h"
 #include <string.h>
 #include <wincodec.h>
@@ -22,7 +23,7 @@ struct sg_image_wic {
 #define RELEASE(p) do { if ((p) != NULL) (p)->lpVtbl->Release(p); } while (0)
 
 static int
-cmpguid(const GUID *x, const GUID *y)
+guidcmp(const GUID *x, const GUID *y)
 {
     return memcmp(x, y, sizeof(GUID));
 }
@@ -43,7 +44,6 @@ sg_image_wic_draw(struct sg_image *img, struct sg_pixbuf *pbuf,
     struct sg_image_wic *im = (struct sg_image_wic *) img;
     HRESULT hr;
     IWICFormatConverter *converter = NULL;
-    WICPixelFormatGUID target_format;
     int r = 0;
 
     if (pbuf->format != SG_RGBX && pbuf->format != SG_RGBA) {
@@ -57,7 +57,7 @@ sg_image_wic_draw(struct sg_image *img, struct sg_pixbuf *pbuf,
 
     hr = converter->lpVtbl->Initialize(
         converter,
-        im->frame,
+        (IWICBitmapSource *) im->frame,
         &GUID_WICPixelFormat32bppPRGBA,
         WICBitmapDitherTypeNone,
         NULL,
@@ -97,7 +97,7 @@ sg_image_wc(struct sg_buffer *buf, struct sg_error **err)
     IWICStream *stream = NULL;
     IWICBitmapDecoder *decoder = NULL;
     IWICBitmapFrameDecode *frame = NULL;
-    WICPixelFormatGUID pixelFormat, targetFormat;
+    WICPixelFormatGUID pixel_format;
     IWICComponentInfo *cinfo = NULL;
     IWICPixelFormatInfo2 *pinfo = NULL;
     UINT chanCount, width, height;
@@ -125,7 +125,7 @@ sg_image_wc(struct sg_buffer *buf, struct sg_error **err)
 
     hr = fac->lpVtbl->CreateDecoderFromStream(
         fac,
-        stream,
+        (IStream *) stream,
         NULL,
         WICDecodeMetadataCacheOnDemand,
         &decoder);
@@ -140,11 +140,11 @@ sg_image_wc(struct sg_buffer *buf, struct sg_error **err)
     if (hr != S_OK)
         goto failed;
 
-    hr = frame->lpVtbl->GetPixelFormat(frame, &pixelFormat);
+    hr = frame->lpVtbl->GetPixelFormat(frame, &pixel_format);
     if (hr != S_OK)
         goto failed;
 
-    hr = fac->lpVtbl->CreateComponentInfo(fac, &pixelFormat, &cinfo);
+    hr = fac->lpVtbl->CreateComponentInfo(fac, &pixel_format, &cinfo);
     if (hr != S_OK)
         goto failed;
 
@@ -161,10 +161,10 @@ sg_image_wc(struct sg_buffer *buf, struct sg_error **err)
 
     switch (chanCount) {
     case 1:
-        if (!cmpguid(&pixelFormat, &GUID_WICPixelFormat1bppIndexed) ||
-            !cmpguid(&pixelFormat, &GUID_WICPixelFormat2bppIndexed) ||
-            !cmpguid(&pixelFormat, &GUID_WICPixelFormat4bppIndexed) ||
-            !cmpguid(&pixelFormat, &GUID_WICPixelFormat8bppIndexed))
+        if (!guidcmp(&pixel_format, &GUID_WICPixelFormat1bppIndexed) ||
+            !guidcmp(&pixel_format, &GUID_WICPixelFormat2bppIndexed) ||
+            !guidcmp(&pixel_format, &GUID_WICPixelFormat4bppIndexed) ||
+            !guidcmp(&pixel_format, &GUID_WICPixelFormat8bppIndexed))
         {
             /* This is not so precise, but we don't care */
             flags = SG_IMAGE_COLOR | SG_IMAGE_ALPHA;
@@ -243,9 +243,152 @@ sg_image_jpeg(struct sg_buffer *buf, struct sg_error **err)
 #endif
 
 int
-sg_pixbuf_writepng(struct sg_pixbuf *pbuf, struct sg_file *fp,
+sg_pixbuf_writepng(struct sg_pixbuf *pbuf, const char *path, size_t pathlen,
                    struct sg_error **err)
 {
-    abort();
-    return -1;
+    HRESULT hr;
+    IWICImagingFactory *fac = NULL;
+    IWICStream *stream = NULL;
+    IWICBitmapEncoder *encoder = NULL;
+    IWICBitmapFrameEncode *frame = NULL;
+    IWICBitmap *bitmap = NULL;
+    IWICFormatConverter *converter = NULL;
+    WICRect rect;
+    wchar_t *fullpath;
+    GUID format;
+    int r;
+
+    switch (pbuf->format) {
+    case SG_RGBX:
+        memcpy(&format, &GUID_WICPixelFormat24bppBGR, sizeof(GUID));
+        break;
+    case SG_RGBA:
+        memcpy(&format, &GUID_WICPixelFormat32bppBGRA, sizeof(GUID));
+        break;
+    default:
+        sg_error_invalid(err, __FUNCTION__, "pbuf");
+        return -1;
+    }
+
+    fullpath = sg_file_createpath(path, pathlen, err);
+    if (!fullpath)
+        return -1;
+
+    hr = CoCreateInstance(
+        &CLSID_WICImagingFactory,
+        NULL,
+        CLSCTX_INPROC_SERVER,
+        &IID_IWICImagingFactory,
+        (void **) &fac);
+    if (hr != S_OK)
+        goto failed;
+
+    hr = fac->lpVtbl->CreateStream(fac, &stream);
+    if (hr != S_OK)
+        goto failed;
+
+    hr = stream->lpVtbl->InitializeFromFilename(
+        stream,
+        fullpath,
+        GENERIC_WRITE);
+    if (hr != S_OK)
+        goto failed;
+
+    hr = fac->lpVtbl->CreateEncoder(
+        fac,
+        &GUID_ContainerFormatPng,
+        NULL,
+        &encoder);
+    if (hr != S_OK)
+        goto failed;
+
+    hr = encoder->lpVtbl->Initialize(
+        encoder,
+        (IStream *) stream,
+        WICBitmapEncoderNoCache);
+    if (hr != S_OK)
+        goto failed;
+
+    hr = encoder->lpVtbl->CreateNewFrame(
+        encoder,
+        &frame,
+        NULL);
+    if (hr != S_OK)
+        goto failed;
+
+    hr = frame->lpVtbl->Initialize(frame, NULL);
+    if (hr != S_OK)
+        goto failed;
+
+    hr = frame->lpVtbl->SetPixelFormat(frame, &format);
+    if (hr != S_OK)
+        goto failed;
+
+    hr = frame->lpVtbl->SetSize(frame, pbuf->width, pbuf->height);
+    if (hr != S_OK)
+        goto failed;
+
+    hr = fac->lpVtbl->CreateBitmapFromMemory(
+        fac,
+        pbuf->width,
+        pbuf->height,
+        &GUID_WICPixelFormat32bppRGBA,
+        pbuf->rowbytes,
+        pbuf->height * pbuf->rowbytes,
+        pbuf->data,
+        &bitmap);
+    if (hr != S_OK)
+        goto failed;
+
+    hr = fac->lpVtbl->CreateFormatConverter(fac, &converter);
+    if (hr != S_OK)
+        goto failed;
+
+    hr = converter->lpVtbl->Initialize(
+        converter,
+        (IWICBitmapSource *) bitmap,
+        &format,
+        WICBitmapDitherTypeNone,
+        NULL,
+        0,
+        WICBitmapPaletteTypeCustom);
+    if (hr != S_OK)
+        goto failed;
+
+    rect.X = 0;
+    rect.Y = 0;
+    rect.Width = pbuf->width;
+    rect.Height = pbuf->height;
+    hr = frame->lpVtbl->WriteSource(
+        frame,
+        (IWICBitmapSource *) converter,
+        &rect);
+    if (hr != S_OK)
+        goto failed;
+
+    hr = frame->lpVtbl->Commit(frame);
+    if (hr != S_OK)
+        goto failed;
+
+    hr = encoder->lpVtbl->Commit(encoder);
+    if (hr != S_OK)
+        goto failed;
+
+    r = 0;
+    goto done;
+
+done:
+    RELEASE(converter);
+    RELEASE(bitmap);
+    RELEASE(frame);
+    RELEASE(encoder);
+    RELEASE(stream);
+    RELEASE(fac);
+    free(fullpath);
+    return r;
+
+failed:
+    sg_error_hresult(err, hr);
+    r = -1;
+    goto done;
 }

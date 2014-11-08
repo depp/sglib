@@ -112,8 +112,7 @@ sg_file_u_seek(struct sg_file *f, int64_t off, int whence)
     return -1;
 }
 
-/* Make the parent directory for a file, recursively.  */
-static int
+int
 sg_file_mkpardir(const char *path, struct sg_error **err)
 {
     char *buf, *p;
