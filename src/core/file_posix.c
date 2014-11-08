@@ -132,12 +132,12 @@ sg_file_mkpardir(const char *path, struct sg_error **err)
     buf[len] = '\0';
     while (1) {
         r = mkdir(buf, 0777);
-        if (!r) {
-            /* printf("mkdir %s\n", buf); */
+        if (!r)
             break;
-        }
         ecode = errno;
         if (ecode != ENOENT) {
+            if (ecode == EEXIST)
+                break;
             sg_error_errno(err, ecode);
             ret = -1;
             goto done;
@@ -155,11 +155,12 @@ sg_file_mkpardir(const char *path, struct sg_error **err)
         r = mkdir(buf, 0777);
         if (r) {
             ecode = errno;
-            sg_error_errno(err, ecode);
-            ret = -1;
-            goto done;
+            if (ecode != EEXIST) {
+                sg_error_errno(err, ecode);
+                ret = -1;
+                goto done;
+            }
         }
-        /* printf("mkdir %s\n", buf); */
     }
 done:
     free(buf);
