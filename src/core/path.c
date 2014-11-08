@@ -134,6 +134,8 @@ sg_file_open(const char *path, size_t pathlen, int flags,
         } else {
             extlen = (unsigned) strlen(extq);
         }
+        if (!extlen)
+            continue;
         if (nexts == MAX_EXTENSIONS) {
             sg_logs(sg_logger_get(NULL), SG_LOG_ERROR,
                     "list of extensions is too long");
@@ -181,7 +183,7 @@ sg_file_open(const char *path, size_t pathlen, int flags,
     }
     if (!pcount)
         goto notfound;
-    pbuf = malloc((pmaxlen + nlen + emaxlen + 1) * sizeof(pchar));
+    pbuf = malloc((pmaxlen + nlen + emaxlen + 2) * sizeof(pchar));
     if (!pbuf)
         goto nomem;
     sg_path_copy(pbuf + pmaxlen, nbuf, nlen);
