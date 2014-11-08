@@ -59,6 +59,39 @@ sg_path_copy2(pchar *dest, const char *src, size_t len)
 #endif
 }
 
+pchar *
+sg_file_createpath(const char *path, size_t pathlen,
+                   struct sg_error **err)
+{
+    int nlen, r;
+    size_t plen;
+    pchar *result;
+
+    {
+        char nbuf[SG_MAX_PATH];
+        nlen = sg_path_norm(nbuf, path, pathlen, err);
+        if (nlen < 0)
+            return NULL;
+        plen = sg_paths.a[0].len;
+        result = malloc(sizeof(pchar) * (plen + nlen + 1));
+        if (!result) {
+            sg_error_nomem(err);
+            return NULL;
+        }
+        memcpy(result, sg_paths.a[0].path, sizeof(pchar) * plen);
+        sg_path_copy(result + plen, nbuf, nlen);
+        result[plen + nlen] = 0;
+    }
+
+    r = sg_file_mkpardir(result, err);
+    if (r) {
+        free(result);
+        return NULL;
+    }
+
+    return result;
+}
+
 #define MAX_EXTENSIONS 8
 
 struct sg_file_ext {
@@ -101,6 +134,8 @@ sg_file_open(const char *path, size_t pathlen, int flags,
         } else {
             extlen = (unsigned) strlen(extq);
         }
+        if (!extlen)
+            continue;
         if (nexts == MAX_EXTENSIONS) {
             sg_logs(sg_logger_get(NULL), SG_LOG_ERROR,
                     "list of extensions is too long");
@@ -148,7 +183,7 @@ sg_file_open(const char *path, size_t pathlen, int flags,
     }
     if (!pcount)
         goto notfound;
-    pbuf = malloc((pmaxlen + nlen + emaxlen + 1) * sizeof(pchar));
+    pbuf = malloc((pmaxlen + nlen + emaxlen + 2) * sizeof(pchar));
     if (!pbuf)
         goto nomem;
     sg_path_copy(pbuf + pmaxlen, nbuf, nlen);

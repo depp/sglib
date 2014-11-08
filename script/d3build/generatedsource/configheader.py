@@ -26,17 +26,25 @@ class ConfigHeader(GeneratedSource):
             '\n'
             '/* Enabled / disabled features */\n'
             .format(NOTICE))
-        for k, v in sorted(self.flags.items()):
-            k = macro(k)
-            if isinstance(v, bool):
-                e = '#define ENABLE_{} 1'.format(k)
-                if v:
-                    print(e, file=fp)
-                else:
-                    print('/* {} */'.format(e), file=fp)
+
+        def writevar(name, status):
+            s = '#define ENABLE_{} 1'.format(name)
+            if status:
+                print(s, file=fp)
             else:
-                print('#define ENABLE_{} 1'.format(k), file=fp)
-                print('#define ENABLE_{}_{} 1'.format(k, macro(v)), file=fp)
+                print('/* {} */'.format(s), file=fp)
+
+        for option in sorted(self.options, key=lambda x: x.name):
+            print(file=fp)
+            name = macro(option.name)
+            value = self.flags[option.name]
+            writevar(name, value and value != 'none')
+            if not option.options:
+                continue
+            for optvalue in option.options:
+                writevar('{}_{}'.format(name, macro(optvalue)),
+                         value == optvalue)
+
         fp.write(
             '\n'
             '#endif\n')

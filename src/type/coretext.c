@@ -322,7 +322,7 @@ sg_textbitmap_render(struct sg_textbitmap *bitmap,
     color_space = CGColorSpaceCreateWithName(kCGColorSpaceGenericGray);
     if (!color_space) goto nomem;
     context = CGBitmapContextCreate(
-        pixbuf->data, pixbuf->pwidth, pixbuf->pheight, 8, pixbuf->rowbytes,
+        pixbuf->data, pixbuf->width, pixbuf->height, 8, pixbuf->rowbytes,
         color_space, 0);
     if (!context) goto nomem;
 

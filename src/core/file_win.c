@@ -108,20 +108,105 @@ sg_file_w_seek(struct sg_file *f, int64_t off, int whence)
 }
 
 int
+sg_file_mkpardir(const wchar_t *path, struct sg_error **err)
+{
+    wchar_t *buf;
+    size_t len, i;
+    int ecode;
+
+    i = wcslen(path);
+    while (i > 0 && path[i-1] != '\\' && path[i-1] != '/')
+        i--;
+    if (i == 0)
+        return 0;
+    len = i;
+    buf = malloc(sizeof(wchar_t) * (len + 1));
+    if (!buf) {
+        sg_error_nomem(err);
+        return -1;
+    }
+    memcpy(buf, path, sizeof(wchar_t) * len);
+    buf[len] = '\0';
+    while (1) {
+        if (CreateDirectory(buf, NULL))
+            break;
+        ecode = GetLastError();
+        if (ecode != ERROR_PATH_NOT_FOUND) {
+            if (ecode == ERROR_ALREADY_EXISTS)
+                break;
+            sg_error_win32(err, ecode);
+            free(buf);
+            return -1;
+        }
+        i--;
+        while (i > 0 && path[i-1] != '\\' && path[i-1] != '/')
+            i--;
+        while (i > 0 && (path[i-1] == '\\' || path[i-1] == '/'))
+            i--;
+        if (i == 0)
+            return 0;
+        buf[i] = L'\0';
+    }
+    while (i < len) {
+        buf[i] = path[i];
+        while (i < len && buf[i] != L'0')
+            i++;
+        if (!CreateDirectory(buf, NULL)) {
+            ecode = GetLastError();
+            if (ecode != ERROR_ALREADY_EXISTS) {
+                sg_error_win32(err, ecode);
+                free(buf);
+                return -1;
+            }
+        }
+    }
+    free(buf);
+    return 0;
+}
+
+int
 sg_file_tryopen(struct sg_file **f, const wchar_t *path, int flags,
                 struct sg_error **e)
 {
     struct sg_file_w *w;
     HANDLE h;
     DWORD ecode;
-    h = CreateFileW(
-        path,
-        FILE_READ_DATA,
-        FILE_SHARE_READ,
-        NULL,
-        OPEN_EXISTING,
-        FILE_ATTRIBUTE_NORMAL,
-        NULL);
+    if (flags & SG_WRONLY) {
+        h = CreateFileW(
+            path,
+            GENERIC_WRITE,
+            0,
+            NULL,
+            CREATE_ALWAYS,
+            FILE_ATTRIBUTE_NORMAL,
+            NULL);
+        if (h == INVALID_HANDLE_VALUE) {
+            ecode = GetLastError();
+            if (ecode != ERROR_PATH_NOT_FOUND) {
+                sg_error_win32(e, ecode);
+                return -1;
+            }
+            if (sg_file_mkpardir(path, e))
+                return -1;
+            h = CreateFileW(
+                path,
+                GENERIC_WRITE,
+                0,
+                NULL,
+                CREATE_ALWAYS,
+                FILE_ATTRIBUTE_NORMAL,
+                NULL);
+        }
+    } else {
+        h = CreateFileW(
+            path,
+            FILE_READ_DATA,
+            FILE_SHARE_READ,
+            NULL,
+            OPEN_EXISTING,
+            FILE_ATTRIBUTE_NORMAL,
+            NULL);
+    }
     if (h != INVALID_HANDLE_VALUE) {
         w = malloc(sizeof(*w));
         if (!w) {

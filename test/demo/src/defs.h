@@ -37,7 +37,7 @@ GLuint
 load_shader(const char *path, GLenum type);
 
 GLuint
-load_pixbuf(struct sg_pixbuf *pixbuf, int do_swizzle);
+load_pixbuf(struct sg_pixbuf *pixbuf);
 
 GLuint
 load_texture(const char *path);

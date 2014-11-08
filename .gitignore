@@ -2,6 +2,9 @@
 *.pyc
 __pycache__
 
+# User data files
+/user
+
 # Doxygen
 /html
 

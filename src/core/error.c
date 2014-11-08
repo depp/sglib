@@ -107,6 +107,7 @@ sg_error_clear(struct sg_error **err)
     }
 }
 
+const struct sg_error_domain SG_ERROR_GENERIC = { "generic" };
 const struct sg_error_domain SG_ERROR_INVALID = { "invalid" };
 const struct sg_error_domain SG_ERROR_INVALPATH = { "invalpath" };
 const struct sg_error_domain SG_ERROR_NOTFOUND = { "notfound" };
@@ -118,9 +119,17 @@ void
 sg_error_invalid(struct sg_error **err,
                  const char *function, const char *argument)
 {
-    sg_error_setf(err, &SG_ERROR_INVALID, 0,
-                  "invalid argument: function=%s argument=%s",
-                  function, argument);
+    if (argument != NULL) {
+        sg_error_setf(
+            err, &SG_ERROR_INVALID, 0,
+            "invalid argument: function=%s argument=%s",
+            function, argument);
+    } else {
+        sg_error_setf(
+            err, &SG_ERROR_INVALID, 0,
+            "invalid argument: function=%s",
+            function);
+    }
 }
 
 void
@@ -300,3 +309,12 @@ sg_error_gai(struct sg_error **err, int code)
 }
 
 #endif
+
+const struct sg_error_domain SG_ERROR_DISABLED = { "disabled" };
+
+void
+sg_error_disabled(struct sg_error **err, const char *name)
+{
+    sg_error_setf(err, &SG_ERROR_DISABLED, 0,
+                  "Feature disabled: %s", name);
+}

@@ -3,6 +3,8 @@
    2-clause BSD license.  For more information, see LICENSE.txt. */
 #include "defs.h"
 #include "sg/pixbuf.h"
+#include "sg/util.h"
+#include <limits.h>
 #include <stdlib.h>
 
 void
@@ -14,7 +16,8 @@ text_layout_create(struct text_layout *layout,
     struct sg_textbitmap *bitmap;
     struct sg_textlayout_metrics metrics;
     struct sg_pixbuf pixbuf;
-    int r, x0, x1, y0, y1, tw, th;
+    int r, x0, x1, y0, y1;
+    unsigned tw, th;
     struct sg_textpoint offset;
     GLuint texture, buffer;
     short v[4][4];
@@ -31,19 +34,18 @@ text_layout_create(struct text_layout *layout,
     y0 = metrics.pixel.y0;
     y1 = metrics.pixel.y1;
 
-    sg_pixbuf_init(&pixbuf);
-    r = sg_pixbuf_set(&pixbuf, SG_Y, x1 - x0, y1 - y0, NULL);
-    if (r) abort();
-    tw = pixbuf.pwidth;
-    th = pixbuf.pheight;
-    r = sg_pixbuf_calloc(&pixbuf, NULL);
+    tw = sg_round_up_pow2_32(x1 - x0);
+    th = sg_round_up_pow2_32(y1 - y0);
+    if (!tw || tw > INT_MAX || !th || th > INT_MAX)
+        abort();
+    r = sg_pixbuf_calloc(&pixbuf, SG_R, (int) tw, (int) th, NULL);
     if (r) abort();
     offset.x = -x0;
-    offset.y = th - y1;
+    offset.y = (int) th - y1;
     r = sg_textbitmap_render(bitmap, &pixbuf, offset, NULL);
     if (r) abort();
 
-    texture = load_pixbuf(&pixbuf, 0);
+    texture = load_pixbuf(&pixbuf);
 
     v[0][0] = x0; v[0][1] = y0; v[0][2] = 0;       v[0][3] = y1 - y0;
     v[1][0] = x1; v[1][1] = y0; v[1][2] = x1 - x0; v[1][3] = y1 - y0;
