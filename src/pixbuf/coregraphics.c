@@ -164,10 +164,13 @@ sg_pixbuf_cg_iorelease(void *info)
 }
 
 int
-sg_pixbuf_writepng(struct sg_pixbuf *pbuf, struct sg_file *fp,
+sg_pixbuf_writepng(struct sg_pixbuf *pbuf, const char *path, size_t pathlen,
                    struct sg_error **err)
 {
-    (void) err;
+    struct sg_file *fp;
+    fp = sg_file_open(path, pathlen, SG_WRONLY, NULL, err);
+    if (!fp)
+        return -1;
 
     int nchan;
     CGBitmapInfo ifo;
