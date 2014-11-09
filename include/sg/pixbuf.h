@@ -116,6 +116,14 @@ sg_pixbuf_writepng(struct sg_pixbuf *pbuf, const char *path, size_t pathlen,
                    struct sg_error **err);
 
 /**
+ * @brief Upload a pixel buffer as an OpenGL texture.
+ *
+ * @param pbuf The pixel buffer containing data to upload.
+ */
+void
+sg_pixbuf_texture(struct sg_pixbuf *pbuf);
+
+/**
  * @brief Image flags.
  */
 enum {

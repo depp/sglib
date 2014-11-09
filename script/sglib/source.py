@@ -113,6 +113,7 @@ libpng.c image_libpng
 pixbuf.c
 premultiply_alpha.c
 private.h
+texture.c
 wincodec.c image_wincodec
 ''')
 
