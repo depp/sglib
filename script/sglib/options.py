@@ -28,17 +28,14 @@ flags = [
         'coregraphics': 'use Core Graphics',
         'wincodec': 'use WinCodec',
     }, require=['png']),
-    EnableFlag('type', 'enable type rendering', {
-        'pango': 'use Pango',
-        'coretext': 'use Core Text',
-        'uniscribe': 'use Uniscribe',
-    }),
+    EnableFlag('freetype', 'enable type rendering'),
     EnableFlag('video-recording', 'enable video recording'),
 ]
 
 DEFAULTS = {
     'vorbis': True,
     'opus': True,
+    'freetype': True,
     'video-recording': False,
 }
 
@@ -46,19 +43,16 @@ PLATFORM_DEFAULTS = {
     'linux': {
         'jpeg': 'libjpeg',
         'png': 'libpng',
-        'type': 'pango',
         'frontend': 'sdl',
     },
     'osx': {
         'jpeg': 'coregraphics',
         'png': 'coregraphics',
-        'type': 'coretext',
         'frontend': 'cocoa',
     },
     'windows': {
         'jpeg': 'wincodec',
         'png': 'wincodec',
-        'type': 'uniscribe',
         'frontend': 'windows',
     },
 }

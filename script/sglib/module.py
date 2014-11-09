@@ -14,6 +14,7 @@ audio_alsa
 audio_coreaudio
 audio_directsound
 audio_sdl
+freetype
 image_coregraphics
 image_libjpeg
 image_libpng
@@ -23,9 +24,6 @@ ogg
 opus
 osx
 posix
-type_coretext
-type_pango
-type_uniscribe
 video_recording
 vorbis
 windows
@@ -38,6 +36,7 @@ def get_tags(build):
         ogg, vorbis, opus,
         sdl, glew, opengl,
         alsa, libjpeg, libpng, pango, gtk, gtkglext,
+        freetype,
     )
     platform = build.config.platform
     flags = build.config.flags
@@ -138,18 +137,8 @@ def get_tags(build):
     if enable_wincodec:
         tags['image_wincodec'] = []
 
-    if flags['type'] == 'coretext':
-        tags['type_coretext'] = [
-            module().add_framework(name='ApplicationServices')]
-    elif flags['type'] == 'pango':
-        tags['type_pango'] = [pango.module(build)]
-    elif flags['type'] == 'uniscribe':
-        tags['type_uniscribe'] = []
-    elif flags['type'] == 'none':
-        pass
-    else:
-        raise ConfigError('invalid type flag: {!r}'
-                          .format(flags['type']))
+    if flags['freetype']:
+        tags['freetype'] = [freetype.module(build)]
 
     if flags['video-recording']:
         tags['video_recording'] = []

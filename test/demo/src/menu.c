@@ -7,6 +7,7 @@
 #include "sg/opengl.h"
 #include "sg/type.h"
 #include <assert.h>
+#include <stdlib.h>
 #include <string.h>
 
 #define BOX_MARGIN 4
@@ -14,7 +15,9 @@
 #define BOX_HEIGHT 18
 
 static const struct st_iface *const ST_ITEMS[] = {
-    &ST_IMAGE, &ST_TYPE, &ST_AUDIO
+    &ST_IMAGE,
+    /* &ST_TYPE, */
+    &ST_AUDIO
 };
 #define ST_NITEMS ((int) (sizeof(ST_ITEMS) / sizeof(*ST_ITEMS)))
 
@@ -25,7 +28,7 @@ enum {
 
 static int g_menu_item = 0;
 static unsigned g_buttons = 0;
-static struct text_layout g_menu_text[ST_NITEMS];
+static struct sg_textlayout *g_menu_text[ST_NITEMS];
 static GLuint g_box_buffer;
 static struct prog_plain g_prog_plain;
 static struct prog_text g_prog_text;
@@ -40,13 +43,33 @@ static const short VERTEX[] = {
 static void st_menu_init(void)
 {
     int i;
+    struct sg_typeface *typeface;
+    struct sg_font *font;
+    struct sg_textflow *flow;
+    const char *path;
 
     sg_opengl_checkerror("st_menu_init start");
 
+    path = "font/Roboto-Regular";
+    typeface = sg_typeface_file(path, strlen(path), NULL);
+    if (!typeface)
+        abort();
+    font = sg_font_new(typeface, 12.0f, NULL);
+    if (!font)
+        abort();
+    sg_typeface_decref(typeface);
+
     for (i = 0; i < ST_NITEMS; i++) {
-        text_layout_create(
-            &g_menu_text[i], ST_ITEMS[i]->name, strlen(ST_ITEMS[i]->name),
-            "Sans", 14.0, SG_TEXTALIGN_LEFT, 0.0);
+        flow = sg_textflow_new(NULL);
+        if (!flow)
+            abort();
+        sg_textflow_setfont(flow, font);
+        sg_textflow_addtext(
+            flow, ST_ITEMS[i]->name, strlen(ST_ITEMS[i]->name));
+        g_menu_text[i] = sg_textlayout_new(flow, NULL);
+        if (!g_menu_text[i])
+            abort();
+        sg_textflow_free(flow);
     }
     g_buttons = 0;
 
@@ -122,6 +145,7 @@ static void st_menu_event(union sg_event *evt)
 
 static void st_menu_draw(int width, int height, unsigned msec)
 {
+    struct sg_textmetrics metrics;
     float xscale, yscale;
     int i;
     sg_opengl_checkerror("st_menu_draw start");
@@ -145,21 +169,15 @@ static void st_menu_draw(int width, int height, unsigned msec)
     glEnableVertexAttribArray(g_prog_text.a_vert);
 
     for (i = 0; i < ST_NITEMS; i++) {
-        glBindTexture(GL_TEXTURE_2D, g_menu_text[i].texture);
+        sg_textlayout_getmetrics(g_menu_text[i], &metrics);
         glUniform2f(
             g_prog_text.u_vertoff,
             -0.5f * (float) width + 32.0f
-            - g_menu_text[i].metrics.logical.x0,
+            - metrics.logical.x0,
             +0.5f * (float) height - 32.0f * (float) (i + 1)
-            - g_menu_text[i].metrics.logical.y1);
-        glUniform2fv(
-            g_prog_text.u_texscale, 1, g_menu_text[i].texture_scale);
-
-        glBindBuffer(GL_ARRAY_BUFFER, g_menu_text[i].buffer);
-        glVertexAttribPointer(g_prog_text.a_vert, 4,
-                              GL_SHORT, GL_FALSE, 0, 0);
-
-        glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+            - metrics.logical.y1);
+        sg_textlayout_draw(g_menu_text[i],
+                           g_prog_text.a_vert, g_prog_text.u_texscale);
     }
 
     glEnableVertexAttribArray(g_prog_text.a_vert);

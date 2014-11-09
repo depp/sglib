@@ -1,6 +1,7 @@
 /* Copyright 2013 Dietrich Epp.
    This file is part of SGLib.  SGLib is licensed under the terms of the
    2-clause BSD license.  For more information, see LICENSE.txt. */
+#if 0
 #include "defs.h"
 #include "sg/opengl.h"
 #include "sg/entry.h"
@@ -235,3 +236,5 @@ const struct st_iface ST_TYPE = {
     st_type_event,
     st_type_draw
 };
+
+#endif
