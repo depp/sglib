@@ -54,7 +54,7 @@ static void st_menu_init(void)
     typeface = sg_typeface_file(path, strlen(path), NULL);
     if (!typeface)
         abort();
-    font = sg_font_new(typeface, 12.0f, NULL);
+    font = sg_font_new(typeface, 16.0f, NULL);
     if (!font)
         abort();
     sg_typeface_decref(typeface);
