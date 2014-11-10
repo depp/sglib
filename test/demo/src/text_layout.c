@@ -1,6 +1,7 @@
 /* Copyright 2013 Dietrich Epp.
    This file is part of SGLib.  SGLib is licensed under the terms of the
    2-clause BSD license.  For more information, see LICENSE.txt. */
+#if 0
 #include "defs.h"
 #include "sg/pixbuf.h"
 #include "sg/util.h"
@@ -63,3 +64,5 @@ text_layout_create(struct text_layout *layout,
     layout->texture_scale[0] = 1.0 / tw;
     layout->texture_scale[1] = 1.0 / th;
 }
+
+#endif

@@ -134,10 +134,13 @@ videotime.c
 videotime.h
 ''')
 
-src.add(path='src/type', sources='''
-coretext.c type_coretext
-pango.c type_pango
-uniscribe.c type_uniscribe
+src.add(path='src/type', tags=['freetype'], sources='''
+font.c
+freetype_error.c
+private.h
+textflow.c
+textlayout.c
+typeface.c
 ''')
 
 src.add(path='src/util', sources='''

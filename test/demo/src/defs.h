@@ -52,6 +52,7 @@ load_program(const char *vertpath, const char *fragpath);
 /* Consists of a texture, and a buffer containing an array containing
    a triangle strip, with each vertex containing screen coordinates
    and texture coordinates.  */
+/*
 struct text_layout {
     GLuint texture;
     GLuint buffer;
@@ -64,7 +65,7 @@ text_layout_create(struct text_layout *layout,
                    const char *text, size_t textlen,
                    const char *fontname, double fontsize,
                    sg_textalign_t alignment, double width);
-
+*/
 /* ========================================
    Shader programs
    ======================================== */
