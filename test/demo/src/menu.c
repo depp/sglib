@@ -16,7 +16,7 @@
 
 static const struct st_iface *const ST_ITEMS[] = {
     &ST_IMAGE,
-    /* &ST_TYPE, */
+    &ST_TYPE,
     &ST_AUDIO
 };
 #define ST_NITEMS ((int) (sizeof(ST_ITEMS) / sizeof(*ST_ITEMS)))

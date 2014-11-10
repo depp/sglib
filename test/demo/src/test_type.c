@@ -1,7 +1,6 @@
-/* Copyright 2013 Dietrich Epp.
+/* Copyright 2013-2014 Dietrich Epp.
    This file is part of SGLib.  SGLib is licensed under the terms of the
    2-clause BSD license.  For more information, see LICENSE.txt. */
-#if 0
 #include "defs.h"
 #include "sg/opengl.h"
 #include "sg/entry.h"
@@ -15,11 +14,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-static const char TEXT1[] = "Text Demo";
-
-static const char TEXT2[] = "吾輩は猫である";
-
-static const char TEXT3[] =
+static const char *const TEXT[4] = {
+"Text Demo",
+"ζῷον δίπουν ἄπτερον", // two-legged featherless animal
 "Solemnly he came forward and mounted the round gunrest. He faced about and "
 "blessed gravely thrice the tower, the surrounding land and the awaking "
 "mountains. Then, catching sight of Stephen Dedalus, he bent towards him "
@@ -27,12 +24,11 @@ static const char TEXT3[] =
 "head. Stephen Dedalus, displeased and sleepy, leaned his arms on the top "
 "of the staircase and looked coldly at the shaking gurgling face that "
 "blessed him, equine in its length, and at the light untonsured hair, "
-"grained and hued like pale oak.";
+"grained and hued like pale oak.",
+"1: invert, 2: boxes"
+};
 
-static const char TEXT4[] =
-"1: invert, 2: boxes";
-
-static struct text_layout g_text1, g_text2, g_text3, g_text4;
+static struct sg_textlayout *g_text[4];
 static int g_dark, g_boxes;
 static struct prog_text g_prog_text;
 static struct prog_plain g_prog_plain;
@@ -43,14 +39,33 @@ static const short VERTEX[] = { -1, -1, 1, -1, -1, 1, 1, 1 };
 static void
 st_type_init(void)
 {
-    text_layout_create(&g_text1, TEXT1, strlen(TEXT1),
-                       "Sans", 36.0, SG_TEXTALIGN_LEFT, 0.0);
-    text_layout_create(&g_text2, TEXT2, strlen(TEXT2),
-                       "Sans", 36.0, SG_TEXTALIGN_LEFT, 0.0);
-    text_layout_create(&g_text3, TEXT3, strlen(TEXT3),
-                       "Sans", 16.0, SG_TEXTALIGN_LEFT, 500.0);
-    text_layout_create(&g_text4, TEXT4, strlen(TEXT4),
-                       "Sans", 16.0, SG_TEXTALIGN_LEFT, 0.0);
+    struct sg_typeface *typeface;
+    struct sg_font *small, *large;
+    struct sg_textflow *flow;
+    struct sg_textlayout *layout;
+    int i;
+    const char *path = "font/Roboto-Regular";
+
+    typeface = sg_typeface_file(path, strlen(path), NULL);
+    if (!typeface) abort();
+    small = sg_font_new(typeface, 16.0f, NULL);
+    if (!small) abort();
+    large = sg_font_new(typeface, 36.0f, NULL);
+    if (!large) abort();
+    sg_typeface_decref(typeface);
+
+    for (i = 0; i < 4; i++) {
+        flow = sg_textflow_new(NULL);
+        if (!flow) abort();
+        sg_textflow_setfont(flow, i < 2 ? large : small);
+        if (i == 2)
+            sg_textflow_setwidth(flow, 500.0f);
+        sg_textflow_addtext(flow, TEXT[i], strlen(TEXT[i]));
+        layout = sg_textlayout_new(flow, NULL);
+        if (!layout) abort();
+        sg_textflow_free(flow);
+        g_text[i] = layout;
+    }
 
     glGenBuffers(1, &g_bar_buffer);
     glBindBuffer(GL_ARRAY_BUFFER, g_bar_buffer);
@@ -86,47 +101,41 @@ st_type_event(union sg_event *evt)
 }
 
 static void
-st_type_set_layout(struct text_layout *layout)
-{
-    glBindTexture(GL_TEXTURE_2D, layout->texture);
-    glUniform2fv(g_prog_text.u_texscale, 1, layout->texture_scale);
-    glBindBuffer(GL_ARRAY_BUFFER, layout->buffer);
-    glVertexAttribPointer(g_prog_text.a_vert, 4, GL_SHORT, GL_FALSE, 0, 0);
-}
-
-static void
-st_type_draw_layout(struct text_layout *layout, int width, int height,
+st_type_draw_layout(struct sg_textlayout *layout, int width, int height,
                     int x, int y, int xalign, int yalign)
 {
     int px, py;
+    struct sg_textmetrics metrics;
+
+    sg_textlayout_getmetrics(layout, &metrics);
 
     switch (xalign) {
     default: abort();
     case 0:
-        px = layout->metrics.logical.x0;
+        px = metrics.logical.x0;
         break;
 
     case 1:
-        px = (layout->metrics.logical.x0 + layout->metrics.logical.x1) >> 1;
+        px = (metrics.logical.x0 + metrics.logical.x1) >> 1;
         break;
 
     case 2:
-        px = layout->metrics.logical.x1;
+        px = metrics.logical.x1;
         break;
     }
 
     switch (yalign) {
     default: abort();
     case 0:
-        py = layout->metrics.logical.y0;
+        py = metrics.logical.y0;
         break;
 
     case 1:
-        py = (layout->metrics.logical.y0 + layout->metrics.logical.y1) >> 1;
+        py = (metrics.logical.y0 + metrics.logical.y1) >> 1;
         break;
 
     case 2:
-        py = layout->metrics.logical.y1;
+        py = metrics.logical.y1;
         break;
     }
 
@@ -134,7 +143,7 @@ st_type_draw_layout(struct text_layout *layout, int width, int height,
         g_prog_text.u_vertoff,
         - 0.5f * (float)  width + (float) (x - px),
         - 0.5f * (float) height + (float) (y - py));
-    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+    sg_textlayout_draw(layout, g_prog_text.a_vert, g_prog_text.u_texscale);
 }
 
 static void
@@ -196,27 +205,23 @@ st_type_draw(int width, int height, unsigned msec)
 
     /* Test box alignment */
 
-    st_type_set_layout(&g_text1);
-    st_type_draw_layout(&g_text1, width, height, 10, 10, 0, 0);
-    st_type_draw_layout(&g_text1, width, height, width - 10, 10, 2, 0);
-    st_type_draw_layout(&g_text1, width, height, 10, height - 10, 0, 2);
+    st_type_draw_layout(g_text[0], width, height, 10, 10, 0, 0);
+    st_type_draw_layout(g_text[0], width, height, width - 10, 10, 2, 0);
+    st_type_draw_layout(g_text[0], width, height, 10, height - 10, 0, 2);
     st_type_draw_layout(
-        &g_text1, width, height, width - 10, height - 10, 2, 2);
+        g_text[0], width, height, width - 10, height - 10, 2, 2);
 
     /* Test non-ASCII characters */
 
-    st_type_set_layout(&g_text2);
-    st_type_draw_layout(&g_text2, width, height, 10, height - 50, 0, 2);
+    st_type_draw_layout(g_text[1], width, height, 10, height - 50, 0, 2);
 
     /* Test wrapping */
 
-    st_type_set_layout(&g_text3);
-    st_type_draw_layout(&g_text3, width, height, 10, height - 90, 0, 2);
+    st_type_draw_layout(g_text[2], width, height, 10, height - 90, 0, 2);
 
     /* Instructions */
 
-    st_type_set_layout(&g_text4);
-    st_type_draw_layout(&g_text4, width, height, width/2, 10, 1, 0);
+    st_type_draw_layout(g_text[3], width, height, width/2, 10, 1, 0);
 
     /* Cleanup */
 
@@ -236,5 +241,3 @@ const struct st_iface ST_TYPE = {
     st_type_event,
     st_type_draw
 };
-
-#endif
