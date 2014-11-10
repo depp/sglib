@@ -4,6 +4,7 @@
 from d3build.error import ConfigError
 from d3build.generatedsource.configuremake import ConfigureMake
 from d3build.package import ExternalPackage
+from ..libs import  binary_lib
 import os
 
 def pkg_config(build):
@@ -12,6 +13,25 @@ def pkg_config(build):
 
 def find_package(build):
     return build.find_package('^freetype(?:-[0-9.]+)$')
+
+def freetype_version(path):
+    name = os.path.basename(path)
+    i = name.find('-')
+    if i < 0:
+        return None
+    ver = name[i+1:].replace('.', '')
+    if not ver.isnumeric():
+        return None
+    return ver
+
+def bundled_bin(build):
+    if build.config.platform != 'windows':
+        raise ConfigError('this only works on Windows')
+    path = find_package(build)
+    ver = freetype_version(path)
+    if ver is None:
+        raise ConfigError('cannot decipher FreeType version')
+    return binary_lib(build, path, ['freetype{}MT.lib'.format(ver)])
 
 CONFIG_ARGS = '''
 --prefix=/
@@ -41,7 +61,7 @@ def bundled_src(build):
     return path, mod
 
 module = ExternalPackage(
-    [pkg_config, bundled_src],
+    [pkg_config, bundled_bin, bundled_src],
     name='FreeType library',
     packages={
         'deb': 'libfreetype6-dev',
