@@ -9,41 +9,170 @@
 #include <stdlib.h>
 #include <string.h>
 
-/* Calculate glyph locations.  Fills in the locs array.  */
-static void
-sg_textlayout_layout(struct sg_textflow *flow, struct sg_textpoint *gloc,
-                     struct sg_textrect *bounds, int *baseline)
+#define MAX_WIDTH 16384
+
+struct sg_textlayout_line {
+    unsigned start;
+    unsigned end;
+    int width;
+    short ascender, descender;
+};
+
+static int
+sg_textlayout_layout(
+    struct sg_textflow *flow,
+    struct sg_textpoint *gloc,
+    struct sg_textrect *bounds,
+    int *baseline)
 {
-    struct sg_textflow_glyph *glyph = flow->glyph;
     struct sg_textflow_run *run = flow->run;
+    struct sg_textflow_glyph *glyph = flow->glyph;
     struct sg_font *font;
     struct sg_font_glyph *fglyph;
-    unsigned ridx, rcount = flow->runcount, gidx = 0, gend;
-    int pos = 0;
-    short bx0, bx1, by0, by1, y0, y1;
-    bx0 = by0 = SHRT_MAX;
-    bx1 = by1 = SHRT_MIN;
+    struct sg_textlayout_line *line = NULL, *nline;
+    unsigned ridx, rcount = flow->runcount,
+        gidx, gend, gcount = flow->glyphcount, gbreak, gline,
+        lidx, lcount, lalloc, nalloc;
+    short *adv = NULL;
+    short maxx, miny, ascender, descender;
+    int pos, bpos, width;
+
+    /* Calculate glyph advances.  */
+    adv = malloc(sizeof(*adv) * gcount);
+    if (!adv)
+        goto nomem;
+    gidx = 0;
     for (ridx = 0; ridx < rcount; ridx++) {
         font = run[ridx].font;
         fglyph = font->glyph;
         gend = gidx + run[ridx].count;
-        y0 = font->descender;
-        y1 = font->ascender;
-        if (y0 < by0) by0 = y0;
-        if (y1 > by1) by1 = y1;
-        for (; gidx != gend; gidx++) {
-            if (pos < bx0) bx0 = pos;
+        for (; gidx != gend; gidx++)
+            adv[gidx] = fglyph[glyph[gidx].index].advance;
+    }
+
+    /* Calculate glyph horizontal positions and line breaks.  */
+    width = flow->width;
+    if (width < 1 || width > MAX_WIDTH)
+        width = MAX_WIDTH;
+    pos = 0;
+    gline = 0;
+    gidx = 0;
+    lcount = 0;
+    lalloc = 0;
+    while (1) {
+        if (gidx >= gcount)
+            goto endline;
+        gloc[gidx].x = pos;
+        pos += adv[gidx];
+        gidx++;
+        if (pos <= width)
+            continue;
+        /* bpos = width from gline..gbreak (half-open range) */
+        gbreak = gidx;
+        bpos = pos;
+        /* Scan backwards for most recent break */
+        do {
+            gbreak--;
+            bpos -= adv[gbreak];
+        } while (gbreak > gline &&
+               (glyph[gbreak].flags & SG_TEXTFLOW_SPACE) == 0);
+        if (gbreak > gline) {
+            /* Scan backwards through run of spaces */
+            gidx = gbreak;
+            pos = bpos;
+        endline:
+            while (gidx > gline &&
+                   (glyph[gidx - 1].flags & SG_TEXTFLOW_SPACE) != 0) {
+                gidx--;
+                pos -= adv[gidx];
+            }
+        } else {
+            /* No break found by scanning backwards, scan forwards */
+            while (gidx < gcount &&
+                   (glyph[gidx].flags & SG_TEXTFLOW_SPACE) == 0) {
+                gloc[gidx].x = pos;
+                pos += adv[gidx];
+                gidx++;
+            }
+        }
+        bpos = pos;
+        /* Consume trailing spaces */
+        while (gidx < gcount &&
+               (glyph[gidx].flags & SG_TEXTFLOW_SPACE) != 0) {
             gloc[gidx].x = pos;
-            gloc[gidx].y = 0;
-            pos += fglyph[glyph[gidx].index].advance;
-            if (pos > bx1) bx1 = pos;
+            pos += adv[gidx];
+            gidx++;
+        }
+        /* Write line data */
+        if (lcount >= lalloc) {
+            nalloc = lalloc ? lalloc * 2 : 4;
+            if (!nalloc)
+                goto nomem;
+            nline = realloc(line, sizeof(*line) * nalloc);
+            if (!nline)
+                goto nomem;
+            line = nline;
+            lalloc = nalloc;
+        }
+        line[lcount].start = gline;
+        line[lcount].end = gidx;
+        line[lcount].width = bpos;
+        line[lcount].ascender = 0;
+        line[lcount].descender = 0;
+        lcount++;
+        if (gidx >= gcount)
+            break;
+        gline = gidx;
+        pos = 0;
+    }
+
+    /* Calculate vertical positions and bounding box */
+    gidx = 0;
+    lidx = 0;
+    for (ridx = 0; ridx < rcount; ridx++) {
+        gend = gidx + run[ridx].count;
+        font = run[ridx].font;
+        ascender = font->ascender;
+        descender = font->descender;
+        while (1) {
+            if (ascender > line[lidx].ascender)
+                line[lidx].ascender = ascender;
+            if (descender < line[lidx].descender)
+                line[lidx].descender = descender;
+            if (gend < line[lidx].end)
+                break;
+            if (gend == line[lidx].end) {
+                lidx++;
+                break;
+            }
+            lidx++;
         }
     }
-    bounds->x0 = bx0;
-    bounds->y0 = by0;
-    bounds->x1 = bx1;
-    bounds->y1 = by1;
-    *baseline = 0;
+    miny = maxx = 0;
+    pos = 0;
+    for (lidx = 0; lidx < lcount; lidx++) {
+        pos -= line[lidx].ascender;
+        gidx = line[lidx].start;
+        gend = line[lidx].end;
+        for (; gidx < gend; gidx++)
+            gloc[gidx].y = pos;
+        pos += line[lidx].descender;
+        if (pos < miny) miny = pos;
+        if (line[lidx].width > maxx) maxx = line[lidx].width;
+    }
+    bounds->x0 = 0;
+    bounds->y0 = miny;
+    bounds->x1 = maxx;
+    bounds->y1 = 0;
+    *baseline = -line[0].ascender;
+    free(adv);
+    free(line);
+    return 0;
+
+nomem:
+    free(adv);
+    free(line);
+    return -1;
 }
 
 struct sg_textlayout *
@@ -92,7 +221,8 @@ sg_textlayout_new(struct sg_textflow *flow, struct sg_error **err)
     gloc = malloc(sizeof(*gloc) * flow->glyphcount);
     if (!gloc)
         goto nomem;
-    sg_textlayout_layout(flow, gloc, &bounds, &baseline);
+    if (sg_textlayout_layout(flow, gloc, &bounds, &baseline))
+        goto nomem;
 
     /* Assign runs to batches */
     bcount = 0;

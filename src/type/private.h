@@ -80,7 +80,9 @@ struct sg_textflow_run {
 
 enum {
     /* The glyph is visible.  */
-    SG_TEXTFLOW_VISIBLE = 1u << 0
+    SG_TEXTFLOW_VISIBLE = 1u << 0,
+    /* The glyph represents a space.  */
+    SG_TEXTFLOW_SPACE = 1u << 1
 };
 
 struct sg_textflow_glyph {

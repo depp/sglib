@@ -117,6 +117,8 @@ sg_textflow_addtext(struct sg_textflow *flow,
         } else {
             flags = 0;
         }
+        if (c == ' ')
+            flags |= SG_TEXTFLOW_SPACE;
         glyph[glyphcount].index = glyphindex;
         glyph[glyphcount].flags = flags;
         glyphcount++;
