@@ -1,14 +1,47 @@
 # Copyright 2014 Dietrich Epp.
 # This file is part of SGLib.  SGLib is licensed under the terms of the
 # 2-clause BSD license.  For more information, see LICENSE.txt.
+from d3build.error import ConfigError
+from d3build.generatedsource.configuremake import ConfigureMake
 from d3build.package import ExternalPackage
+import os
 
 def pkg_config(build):
     flags = build.pkg_config('freetype2')
     return None, build.target.module().add_flags(flags)
 
+def find_package(build):
+    return build.find_package('^freetype(?:-[0-9.]+)$')
+
+CONFIG_ARGS = '''
+--prefix=/
+--disable-shared
+--enable-static
+--without-bzip2
+--without-old-mac-fonts
+--without-fsspec
+--without-fsref
+--without-quickdraw-toolbox
+--without-quickdraw-carbon
+--without-ats
+'''.split()
+
+def bundled_src(build):
+    path = find_package(build)
+    if build.config.target == 'msvc':
+        raise ConfigError('not supported')
+    target = ConfigureMake(build, 'freetype', path, args=CONFIG_ARGS)
+    mod = (build.target.module()
+        .add_generated_source(target)
+        .add_header_path(
+            os.path.join(target.destdir, 'include', 'freetype2'),
+            system=True)
+        .add_library(os.path.join(target.destdir, 'lib', 'libfreetype.a'))
+        .add_library('-lz'))
+    return path, mod
+
 module = ExternalPackage(
-    [pkg_config],
+    [pkg_config, bundled_src],
     name='FreeType library',
     packages={
         'deb': 'libfreetype6-dev',
