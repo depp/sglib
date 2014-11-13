@@ -53,9 +53,13 @@ sg_sdl_updatecapture(void)
     int enabled = sg_sdl.want_capture &&
         (sg_sdl.window_status & SG_WINDOW_FOCUSED) != 0;
     int r = SDL_SetRelativeMouseMode(enabled ? SDL_TRUE : SDL_FALSE);
-    if (r != 0 && enabled) {
-        sg_logs(sg_logger_get(NULL), SG_LOG_WARN,
-                "failed to set relative mouse mode");
+    if (r == 0) {
+        printf("capture: %d\n", enabled);
+        sg_sdl.have_capture = enabled;
+    } else {
+        if (enabled)
+            sg_logs(sg_logger_get(NULL), SG_LOG_WARN,
+                    "failed to set relative mouse mode");
         return;
     }
 }
@@ -142,14 +146,21 @@ sdl_init(int argc, char *argv[])
 static void
 sdl_event_mousemove(SDL_MouseMotionEvent *e)
 {
-    struct sg_event_mouse ee;
+    union sg_event ee;
     int width, height;
-    SDL_GetWindowSize(sg_sdl.window, &width, &height);
-    ee.type = SG_EVENT_MMOVE;
-    ee.button = -1;
-    ee.x = e->x;
-    ee.y = height - 1 - e->y;
-    sg_game_event((union sg_event *) &ee);
+    if (sg_sdl.have_capture) {
+        ee.mouse.type = SG_EVENT_MMOVEREL;
+        ee.mouse.button = -1;
+        ee.mouse.x = e->xrel;
+        ee.mouse.y = -e->yrel;
+    } else {
+        SDL_GetWindowSize(sg_sdl.window, &width, &height);
+        ee.mouse.type = SG_EVENT_MMOVE;
+        ee.mouse.button = -1;
+        ee.mouse.x = e->x;
+        ee.mouse.y = height - 1 - e->y;
+    }
+    sg_game_event(&ee);
 }
 
 static void
