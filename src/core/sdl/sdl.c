@@ -54,7 +54,6 @@ sg_sdl_updatecapture(void)
         (sg_sdl.window_status & SG_WINDOW_FOCUSED) != 0;
     int r = SDL_SetRelativeMouseMode(enabled ? SDL_TRUE : SDL_FALSE);
     if (r == 0) {
-        printf("capture: %d\n", enabled);
         sg_sdl.have_capture = enabled;
     } else {
         if (enabled)
