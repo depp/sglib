@@ -1,4 +1,4 @@
-/* Copyright 2012 Dietrich Epp.
+/* Copyright 2012-2014 Dietrich Epp.
    This file is part of SGLib.  SGLib is licensed under the terms of the
    2-clause BSD license.  For more information, see LICENSE.txt. */
 #ifndef SG_EVENT_H
@@ -23,6 +23,8 @@ typedef enum {
     SG_EVENT_MUP,
     /** @brief Mouse move event, uses ::sg_event_mouse.  */
     SG_EVENT_MMOVE,
+    /** @brief Mouse relative move event, uses ::sg_event_mouse.  */
+    SG_EVENT_MMOVEREL,
 
     /** @brief Key down event, uses ::sg_event_key.  */
     SG_EVENT_KDOWN,
@@ -30,7 +32,7 @@ typedef enum {
     SG_EVENT_KUP,
 
     /**
-     * @brief Window status event, uses ::sg_event_status.
+     * @brief Window status event, uses ::sg_event_window.
      *
      * Indicates that the main window has changed state, the new state
      * is in the event payload.
@@ -95,7 +97,9 @@ enum {
     /** @brief Flag indicating that the window is visible.  */
     SG_WINDOW_VISIBLE = 01,
     /** @brief Flag indicating that the window is fullscreen.  */
-    SG_WINDOW_FULLSCREEN = 02
+    SG_WINDOW_FULLSCREEN = 02,
+    /** @brief Flag indicating that the window has focus.  */
+    SG_WINDOW_FOCUSED = 04
 };
 
 /**
@@ -153,7 +157,7 @@ struct sg_event_key {
 /**
  * @brief Window status event.
  */
-struct sg_event_status {
+struct sg_event_window {
     /**
      * @brief The event type.
      *
@@ -211,7 +215,7 @@ union sg_event {
     /**
      * @brief The window status event data.
      */
-    struct sg_event_status status;
+    struct sg_event_window status;
 
     /**
      * @brief The audio initialization event.

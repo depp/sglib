@@ -141,6 +141,14 @@ SG_ATTR_NORETURN
 void
 sg_sys_abortv(const char *msg, va_list ap);
 
+/**
+ * @brief Enable or disable mouse capture.
+ *
+ * @param enabled Whether mouse capture should be enabled.
+ */
+void
+sg_sys_capturemouse(int enabled);
+
 #ifdef __cplusplus
 }
 #endif

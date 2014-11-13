@@ -7,6 +7,7 @@
 #include "sg/entry.h"
 #include "sg/error.h"
 #include "sg/event.h"
+#include "sg/log.h"
 #include "sg/opengl.h"
 #include "sg/version.h"
 #include "../private.h"
@@ -17,6 +18,8 @@
 
 static SDL_Window *sg_window;
 static SDL_GLContext sg_context;
+static int sg_window_status;
+static int sg_window_wantcapture;
 
 SG_ATTR_NORETURN
 static void
@@ -37,6 +40,26 @@ sg_sys_abort(const char *msg)
 {
     fprintf(stderr, "error: %s\n", msg);
     sdl_quit(1);
+}
+
+static void
+sg_sdl_updatecapture(void)
+{
+    int enabled = sg_window_wantcapture &&
+        (sg_window_status & SG_WINDOW_FOCUSED) != 0;
+    int r = SDL_SetRelativeMouseMode(enabled ? SDL_TRUE : SDL_FALSE);
+    if (r != 0 && enabled) {
+        sg_logs(sg_logger_get(NULL), SG_LOG_WARN,
+                "failed to set relative mouse mode");
+        return;
+    }
+}
+
+void
+sg_sys_capturemouse(int enabled)
+{
+    sg_window_wantcapture = enabled;
+    sg_sdl_updatecapture();
 }
 
 void
@@ -156,6 +179,92 @@ sdl_event_key(SDL_KeyboardEvent *e)
     sg_game_event((union sg_event *) &ee);
 }
 
+#if 0
+
+struct sdl_event_wtype {
+    short type;
+    char name[14];
+};
+
+#define TYPE(x) { SDL_WINDOWEVENT_ ## x, #x }
+static const struct sdl_event_wtype SDL_EVENT_WTYPE[] = {
+    TYPE(SHOWN),
+    TYPE(HIDDEN),
+    TYPE(EXPOSED),
+    TYPE(MOVED),
+    TYPE(RESIZED),
+    TYPE(MINIMIZED),
+    TYPE(MAXIMIZED),
+    TYPE(RESTORED),
+    TYPE(ENTER),
+    TYPE(LEAVE),
+    TYPE(FOCUS_GAINED),
+    TYPE(FOCUS_LOST),
+    TYPE(CLOSE)
+};
+#undef TYPE
+
+static void
+sdl_event_wtype_showname(int wtype)
+{
+    const struct sdl_event_wtype *tp = SDL_EVENT_WTYPE,
+        *te = tp + sizeof(SDL_EVENT_WTYPE) / sizeof(*SDL_EVENT_WTYPE);
+    for (; tp != te; tp++) {
+        if (tp->type == wtype) {
+            sg_logf(sg_logger_get(NULL), SG_LOG_DEBUG,
+                    "window event: %s", tp->name);
+            return;
+        }
+    }
+    sg_logf(sg_logger_get(NULL), SG_LOG_DEBUG,
+            "window event: unknown (%d)", wtype);
+}
+
+#else
+
+#define sdl_event_wtype_showname(x) (void) 0
+
+#endif
+
+static void
+sdl_event_window(SDL_WindowEvent *e)
+{
+    union sg_event ee;
+    unsigned oldstatus, newstatus;
+    sdl_event_wtype_showname(e->event);
+    oldstatus = newstatus = sg_window_status;
+
+    switch (e->event) {
+    case SDL_WINDOWEVENT_SHOWN:
+        newstatus |= SG_WINDOW_VISIBLE;
+        break;
+
+    case SDL_WINDOWEVENT_HIDDEN:
+        newstatus &= ~SG_WINDOW_VISIBLE;
+        break;
+
+    case SDL_WINDOWEVENT_FOCUS_GAINED:
+        newstatus |= SG_WINDOW_FOCUSED;
+        break;
+
+    case SDL_WINDOWEVENT_FOCUS_LOST:
+        newstatus &= ~SG_WINDOW_FOCUSED;
+        break;
+
+    default:
+        break;
+    }
+
+    if (oldstatus == newstatus)
+        return;
+
+    sg_window_status = newstatus;
+    sg_sdl_updatecapture();
+    ee.status.type = SG_EVENT_WINDOW;
+    ee.status.status = newstatus;
+    sg_game_event(&ee);
+}
+
 static void
 sdl_main(void)
 {
@@ -182,7 +291,12 @@ sdl_main(void)
                 sdl_event_key(&e.key);
                 break;
 
+            case SDL_WINDOWEVENT:
+                sdl_event_window(&e.window);
+                break;
+
             default:
+                // printf("Unknown event: %u\n", e.type);
                 break;
             }
         }
