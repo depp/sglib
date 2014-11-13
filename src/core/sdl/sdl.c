@@ -16,10 +16,15 @@
 
 #include "sg/key.h"
 
-static SDL_Window *sg_window;
-static SDL_GLContext sg_context;
-static int sg_window_status;
-static int sg_window_wantcapture;
+struct sg_sdl {
+    SDL_Window *window;
+    SDL_GLContext context;
+    int window_status;
+    int want_capture;
+    int have_capture;
+};
+
+static struct sg_sdl sg_sdl;
 
 SG_ATTR_NORETURN
 static void
@@ -45,8 +50,8 @@ sg_sys_abort(const char *msg)
 static void
 sg_sdl_updatecapture(void)
 {
-    int enabled = sg_window_wantcapture &&
-        (sg_window_status & SG_WINDOW_FOCUSED) != 0;
+    int enabled = sg_sdl.want_capture &&
+        (sg_sdl.window_status & SG_WINDOW_FOCUSED) != 0;
     int r = SDL_SetRelativeMouseMode(enabled ? SDL_TRUE : SDL_FALSE);
     if (r != 0 && enabled) {
         sg_logs(sg_logger_get(NULL), SG_LOG_WARN,
@@ -58,7 +63,7 @@ sg_sdl_updatecapture(void)
 void
 sg_sys_capturemouse(int enabled)
 {
-    sg_window_wantcapture = enabled;
+    sg_sdl.want_capture = enabled;
     sg_sdl_updatecapture();
 }
 
@@ -112,18 +117,18 @@ sdl_init(int argc, char *argv[])
     sg_sys_getinfo(&gameinfo);
 
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-    sg_window = SDL_CreateWindow(
+    sg_sdl.window = SDL_CreateWindow(
         gameinfo.name,
         SDL_WINDOWPOS_UNDEFINED,
         SDL_WINDOWPOS_UNDEFINED,
         gameinfo.default_width,
         gameinfo.default_height,
         SDL_WINDOW_OPENGL);
-    if (!sg_window)
+    if (!sg_sdl.window)
         sdl_error("could not open window");
 
-    sg_context = SDL_GL_CreateContext(sg_window);
-    if (!sg_context)
+    sg_sdl.context = SDL_GL_CreateContext(sg_sdl.window);
+    if (!sg_sdl.context)
         sdl_error("could not create OpenGL context");
 
     err = glewInit();
@@ -139,7 +144,7 @@ sdl_event_mousemove(SDL_MouseMotionEvent *e)
 {
     struct sg_event_mouse ee;
     int width, height;
-    SDL_GetWindowSize(sg_window, &width, &height);
+    SDL_GetWindowSize(sg_sdl.window, &width, &height);
     ee.type = SG_EVENT_MMOVE;
     ee.button = -1;
     ee.x = e->x;
@@ -152,7 +157,7 @@ sdl_event_mousebutton(SDL_MouseButtonEvent *e)
 {
     struct sg_event_mouse ee;
     int width, height;
-    SDL_GetWindowSize(sg_window, &width, &height);
+    SDL_GetWindowSize(sg_sdl.window, &width, &height);
     ee.type = e->type == SDL_MOUSEBUTTONDOWN ?
         SG_EVENT_MDOWN : SG_EVENT_MUP;
     switch (e->button) {
@@ -232,7 +237,7 @@ sdl_event_window(SDL_WindowEvent *e)
     union sg_event ee;
     unsigned oldstatus, newstatus;
     sdl_event_wtype_showname(e->event);
-    oldstatus = newstatus = sg_window_status;
+    oldstatus = newstatus = sg_sdl.window_status;
 
     switch (e->event) {
     case SDL_WINDOWEVENT_SHOWN:
@@ -258,7 +263,7 @@ sdl_event_window(SDL_WindowEvent *e)
     if (oldstatus == newstatus)
         return;
 
-    sg_window_status = newstatus;
+    sg_sdl.window_status = newstatus;
     sg_sdl_updatecapture();
     ee.status.type = SG_EVENT_WINDOW;
     ee.status.status = newstatus;
@@ -301,9 +306,9 @@ sdl_main(void)
             }
         }
 
-        SDL_GetWindowSize(sg_window, &width, &height);
+        SDL_GetWindowSize(sg_sdl.window, &width, &height);
         sg_sys_draw(width, height, sg_clock_get());
-        SDL_GL_SwapWindow(sg_window);
+        SDL_GL_SwapWindow(sg_sdl.window);
 
         new_time = SDL_GetTicks();
         if (new_time - last_time < 5)
@@ -316,7 +321,7 @@ main(int argc, char *argv[])
 {
     sdl_init(argc, argv);
     sdl_main();
-    SDL_DestroyWindow(sg_window);
+    SDL_DestroyWindow(sg_sdl.window);
     sg_game_destroy();
     return 0;
 }
