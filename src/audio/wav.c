@@ -120,12 +120,6 @@ enum {
     SG_WAVE_FLOAT = 3
 };
 
-static struct sg_logger *
-sg_audio_wav_logger(void)
-{
-    return sg_logger_get("audio");
-}
-
 int
 sg_audio_file_loadwav(struct sg_audio_buffer *buf,
                       const void *data, size_t len,
@@ -159,8 +153,7 @@ sg_audio_file_loadwav(struct sg_audio_buffer *buf,
     /* blkalign = sg_read_lu16(p + 12); */
     sampbits = sg_read_lu16(p + 14);
     if (rate < SG_AUDIO_BUFFER_MINRATE || rate > SG_AUDIO_BUFFER_MAXRATE) {
-        sg_logf(sg_audio_wav_logger(), SG_LOG_ERROR,
-                "WAVE sample rate too extreme (%u Hz)", rate);
+        sg_logf(SG_LOG_ERROR, "WAVE sample rate too extreme (%u Hz)", rate);
         goto fmterr;
     }
     if (nchan != 1 && nchan != 2) {
@@ -192,16 +185,14 @@ sg_audio_file_loadwav(struct sg_audio_buffer *buf,
             break;
 
         default:
-            sg_logf(sg_audio_wav_logger(), SG_LOG_ERROR,
-                    "invalid WAVE bit depth: %d", sampbits);
+            sg_logf(SG_LOG_ERROR, "invalid WAVE bit depth: %d", sampbits);
             goto fmterr;
         }
         break;
 
     case SG_WAVE_FLOAT:
         if (sampbits != 32) {
-            sg_logs(sg_audio_wav_logger(), SG_LOG_ERROR,
-                    "WAVE float bits != 32");
+            sg_logs(SG_LOG_ERROR, "WAVE float bits != 32");
             goto fmterr;
         }
         nframe = tag->length / (4 * nchan);
@@ -209,8 +200,7 @@ sg_audio_file_loadwav(struct sg_audio_buffer *buf,
         break;
 
     default:
-        sg_logf(sg_audio_wav_logger(), SG_LOG_ERROR,
-                "unknown WAVE data format: 0x%04x", afmt);
+        sg_logf(SG_LOG_ERROR, "unknown WAVE data format: 0x%04x", afmt);
         goto fmterr;
     }
 

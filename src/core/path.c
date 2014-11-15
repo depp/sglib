@@ -137,8 +137,7 @@ sg_file_open(const char *path, size_t pathlen, int flags,
         if (!extlen)
             continue;
         if (nexts == MAX_EXTENSIONS) {
-            sg_logs(sg_logger_get(NULL), SG_LOG_ERROR,
-                    "list of extensions is too long");
+            sg_logs(SG_LOG_ERROR, "list of extensions is too long");
             break;
         }
         if (extlen > emaxlen)
@@ -295,6 +294,8 @@ static const struct {
     { "Data", "data" }
 };
 
+static struct sg_cvar_string sg_path_data, sg_path_user;
+
 void
 sg_path_init(void)
 {
@@ -302,11 +303,18 @@ sg_path_init(void)
     pchar buf[PATH_BUFSZ], *str = NULL, *q;
     int r, i, writable;
     size_t elen = 0, dlen, slen;
+    const char *cvars[2];
 
+    sg_cvar_defstring(NULL, "datapath", &sg_path_data,
+                      NULL, SG_CVAR_INITONLY);
+    sg_cvar_defstring(NULL, "userpath", &sg_path_user,
+                      NULL, SG_CVAR_INITONLY);
+    cvars[0] = sg_path_user.value;
+    cvars[1] = sg_path_data.value;
     for (i = 0; i < 2; ++i) {
         writable = !i;
-        r = sg_cvar_gets("path", sg_path_defaults[i].varname, &paths);
-        if (r && *paths) {
+        paths = cvars[i];
+        if (*paths) {
             /* Use a path from the config settings */
 
             p = paths;

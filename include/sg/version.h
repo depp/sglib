@@ -7,7 +7,6 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-struct sg_logger;
 
 extern const char SG_SG_VERSION[];
 extern const char SG_SG_COMMIT[];
@@ -15,7 +14,7 @@ extern const char SG_APP_VERSION[];
 extern const char SG_APP_COMMIT[];
 
 void
-sg_version_lib(struct sg_logger *lp, const char *libname,
+sg_version_lib(const char *libname,
                const char *compileversion, const char *runversion);
 
 void
@@ -36,16 +35,13 @@ sg_version_machineid(char *buf, size_t bufsz);
 /* Here, "platform" means GTK, SDL, etc.  The operating system version
    does not need to be logged here.  */
 void
-sg_version_platform(struct sg_logger *lp);
+sg_version_platform(void);
 
 void
-sg_version_libjpeg(struct sg_logger *lp);
+sg_version_libjpeg(void);
 
 void
-sg_version_libpng(struct sg_logger *lp);
-
-void
-sg_version_pango(struct sg_logger *lp);
+sg_version_libpng(void);
 
 #ifdef __cplusplus
 }

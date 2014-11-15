@@ -107,7 +107,7 @@ sg_font_new(struct sg_typeface *tp, float size, struct sg_error **err)
         }
         goto error;
     }
-    sg_logf(sg_logger_get("font"), SG_LOG_INFO,
+    sg_logf(SG_LOG_INFO,
             "%s @%.2f: %d glyphs packed in %dx%d rect\n",
             tp->path, (double) isize * (1.0 / 64.0),
             nglyph, psize.width, psize.height);

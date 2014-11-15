@@ -217,19 +217,14 @@ sg_file_tryopen(struct sg_file **f, const char *path, int flags,
 int
 sg_path_checkdir(const pchar *path)
 {
-    struct sg_logger *logger;
     int r, e;
-    logger = sg_logger_get("path");
     r = access(path, R_OK | X_OK);
     if (r) {
         e = errno;
-        if (SG_LOG_INFO >= logger->level) {
-            sg_logf(logger, SG_LOG_INFO,
-                    "path skipped: %s (%s)", path, strerror(e));
-        }
+        sg_logf(SG_LOG_INFO, "Path skipped: %s (%s)", path, strerror(e));
         return 0;
     } else {
-        sg_logf(logger, SG_LOG_INFO, "path: %s", path);
+        sg_logf(SG_LOG_INFO, "Path: %s", path);
         return 1;
     }
 }

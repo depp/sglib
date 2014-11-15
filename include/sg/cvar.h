@@ -3,6 +3,7 @@
    2-clause BSD license.  For more information, see LICENSE.txt. */
 #ifndef SG_CVAR_H
 #define SG_CVAR_H
+#include <stddef.h>
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -11,140 +12,163 @@ extern "C" {
  *
  * @brief Global configuration variables.
  *
- * Variables are organized by section and by name.  When getting a
- * variable's value, priority goes first to a value set by the user
- * during this session, then to the command line, then to the config
- * files.  Defaults are expected to be provided by another mechanism.
- *
- * Configuration variables always hold strings as values, but
- * functions are provided which automatically convert values to and
- * from strings.
+ * Cvars are organized by section and by name.  They can be set by
+ * engine or framework code, configured by the user, and set on the
+ * command line.
  */
 
 /**
- * @brief Set a variable from a command line parameter.
+ * @brief Public cvar flags.
  *
- * If the name is NULL then it is parsed from the value, which must be
- * of the form <tt>name=value</tt>.  If the section is NULL, then it
- * is parsed from the name, which must be of the form
- * <tt>section.name</tt>.
+ * Cvars also have flags which are private to the cvar system.
+ */
+enum {
+    /** @brief Has been modified since this flag was cleared.  */
+    SG_CVAR_MODIFIED = 01,
+    /** @brief Cannot be modified by the user.  */
+    SG_CVAR_READONLY = 02,
+    /** @brief Can only be modified with command line arguments.  */
+    SG_CVAR_INITONLY = 04,
+    /** @brief Saved to the user's configuration.  */
+    SG_CVAR_PERSISTENT = 010
+};
+
+/**
+ * @brief Header for a cvar.
+ */
+struct sg_cvar_head {
+    unsigned flags;
+};
+
+/**
+ * @brief A string cvar.
+ */
+struct sg_cvar_string {
+    unsigned flags;
+    char *value;
+    char *persistent_value;
+    const char *default_value;
+};
+
+/**
+ * @brief An integer cvar.
+ */
+struct sg_cvar_int {
+    unsigned flags;
+    int value;
+    int persistent_value;
+    int default_value;
+    int min_value;
+    int max_value;
+};
+
+/**
+ * @brief A floating-point cvar.
+ */
+struct sg_cvar_float {
+    unsigned flags;
+    double value;
+    double persistent_value;
+    double default_value;
+    double min_value;
+    double max_value;
+};
+
+/**
+ * @brief A boolean cvar.
+ */
+struct sg_cvar_bool {
+    unsigned flags;
+    int value;
+    int persistent_value;
+    int default_value;
+};
+
+/**
+ * @brief A cvar of any type.
+ */
+union sg_cvar {
+    struct sg_cvar_head chead;
+    struct sg_cvar_string cstring;
+    struct sg_cvar_int cint;
+    struct sg_cvar_float cfloat;
+    struct sg_cvar_bool cbool;
+};
+
+/**
+ * @brief Define a string cvar.
  *
- * @param section The configuration variable section, can be NULL.
- * @param name The configuration variable name, can be NULL.
- * @param value The configuration variable value.
+ * The default value must have static storage duration.
+ *
+ * @param section The cvar section.
+ * @param name The cvar name.
+ * @param cvar The cvar.
+ * @param value The initial value.
+ * @param flags The cvar's flags.
  */
 void
-sg_cvar_addarg(const char *section, const char *name,
-               const char *value);
+sg_cvar_defstring(const char *section, const char *name,
+                  struct sg_cvar_string *cvar,
+                  const char *value, unsigned flags);
 
 /**
- * @brief Set a configuration variable to a string.
+ * @brief Define an integer cvar.
  *
- * @param section The configuration section.
- * @param name The variable name.
- * @param value The value to set.
+ * @param section The cvar section.
+ * @param name The cvar name.
+ * @param cvar The cvar.
+ * @param value The initial value.
+ * @param min_value The minimum value.
+ * @param max_value The maximum value.
+ * @param flags The cvar's flags.
  */
 void
-sg_cvar_sets(const char *section, const char *name, const char *value);
+sg_cvar_defint(const char *section, const char *name,
+               struct sg_cvar_int *cvar,
+               int value, int min_value, int max_value,
+               unsigned flags);
 
 /**
- * @brief Get a configuration variable as a string.
+ * @brief Define a floating-point cvar.
  *
- * @param section The configuration section.
- * @param name The variable name.
- * @param value On return, the value if found.
- * @return 1 if the variable was found, 0 otherwise.
+ * @param section The cvar section.
+ * @param name The cvar name.
+ * @param cvar The cvar.
+ * @param value The initial value.
+ * @param flags The cvar's flags.
+ */
+void
+sg_cvar_deffloat(const char *section, const char *name,
+                 struct sg_cvar_float *cvar,
+                 double value, double min_value, double max_value,
+                 unsigned flags);
+
+/**
+ * @brief Define a boolean cvar.
+ *
+ * @param section The cvar section.
+ * @param name The cvar name.
+ * @param cvar The cvar.
+ * @param value The initial value.
+ * @param flags The cvar's flags.
+ */
+void
+sg_cvar_defbool(const char *section, const char *name,
+                struct sg_cvar_bool *cvar,
+                int value, unsigned flags);
+
+/**
+ * @brief Set a cvar.
+ *
+ * @param fullname The full name of the cvar, including the section.
+ * @param fullnamelen The length of the full name.
+ * @param value The new cvar value.
+ * @param flags Only SG_CVAR_PERSISTENT is recognized.
+ * @return Zero if successful, nonzero if an error occurred.
  */
 int
-sg_cvar_gets(const char *section, const char *name, const char **value);
-
-/**
- * @brief Set a configuration variable to an integer.
- *
- * @param section The configuration section.
- * @param name The variable name.
- * @param value The value to set.
- */
-void
-sg_cvar_seti(const char *section, const char *name, int value);
-
-/**
- * @brief Get a configuration variable as an integer.
- *
- * @param section The configuration section.
- * @param name The variable name.
- * @param value On return, the value if found.
- * @return 1 if the variable was found and conversion was successful,
- * 0 otherwise.
- */
-int
-sg_cvar_geti(const char *section, const char *name, int *value);
-
-/**
- * @brief Set a configuration variable to a long integer.
- *
- * @param section The configuration section.
- * @param name The variable name.
- * @param value The value to set.
- */
-void
-sg_cvar_setl(const char *section, const char *name, long value);
-
-/**
- * @brief Get a configuration variable as a long integer.
- *
- * @param section The configuration section.
- * @param name The variable name.
- * @param value On return, the value if found.
- * @return 1 if the variable was found and conversion was successful,
- * 0 otherwise.
- */
-int
-sg_cvar_getl(const char *section, const char *name, long *value);
-
-/**
- * @brief Set a configuration variable to a boolean.
- *
- * @param section The configuration section.
- * @param name The variable name.
- * @param value The value to set.
- */
-void
-sg_cvar_setb(const char *section, const char *name, int value);
-
-/**
- * @brief Get a configuration variable as a boolean.
- *
- * @param section The configuration section.
- * @param name The variable name.
- * @param value On return, the value if found.
- * @return 1 if the variable was found and conversion was successful,
- * 0 otherwise.
- */
-int
-sg_cvar_getb(const char *section, const char *name, int *value);
-
-/**
- * @brief Set a configuration variable to a floating-point number.
- *
- * @param section The configuration section.
- * @param name The variable name.
- * @param value The value to set.
- */
-void
-sg_cvar_setd(const char *section, const char *name, double value);
-
-/**
- * @brief Get a configuration variable as a floating-point number.
- *
- * @param section The configuration section.
- * @param name The variable name.
- * @param value On return, the value if found.
- * @return 1 if the variable was found and conversion was successful,
- * 0 otherwise.
- */
-int
-sg_cvar_getd(const char *section, const char *name, double *value);
+sg_cvar_set(const char *fullname, size_t fullnamelen,
+            const char *value, unsigned flags);
 
 #ifdef __cplusplus
 }

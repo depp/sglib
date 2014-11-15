@@ -15,8 +15,6 @@
 #define SG_MIXER_SOUND_MAXSZ (16 * 1024 * 1024)
 
 struct sg_mixer_soundglobal {
-    struct sg_logger *log;
-
     /* Lock for this structure.  */
     struct sg_lock lock;
 
@@ -34,7 +32,6 @@ static struct sg_mixer_soundglobal sg_mixer_soundglobal;
 void
 sg_mixer_sound_init(void)
 {
-    sg_mixer_soundglobal.log = sg_logger_get("resource");
     sg_lock_init(&sg_mixer_soundglobal.lock);
 }
 
@@ -110,11 +107,9 @@ sg_mixer_sound_load(struct sg_mixer_sound *sound, int rate)
 
 err:
     if (why)
-        sg_logerrf(sg_mixer_soundglobal.log, SG_LOG_ERROR, err,
-                   "%s: %s", sound->path, why);
+        sg_logerrf(SG_LOG_ERROR, err, "%s: %s", sound->path, why);
     else
-        sg_logerrs(sg_mixer_soundglobal.log, SG_LOG_ERROR, err,
-                   sound->path);
+        sg_logerrs(SG_LOG_ERROR, err, sound->path);
     sg_error_clear(&err);
 
     if (buf)

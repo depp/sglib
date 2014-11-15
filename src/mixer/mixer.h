@@ -1,10 +1,12 @@
 /* Copyright 2014 Dietrich Epp.
    This file is part of SGLib.  SGLib is licensed under the terms of the
    2-clause BSD license.  For more information, see LICENSE.txt. */
+#include "sg/cvar.h"
 #include "sg/defs.h"
 #include "sg/mixer.h"
 #include "sg/atomic.h"
 #include "sg/thread.h"
+#include "config.h"
 #include "time.h"
 
 enum {
@@ -195,6 +197,12 @@ sg_mixer_mixdown_get_f32(struct sg_mixer_mixdowniface *mp,
 
 /* Global mixer system state.  */
 struct sg_mixer {
+#if defined ENABLE_AUDIO_ALSA
+    struct sg_cvar_string cvar_alsadevice;
+#endif
+    struct sg_cvar_int cvar_rate;
+    struct sg_cvar_int cvar_bufsize;
+
     /* Global lock used for communication between different threads
        that use the mixer.  Contention is kept to a minimum: this is
        only locked when committing mixer commands, when receiving

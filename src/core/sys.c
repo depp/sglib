@@ -40,14 +40,12 @@ const struct sg_game_info sg_game_info_defaults = {
 };
 
 void
-sg_sys_init(void)
+sg_sys_init(int argc, char **argv)
 {
-    struct sg_logger *log;
     sg_sys_siginit();
+    sg_cvar_init(argc, argv);
     sg_log_init();
-    log = sg_logger_get("init");
-    if (SG_LOG_INFO >= log->level)
-        sg_version_print();
+    sg_version_print();
     sg_path_init();
     sg_clock_init();
     sg_rand_seed(&sg_rand_global, 1);

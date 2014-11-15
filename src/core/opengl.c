@@ -24,24 +24,23 @@ static const struct sg_opengl_error SG_ERROR_OPENGL_NAMES[] = {
 };
 
 static void
-sg_opengl_logerror(const char *where, struct sg_logger *logger, GLenum code)
+sg_opengl_logerror(const char *where, GLenum code)
 {
     int i, n = sizeof(SG_ERROR_OPENGL_NAMES) / sizeof(*SG_ERROR_OPENGL_NAMES);
     for (i = 0; i < n; i++) {
         if (SG_ERROR_OPENGL_NAMES[i].code == code) {
-            sg_logf(logger, SG_LOG_ERROR, "%s: OpenGL error GL_%s",
+            sg_logf(SG_LOG_ERROR, "%s: OpenGL error GL_%s",
                     where, SG_ERROR_OPENGL_NAMES[i].name);
             return;
         }
     }
-    sg_logf(logger, SG_LOG_ERROR, "%s: OpenGL error 0x%04x",
+    sg_logf(SG_LOG_ERROR, "%s: OpenGL error 0x%04x",
             where, code);
 }
 
 int
 sg_opengl_checkerror(const char *msg, ...)
 {
-    struct sg_logger *logger;
     va_list ap;
     char where[256];
     GLenum error;
@@ -59,9 +58,8 @@ sg_opengl_checkerror(const char *msg, ...)
 #endif
     va_end(ap);
 
-    logger = sg_logger_get("opengl");
     do {
-        sg_opengl_logerror(where, logger, error);
+        sg_opengl_logerror(where, error);
         error = glGetError();
     } while (error);
 

@@ -13,8 +13,7 @@
 static void
 sg_vorbis_log(const char *msg)
 {
-    sg_logf(sg_logger_get("audio"), SG_LOG_ERROR,
-            "Vorbis error: %s", msg);
+    sg_logf(SG_LOG_ERROR, "Vorbis error: %s", msg);
 }
 
 static void

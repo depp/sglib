@@ -13,6 +13,10 @@ extern const struct sg_game_info sg_game_info_defaults;
    exception of sg_net_init(), which may be called at any time after
    the logging system is initialized.  */
 
+/* Initialize the CVar system.  */
+void
+sg_cvar_init(int argc, char **argv);
+
 /* Initialize logging subsystem.  This is called first so other
    subsystems can log errors.  */
 void
@@ -44,11 +48,11 @@ sg_net_init(void);
    These provide a thin layer around the game export functions, or
    provide a thin layer around platform functionality.  */
 
-/* Initialize all library subsystems and the game.  This should be
-   called after the command line arguments are parsed and passed to
-   sg_cvar_addarg.  */
+/* Initialize all library subsystems and the game.  The arguments
+   should not include the executable name, i.e., if called from
+   main(), call sg_sys_init(argc-1, argv+1).  */
 void
-sg_sys_init(void);
+sg_sys_init(int argc, char **argv);
 
 /* Get information about the game.  Details not provided by the game
    are filled in with sensible defaults.  This should be called by

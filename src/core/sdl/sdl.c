@@ -57,8 +57,7 @@ sg_sdl_updatecapture(void)
         sg_sdl.have_capture = enabled;
     } else {
         if (enabled)
-            sg_logs(sg_logger_get(NULL), SG_LOG_WARN,
-                    "failed to set relative mouse mode");
+            sg_logs(SG_LOG_WARN, "failed to set relative mouse mode");
         return;
     }
 }
@@ -71,7 +70,7 @@ sg_sys_capturemouse(int enabled)
 }
 
 void
-sg_version_platform(struct sg_logger *lp)
+sg_version_platform(void)
 {
     char v1[16], v2[16];
     SDL_version v;
@@ -87,7 +86,7 @@ sg_version_platform(struct sg_logger *lp)
     _snprintf_s(v2, sizeof(v2), _TRUNCATE, "%d.%d.%d",
         v.major, v.minor, v.patch);
 #endif
-    sg_version_lib(lp, "LibSDL", v1, v2);
+    sg_version_lib("LibSDL", v1, v2);
 }
 
 SG_ATTR_NORETURN
@@ -104,18 +103,13 @@ sdl_init(int argc, char *argv[])
     GLenum err;
     union sg_event evt;
     struct sg_game_info gameinfo;
-    int flags, i;
+    int flags;
 
-    for (i = 1; i < argc; i++) {
-        if ((argv[i][0] >= 'a' && argv[i][0] <= 'z') ||
-            (argv[i][0] >= 'A' && argv[i][0] <= 'Z'))
-            sg_cvar_addarg(NULL, NULL, argv[i]);
-    }
     flags = SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_EVENTS;
     if (SDL_Init(flags))
         sdl_error("could not initialize LibSDL");
 
-    sg_sys_init();
+    sg_sys_init(argc - 1, argv + 1);
     gameinfo = sg_game_info_defaults;
     sg_sys_getinfo(&gameinfo);
 

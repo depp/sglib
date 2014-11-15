@@ -211,8 +211,7 @@ ogg_eof:
     goto done;
 
 ogg_error:
-    sg_logf(sg_logger_get("audio"), SG_LOG_ERROR,
-            "Ogg error: %s", msg);
+    sg_logf(SG_LOG_ERROR, "Ogg error: %s", msg);
     sg_error_data(err, "ogg");
     r = -1;
     goto done;
@@ -227,8 +226,7 @@ done:
         decoder_free(decoder);
     if (!r) {
         if (!pcmcount) {
-            sg_logs(sg_logger_get("audio"), SG_LOG_ERROR,
-                    "No streams with known codecs were found");
+            sg_logs(SG_LOG_ERROR, "No streams with known codecs were found");
             sg_error_data(err, "ogg");
             return -1;
         }

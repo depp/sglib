@@ -1,248 +1,465 @@
 /* Copyright 2012-2014 Dietrich Epp.
    This file is part of SGLib.  SGLib is licensed under the terms of the
    2-clause BSD license.  For more information, see LICENSE.txt. */
+#include "cvartable.h"
+#include "private.h"
 #include "sg/cvar.h"
-#include "sg/configfile.h"
-
-#include <float.h>
+#include "sg/entry.h"
+#include "sg/log.h"
+#include <errno.h>
 #include <limits.h>
 #include <math.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-static struct sg_configfile sg_cvar_conf, sg_cvar_arg;
+/* The default cvar section.  */
+static const char SG_CVAR_DEFAULTSECTION[] = "general";
+
+/* Maximum length for cvar strings.  */
+#define SG_CVAR_MAXLEN 1023
+
+/* Private cvar flags.  */
+enum {
+    /* The cvar has a value which should be saved to the configuration
+       file in the "persistent_value" slot.  */
+    SG_CVAR_HASPERSISTENT = 020,
+    /* Allow a cvar to be created if it does not exist.  */
+    SG_CVAR_CREATE = 040,
+
+    SG_CVAR_PUBMASK = 017
+};
+
+/* Cvar types.  */
+enum {
+    SG_CVAR_STRING = 1,
+    SG_CVAR_USER = 2,
+    SG_CVAR_INT = 3,
+    SG_CVAR_FLOAT = 4,
+    SG_CVAR_BOOL = 5
+};
+
+/* All cvar sections.  */
+static struct sg_cvartable sg_cvar_section;
+
+/* Test whether a string is a member of a set.  The set is a string,
+   with each element terminated by a NUL byte, and the set terminated
+   by a second NUL byte.  */
+static int
+sg_cvar_strmemb(const char *set, const char *elem)
+{
+    const char *pset = set, *pelem;
+    int cset, celem;
+    while (*pset) {
+        pelem = elem;
+        while (1) {
+            cset = *pset++;
+            celem = *pelem++;
+            if (celem >= 'A' && celem <= 'Z')
+                celem += 'a' - 'A';
+            if (celem != cset) {
+                while (cset)
+                    cset = *pset++;
+                break;
+            }
+            if (!celem)
+                return 1;
+        }
+    }
+    return 0;
+}
+
+static union sg_cvar *
+sg_cvar_get(const char *secbuf, const char *namebuf)
+{
+    struct sg_cvartable *sectable;
+    sectable = sg_cvartable_get(&sg_cvar_section, secbuf);
+    if (!sectable)
+        return NULL;
+    return sg_cvartable_get(sectable, namebuf);
+}
+
+static void **
+sg_cvar_insert(const char *secbuf, const char *namebuf)
+{
+    void **secptr, **varptr;
+    struct sg_cvartable *sectable;
+
+    secptr = sg_cvartable_insert(&sg_cvar_section, secbuf);
+    if (!secptr)
+        goto panic;
+    sectable = *secptr;
+    if (!sectable) {
+        sectable = malloc(sizeof(*sectable));
+        if (!sectable)
+            goto panic;
+        sg_cvartable_init(sectable);
+        *secptr = sectable;
+    }
+
+    varptr = sg_cvartable_insert(&sg_cvar_section, namebuf);
+    if (!varptr)
+        goto panic;
+
+    return varptr;
+
+panic:
+    sg_sys_abort("out of memory");
+    return NULL;
+}
 
 static int
-to_lower(int c)
+sg_cvar_set_obj(const char *secbuf, const char *namebuf, union sg_cvar *cvar,
+                const char *value, unsigned flags)
 {
-    if (c >= 'A' && c <= 'Z')
-        return c + ('a' - 'A');
-    return c;
-}
+    static const char
+        BAD_INT[] = "invalid integer",
+        BAD_FLOAT[] = "invalid floating-point number",
+        BAD_BOOL[] = "invalid boolean";
+    const char *msg;
+    unsigned cflags = cvar->chead.flags, type = cflags >> 16;
+    int clamped = 0;
 
-void
-sg_cvar_addarg(const char *section, const char *name, const char *value)
-{
-    char buf[128];
-    const char *p, *sptr, *nptr, *vptr;
-    size_t len;
-    int r;
-
-    if (!name) {
-        p = strchr(value, '=');
-        if (!p)
-            goto invalid;
-        len = p - value;
-        if (len >= sizeof(buf))
-            goto invalid;
-        memcpy(buf, value, len);
-        buf[len] = '\0';
-        vptr = p + 1;
-        nptr = buf;
-    } else {
-        vptr = value;
-        nptr = name;
+    if (cflags & SG_CVAR_READONLY) {
+        msg = "cvar is read-only";
+        goto fail;
     }
 
-    if (!section) {
-        p = strrchr(nptr, '.');
-        if (!p)
-            goto invalid;
-        len = p - nptr;
-        if (name) {
-            if (len >= sizeof(buf))
-                goto invalid;
-            memcpy(buf, nptr, len);
+    if ((cflags & SG_CVAR_INITONLY) && !(flags & SG_CVAR_INITONLY)) {
+        msg = "cvar can only be set at startup";
+        goto fail;
+    }
+
+    switch (type) {
+    case SG_CVAR_STRING:
+    case SG_CVAR_USER:
+    {
+        char *newstring, *prevstring;
+        size_t len;
+        len = strlen(value);
+        if (len > SG_CVAR_MAXLEN) {
+            msg = "value is too long";
+            goto fail;
         }
-        buf[len] = '\0';
-        nptr = p + 1;
-        sptr = buf;
-    } else {
-        sptr = section;
+        newstring = malloc(len + 1);
+        if (!newstring) {
+            sg_sys_abort("out of memory");
+            return -1;
+        }
+        memcpy(newstring, value, len + 1);
+        prevstring = cvar->cstring.value;
+        if (prevstring != cvar->cstring.persistent_value &&
+            prevstring != cvar->cstring.default_value)
+            free(prevstring);
+        cvar->cstring.value = newstring;
+        if (flags & SG_CVAR_PERSISTENT) {
+            prevstring = cvar->cstring.persistent_value;
+            if (prevstring != cvar->cstring.default_value)
+                free(prevstring);
+            cvar->cstring.persistent_value = newstring;
+        }
     }
-
-    r = sg_configfile_set(&sg_cvar_arg, sptr, nptr, vptr);
-    if (r) { }
-    return;
-
-invalid:
-    return;
-}
-
-void
-sg_cvar_sets(const char *section, const char *name, const char *value)
-{
-    int r;
-    r = sg_configfile_set(&sg_cvar_conf, section, name, value);
-    if (r) { }
-    sg_configfile_remove(&sg_cvar_arg, section, name);
-}
-
-int
-sg_cvar_gets(const char *section, const char *name, const char **value)
-{
-    const char *r;
-    r = sg_configfile_get(&sg_cvar_arg, section, name);
-    if (!r)
-        r = sg_configfile_get(&sg_cvar_conf, section, name);
-    if (!r)
-        return 0;
-    *value = r;
-    return 1;
-}
-
-void
-sg_cvar_seti(const char *section, const char *name, int value)
-{
-    sg_cvar_setl(section, name, value);
-}
-
-int
-sg_cvar_geti(const char *section, const char *name, int *value)
-{
-    long l;
-    if (!sg_cvar_getl(section, name, &l))
-        return 0;
-    if (l >= INT_MAX)
-        *value = INT_MAX;
-    else if (l <= INT_MIN)
-        *value = INT_MIN;
-    else
-        *value = (int) l;
-    return 1;
-}
-
-void
-sg_cvar_setl(const char *section, const char *name, long value)
-{
-    char buf[32];
-#if !defined(_WIN32)
-    snprintf(buf, sizeof(buf), "%ld", value);
-#else
-    _snprintf_s(buf, sizeof(buf), _TRUNCATE, "%ld", value);
-#endif
-    sg_cvar_sets(section, name, buf);
-}
-
-int
-sg_cvar_getl(const char *section, const char *name, long *value)
-{
-    char *e;
-    char const *s;
-    long l;
-
-    if (!sg_cvar_gets(section, name, &s))
-        return 0;
-    if (!*s)
-        return 0;
-    l = strtol(s, &e, 0);
-    if (*e)
-        return 0;
-    *value = l;
-    return 1;
-}
-
-void
-sg_cvar_setb(const char *section, const char *name, int value)
-{
-    sg_cvar_sets(section, name, value ? "yes" : "no");
-}
-
-/* Recognizes true/false, yes/no, on/off */
-int
-sg_cvar_getb(const char *section, const char *name, int *value)
-{
-    const char *s;
-    size_t l;
-    unsigned i, b;
-    char buf[8];
-
-    if (!sg_cvar_gets(section, name, &s))
-        return 0;
-    l = strlen(s);
-    if (l > 5)
-        return 0;
-    for (i = 0; i < l; ++i)
-        buf[i] = to_lower(s[i]);
-    buf[l] = '\0';
-
-    b = 2;
-    switch (l) {
-    case 2:
-        if (!strcmp(buf, "no"))
-            b = 0;
-        else if (!strcmp(buf, "on"))
-            b = 1;
         break;
 
-    case 3:
-        if (!strcmp(buf, "yes"))
-            b = 1;
-        else if (!strcmp(buf, "off"))
-            b = 0;
+    case SG_CVAR_INT:
+    {
+        long newintl;
+        int newint, ecode;
+        char *end;
+
+        if (!*value) {
+            msg = BAD_INT;
+            goto fail;
+        }
+        errno = 0;
+        newintl = strtol(value, &end, 0);
+        ecode = errno;
+        if (*end) {
+            msg = BAD_INT;
+            goto fail;
+        }
+        if ((newintl == LONG_MAX && ecode == ERANGE) ||
+            newintl > cvar->cint.max_value) {
+            clamped = 1;
+            newint = cvar->cint.max_value;
+        } else if ((newintl == LONG_MIN && ecode == ERANGE) ||
+                   newintl < cvar->cint.min_value) {
+            clamped = 1;
+            newint = cvar->cint.min_value;
+        } else {
+            newint = (int) newintl;
+        }
+        cvar->cint.value = newint;
+        if (flags & SG_CVAR_PERSISTENT)
+            cvar->cint.persistent_value = newint;
+    }
         break;
 
-    case 4:
-        if (!strcmp(buf, "true"))
-            b = 1;
+    case SG_CVAR_FLOAT:
+    {
+        double newfloat;
+        int ecode;
+        char *end;
+        if (!*value) {
+            msg = BAD_FLOAT;
+            goto fail;
+        }
+        errno = 0;
+        newfloat = strtod(value, &end);
+        ecode = errno;
+        if (*end || !isfinite(newfloat)) {
+            msg = BAD_FLOAT;
+            goto fail;
+        }
+        if ((newfloat == HUGE_VAL && ecode == ERANGE) ||
+            newfloat > cvar->cfloat.max_value) {
+            clamped = 1;
+            newfloat = cvar->cfloat.max_value;
+        } else if ((newfloat == -HUGE_VAL && ecode == ERANGE) ||
+                   newfloat < cvar->cfloat.min_value) {
+            clamped = 1;
+            newfloat = cvar->cfloat.min_value;
+        }
+        cvar->cfloat.value = newfloat;
+        if (flags & SG_CVAR_PERSISTENT)
+            cvar->cfloat.value = newfloat;
+    }
         break;
 
-    case 5:
-        if (!strcmp(buf, "false"))
-            b = 0;
+    case SG_CVAR_BOOL:
+    {
+        int newbool;
+        if (sg_cvar_strmemb("true\0yes\0on\0001\0", value)) {
+            newbool = 1;
+        } else if (sg_cvar_strmemb("false\0no\0off\0000\0", value)) {
+            newbool = 0;
+        } else {
+            msg = BAD_BOOL;
+            goto fail;
+        }
+        cvar->cbool.value = newbool;
+        if (flags & SG_CVAR_PERSISTENT)
+            cvar->cbool.persistent_value = newbool;
+    }
         break;
 
     default:
-        break;
+        sg_sys_abort("corrupted cvar");
+        return -1;
     }
 
-    if (b == 2)
-        return 0;
-    *value = b;
-    return 1;
+    if (clamped) {
+        sg_logf(SG_LOG_WARN, "Value out of range for cvar %s.%s",
+                secbuf, namebuf);
+    }
+
+    cvar->chead.flags = cflags | SG_CVAR_MODIFIED;
+    return 0;
+
+fail:
+    sg_logf(SG_LOG_WARN, "Could not set cvar %s.%s: %s",
+            secbuf, namebuf, msg);
+    return -1;
+}
+
+static int
+sg_cvar_names(char *secbuf, const char *section, size_t sectionlen,
+              char *namebuf, const char *name, size_t namelen)
+{
+    if (section == NULL || sectionlen == 0) {
+        section = SG_CVAR_DEFAULTSECTION;
+        sectionlen = strlen(section);
+    }
+
+    if (sg_cvartable_getkey(secbuf, section, sectionlen)) {
+        sg_logf(SG_LOG_WARN, "Invalid cvar section name: \"%s\"", section);
+        return -1;
+    }
+
+    if (sg_cvartable_getkey(namebuf, name, namelen)) {
+        sg_logf(SG_LOG_WARN, "Invalid cvar name: \"%s\"", name);
+        return -1;
+    }
+
+    return 0;
+}
+
+static int
+sg_cvar_set_impl(const char *fullname, size_t fullnamelen,
+                 const char *value, unsigned flags)
+{
+    const char *p;
+    const char *section, *name;
+    size_t sectionlen, namelen;
+    char secbuf[SG_CVARLEN + 1], namebuf[SG_CVARLEN + 1];
+    int r;
+    union sg_cvar *cvar;
+
+    p = memchr(fullname, '.', fullnamelen);
+    if (p) {
+        section = fullname;
+        sectionlen = p - fullname;
+        name = p + 1;
+        namelen = fullname + fullnamelen - name;
+    } else {
+        section = fullname;
+        sectionlen = 0;
+        name = fullname;
+        namelen = fullnamelen;
+    }
+
+    r = sg_cvar_names(secbuf, section, sectionlen, namebuf, name, namelen);
+    if (r)
+        return -1;
+
+    if (flags & SG_CVAR_CREATE) {
+        void **varptr;
+        struct sg_cvar_string *newvar;
+        char *empty = (char *) "";
+        varptr = sg_cvar_insert(secbuf, namebuf);
+        cvar = *varptr;
+        if (!cvar) {
+            newvar = malloc(sizeof(*newvar));
+            if (!newvar) {
+                sg_sys_abort("out of memory");
+                return -1;
+            }
+            newvar->flags = SG_CVAR_USER << 16;
+            newvar->value = empty;
+            newvar->persistent_value = empty;
+            newvar->default_value = empty;
+            *varptr = newvar;
+            cvar = (union sg_cvar *) newvar;
+        }
+    } else {
+        cvar = sg_cvar_get(secbuf, namebuf);
+        if (!cvar) {
+            sg_logf(SG_LOG_WARN, "Cvar does not exist: %s.%s",
+                    secbuf, namebuf);
+            return -1;
+        }
+    }
+
+    return sg_cvar_set_obj(secbuf, namebuf, cvar, value, flags);
+}
+
+static void
+sg_cvar_define(const char *section, const char *name, union sg_cvar *cvar)
+{
+    char secbuf[SG_CVARLEN + 1], namebuf[SG_CVARLEN + 1];
+    void **varptr;
+    unsigned type;
+    union sg_cvar *prev;
+    int r;
+
+    r = sg_cvar_names(secbuf, section, section ? strlen(section) : 0,
+                      namebuf, name, strlen(name));
+    if (r)
+        return;
+
+    varptr = sg_cvar_insert(secbuf, namebuf);
+    prev = *varptr;
+    if (prev) {
+        type = prev->chead.flags >> 16;
+        if (type != SG_CVAR_USER) {
+            sg_logf(SG_LOG_WARN, "Duplicate cvar definition: %s.%s",
+                    secbuf, namebuf);
+            return;
+        }
+        sg_cvar_set_obj(
+            secbuf, namebuf, cvar,
+            prev->cstring.value, prev->cstring.flags | SG_CVAR_INITONLY);
+        if (prev->cstring.value != prev->cstring.persistent_value &&
+            prev->cstring.value != prev->cstring.default_value)
+            free(prev->cstring.value);
+        if (prev->cstring.persistent_value !=
+            prev->cstring.default_value)
+            free(prev->cstring.persistent_value);
+        free(prev);
+    }
+    *varptr = cvar;
 }
 
 void
-sg_cvar_setd(const char *section, const char *name, double value)
+sg_cvar_defstring(const char *section, const char *name,
+                  struct sg_cvar_string *cvar,
+                  const char *value, unsigned flags)
 {
-    char buf[64];
-#if defined _WIN32
-    if (_finite(value)) {
-        _snprintf_s(buf, sizeof(buf), _TRUNCATE, "%.17g", value);
-        sg_cvar_sets(section, name, buf);
-    } else if (_isnan(value)) {
-        sg_cvar_sets(section, name, "nan");
-    } else {
-        sg_cvar_sets(section, name, value > 0 ? "+inf" : "-inf");
+    char *cvalue;
+    if (!value)
+        value = "";
+    cvalue = (char *) value;
+    cvar->flags = (flags & SG_CVAR_PUBMASK) | (SG_CVAR_STRING << 16);
+    cvar->value = cvalue;
+    cvar->persistent_value = cvalue;
+    cvar->default_value = value;
+    sg_cvar_define(section, name, (union sg_cvar *) cvar);
+}
+
+void
+sg_cvar_defint(const char *section, const char *name,
+               struct sg_cvar_int *cvar,
+               int value, int min_value, int max_value,
+               unsigned flags)
+{
+    cvar->flags = (flags & SG_CVAR_PUBMASK) | (SG_CVAR_INT << 16);
+    cvar->value = value;
+    cvar->persistent_value = value;
+    cvar->default_value = value;
+    cvar->min_value = min_value;
+    cvar->max_value = max_value;
+    sg_cvar_define(section, name, (union sg_cvar *) cvar);
+}
+
+void
+sg_cvar_deffloat(const char *section, const char *name,
+                 struct sg_cvar_float *cvar,
+                 double value, double min_value, double max_value,
+                 unsigned flags)
+{
+    cvar->flags = (flags & SG_CVAR_PUBMASK) | (SG_CVAR_FLOAT << 16);
+    cvar->value = value;
+    cvar->persistent_value = value;
+    cvar->default_value = value;
+    cvar->min_value = min_value;
+    cvar->max_value = max_value;
+    sg_cvar_define(section, name, (union sg_cvar *) cvar);
+}
+
+void
+sg_cvar_defbool(const char *section, const char *name,
+                struct sg_cvar_bool *cvar,
+                int value, unsigned flags)
+{
+    cvar->flags = (flags & SG_CVAR_PUBMASK) | (SG_CVAR_BOOL << 16);
+    cvar->value = value;
+    cvar->persistent_value = value;
+    cvar->default_value = value;
+    sg_cvar_define(section, name, (union sg_cvar *) cvar);
+}
+
+void
+sg_cvar_init(int argc, char **argv)
+{
+    int i;
+    const char *arg, *p;
+    for (i = 0; i < argc; i++) {
+        arg = argv[i];
+        if (!((*arg >= 'a' && *arg <= 'z') ||
+              (*arg >= 'A' && *arg <= 'Z') ||
+              *arg == '_'))
+            continue;
+        p = strchr(arg, '=');
+        if (!p)
+            continue;
+        sg_cvar_set_impl(arg, p - arg, p + 1,
+                         SG_CVAR_INITONLY | SG_CVAR_CREATE);
     }
-#else
-    if (isfinite(value)) {
-        snprintf(buf, sizeof(buf), "%.17g", value);
-        sg_cvar_sets(section, name, buf);
-    } else if (isnan(value)) {
-        sg_cvar_sets(section, name, "nan");
-    } else {
-        sg_cvar_sets(section, name, value > 0 ? "+inf" : "-inf");
-    }
-#endif
 }
 
 int
-sg_cvar_getd(const char *section, const char *name, double *value)
+sg_cvar_set(const char *fullname, size_t fullnamelen,
+            const char *value, unsigned flags)
 {
-    const char *s;
-    char *p;
-    double d;
-
-    if (!sg_cvar_gets(section, name, &s))
-        return 0;
-    if (!*s)
-        return 0;
-
-    d = strtod(s, &p);
-    if (*p)
-        return 0;
-    *value = d;
-    return 1;
+    return sg_cvar_set_impl(fullname, fullnamelen, value,
+                            flags & SG_CVAR_PERSISTENT);
 }

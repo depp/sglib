@@ -14,7 +14,6 @@ audio_file.h
 binary.h
 byteorder.h
 clock.h
-configfile.h
 cpu.h
 cvar.h
 defs.h
@@ -59,8 +58,9 @@ writer.c
 src.add(path='src/core', sources='''
 clock.c
 clock_impl.h
-configfile.c
 cvar.c
+cvartable.c
+cvartable.h
 error.c
 file_impl.h
 file_posix.c posix

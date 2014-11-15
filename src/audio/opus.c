@@ -22,8 +22,7 @@
 static void
 sg_opus_log(const char *msg)
 {
-    sg_logf(sg_logger_get("audio"), SG_LOG_ERROR,
-            "Opus error: %s", msg);
+    sg_logf(SG_LOG_ERROR, "Opus error: %s", msg);
 }
 
 static void

@@ -9,8 +9,6 @@ struct sg_log_msg {
     size_t datelen;
     const char *level;
     size_t levellen;
-    const char *name;
-    size_t namelen;
     const char *msg;
     size_t msglen;
     sg_log_level_t levelval;

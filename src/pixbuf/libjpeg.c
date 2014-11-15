@@ -156,7 +156,7 @@ sg_logf(sg_logger_get("image"), SG_LOG_ERROR,
 */
 
 void
-sg_version_libjpeg(struct sg_logger *lp)
+sg_version_libjpeg(void)
 {
     char vers[8];
     int major, minor;
@@ -173,5 +173,5 @@ sg_version_libjpeg(struct sg_logger *lp)
         snprintf(vers, sizeof(vers), "%d%c", major, minor + 'a');
     else
         snprintf(vers, sizeof(vers), "%d", major);
-    sg_version_lib(lp, "LibJPEG", vers, NULL);
+    sg_version_lib("LibJPEG", vers, NULL);
 }

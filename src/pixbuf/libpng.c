@@ -27,7 +27,7 @@ static void
 sg_png_error(png_struct *pngp, const char *msg)
 {
     struct sg_image_png *im = png_get_error_ptr(pngp);
-    sg_logf(sg_logger_get("image"), SG_LOG_ERROR, "LibPNG: %s", msg);
+    sg_logf(SG_LOG_ERROR, "LibPNG: %s", msg);
     sg_error_data(im->err, "PNG");
     longjmp(png_jmpbuf(pngp), 1);
 }
@@ -36,7 +36,7 @@ static void
 sg_png_warning(png_struct *pngp, const char *msg)
 {
     (void) pngp;
-    sg_logf(sg_logger_get("image"), SG_LOG_WARN, "LibPNG: %s", msg);
+    sg_logf(SG_LOG_WARN, "LibPNG: %s", msg);
 }
 
 static void
@@ -51,8 +51,7 @@ sg_image_png_read(png_struct *pngp, unsigned char *ptr, png_size_t len)
         memcpy(ptr, im->bufptr, len);
         im->bufptr += len;
     } else {
-        sg_logs(sg_logger_get("image"), SG_LOG_ERROR,
-                "PNG: unexpected end of file");
+        sg_logs(SG_LOG_ERROR, "PNG: unexpected end of file");
         err = png_get_error_ptr(pngp);
         sg_error_data(err, "PNG");
         longjmp(png_jmpbuf(pngp), 1);
@@ -193,7 +192,7 @@ sg_image_png(struct sg_buffer *buf, struct sg_error **err)
 
 invalid:
     sg_error_data(err, "PNG");
-    sg_logf(sg_logger_get("image"), SG_LOG_ERROR, msg);
+    sg_logf(SG_LOG_ERROR, msg);
     goto cleanup;
 
 cleanup:
@@ -316,7 +315,7 @@ done:
 }
 
 void
-sg_version_libpng(struct sg_logger *lp)
+sg_version_libpng(void)
 {
     int v = png_access_version_number(), maj, min, mic;
     char vers[16];
@@ -325,5 +324,5 @@ sg_version_libpng(struct sg_logger *lp)
     maj = min / 100;
     min = min % 100;
     snprintf(vers, sizeof(vers), "%d.%d.%d", maj, min, mic);
-    sg_version_lib(lp, "LibPNG", PNG_LIBPNG_VER_STRING, vers);
+    sg_version_lib("LibPNG", PNG_LIBPNG_VER_STRING, vers);
 }
