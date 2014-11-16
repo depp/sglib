@@ -41,7 +41,7 @@ class ConfigHeader(GeneratedSource):
             writevar(name, value and value != 'none')
             if not option.options:
                 continue
-            for optvalue in option.options:
+            for optvalue in sorted(option.options):
                 writevar('{}_{}'.format(name, macro(optvalue)),
                          value == optvalue)
 

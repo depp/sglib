@@ -60,7 +60,7 @@ class GeneratedSource(object):
             self.write(fp)
             value = fp.getvalue().encode('UTF-8')
 
-        if self.is_regenerated_always:
+        if self.is_regenerated_always or not self.dependencies:
             try:
                 with open(self.target, 'rb') as fp:
                     oldvalue = fp.read()
