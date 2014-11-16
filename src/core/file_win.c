@@ -1,4 +1,4 @@
-/* Copyright 2012 Dietrich Epp.
+/* Copyright 2012-2014 Dietrich Epp.
    This file is part of SGLib.  SGLib is licensed under the terms of the
    2-clause BSD license.  For more information, see LICENSE.txt. */
 /* Windows file / path code.  */
@@ -108,63 +108,6 @@ sg_file_w_seek(struct sg_file *f, int64_t off, int whence)
 }
 
 int
-sg_file_mkpardir(const wchar_t *path, struct sg_error **err)
-{
-    wchar_t *buf;
-    size_t len, i;
-    int ecode;
-
-    i = wcslen(path);
-    while (i > 0 && path[i-1] != '\\' && path[i-1] != '/')
-        i--;
-    if (i == 0)
-        return 0;
-    len = i;
-    buf = malloc(sizeof(wchar_t) * (len + 1));
-    if (!buf) {
-        sg_error_nomem(err);
-        return -1;
-    }
-    memcpy(buf, path, sizeof(wchar_t) * len);
-    buf[len] = '\0';
-    while (1) {
-        if (CreateDirectory(buf, NULL))
-            break;
-        ecode = GetLastError();
-        if (ecode != ERROR_PATH_NOT_FOUND) {
-            if (ecode == ERROR_ALREADY_EXISTS)
-                break;
-            sg_error_win32(err, ecode);
-            free(buf);
-            return -1;
-        }
-        i--;
-        while (i > 0 && path[i-1] != '\\' && path[i-1] != '/')
-            i--;
-        while (i > 0 && (path[i-1] == '\\' || path[i-1] == '/'))
-            i--;
-        if (i == 0)
-            return 0;
-        buf[i] = L'\0';
-    }
-    while (i < len) {
-        buf[i] = path[i];
-        while (i < len && buf[i] != L'0')
-            i++;
-        if (!CreateDirectory(buf, NULL)) {
-            ecode = GetLastError();
-            if (ecode != ERROR_ALREADY_EXISTS) {
-                sg_error_win32(err, ecode);
-                free(buf);
-                return -1;
-            }
-        }
-    }
-    free(buf);
-    return 0;
-}
-
-int
 sg_file_tryopen(struct sg_file **f, const wchar_t *path, int flags,
                 struct sg_error **e)
 {
@@ -186,7 +129,7 @@ sg_file_tryopen(struct sg_file **f, const wchar_t *path, int flags,
                 sg_error_win32(e, ecode);
                 return -1;
             }
-            if (sg_file_mkpardir(path, e))
+            if (sg_path_mkpardir(path, e))
                 return -1;
             h = CreateFileW(
                 path,
@@ -231,27 +174,4 @@ sg_file_tryopen(struct sg_file **f, const wchar_t *path, int flags,
         sg_error_win32(e, ecode);
         return -1;
     }
-}
-
-int
-sg_path_getexepath(pchar *path, size_t len)
-{
-    DWORD dr;
-    dr = GetModuleFileNameW(NULL, path, len);
-    if (!dr || dr >= len)
-        return 0;
-    path[dr] = '\0';
-    return 1;
-}
-
-int
-sg_path_checkdir(const pchar *path)
-{
-    DWORD dr;
-    dr = GetFileAttributesW(path);
-    if (dr == INVALID_FILE_ATTRIBUTES)
-        return 0;
-    if (!(dr & FILE_ATTRIBUTE_DIRECTORY))
-        return 0;
-    return 1;
 }

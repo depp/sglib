@@ -1,4 +1,4 @@
-/* Copyright 2012 Dietrich Epp.
+/* Copyright 2012-2014 Dietrich Epp.
    This file is part of SGLib.  SGLib is licensed under the terms of the
    2-clause BSD license.  For more information, see LICENSE.txt. */
 #ifndef SG_FILE_H
@@ -10,9 +10,6 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-/* The LFILE (low-level file) interface implements simple features
-   like reading an entire file into memory or writing a file
-   atomically.  */
 struct sg_error;
 
 /**
@@ -27,45 +24,64 @@ struct sg_error;
  * ensure this.
  */
 
+/**
+ * @brief Flags for opening files.
+ */
 enum {
-    /* Access modes (sg_file_open only) */
+    /** @brief Open the file for reading.  */
     SG_RDONLY = 00,
+    /** @brief Open the file for writing.  */
     SG_WRONLY = 01,
+    /** @brief Only search the user data path.  */
+    SG_USERONLY = 02,
+    /** @brief Only search the application data path.  */
+    SG_DATAONLY = 04
+};
 
-    /* Ignore files in archives */
-    SG_NO_ARCHIVE = 02,
-
-    /* Ignore files in read-only paths */
-    SG_LOCAL = 04,
-
-    /* Alias for files which can be overwritten */
-    SG_WRITABLE = SG_NO_ARCHIVE | SG_LOCAL,
-
-    /* Maximum length of an internal path, including NUL byte */
+enum {
+    /** @brief Maximum length of a path, including NUL byte.  */
     SG_MAX_PATH = 128
 };
 
-/* Normalize a path.  Returns the length of the result, or -1 if the
-   path is not legal, which sets the error.  The buffer must be
-   SG_MAX_PATH long.  The resulting path will use '/' as a path
-   separator, will not start with '/', and each component will be a
-   non-empty lower-case string containing only alphanumeric characters
-   and "-", "_", and ".".  No component will start or end with a
-   period, and no component will be a reserved device name on Windows.
-   If the input path refers to a directory, the output will either end
-   with '/' or be empty.  */
+/**
+ * @brief Normalize and sanitize a path.
+ *
+ * The resulting path will use '/' as a path separator, will not start
+ * with a '/', and each component will be a non-empty string
+ * containing only alphanumeric characters, '-', '_', and '.'.  No
+ * component will start or end with a period, and now component will
+ * be a reserved device name on Windows.  If the input path refers to
+ * a directory, the output will either end with '/' or be empty.
+ *
+ * @param buf The buffer to store the result, with length SG_MAX_PATH.
+ * @param path The path to normalize.
+ * @param pathlen The length of the path to normalize, in bytes.
+ * @param err On failure, the error.
+ * @return On success, a positive number or zero, indicating the
+ * length of the result.  On failure, a negative number.
+ */
 int
 sg_path_norm(char *buf, const char *path, size_t pathlen,
              struct sg_error **err);
 
-/* Join a relative path to a base path, and normalize the result.  The
-   base path must already be in the buffer.  If the base path is
-   nonempty but does not end with a slash, then the resulting path is
-   relative to the directory containing the base path.  Otherwise, the
-   resulting path is relative to the base path.  This is the same
-   logic used for relative URLs, but not the same logic used by
-   e.g. Python's os.path.join().  Has the same results as
-   sg_path_norm().  */
+/**
+ * @brief Join a relative path to a base path.
+ *
+ * The relative path is normalized and sanitized.  It is assumed that
+ * the base path is already normalized and sanitized.  This resolves
+ * paths in the same way that relative paths are resolved with URIs.
+ * Examples:
+ *
+ * - base: `dir/file.txt`, path: `image.jpg`, result: `dir/image.jpg`
+ * - base: `dir/subdir/`, path: `..`, result: `dir/`
+ *
+ * @param buf The base path and result, with size SG_MAX_PATH.
+ * @param path The relative path to append.
+ * @param pathlen The length of the relative path, in bytes.
+ * @param err On failure, the error.
+ * @return On success, a positive number or zero, indicating the
+ * length of the result.  On failure, a negative number.
+ */
 int
 sg_path_join(char *buf, const char *path, size_t pathlen,
              struct sg_error **err);
@@ -120,106 +136,147 @@ sg_buffer_decref(struct sg_buffer *fbuf)
         sg_buffer_free_(fbuf);
 }
 
-/* An abstract file open for reading.  Do not copy this structure.
-   The methods 'read' and 'close' must be set.  The 'length' and
-   'seek' methods may be both NULL or both set.  The 'map' method may
-   be NULL or may be set.  */
+/**
+ * @brief An abstract file.
+ *
+ * Do not copy this structure.
+ */
 struct sg_file {
-    /* Reference count, you may use this if you want.  It is
-       initialized to 1 but never examined.  */
-    unsigned refcount;
+    /**
+     * @brief Read data.
+     *
+     * @param fp This file.
+     * @param buf The destination buffer.
+     * @param amt The number of bytes to read.
+     * @return The number of bytes read, 0 if no bytes were read
+     * because the end of the file has been reached, or a negative
+     * number if an error occurred.
+     */
+    int (*read)(struct sg_file *fp, void *buf, size_t amt);
 
-    /* Return the number of bytes read for success, 0 for EOF, and -1
-       for errors.  */
-    int     (*read)  (struct sg_file *f, void *buf, size_t amt);
+    /**
+     * @brief Write data.
+     *
+     * @param fp This file.
+     * @param buf The source buffer.
+     * @param amt The number of bytes to write.
+     * @return The number of bytes written, or a negative number if an
+     * error occurred.
+     */
+    int (*write)(struct sg_file *fp, const void *buf, size_t amt);
 
-    /* Return the number of bytes written for success or -1 for
-       error.  */
-    int     (*write) (struct sg_file *f, const void *buf, size_t amt);
+    /**
+     * @brief Commit changes to the file.
+     *
+     * This is only valid for files which are open for writing.  After
+     * this function is called, only `close` should be called.
+     *
+     * @param fp This file.
+     * @return Zero if successful, non-zero if an error occurred.
+     */
+    int (*commit)(struct sg_file *fp);
 
-    /* Close the file.  Return 0 if successful, and -1 if there were
-       any pending IO errors.  In either case, the file will be
-       closed.  */
-    int     (*close) (struct sg_file *f);
+    /**
+     * @brief Close the file handle and free this structure.
+     *
+     * @param fp This file.
+     */
+    void (*close)(struct sg_file *fp);
 
-    /* Free the file structure.  Closes the file if necessary.  */
-    void    (*free)  (struct sg_file *f);
+    /**
+     * @brief Get the file's length.
+     *
+     * @param fp This file.
+     * @return The file's length, or a negative number if an error
+     * occurred.
+     */
+    int64_t (*length)(struct sg_file *fp);
 
-    /* Get the file length or return -1 for an error.  */
-    int64_t (*length)(struct sg_file *f);
+    /**
+     * @brief Seek to a new file position.
+     *
+     * @param fp This file.
+     * @param off The target offset.
+     * @param whence The interpretation of the file offset.
+     */
+    int64_t (*seek)(struct sg_file *fp, int64_t off, int whence);
 
-    /* Seek and return the new offset, or return -1 for an error.  */
-    int64_t (*seek)  (struct sg_file *f, int64_t off, int whence);
-
-    /*
-    void    (*map)   (struct sg_file *f, struct sg_buffer *buf,
-                      int64_t off, size_t len);
-    */
-
+    /**
+     * @brief The most recent error for operations on this file.
+     */
     struct sg_error *err;
-
 };
 
-/* Open a open a regular file, or return NULL for failure.
-
-   If extensions is not NULL, it is a list of extensions to search
-   separated by ":".  Extensions do not begin with a period.  If the
-   given path already starts with one of the extensions in the list,
-   it is stripped and that extension is tried first.  Earlier search
-   paths override later search paths.
-
-   For example, with search path "a:b", path "file", and extensions
-   "png:jpg", the following paths are tried in order:
-
-   > a/file.png a/file.jpg b/file.png b/file.jpg
-
-   The list of extensions is assumed to be safe and lower case.  */
+/**
+ * @brief Open a file.
+ *
+ * The path need not be NUL-terminated, sanitized, or normalized.
+ *
+ * When opening a file for reading, this will search through the user
+ * and application search paths for a file with the given relative
+ * path.  If a list of extensions is specified, then each of the
+ * extensions, from a colon-delimited list, will be tried at each
+ * point in the path.  Empty extensions are ignored.
+ *
+ * For example, with search paths `"a"` and `"b"`, path `"file"`, and
+ * extensions `"png:jpg"`, the following paths are tried in order:
+ *
+ * - `a/file.png`
+ * - `a/file.jpg`
+ * - `b/file.png`
+ * - `b/file.jpg`
+ *
+ * When opening a file for writing, the file is created in the user
+ * data path, and the list of extensions should be NULL.
+ *
+ * @param path The path to the file, relative to the search paths.
+ * @param pathlen The length of the path, in bytes.
+ * @param flags How to open the file.
+ * @param extensions List of extensions or NULL.
+ * @param err On failure, the error.
+ * @return A file handle, or NULL if an error occurred.
+ */
 struct sg_file *
 sg_file_open(const char *path, size_t pathlen, int flags,
-             const char *extensions, struct sg_error **e);
+             const char *extensions, struct sg_error **err);
 
 /**
- * @brief Get the contents of a file starting from the current
- * position.
+ * @brief Get the remaining contents of a file starting from the
+ * current position.
  *
- * @param f The file.
+ * If the amount of data remaining is larger than the specified
+ * maximum size, the operation will fail with an error in the
+ * ::SG_ERROR_DATA domain, but the file position will have changed.
+ * Errors will be recorded in the file handle structure.
  *
- * @param maxsize Maximum file size.  If the file is larger than this,
- * the operation will fail with the ::SG_ERROR_DATA domain.
- *
- * @return On success, a reference to a buffer containing the
- * requested data.  On failure, `NULL`, and an error will be set on
- * the file handle.
+ * @param fp The file.
+ * @param maxsize Maximum amount of data to read.
+ * @return A data buffer, or NULL if an error occurred.
  */
 struct sg_buffer *
-sg_file_readall(struct sg_file *f, size_t maxsize);
+sg_file_readall(struct sg_file *fp, size_t maxsize);
 
 /**
  * @brief Get the contents of a file given its path.
  *
- * @param path File path, relative to the game root directory.  Does
- * not need to be NUL-terminated, sanitized, or normalized.
- *
- * @param pathlen Length of the file path.
- *
- * @param flags File mode flags.  ::SG_RDONLY is assumed.
- *
- * @param extensions A NUL-terminated list of extensions to try,
- * separated by `':'`.  The extensions should not start with `'.'`.
- * For example, `"png:jpg"`.
- *
- * @param maxsize Maximum file size.  If the file is larger than this,
+ * If the file is larger than the specified maximum size,
  * the operation will fail with the ::SG_ERROR_DATA domain.
  *
- * @param e On failure, the error.
+ * See sg_file_open() for a more detailed description of the
+ * parameters.
  *
- * @return On success, a reference to a buffer containing the
- * requested data.  On failure, `NULL`.
+ * @param path  The path to the file, relative to the seacrh paths.
+ * @param pathlen The length of the file path, in bytes.
+ * @param flags How to open the file.  ::SG_RDONLY is implied.
+ * @param extensions List of extensions or NULL.
+ * @param maxsize Maximum file size.
+ * @param err On failure, the error.
+ * @return A data buffer, or NULL if an error occurred.
  */
 struct sg_buffer *
 sg_file_get(const char *path, size_t pathlen, int flags,
             const char *extensions,
-            size_t maxsize, struct sg_error **e);
+            size_t maxsize, struct sg_error **err);
 
 #ifdef __cplusplus
 }

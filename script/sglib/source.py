@@ -80,6 +80,8 @@ opengl.c
 pack.c
 path.c
 path_norm.c
+path_posix.c posix
+path_win.c windows
 private.h
 rand.c
 sys.c

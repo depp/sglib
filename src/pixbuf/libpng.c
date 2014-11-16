@@ -301,13 +301,13 @@ sg_pixbuf_writepng(struct sg_pixbuf *pbuf, const char *path, size_t pathlen,
 
 done:
     if (!ret) {
-        r = fp->close(fp);
+        r = fp->commit(fp);
         if (r) {
             ret = -1;
             sg_error_move(err, &fp->err);
         }
     }
-    fp->free(fp);
+    fp->close(fp);
     free(tmp);
     png_destroy_write_struct(
         (png_structp *) &pngp, (png_infop *) &infop);

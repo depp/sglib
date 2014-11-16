@@ -95,6 +95,6 @@ sg_file_get(const char *path, size_t pathlen, int flags,
     fbuf = sg_file_readall(f, maxsize);
     if (!fbuf)
         sg_error_move(e, &f->err);
-    f->free(f);
+    f->close(f);
     return fbuf;
 }

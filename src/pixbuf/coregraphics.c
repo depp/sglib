@@ -235,7 +235,7 @@ sg_pixbuf_writepng(struct sg_pixbuf *pbuf, const char *path, size_t pathlen,
     if (!success)
         FAIL();
 
-    r = fp->close(fp);
+    r = fp->commit(fp);
     if (!r)
         goto fileerror;
 
@@ -247,7 +247,7 @@ done:
     if (consumer) CFRelease(consumer);
     if (data) CFRelease(data);
     if (color_space) CFRelease(color_space);
-    fp->free(fp);
+    fp->close(fp);
     return ret;
 
 error:

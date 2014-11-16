@@ -155,15 +155,14 @@ sg_audio_writer_close(struct sg_audio_writer *writer,
         pos += r;
     }
 
-    r = fp->close(fp);
-    fp = NULL;
-
+    r = fp->commit(fp);
+    if (r)
+        goto error;
     ret = 0;
     goto done;
 
 done:
-    if (fp)
-        fp->close(fp);
+    fp->close(fp);
     free(writer->tmp);
     free(writer);
     return ret;
