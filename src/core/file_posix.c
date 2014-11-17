@@ -18,14 +18,6 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-void
-sg_buffer_free_(struct sg_buffer *fbuf)
-{
-    if (fbuf->data)
-        free(fbuf->data);
-    free(fbuf);
-}
-
 struct sg_file_u {
     struct sg_file h;
     int fdes;

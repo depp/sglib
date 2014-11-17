@@ -9,14 +9,6 @@
 #include <Windows.h>
 #include <stdio.h>
 
-void
-sg_buffer_free_(struct sg_buffer *fbuf)
-{
-    if (fbuf->data)
-        free(fbuf->data);
-    free(fbuf);
-}
-
 struct sg_file_w {
     struct sg_file h;
     HANDLE hdl;

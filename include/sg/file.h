@@ -93,7 +93,7 @@ sg_path_join(char *buf, const char *path, size_t pathlen,
  */
 struct sg_buffer {
     /**
-     * @private @brief Reference count.
+     * @private @brief Reference count, do not modify.
      */
     sg_atomic_t refcount;
 
@@ -111,30 +111,16 @@ struct sg_buffer {
 };
 
 /**
- * @private @brief Free a buffer of data.
- */
-void
-sg_buffer_free_(struct sg_buffer *fbuf);
-
-/**
  * @brief Increment a buffer's reference count.
  */
-SG_INLINE void
-sg_buffer_incref(struct sg_buffer *fbuf)
-{
-    sg_atomic_inc(&fbuf->refcount);
-}
+void
+sg_buffer_incref(struct sg_buffer *fbuf);
 
 /**
  * @brief Decrement a buffer's reference count.
  */
-SG_INLINE void
-sg_buffer_decref(struct sg_buffer *fbuf)
-{
-    int c = sg_atomic_fetch_add(&fbuf->refcount, -1);
-    if (c == 1)
-        sg_buffer_free_(fbuf);
-}
+void
+sg_buffer_decref(struct sg_buffer *fbuf);
 
 /**
  * @brief An abstract file.

@@ -62,6 +62,7 @@ cvar.c
 cvartable.c
 cvartable.h
 error.c
+file.c
 file_impl.h
 file_posix.c posix
 file_read.c
