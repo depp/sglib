@@ -15,21 +15,17 @@ sg_file_readall(struct sg_file *f, size_t maxsize)
     struct sg_buffer *fbuf;
     unsigned char *buf = NULL, *nbuf;
     size_t len, nlen, pos;
-    int64_t flen;
-    int amt;
+    struct sg_fileinfo info;
+    int amt, r;
     int (*read)(struct sg_file *f, void *buf, size_t amt);
     read = f->read;
 
-    if (f->length) {
-        flen = f->length(f);
-        if (flen < 0)
-            return NULL;
-        if ((uint64_t) flen > maxsize)
-            goto toobig;
-        len = (size_t) flen + 1;
-    } else {
-        len = maxsize > SG_FILE_INITBUF ? SG_FILE_INITBUF : (maxsize + 1);
-    }
+    r = f->getinfo(f, &info);
+    if (r)
+        return NULL;
+    if ((uint64_t) info.size > maxsize)
+        goto toobig;
+    len = (size_t) info.size + 1;
 
     buf = malloc(len);
     if (!buf)

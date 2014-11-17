@@ -71,11 +71,24 @@ sg_file_u_close(struct sg_file *f)
     struct sg_file_u *u = (struct sg_file_u *) f;
     if (u->fdes >= 0)
         close(u->fdes);
+    sg_error_clear(&u->h.err);
     free(u);
 }
 
 static int64_t
-sg_file_u_length(struct sg_file *f)
+sg_file_u_seek(struct sg_file *f, int64_t off, int whence)
+{
+    struct sg_file_u *u = (struct sg_file_u *) f;
+    off_t r;
+    r = lseek(u->fdes, off, whence);
+    if (r >= 0)
+        return r;
+    sg_error_errno(&u->h.err, errno);
+    return -1;
+}
+
+static int
+sg_file_u_getinfo(struct sg_file *f, struct sg_fileinfo *info)
 {
     struct sg_file_u *u = (struct sg_file_u *) f;
     struct stat st;
@@ -89,19 +102,12 @@ sg_file_u_length(struct sg_file *f)
         sg_error_errno(&u->h.err, ESPIPE);
         return -1;
     }
-    return st.st_size;
-}
-
-static int64_t
-sg_file_u_seek(struct sg_file *f, int64_t off, int whence)
-{
-    struct sg_file_u *u = (struct sg_file_u *) f;
-    off_t r;
-    r = lseek(u->fdes, off, whence);
-    if (r >= 0)
-        return r;
-    sg_error_errno(&u->h.err, errno);
-    return -1;
+    info->size = st.st_size;
+    info->mtime = ((uint64_t) st.st_mtim.tv_sec << 32) |
+        ((uint32_t) st.st_mtim.tv_nsec);
+    info->volume = st.st_dev;
+    info->ident = st.st_ino;
+    return 0;
 }
 
 int
@@ -143,8 +149,9 @@ sg_file_tryopen(struct sg_file **f, const char *path, int flags,
     u->h.write = sg_file_u_write;
     u->h.commit = sg_file_u_commit;
     u->h.close = sg_file_u_close;
-    u->h.length = sg_file_u_length;
     u->h.seek = sg_file_u_seek;
+    u->h.getinfo = sg_file_u_getinfo;
+    u->h.err = NULL;
     u->fdes = fdes;
     *f = &u->h;
     return 1;

@@ -123,6 +123,38 @@ void
 sg_buffer_decref(struct sg_buffer *fbuf);
 
 /**
+ * @brief Information about a file.
+ *
+ * The `mtime`, `volume`, and `ident` fields are intended to be
+ * relatively opaque, but serve to identify if a file has changed.
+ * Except in pathological cases, if a file changes, at least one field
+ * in this structure will change.  This technique should not be used
+ * to compare different files, since files in archives may borrow the
+ * attributes of the archives containing them.
+ */
+struct sg_fileinfo {
+    /**
+     * @brief The file size, in bytes.
+     */
+    int64_t size;
+
+    /**
+     * @brief A number representing the file's modification time.
+     */
+    int64_t mtime;
+
+    /**
+     * @brief A number identifying the filesystem containing the file.
+     */
+    int64_t volume;
+
+    /**
+     * @brief A number identifying the file on its filesystem.
+     */
+    int64_t ident;
+};
+
+/**
  * @brief An abstract file.
  *
  * Do not copy this structure.
@@ -170,15 +202,6 @@ struct sg_file {
     void (*close)(struct sg_file *fp);
 
     /**
-     * @brief Get the file's length.
-     *
-     * @param fp This file.
-     * @return The file's length, or a negative number if an error
-     * occurred.
-     */
-    int64_t (*length)(struct sg_file *fp);
-
-    /**
      * @brief Seek to a new file position.
      *
      * @param fp This file.
@@ -186,6 +209,15 @@ struct sg_file {
      * @param whence The interpretation of the file offset.
      */
     int64_t (*seek)(struct sg_file *fp, int64_t off, int whence);
+
+    /**
+     * @brief Get information about a file.
+     *
+     * @param fp This file.
+     * @param info The file info record to initialize.
+     * @return Zero if successful, nonzero if an error occurred.
+     */
+    int (*getinfo)(struct sg_file *fp, struct sg_fileinfo *info);
 
     /**
      * @brief The most recent error for operations on this file.
