@@ -62,10 +62,9 @@ cvar.c
 cvartable.c
 cvartable.h
 error.c
-file.c
 file_impl.h
+file_load.c
 file_posix.c posix
-file_read.c
 file_win.c windows
 keyid.c
 keytable_evdev.c linux

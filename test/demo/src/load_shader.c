@@ -11,26 +11,25 @@
 GLuint
 load_shader(const char *path, GLenum type)
 {
-    struct sg_buffer *buf;
+    struct sg_filedata *data;
     const char *darr[1];
     GLint larr[1], flag, loglen;
-    struct sg_logger *log;
     char *errlog;
     GLuint shader;
+    int r;
 
-    buf = sg_file_get(path, strlen(path), SG_RDONLY,
-                      "glsl", 1024 * 1024, NULL);
-    if (!buf)
+    r = sg_file_load(&data, path, strlen(path), 0,
+                     "glsl", 1024 * 1024, NULL, NULL);
+    if (r)
         abort();
 
-    if (buf->length > INT_MAX) {
-        log = sg_logger_get("shader");
-        sg_logf(log, SG_LOG_ERROR, "%s: too long", path);
+    if (data->length > INT_MAX) {
+        sg_logf(SG_LOG_ERROR, "%s: too long", path);
         return -1;
     }
 
-    darr[0] = buf->data;
-    larr[0] = (GLint) buf->length;
+    darr[0] = data->data;
+    larr[0] = (GLint) data->length;
     shader = glCreateShader(type);
     glShaderSource(shader, 1, darr, larr);
     glCompileShader(shader);
@@ -38,14 +37,13 @@ load_shader(const char *path, GLenum type)
     if (flag)
         return shader;
 
-    log = sg_logger_get("shader");
-    sg_logf(log, SG_LOG_ERROR, "%s: compilation failed", path);
+    sg_logf(SG_LOG_ERROR, "%s: compilation failed", path);
     glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &loglen);
     if (loglen > 0) {
         errlog = malloc(loglen);
         if (errlog) {
             glGetShaderInfoLog(shader, loglen, NULL, errlog);
-            sg_logs(log, SG_LOG_ERROR, errlog);
+            sg_logs(SG_LOG_ERROR, errlog);
             free(errlog);
         }
     }
@@ -56,7 +54,6 @@ load_shader(const char *path, GLenum type)
 GLuint
 load_program(const char *vertpath, const char *fragpath)
 {
-    struct sg_logger *log;
     GLuint prog, vertshader, fragshader;
     GLint flag, loglen;
     char *errlog;
@@ -74,15 +71,14 @@ load_program(const char *vertpath, const char *fragpath)
     if (flag)
         return prog;
 
-    log = sg_logger_get("shader");
-    sg_logf(log, SG_LOG_ERROR, "%s + %s: linking failed",
+    sg_logf(SG_LOG_ERROR, "%s + %s: linking failed",
             vertpath, fragpath);
     glGetProgramiv(prog, GL_INFO_LOG_LENGTH, &loglen);
     if (loglen <= 0) {
         errlog = malloc(loglen);
         if (errlog) {
             glGetProgramInfoLog(prog, loglen, NULL, errlog);
-            sg_logs(log, SG_LOG_ERROR, errlog);
+            sg_logs(SG_LOG_ERROR, errlog);
             free(errlog);
         }
     }

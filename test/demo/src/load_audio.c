@@ -16,8 +16,7 @@ load_audio(const char *path)
 
     snd = sg_mixer_sound_file(path, strlen(path), &err);
     if (!snd) {
-        sg_logf(sg_logger_get(NULL), SG_LOG_ERROR,
-                "could not load audio file: %s", path);
+        sg_logf(SG_LOG_ERROR, "could not load audio file: %s", path);
         sg_error_clear(&err);
     }
 

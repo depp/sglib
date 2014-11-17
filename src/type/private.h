@@ -15,7 +15,7 @@ struct sg_typeface {
     int pathlen;
 
     /* Buffer containing the typeface file.  */
-    struct sg_buffer *buf;
+    struct sg_filedata *data;
     /* The FreeType typeface.  */
     FT_Face face;
     /* Linked list of all fonts derived from this typeface.  */

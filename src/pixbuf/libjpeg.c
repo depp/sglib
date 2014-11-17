@@ -18,7 +18,7 @@
 struct sg_image_jpeg {
     struct sg_image img;
 
-    struct sg_buffer *buf;
+    struct sg_filedata *data;
     struct jpeg_decompress_struct cinfo;
     struct jpeg_error_mgr jerr;
     struct jpeg_source_mgr jsrc;
@@ -70,7 +70,7 @@ static void
 sg_image_jpeg_free(struct sg_image *img)
 {
     struct sg_image_jpeg *im = (struct sg_image_jpeg *) img;
-    sg_buffer_decref(im->buf);
+    sg_filedata_decref(im->data);
     jpeg_destroy_decompress(&im->cinfo);
     free(im);
 }
@@ -104,7 +104,7 @@ invalid:
 }
 
 struct sg_image *
-sg_image_jpeg(struct sg_buffer *buf, struct sg_error **err)
+sg_image_jpeg(struct sg_filedata *data, struct sg_error **err)
 {
     struct sg_image_jpeg *im;
 
@@ -120,8 +120,8 @@ sg_image_jpeg(struct sg_buffer *buf, struct sg_error **err)
     im->cinfo.err = jpeg_std_error(&im->jerr);
     im->cinfo.src = &im->jsrc;
 
-    im->jsrc.next_input_byte = buf->data;
-    im->jsrc.bytes_in_buffer = buf->length;
+    im->jsrc.next_input_byte = data->data;
+    im->jsrc.bytes_in_buffer = data->length;
     im->jsrc.init_source = sg_jpeg_initsource;
     im->jsrc.fill_input_buffer = sg_jpeg_fillinput;
     im->jsrc.skip_input_data = sg_jpeg_skip;
@@ -143,8 +143,8 @@ sg_image_jpeg(struct sg_buffer *buf, struct sg_error **err)
     im->img.free = sg_image_jpeg_free;
     im->img.draw = sg_image_jpeg_draw;
 
-    im->buf = buf;
-    sg_buffer_incref(buf);
+    im->data = data;
+    sg_filedata_incref(data);
 
     return &im->img;
 }

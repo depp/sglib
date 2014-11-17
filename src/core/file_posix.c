@@ -9,150 +9,247 @@
 #include "file_impl.h"
 #include "sg/error.h"
 #include "sg/file.h"
-#include "sg/log.h"
+
 #include <errno.h>
 #include <fcntl.h>
 #include <limits.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
 
-struct sg_file_u {
-    struct sg_file h;
-    int fdes;
-};
-
-static int
-sg_file_u_read(struct sg_file *f, void *buf, size_t amt)
+int
+sg_reader_open(
+    struct sg_reader *fp,
+    const pchar *path,
+    struct sg_error **err)
 {
-    struct sg_file_u *u = (struct sg_file_u *) f;
-    ssize_t r;
-    if (amt > INT_MAX)
-        amt = INT_MAX;
-    r = read(u->fdes, buf, amt);
-    if (r >= 0)
-        return (int) r;
-    sg_error_errno(&u->h.err, errno);
-    return -1;
+    int fdes, ecode;
+    fdes = open(path, O_RDONLY | O_CLOEXEC);
+    if (fdes < 0) {
+        ecode = errno;
+        if (ecode == ENOENT)
+            return SG_FILE_NOTFOUND;
+        sg_error_errno(err, ecode);
+        return SG_FILE_ERROR;
+    }
+    fp->fdes = fdes;
+    return SG_FILE_OK;
 }
 
-static int
-sg_file_u_write(struct sg_file *f, const void *buf, size_t amt)
+int
+sg_reader_getinfo(
+    struct sg_reader *fp,
+    int64_t *length,
+    struct sg_fileid *fileid,
+    struct sg_error **err)
 {
-    struct sg_file_u *u = (struct sg_file_u *) f;
-    ssize_t r;
-    if (amt > INT_MAX)
-        amt = INT_MAX;
-    r = write(u->fdes, buf, amt);
-    if (r >= 0)
-        return (int) r;
-    sg_error_errno(&u->h.err, errno);
-    return -1;
-}
-
-static int
-sg_file_u_commit(struct sg_file *f)
-{
-    struct sg_file_u *u = (struct sg_file_u *) f;
-    int r;
-    if (u->fdes < 0)
-        return 0;
-    r = close(u->fdes);
-    u->fdes = -1;
-    if (r)
-        sg_error_errno(&u->h.err, errno);
-    return r;
-}
-
-static void
-sg_file_u_close(struct sg_file *f)
-{
-    struct sg_file_u *u = (struct sg_file_u *) f;
-    if (u->fdes >= 0)
-        close(u->fdes);
-    sg_error_clear(&u->h.err);
-    free(u);
-}
-
-static int64_t
-sg_file_u_seek(struct sg_file *f, int64_t off, int whence)
-{
-    struct sg_file_u *u = (struct sg_file_u *) f;
-    off_t r;
-    r = lseek(u->fdes, off, whence);
-    if (r >= 0)
-        return r;
-    sg_error_errno(&u->h.err, errno);
-    return -1;
-}
-
-static int
-sg_file_u_getinfo(struct sg_file *f, struct sg_fileinfo *info)
-{
-    struct sg_file_u *u = (struct sg_file_u *) f;
     struct stat st;
     int r;
-    r = fstat(u->fdes, &st);
+    r = fstat(fp->fdes, &st);
     if (r) {
-        sg_error_errno(&u->h.err, errno);
+        sg_error_errno(err, errno);
         return -1;
     }
     if (!S_ISREG(st.st_mode)) {
-        sg_error_errno(&u->h.err, ESPIPE);
+        sg_error_errno(err, ESPIPE);
         return -1;
     }
-    info->size = st.st_size;
-    info->mtime = ((uint64_t) st.st_mtim.tv_sec << 32) |
+    *length = st.st_size;
+    fileid->f_[0] = ((uint64_t) st.st_mtim.tv_sec << 32) |
         ((uint32_t) st.st_mtim.tv_nsec);
-    info->volume = st.st_dev;
-    info->ident = st.st_ino;
+    fileid->f_[1] = st.st_ino;
+    fileid->f_[2] = st.st_dev;
     return 0;
 }
 
 int
-sg_file_tryopen(struct sg_file **f, const char *path, int flags,
-                struct sg_error **e)
+sg_reader_read(
+    struct sg_reader *fp,
+    void *buf,
+    size_t bufsz,
+    struct sg_error **err)
 {
-    int fdes, ecode;
-    struct sg_file_u *u;
-    if (flags & SG_WRONLY) {
-        fdes = open(path, O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC, 0666);
-        if (fdes < 0) {
-            ecode = errno;
-            if (ecode != ENOENT) {
-                sg_error_errno(e, ecode);
-                return -1;
-            }
-            if (sg_path_mkpardir(path, e))
-                return -1;
-            fdes = open(path, O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC, 0666);
-        }
-    } else {
-        fdes = open(path, O_RDONLY | O_CLOEXEC);
-    }
+    size_t amt;
+    ssize_t r;
+    amt = bufsz > INT_MAX ? INT_MAX : bufsz;
+    r = read(fp->fdes, buf, amt);
+    if (r < 0)
+        sg_error_errno(err, errno);
+    return r;
+}
+
+void
+sg_reader_close(
+    struct sg_reader *fp)
+{
+    close(fp->fdes);
+}
+
+/*
+  See Theo Ts'o's blog post for the reasoning behind how we write files.
+
+  http://thunk.org/tytso/blog/2009/03/15/dont-fear-the-fsync/
+*/
+struct sg_writer {
+    int fdes;
+    char *destpath;
+    char *temppath;
+};
+
+struct sg_writer *
+sg_writer_open(
+    const char *path,
+    size_t pathlen,
+    struct sg_error **err)
+{
+    struct sg_writer *fp;
+    const char *basepath;
+    size_t baselen;
+    char buf[SG_MAX_PATH], *destpath, *temppath;
+    int nlen, fdes, ecode, flags, mode;
+
+    nlen = sg_path_norm(buf, path, pathlen, err);
+    if (nlen < 0)
+        return NULL;
+
+    basepath = sg_paths.path[0].path;
+    baselen = sg_paths.path[0].len;
+    fp = malloc(sizeof(*fp) + (baselen + nlen) * 2 + 6);
+    if (!fp)
+        goto error_nomem;
+    fp->destpath = destpath = (char *) (fp + 1);
+    fp->temppath = temppath = destpath + baselen + nlen + 1;
+    memcpy(destpath, basepath, baselen);
+    memcpy(destpath + baselen, buf, nlen + 1);
+    memcpy(temppath, basepath, baselen);
+    memcpy(temppath + baselen, buf, nlen);
+    memcpy(temppath + baselen + nlen, ".tmp", 5);
+
+    flags = O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC;
+    mode = 0666;
+    fdes = open(temppath, flags, mode);
     if (fdes < 0) {
         ecode = errno;
-        if (ecode != ENOENT) {
-            sg_error_errno(e, ecode);
-            return -1;
+        if (ecode != ENOENT)
+            goto error_errno;
+        if (sg_path_mkpardir(temppath, err))
+            goto error;
+        fdes = open(temppath, flags, mode);
+        if (fdes < 0) {
+            ecode = errno;
+            goto error_errno;
         }
-        return 0;
     }
-    u = malloc(sizeof(*u));
-    if (!u) {
-        close(fdes);
-        sg_error_nomem(e);
+    fp->fdes = fdes;
+    return fp;
+
+error_nomem:
+    sg_error_nomem(err);
+    return NULL;
+
+error_errno:
+    sg_error_errno(err, ecode);
+    goto error;
+
+error:
+    free(fp);
+    return NULL;
+}
+
+int64_t
+sg_writer_seek(
+    struct sg_writer *fp,
+    int64_t offset,
+    int whence,
+    struct sg_error **err)
+{
+    int64_t r;
+    if (fp->fdes < 0) {
+        sg_error_invalid(err, __FUNCTION__, "fp");
         return -1;
     }
-    u->h.read = sg_file_u_read;
-    u->h.write = sg_file_u_write;
-    u->h.commit = sg_file_u_commit;
-    u->h.close = sg_file_u_close;
-    u->h.seek = sg_file_u_seek;
-    u->h.getinfo = sg_file_u_getinfo;
-    u->h.err = NULL;
-    u->fdes = fdes;
-    *f = &u->h;
-    return 1;
+    r = lseek(fp->fdes, offset, whence);
+    if (r < 0)
+        sg_error_errno(err, errno);
+    return r;
+}
+
+int
+sg_writer_write(
+    struct sg_writer *fp,
+    const void *buf,
+    size_t amt,
+    struct sg_error **err)
+{
+    size_t namt;
+    ssize_t r;
+    if (fp->fdes < 0) {
+        sg_error_invalid(err, __FUNCTION__, "fp");
+        return -1;
+    }
+    namt = amt > INT_MAX ? INT_MAX : amt;
+    r = write(fp->fdes, buf, namt);
+    if (r < 0)
+        sg_error_errno(err, errno);
+    return r;
+}
+
+int
+sg_writer_commit(
+    struct sg_writer *fp,
+    struct sg_error **err)
+{
+    int fdes, r, ecode;
+    fdes = fp->fdes;
+    if (fdes < 0) {
+        sg_error_invalid(err, __FUNCTION__, "fp");
+        return -1;
+    }
+    fp->fdes = -1;
+    r = fsync(fdes);
+    if (r) {
+        close(fdes);
+        goto error_errno;
+    }
+    r = close(fdes);
+    if (r)
+        goto error_errno;
+#if defined __APPLE__
+    /* This preserves metadata, other than modification time.  */
+    r = exchangedata(fp->temppath, fp->destpath, 0);
+    if (r) {
+        ecode = errno;
+        switch (ecode) {
+        case ENOTSUP:
+        case ENOENT:
+            break;
+        default:
+            goto error_ecode;
+        }
+    }
+#endif
+    r = rename(fp->temppath, fp->destpath);
+    if (r)
+        goto error_errno;
+    return 0;
+
+error_errno:
+    ecode = errno;
+    goto error_ecode;
+
+error_ecode:
+    sg_error_errno(err, ecode);
+    return -1;
+}
+
+void
+sg_writer_close(
+    struct sg_writer *fp)
+{
+    if (fp->fdes >= 0)
+        close(fp->fdes);
+    free(fp);
 }

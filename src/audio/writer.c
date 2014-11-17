@@ -1,4 +1,4 @@
-/* Copyright 2012 Dietrich Epp.
+/* Copyright 2012-2014 Dietrich Epp.
    This file is part of SGLib.  SGLib is licensed under the terms of the
    2-clause BSD license.  For more information, see LICENSE.txt. */
 #include "sg/binary.h"
@@ -47,7 +47,7 @@ sg_audio_writer_fmtfloat(sg_audio_format_t format)
 /* Audio writer structure and functions.  */
 
 struct sg_audio_writer {
-    struct sg_file *fp;
+    struct sg_writer *fp;
     sg_audio_format_t format;
     int channelcount;
     int samplerate;
@@ -68,7 +68,7 @@ sg_audio_writer_open(const char *path,
                      struct sg_error **err)
 {
     struct sg_audio_writer *writer = NULL;
-    struct sg_file *fp = NULL;
+    struct sg_writer *fp = NULL;
     char header[WAV_HEADER_SIZE];
     int r, pos;
 
@@ -83,17 +83,16 @@ sg_audio_writer_open(const char *path,
         return NULL;
     }
 
-    fp = sg_file_open(path, strlen(path), SG_WRONLY, NULL, err);
-    if (!fp) goto cleanup;
+    fp = sg_writer_open(path, strlen(path), err);
+    if (!fp)
+        goto cleanup;
 
     memset(header, 0, WAV_HEADER_SIZE);
     pos = 0;
     while (pos < WAV_HEADER_SIZE) {
-        r = fp->write(fp, header, WAV_HEADER_SIZE);
-        if (r < 0) {
-            sg_error_move(err, &fp->err);
+        r = sg_writer_write(fp, header, WAV_HEADER_SIZE, err);
+        if (r < 0)
             goto cleanup;
-        }
         pos += r;
     }
 
@@ -110,8 +109,7 @@ sg_audio_writer_open(const char *path,
 cleanup:
     if (writer)
         free(writer);
-    if (fp)
-        fp->close(fp);
+    sg_writer_close(fp);
     return NULL;
 }
 
@@ -119,7 +117,7 @@ int
 sg_audio_writer_close(struct sg_audio_writer *writer,
                       struct sg_error **err)
 {
-    struct sg_file *fp = writer->fp;
+    struct sg_writer *fp = writer->fp;
     int r, sz, pos, ret, ssize, sfloat, fsize;
     int64_t rr;
     char header[WAV_HEADER_SIZE];
@@ -128,7 +126,7 @@ sg_audio_writer_close(struct sg_audio_writer *writer,
     sfloat = sg_audio_writer_fmtfloat(writer->format);
     fsize = writer->channelcount * ssize;
 
-    rr = fp->seek(fp, 0, SEEK_SET);
+    rr = sg_writer_seek(fp, 0, SEEK_SET, err);
     if (rr < 0) goto error;
 
     sz = writer->len;
@@ -150,25 +148,24 @@ sg_audio_writer_close(struct sg_audio_writer *writer,
 
     pos = 0;
     while (pos < WAV_HEADER_SIZE) {
-        r = fp->write(fp, header, WAV_HEADER_SIZE);
+        r = sg_writer_write(fp, header, WAV_HEADER_SIZE, err);
         if (r < 0) goto error;
         pos += r;
     }
 
-    r = fp->commit(fp);
+    r = sg_writer_commit(fp, err);
     if (r)
         goto error;
     ret = 0;
     goto done;
 
 done:
-    fp->close(fp);
+    sg_writer_close(fp);
     free(writer->tmp);
     free(writer);
     return ret;
 
 error:
-    sg_error_move(err, &fp->err);
     ret = -1;
     goto done;
 }
@@ -210,7 +207,7 @@ sg_audio_writer_write(struct sg_audio_writer *writer,
                       const void *data, int count,
                       struct sg_error **err)
 {
-    struct sg_file *fp = writer->fp;
+    struct sg_writer *fp = writer->fp;
     int ssize, sswapped, r;
     size_t nsamp, bsize, pos, nalloc;
     void *tmp;
@@ -251,9 +248,9 @@ sg_audio_writer_write(struct sg_audio_writer *writer,
 
     pos = 0;
     while (pos < bsize) {
-        r = fp->write(fp, buf + pos, bsize - pos);
+        r = sg_writer_write(fp, buf + pos, bsize - pos, err);
         if (r < 0)
-            goto ferror;
+            return -1;
         pos += r;
     }
 
@@ -261,9 +258,5 @@ sg_audio_writer_write(struct sg_audio_writer *writer,
 
 nomem:
     sg_error_nomem(err);
-    return -1;
-
-ferror:
-    sg_error_move(err, &fp->err);
     return -1;
 }

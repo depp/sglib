@@ -50,18 +50,18 @@ sg_mixer_sound_load(struct sg_mixer_sound *sound, int rate)
 {
     struct sg_audio_buffer *abuf = NULL;
     size_t abufcount = 0;
-    struct sg_buffer *buf = NULL;
+    struct sg_filedata *data = NULL;
     struct sg_error *err = NULL;
     const char *why = NULL;
     int r;
 
-    buf = sg_file_get(sound->path, sound->pathlen,
-                      SG_RDONLY, SG_AUDIO_FILE_EXTENSIONS,
-                      SG_MIXER_SOUND_MAXSZ, &err);
-    if (!buf)
+    r = sg_file_load(
+        &data, sound->path, sound->pathlen,
+        0, SG_AUDIO_FILE_EXTENSIONS, SG_MIXER_SOUND_MAXSZ, NULL, &err);
+    if (r)
         goto err;
 
-    r = sg_audio_file_load(&abuf, &abufcount, buf->data, buf->length, &err);
+    r = sg_audio_file_load(&abuf, &abufcount, data->data, data->length, &err);
     if (r) {
         why = "failed to load file";
         goto err;
@@ -101,7 +101,7 @@ sg_mixer_sound_load(struct sg_mixer_sound *sound, int rate)
     sg_atomic_set_release(&sound->is_loaded, 1);
 
     sg_audio_buffer_destroy(abuf);
-    sg_buffer_decref(buf);
+    sg_filedata_decref(data);
 
     return;
 
@@ -112,8 +112,8 @@ err:
         sg_logerrs(SG_LOG_ERROR, err, sound->path);
     sg_error_clear(&err);
 
-    if (buf)
-        sg_buffer_decref(buf);
+    if (data)
+        sg_filedata_decref(data);
     if (abuf) {
         sg_audio_buffer_destroy(abuf);
         free(abuf);

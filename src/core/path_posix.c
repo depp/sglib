@@ -3,33 +3,32 @@
    2-clause BSD license.  For more information, see LICENSE.txt. */
 #include "file_impl.h"
 #include "sg/error.h"
+#include "sg/file.h"
 #include <errno.h>
-#include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
 
-int
-sg_path_mkpardir(const char *path, struct sg_error **err)
+void
+sg_path_copy(char *dest, const char *src, size_t len)
 {
-    char *buf, *p;
-    size_t len;
-    int r, ecode, ret = 0;
+    memcpy(dest, src, len);
+}
+
+int
+sg_path_mkpardir(char *path, struct sg_error **err)
+{
+    char *p, *end;
+    int r, ecode;
 
     p = strrchr(path, '/');
     if (!p || p == path)
         return 0;
-    len = p - path;
-    buf = malloc(len + 1);
-    if (!buf) {
-        sg_error_nomem(err);
-        return -1;
-    }
-    memcpy(buf, path, len);
-    buf[len] = '\0';
+    end = p;
+    *p = '\0';
     while (1) {
-        r = mkdir(buf, 0777);
+        r = mkdir(path, 0777);
         if (!r)
             break;
         ecode = errno;
@@ -37,32 +36,27 @@ sg_path_mkpardir(const char *path, struct sg_error **err)
             if (ecode == EEXIST)
                 break;
             sg_error_errno(err, ecode);
-            ret = -1;
-            goto done;
+            return SG_FILE_ERROR;
         }
-        p = strrchr(buf, '/');
-        if (!p || p == buf)
-            goto done;
+        p = strrchr(path, '/');
+        if (!p || p == path)
+            return SG_FILE_NOTFOUND;
         *p = '\0';
     }
     while (1) {
         *p = '/';
+        if (p == end)
+            return SG_FILE_OK;
         p += strlen(p);
-        if (p == buf + len)
-            goto done;
-        r = mkdir(buf, 0777);
+        r = mkdir(path, 0777);
         if (r) {
             ecode = errno;
             if (ecode != EEXIST) {
                 sg_error_errno(err, ecode);
-                ret = -1;
-                goto done;
+                return SG_FILE_ERROR;
             }
         }
     }
-done:
-    free(buf);
-    return ret;
 }
 
 #if defined __APPLE__

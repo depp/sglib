@@ -16,33 +16,13 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define SG_PATH_MAXEXTS 8
-#define SG_PATH_MAXCOUNT 8
-
 #if PATH_MAX > 0
 #define SG_PATH_BUFSZ PATH_MAX
 #else
 #define SG_PATH_BUFSZ 1024
 #endif
 
-struct sg_path {
-    pchar *path;
-    size_t len;
-};
-
-struct sg_paths {
-    struct sg_path *path;
-    unsigned pathcount;
-    unsigned maxlen;
-    struct sg_cvar_string cvar[2];
-};
-
-struct sg_file_ext {
-    const char *p;
-    unsigned len;
-};
-
-static struct sg_paths sg_paths;
+struct sg_paths sg_paths;
 
 SG_ATTR_NORETURN
 static void
@@ -50,32 +30,6 @@ sg_path_initabort(void)
 {
     sg_sys_abort("Failed to initialize paths.");
 }
-
-/* Copy the normalized path 'src' to the destination 'dst', converting
-   normalized directory separators to platform directory separators
-   (e.g., turn slashes backwards on Windows).  */
-static void
-sg_path_copy(pchar *dest, const char *src, size_t len);
-
-#if defined _WIN32
-
-static void
-sg_path_copy(wchar_t *dest, const char *src, size_t len)
-{
-    size_t i;
-    for (i = 0; i < len; ++i)
-        dest[i] = src[i] == '/' ? SG_PATH_DIRSEP : src[i];
-}
-
-#else
-
-static void
-sg_path_copy(char *dest, const char *src, size_t len)
-{
-    memcpy(dest, src, len);
-}
-
-#endif
 
 pchar *
 sg_file_createpath(const char *path, size_t pathlen,
@@ -108,158 +62,6 @@ sg_file_createpath(const char *path, size_t pathlen,
     }
 
     return result;
-}
-
-struct sg_file *
-sg_file_open(const char *path, size_t pathlen, int flags,
-             const char *extensions, struct sg_error **err)
-{
-    struct sg_file *fp;
-    char nbuf[SG_MAX_PATH];
-    pchar *pbuf, *pptr;
-    struct sg_path *search;
-    unsigned sflags, searchcount, maxslen;
-    int nlen;
-
-    sflags = flags & (SG_USERONLY | SG_DATAONLY);
-    search = sg_paths.path;
-    searchcount = sg_paths.pathcount;
-    maxslen = sg_paths.maxlen;
-    if (flags & SG_WRONLY) {
-        if (sflags != 0)
-            goto badflags;
-        searchcount = 1;
-        if (extensions) {
-            sg_error_invalid(err, __FUNCTION__, "extensions");
-            return NULL;
-        }
-    } else {
-        switch (sflags) {
-        case 0:
-            break;
-        case SG_USERONLY:
-            searchcount = 1;
-            break;
-        case SG_DATAONLY:
-            search++;
-            searchcount--;
-            break;
-        default:
-            goto badflags;
-        }
-    }
-    if (searchcount == 1)
-        maxslen = search[0].len;
-
-    nlen = sg_path_norm(nbuf, path, pathlen, err);
-    if (nlen < 0)
-        return NULL;
-
-    if (extensions) {
-        struct sg_file_ext exts[SG_PATH_MAXEXTS];
-        const char *extp = extensions, *ext, *extsep;
-        unsigned extcount = 0, maxelen = 0, extlen, i, j, k;
-        int r;
-
-        while (extp) {
-            ext = extp;
-            extsep = strchr(extp, ':');
-            if (!extsep) {
-                extp = NULL;
-                extlen = (unsigned) strlen(ext);
-            } else {
-                extp = extsep + 1;
-                extlen = (unsigned) (extsep - ext);
-            }
-            if (!extlen)
-                continue;
-            if (extcount >= SG_PATH_MAXEXTS) {
-                sg_logs(SG_LOG_ERROR, "List of extensions is too long.");
-                break;
-            }
-            if (extlen > maxelen)
-                maxelen = extlen;
-            exts[extcount].p = ext;
-            exts[extcount].len = extlen;
-            extcount++;
-        }
-        /* If extensions is not NULL but lists no extensions, it could
-           be caused by support for all file formats being compiled
-           out, in which case "file not found" is the most sensible
-           result, because there is no satisfactory file which could
-           be found.  */
-        if (!extcount)
-            goto notfound;
-        maxelen += 1;
-        if (nlen + maxelen >= SG_MAX_PATH) {
-            sg_error_sets(err, &SG_ERROR_INVALPATH, 0,
-                          "path too long for given extension list");
-            return NULL;
-        }
-
-        if (!searchcount)
-            goto notfound;
-
-        pbuf = malloc((maxslen + nlen + maxelen + 1) * sizeof(pchar));
-        if (!pbuf)
-            goto nomem;
-        sg_path_copy(pbuf + maxslen, nbuf, nlen);
-        pbuf[maxslen + nlen] = '.';
-        for (i = 0; i < searchcount; i++) {
-            pptr = pbuf + maxslen - search[i].len;
-            pmemcpy(pptr, search[i].path, search[i].len);
-            for (j = 0; j < extcount; j++) {
-                ext = exts[j].p;
-                extlen = exts[j].len;
-                for (k = 0; k < extlen; k++)
-                    pbuf[maxslen + nlen + 1 + k] = ext[k];
-                pbuf[maxslen + nlen + 1 + extlen] = '\0';
-                r = sg_file_tryopen(&fp, pbuf, flags, err);
-                if (r != 0)
-                    goto done;
-            }
-        }
-    } else {
-        unsigned i;
-        int r;
-
-        if (!searchcount)
-            goto notfound;
-
-        pbuf = malloc((maxslen + nlen + 1) * sizeof(pchar));
-        if (!pbuf)
-            goto nomem;
-        sg_path_copy(pbuf + maxslen, nbuf, nlen);
-        pbuf[maxslen + nlen] = '\0';
-        for (i = 0; i < searchcount; i++) {
-            pptr = pbuf + maxslen - search[i].len;
-            pmemcpy(pptr, search[i].path, search[i].len);
-            r = sg_file_tryopen(&fp, pbuf, flags, err);
-            if (r != 0)
-                goto done;
-        }
-    }
-
-    goto notfound;
-
-notfound:
-    sg_error_notfound(err, nbuf);
-    fp = NULL;
-    goto done;
-
-nomem:
-    sg_error_nomem(err);
-    fp = NULL;
-    goto done;
-
-badflags:
-    sg_error_invalid(err, __FUNCTION__, "flags");
-    fp = NULL;
-    goto done;
-
-done:
-    free(pbuf);
-    return fp;
 }
 
 static void

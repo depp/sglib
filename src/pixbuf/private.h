@@ -3,7 +3,7 @@
    2-clause BSD license.  For more information, see LICENSE.txt. */
 #include "config.h"
 #include <stddef.h>
-struct sg_buffer;
+struct sg_filedata;
 struct sg_error;
 struct sg_image;
 
@@ -11,7 +11,7 @@ struct sg_image;
 
 /* Load a PNG image.  */
 struct sg_image *
-sg_image_png(struct sg_buffer *buf, struct sg_error **err);
+sg_image_png(struct sg_filedata *data, struct sg_error **err);
 
 #endif
 
@@ -19,7 +19,7 @@ sg_image_png(struct sg_buffer *buf, struct sg_error **err);
 
 /* Load a JPEG image.  */
 struct sg_image *
-sg_image_jpeg(struct sg_buffer *buf, struct sg_error **err);
+sg_image_jpeg(struct sg_filedata *data, struct sg_error **err);
 
 #endif
 

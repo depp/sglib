@@ -4,6 +4,14 @@
 #include "file_impl.h"
 #include <Windows.h>
 
+void
+sg_path_copy(wchar_t *dest, const char *src, size_t len)
+{
+    size_t i;
+    for (i = 0; i < len; ++i)
+        dest[i] = src[i] == '/' ? SG_PATH_DIRSEP : src[i];
+}
+
 int
 sg_path_mkpardir(const wchar_t *path, struct sg_error **err)
 {
