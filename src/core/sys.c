@@ -2,6 +2,7 @@
    This file is part of SGLib.  SGLib is licensed under the terms of the
    2-clause BSD license.  For more information, see LICENSE.txt. */
 #include "sg/entry.h"
+#include "sg/cvar.h"
 #include "sg/log.h"
 #include "sg/rand.h"
 #include "sg/record.h"
@@ -9,6 +10,8 @@
 #include "../record/record.h"
 #include "private.h"
 #include <stdio.h>
+
+static struct sg_cvar_bool sg_showfps;
 
 #if defined __unix__ || defined __APPLE__ && defined __MACH__
 #include <signal.h>
@@ -52,6 +55,8 @@ sg_sys_init(int argc, char **argv)
     sg_mixer_init();
     sg_record_init();
     sg_game_init();
+
+    sg_cvar_defbool(NULL, "showfps", &sg_showfps, 0, 0);
 }
 
 void
@@ -81,6 +86,19 @@ sg_sys_getinfo(struct sg_game_info *info)
 void
 sg_sys_draw(int width, int height, unsigned time)
 {
+    static int time_ref, frame_count;
+    int time_delta;
+
+    frame_count++;
+    time_delta = time - time_ref;
+    if (time_delta > 1000) {
+        if (sg_showfps.value) {
+            sg_logf(SG_LOG_INFO, "FPS: %.0f",
+                    1000.0 * frame_count / time_delta);
+        }
+        time_ref = time;
+        frame_count = 0;
+    }
     unsigned adjtime = time;
     sg_record_frame_begin(&adjtime);
     sg_game_draw(width, height, adjtime);
