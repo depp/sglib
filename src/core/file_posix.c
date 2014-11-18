@@ -58,8 +58,13 @@ sg_reader_getinfo(
         return -1;
     }
     *length = st.st_size;
+#if defined __linux__
     fileid->f_[0] = ((uint64_t) st.st_mtim.tv_sec << 32) |
         ((uint32_t) st.st_mtim.tv_nsec);
+#elif defined __APPLE__
+    fileid->f_[0] = ((uint64_t) st.st_mtimespec.tv_sec << 32) |
+        ((uint32_t) st.st_mtimespec.tv_nsec);
+#endif
     fileid->f_[1] = st.st_ino;
     fileid->f_[2] = st.st_dev;
     return 0;
