@@ -154,6 +154,13 @@ sg_file_load(
             exts[extcount].p = ext;
             exts[extcount].len = extlen;
             extcount++;
+            if ((size_t) nlen > extlen && nbuf[nlen - extlen - 1] == '.' &&
+                !memcmp(nbuf + nlen - extlen, ext, extlen)) {
+                sg_logf(SG_LOG_WARN,
+                        "Removing extension '.%.*s' from path: %s",
+                        (int) extlen, ext, nbuf);
+                nlen -= extlen + 1;
+            }
         }
         /* If extensions is not NULL but lists no extensions, it could
            be caused by support for all file formats being compiled
