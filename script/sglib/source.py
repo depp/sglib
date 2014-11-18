@@ -33,6 +33,7 @@ pack.h
 pixbuf.h
 rand.h
 record.h
+shader.h
 strbuf.h
 thread.h
 type.h
@@ -84,6 +85,7 @@ path_posix.c posix
 path_win.c windows
 private.h
 rand.c
+shader.c
 sys.c
 version.c
 version_const.c

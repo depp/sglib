@@ -12,7 +12,7 @@ load_prog_plain(struct prog_plain *p)
     GLuint prog;
     sg_opengl_checkerror("load_prog_plain start");
     p->prog = prog = load_program(
-        "shader/plain.vert", "shader/plain.frag");
+        "shader/plain", "shader/plain");
     ATTR(a_loc);
     UNIFORM(u_vertoff);
     UNIFORM(u_vertscale);
@@ -26,7 +26,7 @@ load_prog_bkg(struct prog_bkg *p)
     GLuint prog;
     sg_opengl_checkerror("load_prog_bkg start");
     p->prog = prog = load_program(
-        "shader/bkg.vert", "shader/bkg.frag");
+        "shader/bkg", "shader/bkg");
     ATTR(a_loc);
     UNIFORM(u_texoff);
     UNIFORM(u_texmat);
@@ -42,7 +42,7 @@ load_prog_textured(struct prog_textured *p)
     GLuint prog;
     sg_opengl_checkerror("load_prog_textured start");
     p->prog = prog = load_program(
-        "shader/textured.vert", "shader/textured.frag");
+        "shader/textured", "shader/textured");
     ATTR(a_loc);
     ATTR(a_texcoord);
     UNIFORM(u_vertoff);
@@ -58,7 +58,7 @@ load_prog_text(struct prog_text *p)
     GLuint prog;
     sg_opengl_checkerror("load_prog_text start");
     p->prog = prog = load_program(
-        "shader/text.vert", "shader/text.frag");
+        "shader/text", "shader/text");
     ATTR(a_vert);
     UNIFORM(u_vertoff);
     UNIFORM(u_vertscale);

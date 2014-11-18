@@ -65,3 +65,11 @@ sg_opengl_checkerror(const char *msg, ...)
 
     return 1;
 }
+
+const struct sg_error_domain SG_ERROR_OPENGL = { "opengl" };
+
+void
+sg_error_opengl(struct sg_error **err)
+{
+    sg_error_sets(err, &SG_ERROR_OPENGL, 0, "an OpenGL error occurred");
+}

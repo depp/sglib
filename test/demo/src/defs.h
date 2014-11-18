@@ -34,9 +34,6 @@ struct sg_mixer_sound *
 load_audio(const char *path);
 
 GLuint
-load_shader(const char *path, GLenum type);
-
-GLuint
 load_pixbuf(struct sg_pixbuf *pixbuf);
 
 GLuint
