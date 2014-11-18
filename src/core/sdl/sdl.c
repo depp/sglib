@@ -98,6 +98,36 @@ sdl_error(const char *what)
 }
 
 static void
+sg_sdl_setvsync(void)
+{
+    int vsync = sg_sys.vsync.value, r;
+    sg_sys.vsync.flags &= ~SG_CVAR_MODIFIED;
+    switch (vsync) {
+    case 0:
+        r = SDL_GL_SetSwapInterval(0);
+        break;
+    case 1:
+        r = SDL_GL_SetSwapInterval(1);
+        break;
+    case 2:
+        r = SDL_GL_SetSwapInterval(-1);
+        if (!r)
+            return;
+        sg_logf(SG_LOG_WARN, "Could not set vsync 2: %s", SDL_GetError());
+        SDL_ClearError();
+        vsync = 1;
+        r = SDL_GL_SetSwapInterval(1);
+        break;
+    default:
+        return;
+    }
+    if (r) {
+        sg_logf(SG_LOG_WARN, "Could not set vsync %d: %s",
+                vsync, SDL_GetError());
+    }
+}
+
+static void
 sdl_init(int argc, char *argv[])
 {
     GLenum err;
@@ -131,6 +161,8 @@ sdl_init(int argc, char *argv[])
     err = glewInit();
     if (err)
         sg_sys_abort("could not initialize GLEW");
+
+    sg_sdl_setvsync();
 
     evt.type = SG_EVENT_VIDEO_INIT;
     sg_game_event(&evt);
@@ -279,14 +311,16 @@ sdl_main(void)
 {
     SDL_Event e;
     int width, height;
-    int last_time = SDL_GetTicks(), new_time;
+    int last_time = SDL_GetTicks(), new_time, maxfps;
     while (1) {
+        SDL_PumpEvents();
         while (SDL_PollEvent(&e)) {
             switch (e.type) {
             case SDL_QUIT:
                 return;
 
             case SDL_MOUSEMOTION:
+                // printf("MOUSEMOVE\n");
                 sdl_event_mousemove(&e.motion);
                 break;
 
@@ -315,8 +349,14 @@ sdl_main(void)
         SDL_GL_SwapWindow(sg_sdl.window);
 
         new_time = SDL_GetTicks();
-        if (new_time - last_time < 5)
-            SDL_Delay(5 - (new_time - last_time));
+        maxfps = sg_sys.maxfps.value;
+        if (maxfps > 0 && (new_time - last_time) * maxfps < 1000) {
+            int delay;
+            delay = 1000 / maxfps - (new_time - last_time);
+            if (delay > 0)
+                SDL_Delay(delay);
+        }
+        last_time = new_time;
     }
 }
 

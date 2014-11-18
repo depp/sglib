@@ -11,7 +11,7 @@
 #include "private.h"
 #include <stdio.h>
 
-static struct sg_cvar_bool sg_showfps;
+struct sg_sys sg_sys;
 
 #if defined __unix__ || defined __APPLE__ && defined __MACH__
 #include <signal.h>
@@ -56,7 +56,9 @@ sg_sys_init(int argc, char **argv)
     sg_record_init();
     sg_game_init();
 
-    sg_cvar_defbool(NULL, "showfps", &sg_showfps, 0, 0);
+    sg_cvar_defbool(NULL, "showfps", &sg_sys.showfps, 0, 0);
+    sg_cvar_defint(NULL, "vsync", &sg_sys.vsync, 0, 0, 2, 0);
+    sg_cvar_defint(NULL, "maxfps", &sg_sys.maxfps, 120, 0, 1000, 0);
 }
 
 void
@@ -92,7 +94,7 @@ sg_sys_draw(int width, int height, unsigned time)
     frame_count++;
     time_delta = time - time_ref;
     if (time_delta > 1000) {
-        if (sg_showfps.value) {
+        if (sg_sys.showfps.value) {
             sg_logf(SG_LOG_INFO, "FPS: %.0f",
                     1000.0 * frame_count / time_delta);
         }

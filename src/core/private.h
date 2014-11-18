@@ -1,11 +1,21 @@
-/* Copyright 2013 Dietrich Epp.
+/* Copyright 2013-2014 Dietrich Epp.
    This file is part of SGLib.  SGLib is licensed under the terms of the
    2-clause BSD license.  For more information, see LICENSE.txt. */
 #include <stddef.h>
+#include "sg/cvar.h"
 struct sg_game_info;
 union sg_event;
 
 extern const struct sg_game_info sg_game_info_defaults;
+
+/* Common globals */
+struct sg_sys {
+    struct sg_cvar_bool showfps;
+    struct sg_cvar_int vsync;
+    struct sg_cvar_int maxfps;
+};
+
+extern struct sg_sys sg_sys;
 
 /* ===== Subsystem initialization ===== */
 
