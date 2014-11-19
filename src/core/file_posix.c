@@ -114,7 +114,7 @@ sg_writer_open(
     const char *basepath;
     size_t baselen;
     char buf[SG_MAX_PATH], *destpath, *temppath;
-    int nlen, fdes, ecode, flags, mode;
+    int nlen, fdes, ecode, flags, mode, r;
 
     nlen = sg_path_norm(buf, path, pathlen, err);
     if (nlen < 0)
@@ -140,8 +140,12 @@ sg_writer_open(
         ecode = errno;
         if (ecode != ENOENT)
             goto error_errno;
-        if (sg_path_mkpardir(temppath, err))
-            goto error;
+        r = sg_path_mkpardir(temppath, err);
+        if (r != SG_FILE_OK) {
+            if (r == SG_FILE_ERROR)
+                goto error;
+            goto error_errno;
+        }
         fdes = open(temppath, flags, mode);
         if (fdes < 0) {
             ecode = errno;

@@ -33,27 +33,26 @@ sg_file_createpath(const char *path, size_t pathlen,
 {
     int r;
     pchar *result;
-
-    {
-        size_t plen = sg_paths.path[0].len;
-        char nbuf[SG_MAX_PATH];
-        int nlen;
-        nlen = sg_path_norm(nbuf, path, pathlen, err);
-        if (nlen < 0)
-            return NULL;
-        result = malloc(sizeof(pchar) * (plen + nlen + 1));
-        if (!result) {
-            sg_error_nomem(err);
-            return NULL;
-        }
-        pmemcpy(result, sg_paths.path[0].path, plen);
-        sg_path_copy(result + plen, nbuf, nlen);
-        result[plen + nlen] = 0;
+    size_t plen = sg_paths.path[0].len;
+    char nbuf[SG_MAX_PATH];
+    int nlen;
+    nlen = sg_path_norm(nbuf, path, pathlen, err);
+    if (nlen < 0)
+        return NULL;
+    result = malloc(sizeof(pchar) * (plen + nlen + 1));
+    if (!result) {
+        sg_error_nomem(err);
+        return NULL;
     }
+    pmemcpy(result, sg_paths.path[0].path, plen);
+    sg_path_copy(result + plen, nbuf, nlen);
+    result[plen + nlen] = 0;
 
     r = sg_path_mkpardir(result, err);
-    if (r) {
+    if (r != SG_FILE_OK) {
         free(result);
+        if (r != SG_FILE_ERROR)
+            sg_error_notfound(err, nbuf);
         return NULL;
     }
 

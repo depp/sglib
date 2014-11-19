@@ -107,7 +107,7 @@ sg_writer_open(
     size_t baselen;
     char buf[SG_MAX_PATH];
     wchar_t *destpath, *temppath;
-    int nlen;
+    int nlen, r;
     HANDLE h;
     DWORD ecode;
 
@@ -140,8 +140,12 @@ sg_writer_open(
         ecode = GetLastError();
         if (ecode != ERROR_PATH_NOT_FOUND)
             goto error_win32;
-        if (sg_path_mkpardir(temppath, err))
-            goto error;
+        r = sg_path_mkpardir(temppath, err);
+        if (r != SG_FILE_OK) {
+            if (r == SG_FILE_ERROR)
+                goto error;
+            goto error_win32;
+        }
         h = CreateFile(
             temppath,
             GENERIC_WRITE,
