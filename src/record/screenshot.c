@@ -28,8 +28,7 @@ sg_screenshot_write(const void *ptr, int width, int height)
     memcpy(name + r, ".png", 5);
     r = sg_pixbuf_writepng(&pbuf, name, r + 4, &err);
     if (r) {
-        sg_logerrs(sg_logger_get(NULL), SG_LOG_ERROR, err,
-                   "could not save screenshot");
+        sg_logerrs(SG_LOG_ERROR, err, "could not save screenshot");
         sg_error_clear(&err);
     }
 }

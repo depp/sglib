@@ -1,4 +1,4 @@
-/* Copyright 2012 Dietrich Epp.
+/* Copyright 2012-2014 Dietrich Epp.
    This file is part of SGLib.  SGLib is licensed under the terms of the
    2-clause BSD license.  For more information, see LICENSE.txt. */
 #include "log_impl.h"
@@ -24,6 +24,8 @@
 #define NO_SOCKET (-1)
 #define SSIZE_T ssize_t
 #endif
+
+struct sg_cvar_string sg_log_netaddr;
 
 struct sg_log_network {
     struct sg_log_listener h;
@@ -55,12 +57,6 @@ sg_log_network_msg(struct sg_log_listener *llp, struct sg_log_msg *msg)
     PUT(msg->date, msg->datelen);
     buf[len++] = ' ';
     PUT(msg->level, msg->levellen);
-    if (msg->namelen) {
-        buf[len++] = ' ';
-        buf[len++] = '[';
-        PUT(msg->name, msg->namelen);
-        buf[len++] = ']';
-    }
     buf[len++] = ':';
     buf[len++] = ' ';
     PUT(msg->msg, msg->msglen);
@@ -77,7 +73,7 @@ sg_log_network_msg(struct sg_log_listener *llp, struct sg_log_msg *msg)
     return;
 
 overflow:
-    sg_logs(sg_logger_get(NULL), SG_LOG_WARN, "log message too long");
+    sg_logs(SG_LOG_WARN, "log message too long");
     return;
 
 error_errno:
@@ -86,9 +82,7 @@ error_errno:
 #else
     sg_error_win32(&err, WSAGetLastError());
 #endif
-    sg_logf(sg_logger_get(NULL), SG_LOG_ERROR,
-            "logging to %s failed: %s",
-            lp->name, err->msg);
+    sg_logf(SG_LOG_ERROR, "logging to %s failed: %s", lp->name, err->msg);
     sg_error_clear(&err);
     closesocket(sock);
     lp->sock = NO_SOCKET;
@@ -111,7 +105,6 @@ void
 sg_log_network_init(void)
 {
     struct sg_log_network *lp = NULL;
-    struct sg_logger *logger = sg_logger_get(NULL);
     const char *addrstr;
     struct sg_error *err = NULL;
     struct sg_addr addr;
@@ -119,15 +112,18 @@ sg_log_network_init(void)
     int r;
     SOCKET sock = NO_SOCKET;
 
-    r = sg_cvar_gets("log", "netaddr", &addrstr);
-    if (!r) return;
+    sg_cvar_defstring("log", "netaddr", &sg_log_netaddr,
+                      NULL, SG_CVAR_INITONLY);
+    addrstr = sg_log_netaddr.value;
+    if (!*addrstr)
+        return;
     if (!sg_net_init())
         return;
     r = sg_net_getaddr(&addr, addrstr, &err);
     if (r) goto error;
     addrname = sg_net_getname(&addr, &err);
     if (r) goto error;
-    sg_logf(logger, SG_LOG_INFO, "connecting to %s", addrname);
+    sg_logf(SG_LOG_INFO, "connecting to %s", addrname);
 #if defined SOCKET_CLOEXEC
     sock = socket(addr.addr.addr.sa_family, SOCK_STREAM | SOCK_CLOEXEC, 0);
 #else
@@ -160,7 +156,7 @@ error_errno:
 error:
     if (SOCKET_VALID(sock))
         closesocket(sock);
-    sg_logf(sg_logger_get(NULL), SG_LOG_ERROR,
+    sg_logf(SG_LOG_ERROR,
             "logging to %s failed: %s",
             addrname ? addrname : addrstr, err->msg);
     sg_error_clear(&err);

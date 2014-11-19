@@ -7,6 +7,7 @@ __pycache__
 
 # Doxygen
 /html
+/doxygen_sqlite3.db
 
 # Build system
 /config.dat

@@ -22,21 +22,19 @@ struct sg_image_cg {
 static void
 sg_image_cg_freedata(void *info, const void *data, size_t size)
 {
-    struct sg_buffer *buf;
     (void) data;
     (void) size;
-    buf = info;
-    sg_buffer_decref(buf);
+    sg_filedata_decref(info);
 }
 
 static CGDataProviderRef
-sg_image_cg_data(struct sg_buffer *buf)
+sg_image_cg_data(struct sg_filedata *data)
 {
     CGDataProviderRef p = CGDataProviderCreateWithData(
-        buf, buf->data, buf->length, sg_image_cg_freedata);
+        data, data->data, data->length, sg_image_cg_freedata);
     if (!p)
         abort();
-    sg_buffer_incref(buf);
+    sg_filedata_incref(data);
     return p;
 }
 
@@ -131,9 +129,9 @@ invalid:
 #if defined ENABLE_PNG_COREGRAPHICS
 
 struct sg_image *
-sg_image_png(struct sg_buffer *buf, struct sg_error **err)
+sg_image_png(struct sg_filedata *data, struct sg_error **err)
 {
-    CGDataProviderRef dp = sg_image_cg_data(buf);
+    CGDataProviderRef dp = sg_image_cg_data(data);
     CGImageRef img = CGImageCreateWithPNGDataProvider(
         dp, NULL, false, kCGRenderingIntentDefault);
     CGDataProviderRelease(dp);
@@ -145,9 +143,9 @@ sg_image_png(struct sg_buffer *buf, struct sg_error **err)
 #if defined ENABLE_JPEG_COREGRAPHICS
 
 struct sg_image *
-sg_image_jpeg(struct sg_buffer *buf, struct sg_error **err)
+sg_image_jpeg(struct sg_filedata *data, struct sg_error **err)
 {
-    CGDataProviderRef dp = sg_image_cg_data(buf);
+    CGDataProviderRef dp = sg_image_cg_data(data);
     CGImageRef img = CGImageCreateWithJPEGDataProvider(
         dp, NULL, false, kCGRenderingIntentDefault);
     CGDataProviderRelease(dp);
@@ -164,11 +162,16 @@ sg_image_cg_freedata2(void *info, const void *data, size_t size)
     (void) info;
 }
 
+struct sg_coregraphics_consumer {
+    struct sg_error *err;
+    struct sg_writer *fp;
+};
+
 static size_t
 sg_pixbuf_cg_iowrite(void *info, const void *buffer, size_t count)
 {
-    struct sg_file *fp = info;
-    int r = fp->write(fp, buffer, count);
+    struct sg_coregraphics_consumer *cp = info;
+    int r = sg_writer_write(cp->fp, buffer, count, &cp->err);
     return r < 0 ? 0 : (size_t) r;
 }
 
@@ -191,7 +194,10 @@ sg_pixbuf_writepng(struct sg_pixbuf *pbuf, const char *path, size_t pathlen,
     CGDataConsumerRef consumer = NULL;
     CGImageDestinationRef dest = NULL;
     CGImageRef img;
-    struct sg_file *fp;
+    struct sg_writer *fp;
+    struct sg_coregraphics_consumer cdata;
+
+    cdata.err = NULL;
 
     switch (pbuf->format) {
     case SG_RGBX: nchan = 4; info = kCGImageAlphaNoneSkipLast; break;
@@ -201,7 +207,7 @@ sg_pixbuf_writepng(struct sg_pixbuf *pbuf, const char *path, size_t pathlen,
         return -1;
     }
 
-    fp = sg_file_open(path, pathlen, SG_WRONLY, NULL, err);
+    fp = sg_writer_open(path, pathlen, err);
     if (!fp)
         return -1;
 
@@ -222,9 +228,10 @@ sg_pixbuf_writepng(struct sg_pixbuf *pbuf, const char *path, size_t pathlen,
     if (!img)
         FAIL();
 
+    cdata.fp = fp;
     cb.putBytes = sg_pixbuf_cg_iowrite;
     cb.releaseConsumer = sg_pixbuf_cg_iorelease;
-    consumer = CGDataConsumerCreate(fp, &cb);
+    consumer = CGDataConsumerCreate(&cdata, &cb);
 
     dest = CGImageDestinationCreateWithDataConsumer(
         consumer, kUTTypePNG, 1, NULL);
@@ -235,7 +242,7 @@ sg_pixbuf_writepng(struct sg_pixbuf *pbuf, const char *path, size_t pathlen,
     if (!success)
         FAIL();
 
-    r = fp->close(fp);
+    r = sg_writer_commit(fp, err);
     if (!r)
         goto fileerror;
 
@@ -243,15 +250,16 @@ sg_pixbuf_writepng(struct sg_pixbuf *pbuf, const char *path, size_t pathlen,
     goto done;
 
 done:
+    sg_error_clear(&cdata.err);
     if (dest) CFRelease(dest);
     if (consumer) CFRelease(consumer);
     if (data) CFRelease(data);
     if (color_space) CFRelease(color_space);
-    fp->free(fp);
+    sg_writer_close(fp);
     return ret;
 
 error:
-    if (fp->err)
+    if (cdata.err)
         goto fileerror;
     sg_error_setf(err, &SG_ERROR_GENERIC, 0,
                   "could not write PNG (%s:%d)", __FUNCTION__, lineno);
@@ -259,7 +267,7 @@ error:
     goto done;
 
 fileerror:
-    sg_error_move(err, &fp->err);
+    sg_error_move(err, &cdata.err);
     ret = -1;
     goto done;
 }

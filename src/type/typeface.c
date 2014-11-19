@@ -15,7 +15,7 @@ static void
 sg_typeface_free(struct sg_typeface *fp)
 {
     FT_Done_Face(fp->face);
-    sg_buffer_decref(fp->buf);
+    sg_filedata_decref(fp->data);
     free(fp);
 }
 
@@ -38,8 +38,8 @@ sg_typeface_file(const char *path, size_t pathlen, struct sg_error **err)
     FT_Error ferr;
     FT_Face face = NULL;
     FT_CharMap cmap;
-    struct sg_buffer *buf = NULL;
-    int npathlen, i, n;
+    struct sg_filedata *data = NULL;
+    int npathlen, i, n, r;
     char npath[SG_MAX_PATH], *pp;
     struct sg_typeface *tp;
 
@@ -47,10 +47,9 @@ sg_typeface_file(const char *path, size_t pathlen, struct sg_error **err)
     if (npathlen < 0)
         return NULL;
 
-    buf = sg_file_get(npath, npathlen,
-                      SG_RDONLY, SG_FONT_EXTENSIONS,
-                      SG_FONT_MAXSZ, err);
-    if (!buf)
+    r = sg_file_load(&data, npath, npathlen, 0,
+                     SG_FONT_EXTENSIONS, SG_FONT_MAXSZ, NULL, err);
+    if (r)
         return NULL;
 
     if (!sg_font_library) {
@@ -60,7 +59,7 @@ sg_typeface_file(const char *path, size_t pathlen, struct sg_error **err)
     }
 
     ferr = FT_New_Memory_Face(
-        sg_font_library, buf->data, (long) buf->length, 0, &face);
+        sg_font_library, data->data, (long) data->length, 0, &face);
     if (ferr)
         goto freetype_error;
 
@@ -89,7 +88,7 @@ sg_typeface_file(const char *path, size_t pathlen, struct sg_error **err)
     tp->refcount = 1;
     tp->path = pp;
     tp->pathlen = npathlen;
-    tp->buf = buf;
+    tp->data = data;
     tp->face = face;
     tp->font = NULL;
     memcpy(pp, npath, npathlen + 1);
@@ -102,6 +101,6 @@ freetype_error:
 
 error:
     if (face) FT_Done_Face(face);
-    if (buf) sg_buffer_decref(buf);
+    if (data) sg_filedata_decref(data);
     return NULL;
 }

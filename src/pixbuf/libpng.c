@@ -19,7 +19,7 @@ struct sg_image_png {
     png_struct *pngp;
     png_info *infop;
     struct sg_error **err;
-    struct sg_buffer *buf;
+    struct sg_filedata *data;
     const char *bufptr, *bufend;
 };
 
@@ -27,7 +27,7 @@ static void
 sg_png_error(png_struct *pngp, const char *msg)
 {
     struct sg_image_png *im = png_get_error_ptr(pngp);
-    sg_logf(sg_logger_get("image"), SG_LOG_ERROR, "LibPNG: %s", msg);
+    sg_logf(SG_LOG_ERROR, "LibPNG: %s", msg);
     sg_error_data(im->err, "PNG");
     longjmp(png_jmpbuf(pngp), 1);
 }
@@ -36,7 +36,7 @@ static void
 sg_png_warning(png_struct *pngp, const char *msg)
 {
     (void) pngp;
-    sg_logf(sg_logger_get("image"), SG_LOG_WARN, "LibPNG: %s", msg);
+    sg_logf(SG_LOG_WARN, "LibPNG: %s", msg);
 }
 
 static void
@@ -51,8 +51,7 @@ sg_image_png_read(png_struct *pngp, unsigned char *ptr, png_size_t len)
         memcpy(ptr, im->bufptr, len);
         im->bufptr += len;
     } else {
-        sg_logs(sg_logger_get("image"), SG_LOG_ERROR,
-                "PNG: unexpected end of file");
+        sg_logs(SG_LOG_ERROR, "PNG: unexpected end of file");
         err = png_get_error_ptr(pngp);
         sg_error_data(err, "PNG");
         longjmp(png_jmpbuf(pngp), 1);
@@ -64,7 +63,7 @@ sg_image_png_free(struct sg_image *img)
 {
     struct sg_image_png *im = (struct sg_image_png *) img;
     png_destroy_read_struct(&im->pngp, &im->infop, NULL);
-    sg_buffer_decref(im->buf);
+    sg_filedata_decref(im->data);
     free(im);
 }
 
@@ -123,7 +122,7 @@ sg_image_png_draw(struct sg_image *img, struct sg_pixbuf *pbuf,
 }
 
 struct sg_image *
-sg_image_png(struct sg_buffer *buf, struct sg_error **err)
+sg_image_png(struct sg_filedata *data, struct sg_error **err)
 {
     png_struct *pngp;
     png_info *infop;
@@ -155,9 +154,9 @@ sg_image_png(struct sg_buffer *buf, struct sg_error **err)
     }
 
     im->err = err;
-    im->buf = buf;
-    im->bufptr = buf->data;
-    im->bufend = (const char *) buf->data + buf->length;
+    im->data = data;
+    im->bufptr = data->data;
+    im->bufend = (const char *) data->data + data->length;
 
     if (setjmp(png_jmpbuf(pngp)))
         goto cleanup;
@@ -186,14 +185,14 @@ sg_image_png(struct sg_buffer *buf, struct sg_error **err)
          SG_IMAGE_COLOR : 0);
     im->img.free = sg_image_png_free;
     im->img.draw = sg_image_png_draw;
-    sg_buffer_incref(buf);
+    sg_filedata_incref(data);
     im->err = NULL;
 
     return &im->img;
 
 invalid:
     sg_error_data(err, "PNG");
-    sg_logf(sg_logger_get("image"), SG_LOG_ERROR, msg);
+    sg_logf(SG_LOG_ERROR, msg);
     goto cleanup;
 
 cleanup:
@@ -205,22 +204,20 @@ cleanup:
 static void
 sg_png_write(png_structp pngp, png_bytep data, png_size_t length)
 {
-    struct sg_error **err;
-    struct sg_file *fp = png_get_io_ptr(pngp);
+    struct sg_error **errp, *err = NULL;
+    struct sg_writer *fp = png_get_io_ptr(pngp);
     int r;
     png_size_t pos = 0;
 
-again:
-    r = fp->write(fp, data, length);
-    if (r > 0) {
+    do {
+        r = sg_writer_write(fp, data + pos, length - pos, &err);
+        if (r < 0) {
+            errp = png_get_error_ptr(pngp);
+            sg_error_move(errp, &err);
+            longjmp(png_jmpbuf(pngp), 1);
+        }
         pos += r;
-        if (pos < length)
-            goto again;
-    } else {
-        err = png_get_error_ptr(pngp);
-        sg_error_move(err, &fp->err);
-        longjmp(png_jmpbuf(pngp), 1);
-    }
+    } while (pos < length);
 }
 
 static void
@@ -233,7 +230,7 @@ int
 sg_pixbuf_writepng(struct sg_pixbuf *pbuf, const char *path, size_t pathlen,
                    struct sg_error **err)
 {
-    struct sg_file *fp;
+    struct sg_writer *fp;
     volatile png_structp pngp = NULL;
     volatile png_infop infop = NULL;
     int ret, ctype, i, r;
@@ -248,7 +245,7 @@ sg_pixbuf_writepng(struct sg_pixbuf *pbuf, const char *path, size_t pathlen,
         return -1;
     }
 
-    fp = sg_file_open(path, pathlen, SG_WRONLY, NULL, err);
+    fp = sg_writer_open(path, pathlen, err);
     if (!fp)
         return -1;
 
@@ -302,13 +299,11 @@ sg_pixbuf_writepng(struct sg_pixbuf *pbuf, const char *path, size_t pathlen,
 
 done:
     if (!ret) {
-        r = fp->close(fp);
-        if (r) {
+        r = sg_writer_commit(fp, err);
+        if (r)
             ret = -1;
-            sg_error_move(err, &fp->err);
-        }
     }
-    fp->free(fp);
+    sg_writer_close(fp);
     free(tmp);
     png_destroy_write_struct(
         (png_structp *) &pngp, (png_infop *) &infop);
@@ -316,7 +311,7 @@ done:
 }
 
 void
-sg_version_libpng(struct sg_logger *lp)
+sg_version_libpng(void)
 {
     int v = png_access_version_number(), maj, min, mic;
     char vers[16];
@@ -325,5 +320,5 @@ sg_version_libpng(struct sg_logger *lp)
     maj = min / 100;
     min = min % 100;
     snprintf(vers, sizeof(vers), "%d.%d.%d", maj, min, mic);
-    sg_version_lib(lp, "LibPNG", PNG_LIBPNG_VER_STRING, vers);
+    sg_version_lib("LibPNG", PNG_LIBPNG_VER_STRING, vers);
 }

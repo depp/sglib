@@ -6,21 +6,15 @@
 #include "sg/cvar.h"
 #include "sg/error.h"
 #include "sg/log.h"
+#include "sg/util.h"
 #include "SDL.h"
 
 struct sg_mixer_sdl {
-    struct sg_logger *logger;
-
     /* The system was successfully initialized.  */
     int is_initted;
 
     /* The active audio device, or 0 if audio is not running.  */
     SDL_AudioDeviceID dev;
-
-    /* Requested sample rate.  */
-    int req_rate;
-    /* Requested buffer size.  */
-    int req_bufsize;
 
     /* The mixdown.  */
     struct sg_mixer_mixdowniface *mixdown;
@@ -35,8 +29,7 @@ static struct sg_mixer_sdl sg_mixer_sdl;
 static void
 sg_mixer_sdl_error(const char *msg)
 {
-    sg_logf(sg_mixer_sdl.logger, SG_LOG_ERROR,
-            "SDL audio: %s: %s", msg, SDL_GetError());
+    sg_logf(SG_LOG_ERROR, "SDL audio: %s: %s", msg, SDL_GetError());
 }
 
 void
@@ -44,17 +37,11 @@ sg_mixer_system_init(void)
 {
     struct sg_mixer_sdl *ap = &sg_mixer_sdl;
 
-    ap->logger = sg_logger_get("audio");
-
     if (SDL_InitSubSystem(SDL_INIT_AUDIO)) {
         sg_mixer_sdl_error("could not initialize SDL subsystem");
         return;
     }
 
-    if (!sg_cvar_geti("audio", "rate", &ap->req_rate))
-        ap->req_rate = 48000;
-    if (!sg_cvar_geti("audio", "bufsize", &ap->req_bufsize))
-        ap->req_bufsize = 1024;
     ap->is_initted = 1;
 }
 
@@ -71,8 +58,7 @@ sg_mixer_sdl_callback(void *userdata, Uint8 *stream, int len)
     sg_mixer_mixdown_process(mp, time);
     if ((size_t) len != sizeof(float) * ap->bufsize * 2) {
         if (ap->bufsize)
-            sg_logf(ap->logger, SG_LOG_ERROR,
-                    "unexpected audio buffer size: %d", len);
+            sg_logf(SG_LOG_ERROR, "unexpected audio buffer size: %d", len);
         ap->bufsize = 0;
         memset(stream, 0, len);
     } else {
@@ -93,10 +79,10 @@ sg_mixer_start(void)
         return;
 
     memset(&req, 0, sizeof(req));
-    req.freq = ap->req_rate;
+    req.freq = sg_mixer.cvar_rate.value;
     req.format = AUDIO_F32SYS;
     req.channels = 2;
-    req.samples = ap->req_bufsize;
+    req.samples = sg_round_up_pow2_32(sg_mixer.cvar_bufsize.value);
     req.callback = sg_mixer_sdl_callback;
     dev = SDL_OpenAudioDevice(
         NULL, 0, &req, &spec,
@@ -108,15 +94,12 @@ sg_mixer_start(void)
 
     ap->rate = spec.freq;
     ap->bufsize = spec.samples;
-    sg_logf(ap->logger, SG_LOG_INFO,
-            "audio sample rate: %d", spec.freq);
-    sg_logf(ap->logger, SG_LOG_INFO,
-            "audio buffer size: %d", spec.samples);
+    sg_logf(SG_LOG_INFO, "audio sample rate: %d", spec.freq);
+    sg_logf(SG_LOG_INFO, "audio buffer size: %d", spec.samples);
     mp = sg_mixer_mixdown_new_live(spec.freq, spec.samples, &err);
     if (!mp) {
         SDL_CloseAudioDevice(dev);
-        sg_logerrs(ap->logger, SG_LOG_ERROR, err,
-                   "failed to create mixdown");
+        sg_logerrs(SG_LOG_ERROR, err, "failed to create mixdown");
         sg_error_clear(&err);
         return;
     }

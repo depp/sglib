@@ -1,7 +1,13 @@
 /* Copyright 2013 Dietrich Epp.
    This file is part of SGLib.  SGLib is licensed under the terms of the
    2-clause BSD license.  For more information, see LICENSE.txt. */
-#define _CRT_SECURE_NO_WARNINGS
+
+#if defined _WIN32
+# define _CRT_SECURE_NO_WARNINGS
+# pragma warning(disable: 4244)
+# pragma warning(disable: 4305)
+#endif
+
 #include "sg/opengl.h"
 #include "sg/type.h"
 
@@ -32,9 +38,6 @@ struct sg_pixbuf;
 
 struct sg_mixer_sound *
 load_audio(const char *path);
-
-GLuint
-load_shader(const char *path, GLenum type);
 
 GLuint
 load_pixbuf(struct sg_pixbuf *pixbuf);

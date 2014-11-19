@@ -1,90 +1,47 @@
-/* Copyright 2013 Dietrich Epp.
+/* Copyright 2013-2014 Dietrich Epp.
    This file is part of SGLib.  SGLib is licensed under the terms of the
    2-clause BSD license.  For more information, see LICENSE.txt. */
 #include "defs.h"
-#include "sg/file.h"
-#include "sg/log.h"
-#include <limits.h>
-#include <stdlib.h>
+#include "sg/entry.h"
+#include "sg/shader.h"
+#include <stdio.h>
 #include <string.h>
-
-GLuint
-load_shader(const char *path, GLenum type)
-{
-    struct sg_buffer *buf;
-    const char *darr[1];
-    GLint larr[1], flag, loglen;
-    struct sg_logger *log;
-    char *errlog;
-    GLuint shader;
-
-    buf = sg_file_get(path, strlen(path), SG_RDONLY,
-                      "glsl", 1024 * 1024, NULL);
-    if (!buf)
-        abort();
-
-    if (buf->length > INT_MAX) {
-        log = sg_logger_get("shader");
-        sg_logf(log, SG_LOG_ERROR, "%s: too long", path);
-        return -1;
-    }
-
-    darr[0] = buf->data;
-    larr[0] = (GLint) buf->length;
-    shader = glCreateShader(type);
-    glShaderSource(shader, 1, darr, larr);
-    glCompileShader(shader);
-    glGetShaderiv(shader, GL_COMPILE_STATUS, &flag);
-    if (flag)
-        return shader;
-
-    log = sg_logger_get("shader");
-    sg_logf(log, SG_LOG_ERROR, "%s: compilation failed", path);
-    glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &loglen);
-    if (loglen > 0) {
-        errlog = malloc(loglen);
-        if (errlog) {
-            glGetShaderInfoLog(shader, loglen, NULL, errlog);
-            sg_logs(log, SG_LOG_ERROR, errlog);
-            free(errlog);
-        }
-    }
-    glDeleteShader(shader);
-    abort();
-}
 
 GLuint
 load_program(const char *vertpath, const char *fragpath)
 {
-    struct sg_logger *log;
-    GLuint prog, vertshader, fragshader;
-    GLint flag, loglen;
-    char *errlog;
+    GLuint program, vertshader, fragshader;
+    int r;
+    char name[128];
 
-    vertshader = load_shader(vertpath, GL_VERTEX_SHADER);
-    fragshader = load_shader(fragpath, GL_FRAGMENT_SHADER);
-    prog = glCreateProgram();
-    glAttachShader(prog, vertshader);
-    glAttachShader(prog, fragshader);
+    vertshader = sg_shader_file(
+        vertpath, strlen(vertpath), GL_VERTEX_SHADER, NULL);
+    if (!vertshader)
+        return 0;
+    fragshader = sg_shader_file(
+        fragpath, strlen(fragpath), GL_FRAGMENT_SHADER, NULL);
+    if (!fragshader) {
+        glDeleteShader(vertshader);
+        return 0;
+    }
+
+#if defined _WIN32
+    _snprintf_s(name, sizeof(name), _TRUNCATE, "%s + %s", vertpath, fragpath);
+#else
+    snprintf(name, sizeof(name), "%s + %s", vertpath, fragpath);
+#endif
+
+    program = glCreateProgram();
+    if (!program)
+        sg_sys_abort("Could not create OpenGL shader program.");
+    glAttachShader(program, vertshader);
+    glAttachShader(program, fragshader);
     glDeleteShader(vertshader);
     glDeleteShader(fragshader);
-
-    glLinkProgram(prog);
-    glGetProgramiv(prog, GL_LINK_STATUS, &flag);
-    if (flag)
-        return prog;
-
-    log = sg_logger_get("shader");
-    sg_logf(log, SG_LOG_ERROR, "%s + %s: linking failed",
-            vertpath, fragpath);
-    glGetProgramiv(prog, GL_INFO_LOG_LENGTH, &loglen);
-    if (loglen <= 0) {
-        errlog = malloc(loglen);
-        if (errlog) {
-            glGetProgramInfoLog(prog, loglen, NULL, errlog);
-            sg_logs(log, SG_LOG_ERROR, errlog);
-            free(errlog);
-        }
+    r = sg_shader_link(program, name, NULL);
+    if (r < 0) {
+        glDeleteProgram(program);
+        return 0;
     }
-    abort();
+    return program;
 }

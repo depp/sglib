@@ -16,14 +16,13 @@ static void
 sg_error_clobber(const struct sg_error_domain *dom,
                  long code, const char *msg)
 {
-    struct sg_logger *logger = sg_logger_get(NULL);
     if (code)
-        sg_logf(logger, SG_LOG_ERROR,
-                "warning: error discarded: %s (%s %ld)\n",
+        sg_logf(SG_LOG_WARN,
+                "Error discarded: %s (%s %ld)\n",
                 msg, dom->name, code);
     else
-        sg_logf(logger, SG_LOG_ERROR,
-                "warning: error discarded: %s (%s)\n",
+        sg_logf(SG_LOG_WARN,
+                "Error discarded: %s (%s)\n",
                 msg, dom->name);
 }
 

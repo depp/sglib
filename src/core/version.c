@@ -10,16 +10,18 @@
 #include <stdio.h>
 
 void
-sg_version_lib(struct sg_logger *lp, const char *libname,
+sg_version_lib(const char *libname,
                const char *compileversion, const char *runversion)
 {
+    /*
     if (SG_LOG_DEBUG >= lp->level && compileversion && runversion &&
         strcmp(compileversion, runversion))
         sg_logf(lp, SG_LOG_INFO, "%s: version %s (compiled against %s)",
                 libname, compileversion, runversion);
     else
-        sg_logf(lp, SG_LOG_INFO, "%s: version %s", libname,
-                runversion ? runversion : compileversion);
+    */
+    sg_logf(SG_LOG_INFO, "%s: version %s", libname,
+            runversion ? runversion : compileversion);
 }
 
 #if defined(__linux__)
@@ -255,25 +257,20 @@ void
 sg_version_print(void)
 {
     char buf[256];
-    struct sg_logger *log = sg_logger_get("init");
-    sg_logf(log, SG_LOG_INFO, "App version: %s (%s)",
+    sg_logf(SG_LOG_INFO, "App version: %s (%s)",
             SG_APP_VERSION, SG_APP_COMMIT);
-    sg_logf(log, SG_LOG_INFO, "SGLib version: %s (%s)",
+    sg_logf(SG_LOG_INFO, "SGLib version: %s (%s)",
             SG_SG_VERSION, SG_SG_COMMIT);
-    sg_logf(log, SG_LOG_INFO, "Compiler: " COMPILER);
+    sg_logf(SG_LOG_INFO, "Compiler: " COMPILER);
     sg_version_os(buf, sizeof(buf));
-    sg_logs(log, SG_LOG_INFO, buf);
-    sg_version_platform(log);
+    sg_logs(SG_LOG_INFO, buf);
+    sg_version_platform();
 
 #if defined USE_PNG_LIBPNG
-    sg_version_libjpeg(log);
+    sg_version_libjpeg();
 #endif
 
-#if defined USE_JPEG_LIBJPEC
-    sg_version_libpng(log);
-#endif
-
-#if defined USE_TYPE_PANGO
-    sg_version_pango(log);
+#if defined USE_JPEG_LIBJPEG
+    sg_version_libpng();
 #endif
 }

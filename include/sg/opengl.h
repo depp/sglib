@@ -4,6 +4,7 @@
 #ifndef SG_OPENGL_H
 #define SG_OPENGL_H
 #include "config.h"
+struct sg_error;
 
 /**
  * @file opengl.h
@@ -50,6 +51,19 @@ extern "C" {
  */
 int
 sg_opengl_checkerror(const char *where, ...);
+
+/**
+ * @brief An OpenGL error.
+ */
+extern const struct sg_error_domain SG_ERROR_OPENGL;
+
+/**
+ * @brief Create an OpenGL error.
+ *
+ * @param err The error to initialize, can be null.
+ */
+void
+sg_error_opengl(struct sg_error **err);
 
 #ifdef __cplusplus
 }

@@ -92,10 +92,9 @@ class App(object):
             name = name.replace(' ', '_')
 
         args = [
-            ('log.level.root', 'debug'),
-            ('path.data',
+            ('datapath',
              os.path.join(build.target.run_srcroot, self.datapath)),
-            ('path.user',
+            ('userpath',
              os.path.join(build.target.run_srcroot, 'user')),
         ]
         if build.config.platform == 'windows':

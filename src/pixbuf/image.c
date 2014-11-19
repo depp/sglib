@@ -34,34 +34,36 @@ static const unsigned char SG_PIXBUF_JPEGHEAD[2] = { 255, 216 };
 struct sg_image *
 sg_image_file(const char *path, size_t pathlen, struct sg_error **err)
 {
-    struct sg_buffer *buf;
+    struct sg_filedata *data;
     struct sg_image *image;
-    buf = sg_file_get(path, pathlen, SG_RDONLY,
-                      SG_PIXBUF_IMAGE_EXTENSIONS, SG_IMAGE_MAXSIZE, err);
-    if (!buf)
+    int r;
+    r = sg_file_load(
+        &data, path, pathlen,
+        0, SG_PIXBUF_IMAGE_EXTENSIONS, SG_IMAGE_MAXSIZE, NULL, err);
+    if (r)
         return NULL;
-    image = sg_image_buffer(buf, err);
-    sg_buffer_decref(buf);
+    image = sg_image_buffer(data, err);
+    sg_filedata_decref(data);
     return image;
 }
 
 struct sg_image *
-sg_image_buffer(struct sg_buffer *buf, struct sg_error **err)
+sg_image_buffer(struct sg_filedata *data, struct sg_error **err)
 {
-    const void *data = buf->data;
-    size_t len = buf->length;
+    const void *ptr = data->data;
+    size_t len = data->length;
 
-    (void) data;
+    (void) ptr;
     (void) len;
 
 #if defined ENABLE_PNG
-    if (len >= 8 && !memcmp(data, SG_PIXBUF_PNGHEAD, 8))
-        return sg_image_png(buf, err);
+    if (len >= 8 && !memcmp(ptr, SG_PIXBUF_PNGHEAD, 8))
+        return sg_image_png(data, err);
 #endif
 
 #if defined ENABLE_JPEG
-    if (len >= 2 && !memcmp(data, SG_PIXBUF_JPEGHEAD, 2))
-        return sg_image_jpeg(buf, err);
+    if (len >= 2 && !memcmp(ptr, SG_PIXBUF_JPEGHEAD, 2))
+        return sg_image_jpeg(data, err);
 #endif
 
     sg_error_data(err, "image");

@@ -1,17 +1,31 @@
-/* Copyright 2013 Dietrich Epp.
+/* Copyright 2013-2014 Dietrich Epp.
    This file is part of SGLib.  SGLib is licensed under the terms of the
    2-clause BSD license.  For more information, see LICENSE.txt. */
 #include <stddef.h>
+#include "sg/cvar.h"
 struct sg_game_info;
 union sg_event;
 
 extern const struct sg_game_info sg_game_info_defaults;
+
+/* Common globals */
+struct sg_sys {
+    struct sg_cvar_bool showfps;
+    struct sg_cvar_int vsync;
+    struct sg_cvar_int maxfps;
+};
+
+extern struct sg_sys sg_sys;
 
 /* ===== Subsystem initialization ===== */
 
 /* The initialization funcitons are called in this order, with the
    exception of sg_net_init(), which may be called at any time after
    the logging system is initialized.  */
+
+/* Initialize the CVar system.  */
+void
+sg_cvar_init(int argc, char **argv);
 
 /* Initialize logging subsystem.  This is called first so other
    subsystems can log errors.  */
@@ -44,11 +58,11 @@ sg_net_init(void);
    These provide a thin layer around the game export functions, or
    provide a thin layer around platform functionality.  */
 
-/* Initialize all library subsystems and the game.  This should be
-   called after the command line arguments are parsed and passed to
-   sg_cvar_addarg.  */
+/* Initialize all library subsystems and the game.  The arguments
+   should not include the executable name, i.e., if called from
+   main(), call sg_sys_init(argc-1, argv+1).  */
 void
-sg_sys_init(void);
+sg_sys_init(int argc, char **argv);
 
 /* Get information about the game.  Details not provided by the game
    are filled in with sensible defaults.  This should be called by

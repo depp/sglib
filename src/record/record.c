@@ -59,7 +59,6 @@ struct sg_record_buf {
 };
 
 struct sg_record {
-    struct sg_logger *log;
     unsigned flags;
     int fwidth, fheight;
     struct sg_record_buf buf[2];
@@ -176,8 +175,7 @@ sg_record_buf_process(struct sg_record_buf *buf)
         fptr = malloc(sz);
         if (!fptr) {
             sg_error_nomem(&err);
-            sg_logerrs(sg_record.log, SG_LOG_ERROR, err,
-                       "could not allocate video buffer");
+            sg_logerrs(SG_LOG_ERROR, err, "could not allocate video buffer");
             sg_error_clear(&err);
         } else {
             for (i = 0; i < height; i++) {
@@ -199,8 +197,7 @@ sg_record_buf_process(struct sg_record_buf *buf)
         }
         glUnmapBuffer(GL_PIXEL_PACK_BUFFER);
     } else {
-        sg_logs(sg_record.log, SG_LOG_ERROR,
-                "could not map framebuffer for recording");
+        sg_logs(SG_LOG_ERROR, "could not map framebuffer for recording");
         sg_record.flags &= ~SG_RECORD_VIDEO;
     }
 
@@ -220,7 +217,6 @@ void
 sg_record_init(void)
 {
     int i;
-    sg_record.log = sg_logger_get("video");
     sg_record.flags = 0;
     for (i = 0; i < 2; i++) {
         sg_record.buf[i].flags = 0;

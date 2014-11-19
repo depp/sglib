@@ -15,7 +15,7 @@
 
 struct sg_image_wic {
     struct sg_image img;
-    struct sg_buffer *buf;
+    struct sg_filedata *data;
     IWICImagingFactory *fac;
     IWICBitmapFrameDecode *frame;
 };
@@ -34,7 +34,7 @@ sg_image_wic_free(struct sg_image *img)
     struct sg_image_wic *im = (struct sg_image_wic *) img;
     RELEASE(im->frame);
     RELEASE(im->fac);
-    sg_buffer_decref(im->buf);
+    sg_filedata_decref(im->data);
 }
 
 static int
@@ -89,7 +89,7 @@ failed:
 }
 
 struct sg_image *
-sg_image_wc(struct sg_buffer *buf, struct sg_error **err)
+sg_image_wc(struct sg_filedata *data, struct sg_error **err)
 {
     struct sg_image_wic *im = NULL;
     HRESULT hr;
@@ -118,8 +118,8 @@ sg_image_wc(struct sg_buffer *buf, struct sg_error **err)
 
     hr = stream->lpVtbl->InitializeFromMemory(
         stream,
-        (BYTE *) buf->data,
-        (DWORD) buf->length);
+        (BYTE *) data->data,
+        (DWORD) data->length);
     if (hr != S_OK)
         goto failed;
 
@@ -182,8 +182,7 @@ sg_image_wc(struct sg_buffer *buf, struct sg_error **err)
         break;
 
     default:
-        sg_logf(sg_logger_get("image"), SG_LOG_ERROR,
-                "Unsupported channel count: %u", chanCount);
+        sg_logf(SG_LOG_ERROR, "Unsupported channel count: %u", chanCount);
         sg_error_data(err, "Wincodec");
         goto failed;
     }
@@ -198,10 +197,10 @@ sg_image_wc(struct sg_buffer *buf, struct sg_error **err)
     im->img.flags = flags;
     im->img.free = sg_image_wic_free;
     im->img.draw = sg_image_wic_draw;
-    im->buf = buf;
+    im->data = data;
     im->fac = fac;
     im->frame = frame;
-    sg_buffer_incref(buf);
+    sg_filedata_incref(data);
     fac = NULL;
     frame = NULL;
     goto done;
@@ -225,9 +224,9 @@ failed:
 #if defined ENABLE_PNG
 
 struct sg_image *
-sg_image_png(struct sg_buffer *buf, struct sg_error **err)
+sg_image_png(struct sg_filedata *data, struct sg_error **err)
 {
-    return sg_image_wc(buf, err);
+    return sg_image_wc(data, err);
 }
 
 #endif
@@ -235,9 +234,9 @@ sg_image_png(struct sg_buffer *buf, struct sg_error **err)
 #if defined ENABLE_JPEG
 
 struct sg_image *
-sg_image_jpeg(struct sg_buffer *buf, struct sg_error **err)
+sg_image_jpeg(struct sg_filedata *data, struct sg_error **err)
 {
-    return sg_image_wc(buf, err);
+    return sg_image_wc(data, err);
 }
 
 #endif

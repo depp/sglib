@@ -1,4 +1,4 @@
-/* Copyright 2012-2013 Dietrich Epp.
+/* Copyright 2012-2014 Dietrich Epp.
    This file is part of SGLib.  SGLib is licensed under the terms of the
    2-clause BSD license.  For more information, see LICENSE.txt. */
 #include "log_impl.h"
@@ -92,6 +92,8 @@ sg_log_console_init(void)
 
 #define BUFFER_SIZE BUFSIZ
 
+static struct sg_cvar_bool sg_log_winconsole;
+
 static void
 sg_log_console_reopen(FILE *fp, DWORD which, const char *mode)
 {
@@ -115,8 +117,9 @@ static int
 sg_log_console_create(void)
 {
     BOOL br;
-    int flag;
-    if (!sg_cvar_getb("log", "winconsole", &flag) || !flag)
+    sg_cvar_defbool("log", "winconsole", &sg_log_winconsole,
+                    0, SG_CVAR_INITONLY);
+    if (!sg_log_winconsole.value)
         return 0;
     br = AllocConsole();
     if (!br)

@@ -57,8 +57,7 @@ sg_sdl_updatecapture(void)
         sg_sdl.have_capture = enabled;
     } else {
         if (enabled)
-            sg_logs(sg_logger_get(NULL), SG_LOG_WARN,
-                    "failed to set relative mouse mode");
+            sg_logs(SG_LOG_WARN, "failed to set relative mouse mode");
         return;
     }
 }
@@ -71,7 +70,7 @@ sg_sys_capturemouse(int enabled)
 }
 
 void
-sg_version_platform(struct sg_logger *lp)
+sg_version_platform(void)
 {
     char v1[16], v2[16];
     SDL_version v;
@@ -87,7 +86,7 @@ sg_version_platform(struct sg_logger *lp)
     _snprintf_s(v2, sizeof(v2), _TRUNCATE, "%d.%d.%d",
         v.major, v.minor, v.patch);
 #endif
-    sg_version_lib(lp, "LibSDL", v1, v2);
+    sg_version_lib("LibSDL", v1, v2);
 }
 
 SG_ATTR_NORETURN
@@ -99,23 +98,48 @@ sdl_error(const char *what)
 }
 
 static void
+sg_sdl_setvsync(void)
+{
+    int vsync = sg_sys.vsync.value, r;
+    sg_sys.vsync.flags &= ~SG_CVAR_MODIFIED;
+    switch (vsync) {
+    case 0:
+        r = SDL_GL_SetSwapInterval(0);
+        break;
+    case 1:
+        r = SDL_GL_SetSwapInterval(1);
+        break;
+    case 2:
+        r = SDL_GL_SetSwapInterval(-1);
+        if (!r)
+            return;
+        sg_logf(SG_LOG_WARN, "Could not set vsync 2: %s", SDL_GetError());
+        SDL_ClearError();
+        vsync = 1;
+        r = SDL_GL_SetSwapInterval(1);
+        break;
+    default:
+        return;
+    }
+    if (r) {
+        sg_logf(SG_LOG_WARN, "Could not set vsync %d: %s",
+                vsync, SDL_GetError());
+    }
+}
+
+static void
 sdl_init(int argc, char *argv[])
 {
     GLenum err;
     union sg_event evt;
     struct sg_game_info gameinfo;
-    int flags, i;
+    int flags;
 
-    for (i = 1; i < argc; i++) {
-        if ((argv[i][0] >= 'a' && argv[i][0] <= 'z') ||
-            (argv[i][0] >= 'A' && argv[i][0] <= 'Z'))
-            sg_cvar_addarg(NULL, NULL, argv[i]);
-    }
     flags = SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_EVENTS;
     if (SDL_Init(flags))
         sdl_error("could not initialize LibSDL");
 
-    sg_sys_init();
+    sg_sys_init(argc - 1, argv + 1);
     gameinfo = sg_game_info_defaults;
     sg_sys_getinfo(&gameinfo);
 
@@ -137,6 +161,8 @@ sdl_init(int argc, char *argv[])
     err = glewInit();
     if (err)
         sg_sys_abort("could not initialize GLEW");
+
+    sg_sdl_setvsync();
 
     evt.type = SG_EVENT_VIDEO_INIT;
     sg_game_event(&evt);
@@ -285,14 +311,16 @@ sdl_main(void)
 {
     SDL_Event e;
     int width, height;
-    int last_time = SDL_GetTicks(), new_time;
+    int last_time = SDL_GetTicks(), new_time, maxfps;
     while (1) {
+        SDL_PumpEvents();
         while (SDL_PollEvent(&e)) {
             switch (e.type) {
             case SDL_QUIT:
                 return;
 
             case SDL_MOUSEMOTION:
+                // printf("MOUSEMOVE\n");
                 sdl_event_mousemove(&e.motion);
                 break;
 
@@ -321,8 +349,14 @@ sdl_main(void)
         SDL_GL_SwapWindow(sg_sdl.window);
 
         new_time = SDL_GetTicks();
-        if (new_time - last_time < 5)
-            SDL_Delay(5 - (new_time - last_time));
+        maxfps = sg_sys.maxfps.value;
+        if (maxfps > 0 && (new_time - last_time) * maxfps < 1000) {
+            int delay;
+            delay = 1000 / maxfps - (new_time - last_time);
+            if (delay > 0)
+                SDL_Delay(delay);
+        }
+        last_time = new_time;
     }
 }
 

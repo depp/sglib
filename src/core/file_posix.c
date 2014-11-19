@@ -1,4 +1,4 @@
-/* Copyright 2012 Dietrich Epp.
+/* Copyright 2012-2014 Dietrich Epp.
    This file is part of SGLib.  SGLib is licensed under the terms of the
    2-clause BSD license.  For more information, see LICENSE.txt. */
 /* POSIX file / path code.  Used on Linux, BSD, Mac OS X.  */
@@ -9,289 +9,258 @@
 #include "file_impl.h"
 #include "sg/error.h"
 #include "sg/file.h"
-#include "sg/log.h"
+
 #include <errno.h>
 #include <fcntl.h>
 #include <limits.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
 
-void
-sg_buffer_free_(struct sg_buffer *fbuf)
+int
+sg_reader_open(
+    struct sg_reader *fp,
+    const pchar *path,
+    struct sg_error **err)
 {
-    if (fbuf->data)
-        free(fbuf->data);
-    free(fbuf);
+    int fdes, ecode;
+    fdes = open(path, O_RDONLY | O_CLOEXEC);
+    if (fdes < 0) {
+        ecode = errno;
+        if (ecode == ENOENT)
+            return SG_FILE_NOTFOUND;
+        sg_error_errno(err, ecode);
+        return SG_FILE_ERROR;
+    }
+    fp->fdes = fdes;
+    return SG_FILE_OK;
 }
 
-struct sg_file_u {
-    struct sg_file h;
-    int fdes;
-};
-
-static int
-sg_file_u_read(struct sg_file *f, void *buf, size_t amt)
+int
+sg_reader_getinfo(
+    struct sg_reader *fp,
+    int64_t *length,
+    struct sg_fileid *fileid,
+    struct sg_error **err)
 {
-    struct sg_file_u *u = (struct sg_file_u *) f;
-    ssize_t r;
-    if (amt > INT_MAX)
-        amt = INT_MAX;
-    r = read(u->fdes, buf, amt);
-    if (r >= 0)
-        return (int) r;
-    sg_error_errno(&u->h.err, errno);
-    return -1;
-}
-
-static int
-sg_file_u_write(struct sg_file *f, const void *buf, size_t amt)
-{
-    struct sg_file_u *u = (struct sg_file_u *) f;
-    ssize_t r;
-    if (amt > INT_MAX)
-        amt = INT_MAX;
-    r = write(u->fdes, buf, amt);
-    if (r >= 0)
-        return (int) r;
-    sg_error_errno(&u->h.err, errno);
-    return -1;
-}
-
-static int
-sg_file_u_close(struct sg_file *f)
-{
-    struct sg_file_u *u = (struct sg_file_u *) f;
-    int r;
-    if (u->fdes < 0)
-        return 0;
-    r = close(u->fdes);
-    u->fdes = -1;
-    if (r)
-        sg_error_errno(&u->h.err, errno);
-    return r;
-}
-
-static void
-sg_file_u_free(struct sg_file *f)
-{
-    struct sg_file_u *u = (struct sg_file_u *) f;
-    if (u->fdes >= 0)
-        close(u->fdes);
-    free(u);
-}
-
-static int64_t
-sg_file_u_length(struct sg_file *f)
-{
-    struct sg_file_u *u = (struct sg_file_u *) f;
     struct stat st;
     int r;
-    r = fstat(u->fdes, &st);
+    r = fstat(fp->fdes, &st);
     if (r) {
-        sg_error_errno(&u->h.err, errno);
+        sg_error_errno(err, errno);
         return -1;
     }
     if (!S_ISREG(st.st_mode)) {
-        sg_error_errno(&u->h.err, ESPIPE);
+        sg_error_errno(err, ESPIPE);
         return -1;
     }
-    return st.st_size;
-}
-
-static int64_t
-sg_file_u_seek(struct sg_file *f, int64_t off, int whence)
-{
-    struct sg_file_u *u = (struct sg_file_u *) f;
-    off_t r;
-    r = lseek(u->fdes, off, whence);
-    if (r >= 0)
-        return r;
-    sg_error_errno(&u->h.err, errno);
-    return -1;
+    *length = st.st_size;
+#if defined __linux__
+    fileid->f_[0] = ((uint64_t) st.st_mtim.tv_sec << 32) |
+        ((uint32_t) st.st_mtim.tv_nsec);
+#elif defined __APPLE__
+    fileid->f_[0] = ((uint64_t) st.st_mtimespec.tv_sec << 32) |
+        ((uint32_t) st.st_mtimespec.tv_nsec);
+#endif
+    fileid->f_[1] = st.st_ino;
+    fileid->f_[2] = st.st_dev;
+    return 0;
 }
 
 int
-sg_file_mkpardir(const char *path, struct sg_error **err)
+sg_reader_read(
+    struct sg_reader *fp,
+    void *buf,
+    size_t bufsz,
+    struct sg_error **err)
 {
-    char *buf, *p;
-    size_t len;
-    int r, ecode, ret = 0;
-
-    p = strrchr(path, '/');
-    if (!p || p == path)
-        return 0;
-    len = p - path;
-    buf = malloc(len + 1);
-    if (!buf) {
-        sg_error_nomem(err);
-        return -1;
-    }
-    memcpy(buf, path, len);
-    buf[len] = '\0';
-    while (1) {
-        r = mkdir(buf, 0777);
-        if (!r)
-            break;
-        ecode = errno;
-        if (ecode != ENOENT) {
-            if (ecode == EEXIST)
-                break;
-            sg_error_errno(err, ecode);
-            ret = -1;
-            goto done;
-        }
-        p = strrchr(buf, '/');
-        if (!p || p == buf)
-            goto done;
-        *p = '\0';
-    }
-    while (1) {
-        *p = '/';
-        p += strlen(p);
-        if (p == buf + len)
-            goto done;
-        r = mkdir(buf, 0777);
-        if (r) {
-            ecode = errno;
-            if (ecode != EEXIST) {
-                sg_error_errno(err, ecode);
-                ret = -1;
-                goto done;
-            }
-        }
-    }
-done:
-    free(buf);
-    return ret;
+    size_t amt;
+    ssize_t r;
+    amt = bufsz > INT_MAX ? INT_MAX : bufsz;
+    r = read(fp->fdes, buf, amt);
+    if (r < 0)
+        sg_error_errno(err, errno);
+    return r;
 }
 
-int
-sg_file_tryopen(struct sg_file **f, const char *path, int flags,
-                struct sg_error **e)
+void
+sg_reader_close(
+    struct sg_reader *fp)
 {
-    int fdes, ecode;
-    struct sg_file_u *u;
-    if (flags & SG_WRONLY) {
-        fdes = open(path, O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC, 0666);
-        if (fdes < 0) {
-            ecode = errno;
-            if (ecode != ENOENT) {
-                sg_error_errno(e, ecode);
-                return -1;
-            }
-            if (sg_file_mkpardir(path, e))
-                return -1;
-            fdes = open(path, O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC, 0666);
-        }
-    } else {
-        fdes = open(path, O_RDONLY | O_CLOEXEC);
-    }
+    close(fp->fdes);
+}
+
+/*
+  See Theo Ts'o's blog post for the reasoning behind how we write files.
+
+  http://thunk.org/tytso/blog/2009/03/15/dont-fear-the-fsync/
+*/
+struct sg_writer {
+    int fdes;
+    char *destpath;
+    char *temppath;
+};
+
+struct sg_writer *
+sg_writer_open(
+    const char *path,
+    size_t pathlen,
+    struct sg_error **err)
+{
+    struct sg_writer *fp;
+    const char *basepath;
+    size_t baselen;
+    char buf[SG_MAX_PATH], *destpath, *temppath;
+    int nlen, fdes, ecode, flags, mode, r;
+
+    nlen = sg_path_norm(buf, path, pathlen, err);
+    if (nlen < 0)
+        return NULL;
+
+    basepath = sg_paths.path[0].path;
+    baselen = sg_paths.path[0].len;
+    fp = malloc(sizeof(*fp) + (baselen + nlen) * 2 + 6);
+    if (!fp)
+        goto error_nomem;
+    fp->destpath = destpath = (char *) (fp + 1);
+    fp->temppath = temppath = destpath + baselen + nlen + 1;
+    memcpy(destpath, basepath, baselen);
+    memcpy(destpath + baselen, buf, nlen + 1);
+    memcpy(temppath, basepath, baselen);
+    memcpy(temppath + baselen, buf, nlen);
+    memcpy(temppath + baselen + nlen, ".tmp", 5);
+
+    flags = O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC;
+    mode = 0666;
+    fdes = open(temppath, flags, mode);
     if (fdes < 0) {
         ecode = errno;
-        if (ecode != ENOENT) {
-            sg_error_errno(e, ecode);
-            return -1;
+        if (ecode != ENOENT)
+            goto error_errno;
+        r = sg_path_mkpardir(temppath, err);
+        if (r != SG_FILE_OK) {
+            if (r == SG_FILE_ERROR)
+                goto error;
+            goto error_errno;
         }
-        return 0;
+        fdes = open(temppath, flags, mode);
+        if (fdes < 0) {
+            ecode = errno;
+            goto error_errno;
+        }
     }
-    u = malloc(sizeof(*u));
-    if (!u) {
-        close(fdes);
-        sg_error_nomem(e);
+    fp->fdes = fdes;
+    return fp;
+
+error_nomem:
+    sg_error_nomem(err);
+    return NULL;
+
+error_errno:
+    sg_error_errno(err, ecode);
+    goto error;
+
+error:
+    free(fp);
+    return NULL;
+}
+
+int64_t
+sg_writer_seek(
+    struct sg_writer *fp,
+    int64_t offset,
+    int whence,
+    struct sg_error **err)
+{
+    int64_t r;
+    if (fp->fdes < 0) {
+        sg_error_invalid(err, __FUNCTION__, "fp");
         return -1;
     }
-    u->h.refcount = 1;
-    u->h.read = sg_file_u_read;
-    u->h.write = sg_file_u_write;
-    u->h.close = sg_file_u_close;
-    u->h.free = sg_file_u_free;
-    u->h.length = sg_file_u_length;
-    u->h.seek = sg_file_u_seek;
-    u->fdes = fdes;
-    *f = &u->h;
-    return 1;
+    r = lseek(fp->fdes, offset, whence);
+    if (r < 0)
+        sg_error_errno(err, errno);
+    return r;
 }
 
 int
-sg_path_checkdir(const pchar *path)
+sg_writer_write(
+    struct sg_writer *fp,
+    const void *buf,
+    size_t amt,
+    struct sg_error **err)
 {
-    struct sg_logger *logger;
-    int r, e;
-    logger = sg_logger_get("path");
-    r = access(path, R_OK | X_OK);
-    if (r) {
-        e = errno;
-        if (SG_LOG_INFO >= logger->level) {
-            sg_logf(logger, SG_LOG_INFO,
-                    "path skipped: %s (%s)", path, strerror(e));
-        }
-        return 0;
-    } else {
-        sg_logf(logger, SG_LOG_INFO, "path: %s", path);
-        return 1;
-    }
-}
-
-#if defined(__APPLE__)
-#include <CoreFoundation/CFBundle.h>
-#include <sys/param.h>
-
-/* Mac OS X implementation */
-int
-sg_path_getexepath(char *buf, size_t len)
-{
-    CFBundleRef bundle;
-    CFURLRef url = NULL;
-    Boolean r;
-    int ret = 0;
-
-    bundle = CFBundleGetMainBundle();
-    if (!bundle)
-        goto done;
-    url = CFBundleCopyBundleURL(bundle);
-    if (!url)
-        goto done;
-    r = CFURLGetFileSystemRepresentation(
-        url, true, (UInt8 *) buf, len);
-    if (!r)
-        goto done;
-    ret = 1;
-
-done:
-    if (url)
-        CFRelease(url);
-    return ret;
-}
-
-#elif defined(__linux__)
-#include <sys/param.h>
-
-/* Linux implementation */
-int
-sg_path_getexepath(char *buf, size_t len)
-{
+    size_t namt;
     ssize_t r;
-    r = readlink("/proc/self/exe", buf, len - 1);
-    if (r > 0 && (size_t) r < len - 1) {
-        buf[r] = '\0';
-        return 1;
-    } else {
-        return 0;
+    if (fp->fdes < 0) {
+        sg_error_invalid(err, __FUNCTION__, "fp");
+        return -1;
     }
+    namt = amt > INT_MAX ? INT_MAX : amt;
+    r = write(fp->fdes, buf, namt);
+    if (r < 0)
+        sg_error_errno(err, errno);
+    return r;
 }
 
-#else
-
-#warning "Can't find executable directory on this platform"
-
 int
-sg_path_getexepath(char *buf, size_t len)
+sg_writer_commit(
+    struct sg_writer *fp,
+    struct sg_error **err)
 {
-    (void) buf;
-    (void) len;
+    int fdes, r, ecode;
+    fdes = fp->fdes;
+    if (fdes < 0) {
+        sg_error_invalid(err, __FUNCTION__, "fp");
+        return -1;
+    }
+    fp->fdes = -1;
+    r = fsync(fdes);
+    if (r) {
+        close(fdes);
+        goto error_errno;
+    }
+    r = close(fdes);
+    if (r)
+        goto error_errno;
+#if defined __APPLE__
+    /* This preserves metadata, other than modification time.  */
+    r = exchangedata(fp->temppath, fp->destpath, 0);
+    if (r) {
+        ecode = errno;
+        switch (ecode) {
+        case ENOTSUP:
+        case ENOENT:
+            break;
+        default:
+            goto error_ecode;
+        }
+    }
+#endif
+    r = rename(fp->temppath, fp->destpath);
+    if (r)
+        goto error_errno;
+    return 0;
+
+error_errno:
+    ecode = errno;
+    goto error_ecode;
+
+error_ecode:
+    sg_error_errno(err, ecode);
     return -1;
 }
 
-#endif
+void
+sg_writer_close(
+    struct sg_writer *fp)
+{
+    if (fp->fdes >= 0) {
+        close(fp->fdes);
+        unlink(fp->temppath);
+    }
+    free(fp);
+}

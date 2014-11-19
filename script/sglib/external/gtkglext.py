@@ -5,7 +5,7 @@ from d3build.package import ExternalPackage
 
 def pkg_config(build):
     flags = build.pkg_config('gtkglext-1.0')
-    flags['LIBS'] = [flag for flag in varset['LIBS']
+    flags['LIBS'] = [flag for flag in flags['LIBS']
                      if flag != '-Wl,--export-dynamic']
     return None, build.target.module().add_flags(flags)
 

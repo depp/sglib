@@ -14,7 +14,6 @@ audio_file.h
 binary.h
 byteorder.h
 clock.h
-configfile.h
 cpu.h
 cvar.h
 defs.h
@@ -34,6 +33,7 @@ pack.h
 pixbuf.h
 rand.h
 record.h
+shader.h
 strbuf.h
 thread.h
 type.h
@@ -59,12 +59,13 @@ writer.c
 src.add(path='src/core', sources='''
 clock.c
 clock_impl.h
-configfile.c
 cvar.c
+cvartable.c
+cvartable.h
 error.c
 file_impl.h
+file_load.c
 file_posix.c posix
-file_read.c
 file_win.c windows
 keyid.c
 keytable_evdev.c linux
@@ -80,8 +81,11 @@ opengl.c
 pack.c
 path.c
 path_norm.c
+path_posix.c posix
+path_win.c windows
 private.h
 rand.c
+shader.c
 sys.c
 version.c
 version_const.c

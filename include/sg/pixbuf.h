@@ -8,8 +8,7 @@
 extern "C" {
 #endif
 struct sg_error;
-struct sg_file;
-struct sg_buffer;
+struct sg_filedata;
 
 /**
  * @brief A list of supported image extensions, without the leading
@@ -189,21 +188,20 @@ struct sg_image {
  * @param path The path to the image to load.
  * @param pathlen The length of the path, in bytes.
  * @param err On failure, the error.
- * @return An image, or @c NULL for failure.
+ * @return An image, or NULL for failure.
  */
 struct sg_image *
 sg_image_file(const char *path, size_t pathlen, struct sg_error **err);
 
 /**
- * @brief Load an image from a buffer
+ * @brief Load an image from a file buffer.
  *
- * @param path The path to the image to load.
- * @param pathlen The length of the path, in bytes.
+ * @param data The file buffer containing the image data.
  * @param err On failure, the error.
- * @return An image, or @c NULL for failure.
+ * @return An image, or NULL for failure.
  */
 struct sg_image *
-sg_image_buffer(struct sg_buffer *buf, struct sg_error **err);
+sg_image_buffer(struct sg_filedata *data, struct sg_error **err);
 
 #ifdef __cplusplus
 }
