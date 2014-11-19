@@ -66,22 +66,32 @@ static size_t
 sg_path_getexerelpath(char *buf, size_t buflen, CFStringRef relpath)
 {
     CFBundleRef bundle;
-    CFURLRef u1, u2;
+    CFURLRef url1, url2;
     Boolean r;
+
     bundle = CFBundleGetMainBundle();
     if (!bundle)
         return 0;
-    u1 = CFBundleCopyBundleURL(bundle);
-    if (!u1)
+
+    url1 = CFBundleCopyBundleURL(bundle);
+    if (!url1)
         return 0;
-    u2 = CFURLCreateCopyAppendingPathComponent(NULL, u1, relpath, true);
-    CFRelease(u1);
-    if (!u2)
+
+    url2 = CFURLCreateCopyDeletingLastPathComponent(NULL, url1);
+    CFRelease(url1);
+    if (!url2)
         return 0;
-    r = CFURLGetFileSystemRepresentation(u2, false, (UInt8 *) buf, buflen);
-    CFRelease(u2);
+
+    url1 = CFURLCreateCopyAppendingPathComponent(NULL, url2, relpath, true);
+    CFRelease(url2);
+    if (!url2)
+        return 0;
+
+    r = CFURLGetFileSystemRepresentation(url1, false, (UInt8 *) buf, buflen);
+    CFRelease(url1);
     if (!r)
         return 0;
+
     return strlen(buf);
 }
 
