@@ -92,7 +92,7 @@ sg_log_console_init(void)
 
 #define BUFFER_SIZE BUFSIZ
 
-static sg_cvar_bool sg_log_winconsole;
+static struct sg_cvar_bool sg_log_winconsole;
 
 static void
 sg_log_console_reopen(FILE *fp, DWORD which, const char *mode)
@@ -117,7 +117,6 @@ static int
 sg_log_console_create(void)
 {
     BOOL br;
-    int flag;
     sg_cvar_defbool("log", "winconsole", &sg_log_winconsole,
                     0, SG_CVAR_INITONLY);
     if (!sg_log_winconsole.value)
