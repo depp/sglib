@@ -254,7 +254,9 @@ void
 sg_writer_close(
     struct sg_writer *fp)
 {
-    if (fp->fdes >= 0)
+    if (fp->fdes >= 0) {
         close(fp->fdes);
+        unlink(fp->temppath);
+    }
     free(fp);
 }
