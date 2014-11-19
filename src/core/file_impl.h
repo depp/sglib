@@ -20,6 +20,7 @@ enum {
 
 #if defined _WIN32
 
+#include <wchar.h>
 typedef wchar_t pchar;
 #define SG_PATH_PATHSEP ';'
 #define SG_PATH_DIRSEP '\\'
@@ -28,6 +29,7 @@ typedef wchar_t pchar;
 
 #else
 
+#include <string.h>
 typedef char pchar;
 #define SG_PATH_PATHSEP ':'
 #define SG_PATH_DIRSEP '/'

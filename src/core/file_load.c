@@ -260,7 +260,7 @@ success:
                 return SG_FILE_NOTCHANGED;
             }
         }
-        dp = sg_reader_load(&fp, flen, nbuf, nlen, err);
+        dp = sg_reader_load(&fp, (size_t) flen, nbuf, nlen, err);
         sg_reader_close(&fp);
         if (!dp)
             return SG_FILE_ERROR;

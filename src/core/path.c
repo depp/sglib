@@ -1,26 +1,22 @@
 /* Copyright 2012-2014 Dietrich Epp.
    This file is part of SGLib.  SGLib is licensed under the terms of the
    2-clause BSD license.  For more information, see LICENSE.txt. */
-#include "sg/defs.h"
-#if defined _WIN32
-#include <Windows.h>
-#endif
-
 #include "file_impl.h"
 #include "sg/cvar.h"
+#include "sg/defs.h"
 #include "sg/entry.h"
 #include "sg/error.h"
 #include "sg/file.h"
 #include "sg/log.h"
 #include "private.h"
-#include <stdlib.h>
-#include <string.h>
 
-#if PATH_MAX > 0
-#define SG_PATH_BUFSZ PATH_MAX
-#else
-#define SG_PATH_BUFSZ 1024
+#include <stdlib.h>
+
+#if defined _WIN32
+# include <Windows.h>
 #endif
+
+#define SG_PATH_BUFSZ 1024
 
 struct sg_paths sg_paths;
 
@@ -165,14 +161,18 @@ sg_path_init2(void)
 {
     struct sg_path cvar[2];
     const char *cval;
-    int i, r, wlen;
-    sg_path_initcvar();
+    int i, j, r, wlen;
+    wchar_t *wpath;
     for (i = 0; i < 2; i++) {
-        cval = sg_path_cvar[i].value;
+        cval = sg_paths.cvar[i].value;
         if (*cval) {
-            r = sg_wchar_from_utf8(&cvar[i].path, &wlen, cval, strlen(cval));
+            r = sg_wchar_from_utf8(&wpath, &wlen, cval, strlen(cval));
             if (r)
                 goto error;
+            for (j = 0; j < wlen; j++)
+                if (wpath[j] == '/')
+                    wpath[j] = '\\';
+            cvar[i].path = wpath;
             cvar[i].len = wlen;
         } else {
             cvar[i].path = NULL;

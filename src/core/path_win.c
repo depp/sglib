@@ -2,6 +2,8 @@
    This file is part of SGLib.  SGLib is licensed under the terms of the
    2-clause BSD license.  For more information, see LICENSE.txt. */
 #include "file_impl.h"
+#include "sg/error.h"
+#include "sg/file.h"
 #include <Windows.h>
 
 void
@@ -12,61 +14,72 @@ sg_path_copy(wchar_t *dest, const char *src, size_t len)
         dest[i] = src[i] == '/' ? SG_PATH_DIRSEP : src[i];
 }
 
-int
-sg_path_mkpardir(const wchar_t *path, struct sg_error **err)
+/* Returns the first part of the path not counting the drive specification.
+   For "C:\dir\file.txt", returns "\dir\file.txt".
+   For "\\server\mount\dir\file.txt", returns "\dir\file.txt".  */
+static wchar_t *
+sg_path_skipdrive(wchar_t *path)
 {
-    wchar_t *buf;
-    size_t len, i;
-    int ecode;
-
-    i = wcslen(path);
-    while (i > 0 && path[i-1] != '\\' && path[i-1] != '/')
-        i--;
-    if (i == 0)
-        return 0;
-    len = i;
-    buf = malloc(sizeof(wchar_t) * (len + 1));
-    if (!buf) {
-        sg_error_nomem(err);
-        return -1;
+    wchar_t *p, *q;
+    if (path[0] == '\\' && path[1] == '\\') {
+        p = wcschr(path + 2, '\\');
+        if (!p)
+            return path;
+        q = wcschr(p + 1, '\\');
+        if (q == p + 1)
+            return path;
+        if (!q)
+            return path + wcslen(path);
+        return q;
     }
-    memcpy(buf, path, sizeof(wchar_t) * len);
-    buf[len] = '\0';
+    if (path[0] && path[1] == ':')
+        return path + 2;
+    return path;
+}
+
+int
+sg_path_mkpardir(wchar_t *path, struct sg_error **err)
+{
+    wchar_t *start, *p, *end;
+    DWORD ecode;
+    BOOL r;
+
+    start = sg_path_skipdrive(path);
+    p = wcsrchr(start, '\\');
+    if (!p || p == start || !*p)
+        return SG_FILE_NOTFOUND;
+    end = p;
+    *p = '\0';
     while (1) {
-        if (CreateDirectory(buf, NULL))
+        r = CreateDirectory(path, NULL);
+        if (r)
             break;
         ecode = GetLastError();
         if (ecode != ERROR_PATH_NOT_FOUND) {
             if (ecode == ERROR_ALREADY_EXISTS)
                 break;
             sg_error_win32(err, ecode);
-            free(buf);
-            return -1;
+            return SG_FILE_ERROR;
         }
-        i--;
-        while (i > 0 && path[i-1] != '\\' && path[i-1] != '/')
-            i--;
-        while (i > 0 && (path[i-1] == '\\' || path[i-1] == '/'))
-            i--;
-        if (i == 0)
-            return 0;
-        buf[i] = L'\0';
+        p = wcsrchr(start, '\\');
+        if (!p || p == start)
+            return SG_FILE_NOTFOUND;
+        *p = '\0';
     }
-    while (i < len) {
-        buf[i] = path[i];
-        while (i < len && buf[i] != L'0')
-            i++;
-        if (!CreateDirectory(buf, NULL)) {
-            ecode = GetLastError();
+    while (1) {
+        *p = '\\';
+        if (p == end)
+            return SG_FILE_OK;
+        p += wcslen(p);
+        r = CreateDirectory(path, NULL);
+        if (!r) {
+            ecode = errno;
             if (ecode != ERROR_ALREADY_EXISTS) {
                 sg_error_win32(err, ecode);
-                free(buf);
-                return -1;
+                return SG_FILE_ERROR;
             }
         }
     }
-    free(buf);
-    return 0;
 }
 
 static size_t
