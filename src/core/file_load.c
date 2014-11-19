@@ -193,7 +193,7 @@ sg_file_load(
                 for (k = 0; k < extlen; k++)
                     pbuf[maxslen + nlen + 1 + k] = ext[k];
                 pbuf[maxslen + nlen + 1 + extlen] = '\0';
-                r = sg_reader_open(&fp, pbuf, err);
+                r = sg_reader_open(&fp, pptr, err);
                 if (r == SG_FILE_OK) {
                     nbuf[nlen++] = '.';
                     memcpy(nbuf + nlen, ext, extlen);
@@ -221,7 +221,7 @@ sg_file_load(
         for (i = 0; i < searchcount; i++) {
             pptr = pbuf + maxslen - search[i].len;
             pmemcpy(pptr, search[i].path, search[i].len);
-            r = sg_reader_open(&fp, pbuf, err);
+            r = sg_reader_open(&fp, pptr, err);
             if (r == SG_FILE_OK) {
                 goto success;
             } else if (r == SG_FILE_ERROR) {
