@@ -1,4 +1,4 @@
-/* Copyright 2012 Dietrich Epp.
+/* Copyright 2012-2014 Dietrich Epp.
    This file is part of SGLib.  SGLib is licensed under the terms of the
    2-clause BSD license.  For more information, see LICENSE.txt. */
 #include "sg/defs.h"
@@ -41,6 +41,8 @@ static inet_ntop_t inet_ntop;
 static int WSAAPI
 sg_net_inet_pton(int af, const char *src, void *dest)
 {
+    wchar_t wsrc[INET6_ADDRSTRLEN];
+    int wsrclen;
     DWORD alen;
     int r;
     union {
@@ -49,18 +51,30 @@ sg_net_inet_pton(int af, const char *src, void *dest)
         struct sockaddr_in6 in6;
     } a;
 
+    if (!*src)
+        return -1;
+
+    wsrclen = MultiByteToWideChar(
+        CP_UTF8, 0, src, strlen(src), wsrc, INET6_ADDRSTRLEN - 1);
+    if (wsrclen == 0 || wsrclen >= INET6_ADDRSTRLEN) {
+        WSASetLastError(WSAEINVAL);
+        return -1;
+    }
+
     switch (af) {
     case AF_INET:
         alen = sizeof(a.in);
-        r = WSAStringToAddressA((char *) src, af, NULL, &a.addr, &alen);
-        if (r) return -1;
+        r = WSAStringToAddress(wsrc, af, NULL, &a.addr, &alen);
+        if (r)
+            return -1;
         memcpy(dest, &a.in.sin_addr, sizeof(struct in_addr));
         return 1;
 
     case AF_INET6:
         alen = sizeof(a.in6);
-        r = WSAStringToAddressA((char *) src, af, NULL, &a.addr, &alen);
-        if (r) return -1;
+        r = WSAStringToAddress(wsrc, af, NULL, &a.addr, &alen);
+        if (r)
+            return -1;
         memcpy(dest, &a.in6.sin6_addr, sizeof(struct in6_addr));
         return 1;
 
@@ -73,8 +87,9 @@ sg_net_inet_pton(int af, const char *src, void *dest)
 static const char * WSAAPI
 sg_net_inet_ntop(int af, const void *src, char *dest, size_t len)
 {
-    DWORD slen = (DWORD) len;
     int r;
+    wchar_t wdest[INET_ADDRSTRLEN];
+    DWORD wdestlen = INET_ADDRSTRLEN;
     union {
         struct sockaddr addr;
         struct sockaddr_in in;
@@ -86,22 +101,35 @@ sg_net_inet_ntop(int af, const void *src, char *dest, size_t len)
         memset(&a.in, 0, sizeof(a.in));
         a.in.sin_family = AF_INET;
         memcpy(&a.in.sin_addr, src, sizeof(struct in_addr));
-        r = WSAAddressToStringA(&a.addr, sizeof(a.in), NULL, dest, &slen);
-        if (r) return NULL;
-        return dest;
+        r = WSAAddressToString(
+            &a.addr, sizeof(a.in), NULL, wdest, &wdestlen);
+        if (r)
+            return NULL;
+        break;
 
     case AF_INET6:
         memset(&a.in6, 0, sizeof(a.in6));
         a.in6.sin6_family = AF_INET6;
         memcpy(&a.in6.sin6_addr, src, sizeof(struct in6_addr));
-        r = WSAAddressToStringA(&a.addr, sizeof(a.in6), NULL, dest, &slen);
-        if (r) return NULL;
-        return dest;
+        r = WSAAddressToString(
+            &a.addr, sizeof(a.in6), NULL, wdest, &wdestlen);
+        if (r)
+            return NULL;
+        break;
 
     default:
         WSASetLastError(WSAEINVAL);
         return NULL;
     }
+
+    r = WideCharToMultiByte(
+        CP_UTF8, 0, wdest, wdestlen, dest, (int)len, NULL, NULL);
+    if (!r) {
+        WSASetLastError(WSAEINVAL);
+        return NULL;
+    }
+
+    return dest;
 }
 
 static void
