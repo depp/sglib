@@ -2,6 +2,7 @@
 # This file is part of SGLib.  SGLib is licensed under the terms of the
 # 2-clause BSD license.  For more information, see LICENSE.txt.
 from d3build.package import ExternalPackage
+from d3build.error import ConfigError
 
 # stdio.h is necessary
 TEST_SOURCE = '''\
@@ -29,7 +30,7 @@ module = ExternalPackage(
     [test],
     name='LibJPEG',
     packages={
-        'deb': 'libjpeg-dev',
+        'deb': 'libjpeg62-turbo-dev',
         'rpm': 'libjpeg-turbo',
         'gentoo': 'media-libs/libjpeg-turbo',
         'arch': 'libjpeg-turbo',
