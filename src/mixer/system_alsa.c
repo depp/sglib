@@ -5,11 +5,10 @@
 
 #include "../core/clock_impl.h"
 #include "mixer.h"
-#include "sg/byteorder.h"
+#include "sg/defs.h"
 #include "sg/cvar.h"
 #include "sg/entry.h"
 #include "sg/error.h"
-/* #include "sg/event.h" */
 #include "sg/log.h"
 #include <alloca.h>
 #include <alsa/asoundlib.h>

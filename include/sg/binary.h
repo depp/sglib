@@ -7,7 +7,7 @@
 extern "C" {
 #endif
 #include <stdint.h>
-#include "sg/attribute.h"
+#include "sg/defs.h"
 
 /**
  * @file binary.h

@@ -3,7 +3,7 @@
    2-clause BSD license.  For more information, see LICENSE.txt. */
 #ifndef SG_CPU_H
 #define SG_CPU_H
-#include "sg/arch.h"
+#include "sg/defs.h"
 #ifdef __cplusplus
 extern "C" {
 #endif

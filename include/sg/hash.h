@@ -7,7 +7,7 @@
 extern "C" {
 #endif
 #include <stddef.h>
-#include "sg/attribute.h"
+#include "sg/defs.h"
 
 /**
  * @file hash.h

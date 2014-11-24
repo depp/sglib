@@ -7,7 +7,7 @@
 #include <stdarg.h>
 #include <stddef.h>
 #include <string.h>
-#include "sg/attribute.h"
+#include "sg/defs.h"
 #ifdef __cplusplus
 extern "C" {
 #endif

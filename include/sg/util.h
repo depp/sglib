@@ -7,8 +7,7 @@
 extern "C" {
 #endif
 #include <stddef.h>
-#include "sg/attribute.h"
-#include "sg/byteorder.h"
+#include "sg/defs.h"
 
 /**
  * @file util.h

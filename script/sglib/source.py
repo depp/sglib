@@ -6,13 +6,10 @@ from d3build.source import SourceList
 src = SourceList(base=__file__, path='../..')
 
 src.add(path='include/sg', sources='''
-arch.h
 atomic.h
-attribute.h
 audio_buffer.h
 audio_file.h
 binary.h
-byteorder.h
 clock.h
 cpu.h
 cvar.h

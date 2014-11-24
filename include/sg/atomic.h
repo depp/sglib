@@ -3,8 +3,7 @@
    2-clause BSD license.  For more information, see LICENSE.txt. */
 #ifndef SG_ATOMIC_H
 #define SG_ATOMIC_H
-#include "sg/arch.h"
-#include "sg/attribute.h"
+#include "sg/defs.h"
 #ifdef __cplusplus
 extern "C" {
 #endif
