@@ -35,9 +35,14 @@ sg_log_listen(struct sg_log_listener *listener)
 void
 sg_log_init(void)
 {
+    char date[SG_DATE_LEN];
+
     sg_lock_init(&sg_logger_lock);
     sg_log_console_init();
     sg_log_network_init();
+
+    sg_clock_getdate(date, 0);
+    sg_logf(SG_LOG_INFO, "Startup %s", date);
 }
 
 void
@@ -59,11 +64,17 @@ sg_dologmem(sg_log_level_t level, const char *msg, size_t len)
     struct sg_log_listener *p;
     struct sg_log_msg m;
     const char *levelname;
-    char date[SG_DATE_LEN];
-    int datelen, levellen;
+    char time[32];
+    int timelen, levellen;
     int i;
 
-    datelen = sg_clock_getdate(date, 0);
+#if defined _WIN32
+    _snprintf_s(time, sizeof(time), _TRUNCATE, "%9.3f", sg_clock_get());
+#else
+    snprintf(time, sizeof(time), "%9.3f", sg_clock_get());
+#endif
+    timelen = (int) strlen(time);
+
     if ((int) level < 0)
         level = 0;
     else if ((int) level > 3)
@@ -71,8 +82,8 @@ sg_dologmem(sg_log_level_t level, const char *msg, size_t len)
     levelname = SG_LOGLEVEL[(int) level];
     levellen = (int) strlen(levelname);
 
-    m.date = date;
-    m.datelen = datelen;
+    m.time = time;
+    m.timelen = timelen;
     m.level = levelname;
     m.levellen = levellen;
     m.msg = msg;

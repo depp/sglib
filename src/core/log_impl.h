@@ -1,12 +1,12 @@
-/* Copyright 2012 Dietrich Epp.
+/* Copyright 2012-2014 Dietrich Epp.
    This file is part of SGLib.  SGLib is licensed under the terms of the
    2-clause BSD license.  For more information, see LICENSE.txt. */
 #include "sg/log.h"
 #include <stddef.h>
 
 struct sg_log_msg {
-    const char *date;
-    size_t datelen;
+    const char *time;
+    size_t timelen;
     const char *level;
     size_t levellen;
     const char *msg;

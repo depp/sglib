@@ -54,7 +54,7 @@ sg_log_network_msg(struct sg_log_listener *llp, struct sg_log_msg *msg)
     if (!SOCKET_VALID(sock))
         return;
 
-    PUT(msg->date, msg->datelen);
+    PUT(msg->time, msg->timelen);
     buf[len++] = ' ';
     PUT(msg->level, msg->levellen);
     buf[len++] = ':';

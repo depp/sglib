@@ -9,29 +9,16 @@
 #include <unistd.h>
 #endif
 
-static char sg_log_prevdate[10];
 static int sg_log_color;
 
 static void
 sg_log_console_msg(struct sg_log_listener *h, struct sg_log_msg *m)
 {
-    const char *color, *date;
-    size_t datelen;
-
-    date = m->date;
-    datelen = m->datelen;
-    if (datelen >= 10 && (date[10] == 'T' || date[10] == ' ')) {
-        if (memcmp(date, sg_log_prevdate, 10)) {
-            memcpy(sg_log_prevdate, date, 10);
-        } else {
-            date += 11;
-            datelen -= 11;
-        }
-    }
+    const char *color;
 
     (void) h;
 
-    fwrite(date, 1, datelen, stderr);
+    fwrite(m->time, 1, m->timelen, stderr);
     putc(' ', stderr);
     color = NULL;
     if (sg_log_color) {

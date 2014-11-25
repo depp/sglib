@@ -47,10 +47,10 @@ sg_sys_init(int argc, char **argv)
 {
     sg_sys_siginit();
     sg_cvar_init(argc, argv);
+    sg_clock_init();
     sg_log_init();
     sg_version_print();
     sg_path_init();
-    sg_clock_init();
     sg_rand_seed(&sg_rand_global, 1);
     sg_mixer_init();
     sg_record_init();
