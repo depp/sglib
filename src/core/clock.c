@@ -1,4 +1,4 @@
-/* Copyright 2012 Dietrich Epp.
+/* Copyright 2012-2014 Dietrich Epp.
    This file is part of SGLib.  SGLib is licensed under the terms of the
    2-clause BSD license.  For more information, see LICENSE.txt. */
 #include "clock_impl.h"
@@ -6,40 +6,50 @@
 #include "private.h"
 #include <stdio.h>
 
-#if defined(SG_CLOCK_APPLE)
+#if defined SG_CLOCK_APPLE
+/* ===================================================================
+   OS X (Mach)
+   =================================================================== */
+#include <mach/mach_time.h>
+#include <time.h>
 
-uint64_t sg_clock_zero;
-struct mach_timebase_info sg_clock_info;
+static struct {
+    uint64_t zero;
+    double scale;
+} sg_clock;
 
-unsigned
+double
 sg_clock_convert(uint64_t mach_time)
 {
-    return (unsigned)
-        ((mach_time - sg_clock_zero) * sg_clock_info.numer /
-         ((uint64_t) sg_clock_info.denom * 1000000));
+    return (double) (mach_time - sg_clock.zero) * sg_clock.scale;
 }
 
 void
 sg_clock_init(void)
 {
-    mach_timebase_info(&sg_clock_info);
-    sg_clock_zero = mach_absolute_time();
+    struct mach_timebase_info info;
+    mach_timebase_info(&info);
+    sg_clock.zero = mach_absolute_time();
+    sg_clock.scale = (double) info.numer / ((double) info.denom * 1e9);
 }
 
-unsigned
+double
 sg_clock_get(void)
 {
     return sg_clock_convert(mach_absolute_time());
 }
 
-#elif defined(SG_CLOCK_WINDOWS)
+#elif defined SG_CLOCK_WINDOWS
+/* ===================================================================
+   Windows
+   =================================================================== */
 
-DWORD sg_clock_zero;
+static DWORD sg_clock_zero;
 
-unsigned
+double
 sg_clock_convert(DWORD win_time)
 {
-    return win_time - sg_clock_zero;
+    return (double) (win_time - sg_clock_zero);
 }
 
 void
@@ -48,22 +58,24 @@ sg_clock_init(void)
     sg_clock_zero = GetTickCount();
 }
 
-unsigned
+double
 sg_clock_get(void)
 {
-    DWORD tv = GetTickCount();
-    return tv - sg_clock_zero;
+    return sg_clock_convert(GetTickCount());
 }
 
-#elif defined(SG_CLOCK_POSIX_MONOTONIC)
+#elif defined SG_CLOCK_POSIX_MONOTONIC
+/* ===================================================================
+   POSIX with CLOCK_MONOTONIC
+   =================================================================== */
 
 struct timespec sg_clock_zero;
 
-unsigned
+double
 sg_clock_convert(const struct timespec *ts)
 {
-    return (ts->tv_sec - sg_clock_zero.tv_sec) * 1000
-        + (ts->tv_nsec - sg_clock_zero.tv_nsec) / 1000000;
+    return (double) (ts->tv_sec - sg_clock_zero.tv_sec) +
+        + (double) (ts->tv_nsec - sg_clock_zero.tv_nsec) * 1e-9;
 }
 
 void
@@ -72,7 +84,7 @@ sg_clock_init(void)
     clock_gettime(CLOCK_MONOTONIC, &sg_clock_zero);
 }
 
-unsigned
+double
 sg_clock_get(void)
 {
     struct timespec tv;
@@ -80,15 +92,18 @@ sg_clock_get(void)
     return sg_clock_convert(&tv);
 }
 
-#elif defined(SG_CLOCK_POSIX_SIMPLE)
+#elif defined SG_CLOCK_POSIX_SIMPLE
+/* ===================================================================
+   POSIX without CLOCK_MONOTONIC
+   =================================================================== */
 
 struct timeval sg_clock_zero;
 
-unsigned
+double
 sg_clock_convert(const struct timeval *tv)
 {
-    return (tv.tv_sec - sg_clock_zero.tv_sec) * 1000
-        + (tv.tv_usec - sg_clock_zero.tv_usec) / 1000;
+    return (double) (tv.tv_sec - sg_clock_zero.tv_sec) *
+        + (double)(tv.tv_usec - sg_clock_zero.tv_usec) * 1e-6;
 }
 
 void
@@ -97,7 +112,7 @@ sg_clock_init(void)
     gettimeofday(&sg_clock_zero, NULL);
 }
 
-unsigned
+double
 sg_clock_get(void)
 {
     struct timeval tv;
@@ -108,6 +123,10 @@ sg_clock_get(void)
 #else
 #error "No clock implementation!"
 #endif
+
+/* ===================================================================
+   Calendar date
+   =================================================================== */
 
 static int
 sg_clock_fmtdate(char *date, int shortfmt, int year, int month, int day,
@@ -124,7 +143,7 @@ sg_clock_fmtdate(char *date, int shortfmt, int year, int month, int day,
 #endif
 }
 
-#if defined(_WIN32)
+#if defined _WIN32
 
 int
 sg_clock_getdate(char *date, int shortfmt)
@@ -151,29 +170,6 @@ sg_clock_getdate(char *date, int shortfmt)
     return sg_clock_fmtdate(
         date, shortfmt, tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday,
         tm.tm_hour, tm.tm_min, tm.tm_sec, tv.tv_usec / 1000);
-}
-
-#endif
-
-#if defined(_WIN32)
-
-void
-sg_clock_sleep(unsigned milliseconds)
-{
-    Sleep(milliseconds);
-}
-
-#else
-
-#include <time.h>
-
-void
-sg_clock_sleep(unsigned milliseconds)
-{
-    struct timespec req;
-    req.tv_sec = milliseconds / 1000;
-    req.tv_nsec = (milliseconds % 1000) * 1000000;
-    nanosleep(&req, NULL);
 }
 
 #endif

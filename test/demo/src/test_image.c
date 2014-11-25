@@ -1,4 +1,4 @@
-/* Copyright 2013 Dietrich Epp.
+/* Copyright 2013-2014 Dietrich Epp.
    This file is part of SGLib.  SGLib is licensed under the terms of the
    2-clause BSD license.  For more information, see LICENSE.txt. */
 #include "defs.h"
@@ -154,18 +154,26 @@ matrix2_rotate(float *x, float angle)
     x[3] = a;
 }
 
+#include <stdio.h>
 static void
-st_image_draw_background(int width, int height, unsigned msec)
+st_image_draw_background(int width, int height, double time)
 {
+    double tf;
     int t;
     float mod, mod2, s;
 
     glUseProgram(g_prog_bkg.prog);
     glUniform2f(g_prog_bkg.u_texoff, 0.0f, 0.0f);
 
-    t = (msec >> 12) % 3;
-    mod = (float) (msec & ((1u << 12) - 1)) / (1 << 12);
-    mod2 = (float) (msec & ((1u << 13) - 1)) / (1 << 13);
+    tf = fmod(time * (1.0 / 8.0), 3.0);
+    if (tf < 0.0)
+        tf += 3.0;
+    t = (int) floor(tf);
+    if (t < 0 || t >= 3)
+        t = 0;
+
+    mod = (float) fmod(tf, 1.0);
+    mod2 = (float) fmod(time * (1.0 / 16.0), 1.0);
     s = -cosf((8 * atanf(1.0f)) * mod);
     s = expf(logf(4) * s);
 
@@ -245,10 +253,10 @@ st_image_draw_foreground(int width, int height)
 }
 
 static void
-st_image_draw(int width, int height, unsigned msec)
+st_image_draw(int width, int height, double time)
 {
     glViewport(0, 0, width, height);
-    st_image_draw_background(width, height, msec);
+    st_image_draw_background(width, height, time);
     st_image_draw_foreground(width, height);
 }
 

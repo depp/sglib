@@ -147,7 +147,7 @@ st_type_draw_layout(struct sg_textlayout *layout, int width, int height,
 }
 
 static void
-st_type_draw(int width, int height, unsigned msec)
+st_type_draw(int width, int height, double time)
 {
     float mod;
 
@@ -160,7 +160,7 @@ st_type_draw(int width, int height, unsigned msec)
 
     /* Bar */
 
-    mod = (float) (msec & ((1u << 12) - 1)) / (1 << 12);
+    mod = (float) fmod(time * 0.25, 1.0);
     mod = sinf((8 * atanf(1.0f)) * mod);
 
     glUseProgram(g_prog_plain.prog);
@@ -230,8 +230,6 @@ st_type_draw(int width, int height, unsigned msec)
     glBindTexture(GL_TEXTURE_2D, 0);
     glUseProgram(0);
     glDisable(GL_BLEND);
-
-    (void) msec;
 }
 
 const struct st_iface ST_TYPE = {

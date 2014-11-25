@@ -5,32 +5,30 @@
 
 void
 sg_mixer_timeexact_init(struct sg_mixer_timeexact *mtime,
-                        int bufsize, int samplerate, unsigned reftime)
+                        int bufsize, int samplerate, double reftime)
 {
     mtime->bufsize = bufsize;
-    mtime->samplerate = samplerate;
-    mtime->intime = reftime;
-    mtime->outtime = 0;
+    mtime->m = samplerate;
+    mtime->y0 = bufsize - samplerate * reftime;
 }
 
 void
 sg_mixer_timeexact_update(struct sg_mixer_timeexact *mtime)
 {
-    mtime->outtime -= mtime->bufsize;
-    if (mtime->outtime <= -mtime->samplerate) {
-        mtime->intime += 1000;
-        mtime->outtime += mtime->samplerate;
-    }
+    mtime->y0 += mtime->bufsize;
 }
 
 int
-sg_mixer_timeexact_get(struct sg_mixer_timeexact *mtime,
-                       unsigned time)
+sg_mixer_timeexact_get(struct sg_mixer_timeexact *mtime, double time)
 {
-    int delta = (int) (time - mtime->intime);
-    if (delta < 0)
+    double result = time * mtime->m + mtime->y0;
+    if (result >= 0.0) {
+        if (result <= mtime->bufsize) {
+            return (int) result;
+        } else {
+            return mtime->bufsize;
+        }
+    } else {
         return 0;
-    if (delta > 2000)
-        return mtime->bufsize;
-    return mtime->outtime + (delta * mtime->samplerate) / 1000;
+    }
 }

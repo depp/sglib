@@ -3,18 +3,12 @@
    2-clause BSD license.  For more information, see LICENSE.txt. */
 #include "sg/defs.h"
 
-/*
-  A note about timestamps: The input timestamps are unsigned
-  milliseconds, and the output timestamps are signed sample positions.
-  This is because the input timestamps can go on forever, wrapping
-  around every 50 days.  The output timestamps are relative to the
-  current buffer.
-*/
+/* A note about timestamps: The input timestamps are floating point
+   seconds, and the output timestamps are signed integer sample
+   positions.  Input timestamps are absolute, output timestamps are
+   relative to the current buffer.  */
 
 enum {
-    /* Number of points used to map input to output timestamps */
-    SG_MIXER_TIME_NPOINT = 3,
-
     /* Number of sample points used to predict latency.  A typical
        buffer size is 1024, so this uses just under 1 second of
        data at 44.1 kHz.  This must be a power of 2.  */
@@ -31,14 +25,12 @@ struct sg_mixer_time {
        value after calling update().  */
     int bufsize;
 
-    /* (Public) Log 2 of the distance between points in the function
-       mapping input to output timestamps.  This distance should be
-       larger than the buffer size, but no larger than 15.  Do not
-       modify this value after calling update().  */
-    int deltabits;
+    /* (Public) The distance between points in the function mapping
+       input timestamps to output timestamps, in seconds.  */
+    double deltatime;
 
     /* (Public) Fudge factor to add to mixahead.  */
-    int mixahead;
+    double mixahead;
 
     /* (Public) Buffer safety margin, in standard deviations.  0
        selects a mixahead delay that puts 50% of commit times after
@@ -62,22 +54,18 @@ struct sg_mixer_time {
     /* Flag indicating the rest of the structure is initialized */
     int initted;
 
-    /* The timestamp of the beginning and end of the current buffer.  */
-    unsigned buftime[2];
+    /* The actual timestamps of the beginning and end of the current
+       buffer, and the ratio bufsize / (buftime[1] - buftime[0]).  */
+    double buftime[2];
+    double buftime_m;
 
-    /* Reference time for input timestamps.  This will move ahead by
-       TIMEDELTA as necessary to keep the output audio buffer
-       timestamps within range.  */
-    unsigned intime;
+    /* Map from input to output timestamps.  The function is defined
+       as f(t) = (t - out_x0) * out_m[i] + out_y0, where i = 0 when t
+       < outx0 and i = 1 when t >= outx0.  */
+    double out_x0, out_m[2], out_y0;
 
-    /* Map from input timestamps to output timestamps.  The input
-       timestamp `intime - TIMEDELTA * i` corresponds to the output
-       timestamp `outtime[i]`.  This is chosen so that the first entry
-       always >= bufsize.  */
-    int outtime[SG_MIXER_TIME_NPOINT];
-
-    /* Past commit times, relative to the current intime */
-    int commit_sample[SG_MIXER_TIME_NSAMP];
+    /* Past commit times.  */
+    double commit_sample[SG_MIXER_TIME_NSAMP];
     int commit_sample_num;
 };
 
@@ -94,13 +82,13 @@ sg_mixer_time_init(struct sg_mixer_time *SG_RESTRICT mtime,
    before sg_mixer_time_get() is called.  */
 void
 sg_mixer_time_update(struct sg_mixer_time *SG_RESTRICT mtime,
-                     unsigned committime, unsigned buffertime);
+                     double committime, double buffertime);
 
 /* Get the sample position for the given timestamp.  Returns the
    buffer size if the sample position is after the current buffer.  */
 int
 sg_mixer_time_get(struct sg_mixer_time const *SG_RESTRICT mtime,
-                  unsigned time);
+                  double time);
 
 /* Get the current mixer latency, in samples.  */
 double
@@ -111,20 +99,15 @@ struct sg_mixer_timeexact {
     /* The audio buffer size, in samples.  */
     int bufsize;
 
-    /* The audio sample rate, in Hz.  */
-    int samplerate;
-
-    /* The reference input time.  */
-    unsigned intime;
-
-    /* The reference output time.  */
-    int outtime;
+    /* Function mapping input to output timestamps.  The function is
+       defined as f(t) = t * m + y0.  */
+    double m, y0;
 };
 
 /* Initialize the timing system.  */
 void
 sg_mixer_timeexact_init(struct sg_mixer_timeexact *mtime,
-                        int bufsize, int samplerate, unsigned reftime);
+                        int bufsize, int samplerate, double reftime);
 
 /* Update the state for the next buffer.  */
 void
@@ -132,5 +115,4 @@ sg_mixer_timeexact_update(struct sg_mixer_timeexact *mtime);
 
 /* Get the sample position for the given timestamp.  */
 int
-sg_mixer_timeexact_get(struct sg_mixer_timeexact *mtime,
-                       unsigned time);
+sg_mixer_timeexact_get(struct sg_mixer_timeexact *mtime, double time);

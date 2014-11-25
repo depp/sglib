@@ -35,7 +35,7 @@ sg_mixer_init(void)
 }
 
 void
-sg_mixer_settime(unsigned timestamp)
+sg_mixer_settime(double timestamp)
 {
     sg_mixer.time = timestamp;
 }

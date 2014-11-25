@@ -14,12 +14,13 @@ import math
 class TestFailure(Exception):
     pass
 
-def test(bufsize, data, *, deltabits=None, mixahead=None, safety=None,
+def test(rate, bufsize, data, *,
+         deltabits=None, mixahead=None, safety=None,
          maxslope=None, smoothing=None):
     if not isinstance(data, numpy.ndarray):
         raise TypeError('data must be ndarray')
-    if data.dtype != numpy.uint32 and data.dtype != numpy.int32:
-        raise TypeError('data must contain uint32 or int32')
+    if data.dtype != numpy.float64:
+        raise TypeError('data must contain float64')
     if len(data.shape) != 2:
         raise TypeError('data has must be 2D')
     if data.shape[1] != 2:
@@ -28,6 +29,7 @@ def test(bufsize, data, *, deltabits=None, mixahead=None, safety=None,
         raise TypeError('data must be contiguous')
     cmd = [
         './mixer_time',
+        '{:d}'.format(rate),
         '{:d}'.format(bufsize),
         '-' if deltabits is None else '{:d}'.format(deltabits),
         '-' if mixahead  is None else '{:d}'.format(mixahead),
@@ -43,45 +45,53 @@ def test(bufsize, data, *, deltabits=None, mixahead=None, safety=None,
     if proc.returncode != 0:
         raise TestFailure(
             'Program returned {}\n{}'
-            .format(proc.returncode))
-    return numpy.fromstring(stdout, dtype=numpy.uint32)
+            .format(proc.returncode, stderr))
+    out = numpy.fromstring(stdout, dtype=numpy.float64)
+    return out.reshape((out.size//2, 2))
 
-def test_simple(*, bufsize, count, speed, mindelay, maxdelay):
-    realtime = numpy.linspace(
-        bufsize,
-        count * bufsize / speed + bufsize,
-        num=count + 1)
-    realtime = realtime.astype(numpy.int32)
-    indata = numpy.ndarray((count + 1, 2), numpy.int32)
-    indata[:,0] = realtime - numpy.random.random_integers(
-        mindelay + bufsize, maxdelay + bufsize, count + 1)
+def test_simple(*, rate, bufsize, count, speed, mindelay, maxdelay):
+    buftime = bufsize / (rate * speed)
+    realtime = numpy.linspace(buftime, (count + 1) * buftime, num=count + 1)
+    indata = numpy.ndarray((count + 1, 2), numpy.float64)
+    delay = ((mindelay + buftime) +
+             (maxdelay - mindelay) * numpy.random.random(count + 1))
+    indata[:,0] = realtime - delay
     indata[:,1] = realtime
-    outdata = test(bufsize, indata)
-    delay = ((outdata.astype(numpy.float64)) * (1 / speed) -
-             numpy.arange(len(outdata), dtype=numpy.float64))
-    start = int(bufsize * 32 / speed + 2**14)
-    delay = delay[start:]
-    mean = numpy.mean(delay)
-    var = numpy.var(delay)
-    print('Delay: {:.0f} +/- {:.0f}'.format(mean, math.sqrt(var)))
+    del delay
+    outdata = test(rate, bufsize, indata)
+    del indata
 
-    dmean = (mindelay + maxdelay) / 2
-    dvar = (maxdelay - mindelay)**2 / 12
-    print('Expected: {:.0f}'
-          .format(bufsize + dmean + 2 * math.sqrt(dvar) + (bufsize >> 3)))
+    warmuptime = 32 * bufsize / (rate * speed) + 0.125
+    index = numpy.argmax(outdata[:,0] > warmuptime)
+    delay = outdata[index:,1] * (1.0 / (rate * speed)) - outdata[index:,0]
+
+    print('Delay: {:.1f} ms \xb1 {:.1f} ms ({:.1f} - {:.1f} ms)'.format(
+        numpy.mean(delay) * 1000,
+        math.sqrt(numpy.var(delay)) * 1000,
+        numpy.min(delay) * 1000,
+        numpy.max(delay) * 1000))
+
+    expected = (
+        (mindelay + maxdelay) / 2 +
+        buftime * 1.125 +
+        2.0 * (maxdelay - mindelay) / math.sqrt(12))
+    print('Expected: {:.0f} ms'
+          .format(expected * 1000))
 
 test_simple(
-    bufsize=1024,
-    count=500,
-    speed=1.1,
-    mindelay=20,
-    maxdelay=600,
+    rate     = 48000,
+    bufsize  = 1024,
+    count    = 500,
+    speed    = 1.1,
+    mindelay = 0.001,
+    maxdelay = 0.010,
 )
 
 test_simple(
-    bufsize=128,
-    count=2000,
-    speed=1.1,
-    mindelay=20,
-    maxdelay=600,
+    rate     = 48000,
+    bufsize  = 128,
+    count    = 2000,
+    speed    = 1.1,
+    mindelay = 0.001,
+    maxdelay = 0.010,
 )

@@ -1,4 +1,4 @@
-/* Copyright 2013 Dietrich Epp.
+/* Copyright 2013-2014 Dietrich Epp.
    This file is part of SGLib.  SGLib is licensed under the terms of the
    2-clause BSD license.  For more information, see LICENSE.txt. */
 
@@ -22,7 +22,7 @@ struct st_iface {
     void (*init)(void);
     void (*destroy)(void);
     void (*event)(union sg_event *evt);
-    void (*draw)(int width, int height, unsigned msec);
+    void (*draw)(int width, int height, double time);
 };
 
 extern const struct st_iface *st_screen;

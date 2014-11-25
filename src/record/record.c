@@ -249,7 +249,7 @@ sg_record_frame_begin(unsigned *time)
 #else
 
 void
-sg_record_frame_begin(unsigned *time)
+sg_record_frame_begin(double *time)
 {
     (void) time;
     sg_record.flags |= SG_RECORD_INFRAME;

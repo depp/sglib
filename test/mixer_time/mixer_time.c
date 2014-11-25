@@ -7,14 +7,6 @@
 #include "src/mixer/time.h"
 
 static void
-parse_int(int *x, const char *s)
-{
-    if (!strcmp(s, "-"))
-        return;
-    *x = (int) strtol(s, NULL, 0);
-}
-
-static void
 parse_double(double *x, const char *s)
 {
     if (!strcmp(s, "-"))
@@ -26,31 +18,32 @@ int
 main(int argc, char **argv)
 {
     struct sg_mixer_time time;
-    int bufsize, pos, amt, offset, outtime;
-    unsigned input[2], intime;
+    int samplerate, bufsize, pos, amt, offset, outtime;
+    double input[2], intime, output[2];
 
-    if (argc != 7) {
-        fputs("Usage: time_test BUFSIZE DELTABITS MIXAHEAD "
+    if (argc != 8) {
+        fputs("Usage: time_test RATE BUFSIZE DELTATIME MIXAHEAD "
               "SAFETY MAXSLOPE SMOOTHING\n",
               stderr);
         return 1;
     }
 
-    bufsize = (int) strtol(argv[1], NULL, 0);
-    sg_mixer_time_init(&time, bufsize);
-    parse_int(&time.deltabits, argv[2]);
-    parse_int(&time.mixahead, argv[3]);
-    parse_double(&time.safety, argv[4]);
-    parse_double(&time.maxslope, argv[5]);
-    parse_double(&time.smoothing, argv[6]);
+    samplerate = (int) strtol(argv[1], NULL, 0);
+    bufsize = (int) strtol(argv[2], NULL, 0);
+    sg_mixer_time_init(&time, samplerate, bufsize);
+    parse_double(&time.deltatime, argv[3]);
+    parse_double(&time.mixahead, argv[4]);
+    parse_double(&time.safety, argv[5]);
+    parse_double(&time.maxslope, argv[6]);
+    parse_double(&time.smoothing, argv[7]);
 
     offset = 0;
     intime = 0;
     while (1) {
         pos = 0;
-        while (pos < (int) (sizeof(unsigned) * 2)) {
+        while (pos < (int) sizeof(input)) {
             amt = fread((char *) &input + pos,
-                        1, sizeof(unsigned) * 2 - pos,
+                        1, sizeof(input) - pos,
                         stdin);
             if (!amt) {
                 if (feof(stdin) && pos == 0)
@@ -62,12 +55,13 @@ main(int argc, char **argv)
 
         sg_mixer_time_update(&time, input[0], input[1]);
         while (1) {
-            outtime = sg_mixer_time_get(&time, intime);
+            output[0] = intime * 0.01;
+            outtime = sg_mixer_time_get(&time, intime * 0.01);
             if (outtime >= bufsize)
                 break;
-            outtime += offset;
-            amt = fwrite(&outtime, 1, sizeof(int), stdout);
-            if (amt != sizeof(int))
+            output[1] = outtime + offset;
+            amt = fwrite(&output, 1, sizeof(output), stdout);
+            if (amt != sizeof(output))
                 abort();
             intime++;
         }

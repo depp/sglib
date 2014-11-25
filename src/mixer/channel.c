@@ -5,7 +5,7 @@
 
 struct sg_mixer_channel *
 sg_mixer_channel_play(struct sg_mixer_sound *sound,
-                      unsigned timestamp, unsigned flags)
+                      double timestamp, unsigned flags)
 {
     struct sg_mixer_channel *chp, *che;
     int i;

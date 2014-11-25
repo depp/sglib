@@ -1,4 +1,4 @@
-/* Copyright 2013 Dietrich Epp.
+/* Copyright 2013-2014 Dietrich Epp.
    This file is part of SGLib.  SGLib is licensed under the terms of the
    2-clause BSD license.  For more information, see LICENSE.txt. */
 #include "defs.h"
@@ -78,9 +78,9 @@ sg_game_event(union sg_event *evt)
 }
 
 void
-sg_game_draw(int width, int height, unsigned msec)
+sg_game_draw(int width, int height, double time)
 {
-    sg_mixer_settime(msec);
-    st_screen->draw(width, height, msec);
+    sg_mixer_settime(time);
+    st_screen->draw(width, height, time);
     sg_mixer_commit();
 }

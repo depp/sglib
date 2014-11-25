@@ -1,4 +1,4 @@
-/* Copyright 2012 Dietrich Epp.
+/* Copyright 2012-2014 Dietrich Epp.
    This file is part of SGLib.  SGLib is licensed under the terms of the
    2-clause BSD license.  For more information, see LICENSE.txt. */
 #ifndef SG_ENTRY_H
@@ -88,10 +88,10 @@ sg_game_event(union sg_event *evt);
  *
  * @param width The viewport width.
  * @param height The viewport height.
- * @param msec The current time, in milliseconds since startup.
+ * @param time The current time, in seconds, since startup.
  */
 void
-sg_game_draw(int width, int height, unsigned msec);
+sg_game_draw(int width, int height, double time);
 
 /**
  * @brief Handle game shutdown.

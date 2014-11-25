@@ -86,7 +86,7 @@ sg_sys_getinfo(struct sg_game_info *info)
 }
 
 void
-sg_sys_draw(int width, int height, unsigned time)
+sg_sys_draw(int width, int height, double time)
 {
     static int time_ref, frame_count;
     int time_delta;
@@ -101,7 +101,7 @@ sg_sys_draw(int width, int height, unsigned time)
         time_ref = time;
         frame_count = 0;
     }
-    unsigned adjtime = time;
+    double adjtime = time;
     sg_record_frame_begin(&adjtime);
     sg_game_draw(width, height, adjtime);
     sg_record_frame_end(0, 0, width, height);

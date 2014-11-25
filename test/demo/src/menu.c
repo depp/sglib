@@ -1,4 +1,4 @@
-/* Copyright 2013 Dietrich Epp.
+/* Copyright 2013-2014 Dietrich Epp.
    This file is part of SGLib.  SGLib is licensed under the terms of the
    2-clause BSD license.  For more information, see LICENSE.txt. */
 #include "defs.h"
@@ -143,7 +143,7 @@ static void st_menu_event(union sg_event *evt)
     }
 }
 
-static void st_menu_draw(int width, int height, unsigned msec)
+static void st_menu_draw(int width, int height, double time)
 {
     struct sg_textmetrics metrics;
     float xscale, yscale;
@@ -203,7 +203,7 @@ static void st_menu_draw(int width, int height, unsigned msec)
     glUseProgram(0);
 
     sg_opengl_checkerror("st_menu_draw");
-    (void) msec;
+    (void) time;
 }
 
 const struct st_iface ST_MENU = {

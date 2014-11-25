@@ -411,7 +411,7 @@ sg_mixer_mixdown_render(struct sg_mixer_mixdown *SG_RESTRICT mp)
 
 int
 sg_mixer_mixdown_process(struct sg_mixer_mixdowniface *mp,
-                         unsigned buffertime)
+                         double buffertime)
 {
     sg_lock_acquire(&sg_mixer.lock);
     if (!sg_mixer.is_ready) {

@@ -34,8 +34,8 @@ sg_mixer_time_init(struct sg_mixer_time *SG_RESTRICT mtime,
 {
     mtime->samplerate = samplerate;
     mtime->bufsize = bufsize;
-    mtime->deltabits = 8;
-    mtime->mixahead = bufsize >> 3;
+    mtime->deltatime = 0.125;
+    mtime->mixahead = (double) bufsize / samplerate * 0.125;
     mtime->safety = 2.0;
     mtime->maxslope = 1.5;
     mtime->smoothing = 0.75;
@@ -46,145 +46,142 @@ sg_mixer_time_init(struct sg_mixer_time *SG_RESTRICT mtime,
 static void
 sg_mixer_time_predict(struct sg_mixer_time *SG_RESTRICT mtime)
 {
-    int i, idx;
-    double x, t, ax, at, axx, axt, fac, pa, pb, avar, d, y, dy, maxdy;
+    double x0, fac, pa, pb, dev;
 
-    /* Update the samples to be relative to the next intime, advance
-       the output map */
-    for (i = SG_MIXER_TIME_NPOINT - 1; i > 0; i--)
-        mtime->outtime[i] = mtime->outtime[i - 1];
-    mtime->intime += 1 << mtime->deltabits;
-    for (i = 0; i < SG_MIXER_TIME_NSAMP; i++)
-        mtime->commit_sample[i] -= 1 << mtime->deltabits;
-
-    /* Linear regression mapping commit time to buffer position,
-       position = pa + pb * commit_time */
-    ax = at = axx = axt = 0.0;
-    for (i = 0; i < SG_MIXER_TIME_NSAMP; i++) {
-        idx = (i + mtime->commit_sample_num) & (SG_MIXER_TIME_NSAMP - 1);
-        t = (i + 2 - SG_MIXER_TIME_NSAMP) * mtime->bufsize;
-        x = mtime->commit_sample[idx];
-        ax += x;
-        at += t;
-        axx += x * x;
-        axt += x * t;
-    }
+    x0 = mtime->out_x0;
     fac = 1.0 / SG_MIXER_TIME_NSAMP;
-    pb = (axt - ax * at * fac) / (axx - ax * ax * fac);
-    pa = (at - pb * ax) * fac;
 
-    /* Calculate remaining variance */
-    avar = 0.0;
-    for (i = 0; i < SG_MIXER_TIME_NSAMP; i++) {
-        idx = (i + mtime->commit_sample_num) & (SG_MIXER_TIME_NSAMP - 1);
-        t = (i + 2 - SG_MIXER_TIME_NSAMP) * mtime->bufsize;
-        x = mtime->commit_sample[idx];
-        d = pa + pb * x - t;
-        avar += d * d;
+    {
+        int i, idx;
+        double x, t, ax = 0.0, at = 0.0, axx = 0.0, axt = 0.0;
+        /* Linear regression mapping commit time to buffer position,
+           position = pa + pb * commit_time */
+        for (i = 0; i < SG_MIXER_TIME_NSAMP; i++) {
+            idx = (i + mtime->commit_sample_num) & (SG_MIXER_TIME_NSAMP - 1);
+            t = i + 2 - SG_MIXER_TIME_NSAMP;
+            x = mtime->commit_sample[idx] - x0;
+            ax += x;
+            at += t;
+            axx += x * x;
+            axt += x * t;
+        }
+        pb = (axt - ax * at * fac) / (axx - ax * ax * fac);
+        pa = (at - pb * ax) * fac;
     }
-    avar *= fac;
 
-    /* Calculate buffer position for new data point */
-    y = pa + sqrt(avar) * mtime->safety + mtime->mixahead;
-    if (isfinite(y)) {
-        dy = y - mtime->outtime[1];
-        maxdy = (mtime->samplerate << mtime->deltabits) *
-            mtime->maxslope * 0.001;
-        if (dy > maxdy)
-            dy = maxdy;
-        else if (dy < mtime->bufsize)
+    {
+        int i, idx;
+        double x, t, avar = 0.0, d;
+        /* Calculate variance from fit */
+        avar = 0.0;
+        for (i = 0; i < SG_MIXER_TIME_NSAMP; i++) {
+            idx = (i + mtime->commit_sample_num) & (SG_MIXER_TIME_NSAMP - 1);
+            t = i + 2 - SG_MIXER_TIME_NSAMP;
+            x = mtime->commit_sample[idx] - x0;
+            d = pa + pb * x - t;
+            avar += d * d;
+        }
+        dev = sqrt(avar * fac);
+    }
+
+    {
+        double y0, y1, dy, maxdy;
+        /* Calculate buffer position for new data point */
+        dev = 0;
+        y0 = mtime->out_m[1] * mtime->deltatime;
+        y1 = (pa + pb * mtime->deltatime * 2.0 + dev * mtime->safety) *
+            mtime->bufsize +
+            mtime->mixahead * mtime->samplerate -
+            mtime->out_y0;
+        if (isfinite(y1)) {
+            dy = y1 - y0;
+            maxdy = mtime->samplerate * mtime->deltatime * mtime->maxslope;
+            if (dy > maxdy && 0)
+                dy = maxdy;
+            else if (dy < mtime->bufsize)
+                dy = mtime->bufsize;
+        } else {
             dy = mtime->bufsize;
-    } else {
-        dy = mtime->bufsize;
-    }
+        }
 
-    /* Smooth the buffer position output with an IIR filter */
-    dy += mtime->smoothing * ((mtime->outtime[1] - mtime->outtime[2]) - dy);
-    mtime->outtime[0] = (int) ceil(y);
+        /* Smooth the buffer position output with an IIR filter */
+        /* dy += mtime->smoothing * (y0 - dy); */
+
+        mtime->out_x0 += mtime->deltatime;
+        mtime->out_m[0] = mtime->out_m[1];
+        mtime->out_m[1] = dy / mtime->deltatime;
+        mtime->out_y0 += y0;
+    }
 }
 
 void
 sg_mixer_time_update(struct sg_mixer_time *SG_RESTRICT mtime,
-                     unsigned committime, unsigned buffertime)
+                     double committime, double buffertime)
 {
-    int i, delta;
-
     if (!mtime->initted) {
+        int i;
+        double delta;
+
+        delta = (double) mtime->bufsize / mtime->samplerate;
         mtime->initted = 1;
-        mtime->buftime[0] = buffertime - mtime->bufsize;
+        mtime->buftime[0] = buffertime - delta;
         mtime->buftime[1] = buffertime;
-        mtime->intime = committime;
-        delta = (mtime->samplerate << mtime->deltabits) / 1000;
-        for (i = 0; i < SG_MIXER_TIME_NPOINT; i++)
-            mtime->outtime[i] = mtime->bufsize - delta * i;
-        delta = (mtime->bufsize * 1000) / mtime->samplerate;
+        mtime->out_x0 = committime;
+        mtime->out_m[0] = mtime->out_m[1] = mtime->samplerate;
+        mtime->out_y0 = mtime->bufsize;
         for (i = 0; i < SG_MIXER_TIME_NSAMP; i++)
-            mtime->commit_sample[i] = delta *
-                (i + 1 - SG_MIXER_TIME_NSAMP);
+            mtime->commit_sample[i] = committime +
+                delta * (i + 1 - SG_MIXER_TIME_NSAMP);
         mtime->commit_sample_num = 0;
-        return;
-    }
-
-    mtime->buftime[0] = mtime->buftime[1];
-    if (mtime->buftime[0] == buffertime)
-        mtime->buftime[0] = buffertime - 1;
-    mtime->buftime[1] = buffertime;
-    for (i = 0; i < SG_MIXER_TIME_NPOINT; i++)
-        mtime->outtime[i] -= mtime->bufsize;
-    mtime->commit_sample[mtime->commit_sample_num] =
-        committime - mtime->intime;
-    mtime->commit_sample_num = (mtime->commit_sample_num + 1) &
-        (SG_MIXER_TIME_NSAMP - 1);
-    if (mtime->outtime[0] < mtime->bufsize)
-        sg_mixer_time_predict(mtime);
-}
-
-/* Get the delayed output timestamp for an input timestamp.  */
-static int
-sg_mixer_time_get_delayed(struct sg_mixer_time const *SG_RESTRICT mtime,
-                          unsigned time)
-{
-    /* Find two timestamps with known sample positions surrounding the
-       given timestamp, and interpolate between them.  If the
-       timestamp is outside the timestamps with known sample times,
-       then refuse to extrapolate and simply clamp the sample position
-       to the nearest known point.  */
-    int dt, s0, s1, delta = 1 << mtime->deltabits;
-    dt = mtime->intime - time;
-    if (dt < delta) {
-        if (dt <= 0)
-            return mtime->outtime[0];
-        s0 = mtime->outtime[0];
-        s1 = mtime->outtime[1];
     } else {
-        dt -= delta;
-        if (dt >= delta)
-            return mtime->outtime[2];
-        s0 = mtime->outtime[1];
-        s1 = mtime->outtime[2];
+        double y;
+
+        mtime->buftime[0] = mtime->buftime[1];
+        mtime->buftime[1] = buffertime;
+        mtime->out_y0 -= mtime->bufsize;
+        mtime->commit_sample[mtime->commit_sample_num] = committime;
+        mtime->commit_sample_num = (mtime->commit_sample_num + 1) &
+            (SG_MIXER_TIME_NSAMP - 1);
+        y = mtime->out_m[1] * mtime->deltatime + mtime->out_y0;
+        if (y < mtime->bufsize)
+            sg_mixer_time_predict(mtime);
     }
-    return (s0 * (delta - dt) + s1 * dt) >> mtime->deltabits;
+
+    mtime->buftime_m =
+        (double) mtime->bufsize / (mtime->buftime[1] - mtime->buftime[0]);
 }
 
 int
 sg_mixer_time_get(struct sg_mixer_time const *SG_RESTRICT mtime,
-                  unsigned time)
+                  double time)
 {
-    int reltime, bufdelta, abstime, delayedtime;
+    double reltime, result;
+
+    reltime = time - mtime->out_x0;
+    result = reltime * mtime->out_m[reltime >= 0.0] + mtime->out_y0;
+
     reltime = time - mtime->buftime[0];
-    bufdelta = mtime->buftime[1] - mtime->buftime[0];
-    if (reltime >= bufdelta)
-        return mtime->bufsize;
-    delayedtime = sg_mixer_time_get_delayed(mtime, time);
-    abstime = reltime <= 0 ? 0 : reltime * mtime->bufsize / bufdelta;
-    return abstime > delayedtime ? abstime : delayedtime;
+    if (reltime >= 0.0 && 0) {
+        double exact;
+        exact = (time - mtime->buftime[0]) * mtime->buftime_m;
+        if (exact > result)
+            result = exact;
+    }
+
+    if (result >= 0.0) {
+        if (result <= mtime->bufsize) {
+            return (int) result;
+        } else {
+            return mtime->bufsize;
+        }
+    } else {
+        return 0;
+    }
 }
 
 double
 sg_mixer_time_latency(struct sg_mixer_time const *SG_RESTRICT mtime)
 {
-    return mtime->buftime[1] - mtime->intime +
-        (double) (mtime->buftime[1] - mtime->outtime[0]) *
-        (1 << mtime->deltabits) /
-        (mtime->outtime[1] - mtime->outtime[0]);
+    return (mtime->buftime[1] - mtime->out_x0) -
+        (mtime->bufsize - mtime->out_y0) / mtime->out_m[1];
 }

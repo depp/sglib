@@ -93,7 +93,7 @@ sg_mixer_stop(void);
  * @param timestamp The new current mixer time.
  */
 void
-sg_mixer_settime(unsigned timestamp);
+sg_mixer_settime(double timestamp);
 
 /**
  * @brief Commit mixer changes.
@@ -119,7 +119,7 @@ sg_mixer_commit(void);
  */
 int
 sg_mixer_startrecord(const char *path, size_t pathlen,
-                     unsigned timestamp,
+                     double timestamp,
                      struct sg_error **err);
 
 /**
@@ -133,7 +133,7 @@ sg_mixer_startrecord(const char *path, size_t pathlen,
  * @return Zero for success, nonzero for failure.
  */
 int
-sg_mixer_stoprecord(unsigned timestamp,
+sg_mixer_stoprecord(double timestamp,
                     struct sg_error **err);
 
 /**
@@ -191,7 +191,7 @@ sg_mixer_sound_decref(struct sg_mixer_sound *sound);
  */
 struct sg_mixer_channel *
 sg_mixer_channel_play(struct sg_mixer_sound *sound,
-                      unsigned timestamp, unsigned flags);
+                      double timestamp, unsigned flags);
 
 /**
  * @brief Stop channel playback, invalidating the channel.

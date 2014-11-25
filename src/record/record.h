@@ -9,4 +9,4 @@ sg_record_init(void);
 /* Start recording a frame.  This will adjust the timestamp of the
    frame to be rendered.  */
 void
-sg_record_frame_begin(unsigned *time);
+sg_record_frame_begin(double *time);

@@ -137,7 +137,7 @@ get_state(int n)
 }
 
 static void
-func1(unsigned msec)
+func1(double time)
 {
     static int g_state, g_mod;
     int state = get_state(0);
@@ -151,7 +151,7 @@ func1(unsigned msec)
         case 2: snd = g_audio.tink;  break;
         }
         g_mod = (g_mod + 1) % 3;
-        sg_mixer_channel_play(snd, msec, SG_MIXER_FLAG_DETACHED);
+        sg_mixer_channel_play(snd, time, SG_MIXER_FLAG_DETACHED);
     }
 
     draw_key(0, state);
@@ -159,7 +159,7 @@ func1(unsigned msec)
 }
 
 static void
-func2(unsigned msec)
+func2(double time)
 {
     static int g_state, g_mod;
     int state = get_state(1);
@@ -180,7 +180,7 @@ func2(unsigned msec)
         case 2: pan = 1.0f; break;
         }
         g_mod = (g_mod + 1) % 9;
-        chan = sg_mixer_channel_play(snd, msec, SG_MIXER_FLAG_DETACHED);
+        chan = sg_mixer_channel_play(snd, time, SG_MIXER_FLAG_DETACHED);
         sg_mixer_channel_setparam(chan, SG_MIXER_PARAM_PAN, pan);
     }
 
@@ -189,7 +189,7 @@ func2(unsigned msec)
 }
 
 static void
-func3(unsigned msec)
+func3(double time)
 {
     static int g_state, g_mod;
     int state = get_state(2);
@@ -206,7 +206,7 @@ func3(unsigned msec)
         case 2: snd = g_audio.right;  pan = +0.75f; break;
         }
         g_mod = (g_mod + 1) % 3;
-        chan = sg_mixer_channel_play(snd, msec, SG_MIXER_FLAG_DETACHED);
+        chan = sg_mixer_channel_play(snd, time, SG_MIXER_FLAG_DETACHED);
         sg_mixer_channel_setparam(chan, SG_MIXER_PARAM_PAN, pan);
     }
 
@@ -215,7 +215,7 @@ func3(unsigned msec)
 }
 
 static void
-func4(unsigned msec)
+func4(double time)
 {
     static int g_state;
     int state = get_state(3);
@@ -229,7 +229,7 @@ func4(unsigned msec)
     case 0:
         if (state) {
             snd = (g_state & 4) ? g_audio.alien : g_audio.music;
-            chan = sg_mixer_channel_play(snd, msec, SG_MIXER_FLAG_LOOP);
+            chan = sg_mixer_channel_play(snd, time, SG_MIXER_FLAG_LOOP);
             g_state++;
         }
         break;
@@ -253,16 +253,16 @@ func4(unsigned msec)
 }
 
 static void
-st_audio_draw(int width, int height, unsigned msec)
+st_audio_draw(int width, int height, double time)
 {
     glClearColor(0.08, 0.05, 0.16, 0.0);
     glViewport(0, 0, width, height);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    func1(msec);
-    func2(msec);
-    func3(msec);
-    func4(msec);
+    func1(time);
+    func2(time);
+    func3(time);
+    func4(time);
 }
 
 const struct st_iface ST_AUDIO = {

@@ -76,7 +76,7 @@ struct sg_mixer_msg {
        bits give the parameter.  */
     unsigned addr;
     /* The time at which the parameter should change.  */
-    unsigned timestamp;
+    double timestamp;
     /* The new parameter value.  */
     float value;
 };
@@ -169,7 +169,7 @@ sg_mixer_mixdown_new_live(int bufsz, int samplerate,
 /* Create a new recording mixdown.  The system will automatically
    process the recording mixdown.  */
 int
-sg_mixer_mixdown_new_record(unsigned starttime,
+sg_mixer_mixdown_new_record(double starttime,
                             struct sg_error **err);
 
 /* Free a mixdown.  */
@@ -182,7 +182,7 @@ sg_mixer_mixdown_free(struct sg_mixer_mixdowniface *mp);
    samples rendered, or 0 if the mixdown has halted.  */
 int
 sg_mixer_mixdown_process(struct sg_mixer_mixdowniface *mp,
-                         unsigned buffertime);
+                         double buffertime);
 
 /* Get the mixer output, as interleaved 16-bit samples.  */
 void
@@ -214,11 +214,11 @@ struct sg_mixer {
     int is_ready;
 
     /* The current time, not committed yet.  */
-    unsigned time;
+    double time;
 
     /* The commit timestamp.  All future messages should have later
        timestamps than the commit timestamp.  */
-    unsigned committime;
+    double committime;
 
     /* The control structures for each of the channels, used to issue
        commands to the mixdowns.  */
