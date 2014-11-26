@@ -7,7 +7,14 @@
    private to the base library, and are used for converting from OS
    timestamps to game timestamps.  */
 
-#if defined __APPLE__
+#if defined ENABLE_FRONTEND_SDL
+# define SG_CLOCK_SDL 1
+
+/* Convert an SDL timestamp (SDL_GetTicks) to game time.  */
+double
+sg_clock_convert(unsigned sdl_time);
+
+#elif defined __APPLE__
 # define SG_CLOCK_APPLE 1
 
 /* Convert a Mach timestamp to game time.  */

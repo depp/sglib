@@ -20,6 +20,7 @@ image_libjpeg
 image_libpng
 image_wincodec
 linux
+maybe_sdl
 ogg
 opus
 osx
@@ -50,6 +51,7 @@ def get_tags(build):
         glew.module(build),
         math.module(build),
     ]
+    tags['maybe_sdl'] = []
 
     if platform == 'linux':
         tags['posix'] = []
@@ -71,6 +73,7 @@ def get_tags(build):
         tags['frontend_gtk'] = [gtkglext.module(build), gtk.module(build)]
     elif flags['frontend'] == 'sdl':
         tags['frontend_sdl'] = [sdl.version_2(build)]
+        tags['maybe_sdl'].append(sdl.version_2(build))
     elif flags['frontend'] == 'windows':
         tags['frontend_windows'] = []
     else:

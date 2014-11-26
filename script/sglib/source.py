@@ -54,7 +54,7 @@ writer.c
 ''')
 
 src.add(path='src/core', sources='''
-clock.c
+clock.c maybe_sdl
 clock_impl.h
 cvar.c
 cvartable.c

@@ -6,7 +6,26 @@
 #include "private.h"
 #include <stdio.h>
 
-#if defined SG_CLOCK_APPLE
+#if defined SG_CLOCK_SDL
+#include "SDL.h"
+
+double
+sg_clock_convert(unsigned sdl_time)
+{
+    return 0.001 * sdl_time;
+}
+
+void
+sg_clock_init(void)
+{ }
+
+double
+sg_clock_get(void)
+{
+    return 0.001 * SDL_GetTicks();
+}
+
+#elif defined SG_CLOCK_APPLE
 /* ===================================================================
    OS X (Mach)
    =================================================================== */
