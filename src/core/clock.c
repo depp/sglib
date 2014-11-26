@@ -10,7 +10,7 @@
 #include "SDL.h"
 
 double
-sg_clock_convert(unsigned sdl_time)
+sg_clock_convert_sdl(unsigned sdl_time)
 {
     return 0.001 * sdl_time;
 }
@@ -38,7 +38,7 @@ static struct {
 } sg_clock;
 
 double
-sg_clock_convert(uint64_t mach_time)
+sg_clock_convert_mach(uint64_t mach_time)
 {
     return (double) (mach_time - sg_clock.zero) * sg_clock.scale;
 }
@@ -55,7 +55,7 @@ sg_clock_init(void)
 double
 sg_clock_get(void)
 {
-    return sg_clock_convert(mach_absolute_time());
+    return sg_clock_convert_mach(mach_absolute_time());
 }
 
 #elif defined SG_CLOCK_WINDOWS
@@ -66,7 +66,7 @@ sg_clock_get(void)
 static DWORD sg_clock_zero;
 
 double
-sg_clock_convert(DWORD win_time)
+sg_clock_convert_win32(DWORD win_time)
 {
     return (double) (win_time - sg_clock_zero);
 }
@@ -80,7 +80,7 @@ sg_clock_init(void)
 double
 sg_clock_get(void)
 {
-    return sg_clock_convert(GetTickCount());
+    return sg_clock_convert_win32(GetTickCount());
 }
 
 #elif defined SG_CLOCK_POSIX_MONOTONIC
@@ -91,7 +91,7 @@ sg_clock_get(void)
 struct timespec sg_clock_zero;
 
 double
-sg_clock_convert(const struct timespec *ts)
+sg_clock_convert_timespec(const struct timespec *ts)
 {
     return (double) (ts->tv_sec - sg_clock_zero.tv_sec) +
         + (double) (ts->tv_nsec - sg_clock_zero.tv_nsec) * 1e-9;
@@ -108,7 +108,7 @@ sg_clock_get(void)
 {
     struct timespec tv;
     clock_gettime(CLOCK_MONOTONIC, &tv);
-    return sg_clock_convert(&tv);
+    return sg_clock_convert_timespec(&tv);
 }
 
 #elif defined SG_CLOCK_POSIX_SIMPLE
@@ -119,7 +119,7 @@ sg_clock_get(void)
 struct timeval sg_clock_zero;
 
 double
-sg_clock_convert(const struct timeval *tv)
+sg_clock_convert_timeval(const struct timeval *tv)
 {
     return (double) (tv.tv_sec - sg_clock_zero.tv_sec) *
         + (double)(tv.tv_usec - sg_clock_zero.tv_usec) * 1e-6;
@@ -136,7 +136,7 @@ sg_clock_get(void)
 {
     struct timeval tv;
     gettimeofday(&tv, NULL);
-    return sg_clock_convert(&tv);
+    return sg_clock_convert_timeval(&tv);
 }
 
 #else

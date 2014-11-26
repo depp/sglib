@@ -12,14 +12,14 @@
 
 /* Convert an SDL timestamp (SDL_GetTicks) to game time.  */
 double
-sg_clock_convert(unsigned sdl_time);
+sg_clock_convert_sdl(unsigned sdl_time);
 
 #elif defined __APPLE__
 # define SG_CLOCK_APPLE 1
 
 /* Convert a Mach timestamp to game time.  */
 double
-sg_clock_convert(uint64_t mach_time);
+sg_clock_convert_mach(uint64_t mach_time);
 
 #elif defined _WIN32
 # define SG_CLOCK_WINDOWS 1
@@ -27,11 +27,7 @@ sg_clock_convert(uint64_t mach_time);
 
 /* Convert a Windows timestamp (GetTickCount64) to game time.  */
 double
-sg_clock_convert(DWORD win_time);
-
-/* Convert a Windows timestamp (GetTickCount64) to game time.  */
-double
-sg_clock_convert(DWORD win_time);
+sg_clock_convert_win32(DWORD win_time);
 
 #else /* POSIX */
 # include <time.h>
@@ -42,14 +38,14 @@ sg_clock_convert(DWORD win_time);
 
 /* Convert a POSIX monotonic clock timestamp to game time.  */
 double
-sg_clock_convert(const struct timespec *ts);
+sg_clock_convert_timespec(const struct timespec *ts);
 
 # else
 #  define SG_CLOCK_POSIX_SIMPLE 1
 
 /* Convert a POSIX timestamp to game time.  */
 double
-sg_clock_convert(const struct timeval *tv);
+sg_clock_convert_timeval(const struct timeval *tv);
 
 # endif /* POSIX MONOTONIC / SIMPLE */
 
