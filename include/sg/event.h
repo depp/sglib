@@ -103,9 +103,29 @@ enum {
 };
 
 /**
+ * @brief Common event fields.
+ */
+struct sg_event_common {
+    /**
+     * @brief The event timestamp.
+     */
+    double time;
+
+    /**
+     * @brief The event type.
+     */
+    sg_event_type_t type;
+};
+
+/**
  * @brief Mouse event.
  */
 struct sg_event_mouse {
+    /**
+     * @brief The event timestamp.
+     */
+    double time;
+
     /**
      * @brief The event type.
      *
@@ -138,6 +158,11 @@ struct sg_event_mouse {
  */
 struct sg_event_key {
     /**
+     * @brief The event timestamp.
+     */
+    double time;
+
+    /**
      * @brief The event type.
      *
      * This is always ::SG_EVENT_KDOWN or ::SG_EVENT_KUP.
@@ -159,6 +184,11 @@ struct sg_event_key {
  */
 struct sg_event_window {
     /**
+     * @brief The event timestamp.
+     */
+    double time;
+
+    /**
      * @brief The event type.
      *
      * Always ::SG_EVENT_WINDOW.
@@ -175,6 +205,11 @@ struct sg_event_window {
  * @brief Audio initialization event.
  */
 struct sg_event_audioinit {
+    /**
+     * @brief The event timestamp.
+     */
+    double time;
+
     /**
      * @brief The event type.
      *
@@ -198,9 +233,9 @@ struct sg_event_audioinit {
  */
 union sg_event {
     /**
-     * @brief The event type.
+     * @brief Common event fields.
      */
-    sg_event_type_t type;
+    struct sg_event_common common;
 
     /**
      * @brief The mouse event data.

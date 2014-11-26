@@ -83,7 +83,7 @@ st_type_destroy(void)
 static void
 st_type_event(union sg_event *evt)
 {
-    switch (evt->type) {
+    switch (evt->common.type) {
     case SG_EVENT_KDOWN:
         switch (evt->key.key) {
         case KEY_1:

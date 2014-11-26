@@ -63,7 +63,7 @@ static void
 st_audio_event(union sg_event *evt)
 {
     int cmd;
-    switch (evt->type) {
+    switch (evt->common.type) {
     case SG_EVENT_KDOWN:
     case SG_EVENT_KUP:
         cmd = -1;
@@ -81,7 +81,7 @@ st_audio_event(union sg_event *evt)
         default: break;
         }
         if (cmd >= 0) {
-            if (evt->type == SG_EVENT_KDOWN)
+            if (evt->key.type == SG_EVENT_KDOWN)
                 g_cmd |= 1u << cmd;
             else
                 g_cmd &= ~(1u << cmd);

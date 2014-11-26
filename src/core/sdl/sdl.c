@@ -10,6 +10,7 @@
 #include "sg/log.h"
 #include "sg/opengl.h"
 #include "sg/version.h"
+#include "../clock_impl.h"
 #include "../private.h"
 #include "SDL.h"
 #include <stdio.h>
@@ -164,7 +165,8 @@ sdl_init(int argc, char *argv[])
 
     sg_sdl_setvsync();
 
-    evt.type = SG_EVENT_VIDEO_INIT;
+    evt.common.time = sg_clock_get();
+    evt.common.type = SG_EVENT_VIDEO_INIT;
     sg_game_event(&evt);
 }
 
@@ -173,6 +175,7 @@ sdl_event_mousemove(SDL_MouseMotionEvent *e)
 {
     union sg_event ee;
     int width, height;
+    ee.mouse.time = sg_clock_convert_sdl(e->timestamp);
     if (sg_sdl.have_capture) {
         ee.mouse.type = SG_EVENT_MMOVEREL;
         ee.mouse.button = -1;
@@ -191,33 +194,35 @@ sdl_event_mousemove(SDL_MouseMotionEvent *e)
 static void
 sdl_event_mousebutton(SDL_MouseButtonEvent *e)
 {
-    struct sg_event_mouse ee;
+    union sg_event ee;
     int width, height;
     SDL_GetWindowSize(sg_sdl.window, &width, &height);
-    ee.type = e->type == SDL_MOUSEBUTTONDOWN ?
+    ee.mouse.time = sg_clock_convert_sdl(e->timestamp);
+    ee.mouse.type = e->type == SDL_MOUSEBUTTONDOWN ?
         SG_EVENT_MDOWN : SG_EVENT_MUP;
     switch (e->button) {
-    case SDL_BUTTON_LEFT:   ee.button = SG_BUTTON_LEFT;   break;
-    case SDL_BUTTON_MIDDLE: ee.button = SG_BUTTON_MIDDLE; break;
-    case SDL_BUTTON_RIGHT:  ee.button = SG_BUTTON_RIGHT;  break;
+    case SDL_BUTTON_LEFT:   ee.mouse.button = SG_BUTTON_LEFT;   break;
+    case SDL_BUTTON_MIDDLE: ee.mouse.button = SG_BUTTON_MIDDLE; break;
+    case SDL_BUTTON_RIGHT:  ee.mouse.button = SG_BUTTON_RIGHT;  break;
     default:
-        ee.button = SG_BUTTON_OTHER + e->button - 4;
+        ee.mouse.button = SG_BUTTON_OTHER + e->button - 4;
         break;
     }
-    ee.x = e->x;
-    ee.y = height - 1 - e->y;
-    sg_game_event((union sg_event *) &ee);
+    ee.mouse.x = e->x;
+    ee.mouse.y = height - 1 - e->y;
+    sg_game_event(&ee);
 }
 
 static void
 sdl_event_key(SDL_KeyboardEvent *e)
 {
-    struct sg_event_key ee;
-    ee.type = e->type == SDL_KEYDOWN ?
+    union sg_event ee;
+    ee.key.time = sg_clock_convert_sdl(e->timestamp);
+    ee.key.type = e->type == SDL_KEYDOWN ?
         SG_EVENT_KDOWN : SG_EVENT_KUP;
     /* SDL scancodes are just HID codes, which is what we use.  */
-    ee.key = e->keysym.scancode;
-    sg_game_event((union sg_event *) &ee);
+    ee.key.key = e->keysym.scancode;
+    sg_game_event(&ee);
 }
 
 #if 0
@@ -301,6 +306,7 @@ sdl_event_window(SDL_WindowEvent *e)
 
     sg_sdl.window_status = newstatus;
     sg_sdl_updatecapture();
+    ee.status.time = sg_clock_convert_sdl(e->timestamp);
     ee.status.type = SG_EVENT_WINDOW;
     ee.status.status = newstatus;
     sg_game_event(&ee);

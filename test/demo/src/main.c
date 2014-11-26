@@ -31,7 +31,7 @@ void
 sg_game_event(union sg_event *evt)
 {
     static int escape_down;
-    switch (evt->type) {
+    switch (evt->common.type) {
     case SG_EVENT_VIDEO_INIT:
         st_screen->init();
         return;

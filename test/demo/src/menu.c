@@ -91,7 +91,7 @@ static void st_menu_destroy(void)
 static void st_menu_event(union sg_event *evt)
 {
     int button;
-    switch (evt->type) {
+    switch (evt->common.type) {
     case SG_EVENT_KDOWN:
     case SG_EVENT_KUP:
         switch (evt->key.key) {
@@ -114,7 +114,7 @@ static void st_menu_event(union sg_event *evt)
             break;
         }
         if (button >= 0) {
-            if (evt->type == SG_EVENT_KDOWN) {
+            if (evt->key.type == SG_EVENT_KDOWN) {
                 if ((g_buttons & (1u << button)) == 0) {
                     switch (button) {
                     case ST_MENU_BUTTON_DOWN:
