@@ -96,13 +96,6 @@ sg_audio_loop(void *ptr)
 
     (void) ptr;
 
-    /*
-    event.audioinit.type = SG_EVENT_AUDIO_INIT;
-    event.audioinit.rate = rate;
-    event.audioinit.buffersize = periodsize;
-    sg_game_event(&event);
-    */
-
     while (!sg_atomic_get(&alsa->stop_requested)) {
         snd_pcm_wait(pcm, 1000);
         r = snd_pcm_status(pcm, status);
@@ -167,12 +160,6 @@ sg_audio_loop(void *ptr)
     }
 
 done:
-
-    /*
-    event.type = SG_EVENT_AUDIO_TERM;
-    sg_game_event(&event);
-    */
-
     sg_mixer_mixdown_free(mp);
 
     rr = pthread_mutex_lock(&alsa->mutex);

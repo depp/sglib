@@ -39,12 +39,6 @@ sg_game_event(union sg_event *evt)
     case SG_EVENT_VIDEO_TERM:
         return;
 
-    case SG_EVENT_AUDIO_INIT:
-        return;
-
-    case SG_EVENT_AUDIO_TERM:
-        return;
-
     case SG_EVENT_KDOWN:
         if (evt->key.key == KEY_Escape) {
             if (!escape_down) {

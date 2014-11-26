@@ -54,26 +54,6 @@ typedef enum {
      * all associated resources have been freed.
      */
     SG_EVENT_VIDEO_TERM,
-
-    /**
-     * @brief Audio system initialization event, uses
-     * ::sg_event_audioinit.
-     *
-     * This indicates that the audio system is now initialized, and
-     * the game audio callback will start being called.  Information
-     * about the audio system is stored in the event payload.  This
-     * event is processed synchronously by the audio system.
-     */
-    SG_EVENT_AUDIO_INIT,
-
-    /**
-     * @brief Audio system termination event, has no data.
-     *
-     * This indicates that the audio system has shut down.  In order
-     * for audio to play, the audio system must be reinitialized.
-     * This event is processed synchronously by the audio system.
-     */
-    SG_EVENT_AUDIO_TERM
 } sg_event_type_t;
 
 /**
@@ -202,33 +182,6 @@ struct sg_event_window {
 };
 
 /**
- * @brief Audio initialization event.
- */
-struct sg_event_audioinit {
-    /**
-     * @brief The event timestamp.
-     */
-    double time;
-
-    /**
-     * @brief The event type.
-     *
-     * Always ::SG_EVENT_AUDIO_INIT.
-     */
-    sg_event_type_t type;
-
-    /**
-     * @brief The new audio system sample rate, in Hz.
-     */
-    int rate;
-
-    /**
-     * @brief The buffer size for the audio system, in frames.
-     */
-    int buffersize;
-};
-
-/**
  * @brief Event.
  */
 union sg_event {
@@ -251,11 +204,6 @@ union sg_event {
      * @brief The window status event data.
      */
     struct sg_event_window status;
-
-    /**
-     * @brief The audio initialization event.
-     */
-    struct sg_event_audioinit audioinit;
 };
 
 #ifdef __cplusplus
