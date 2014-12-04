@@ -57,7 +57,7 @@ sg_cvartable_get(struct sg_cvartable *t, const char *keybuf)
         if (!key[pos][0])
             break;
         if (!memcmp(keybuf, key[pos], SG_CVARLEN))
-            return &t->value[pos];
+            return t->value[pos];
     }
     return NULL;
 }

@@ -96,7 +96,7 @@ sg_cvar_insert(const char *secbuf, const char *namebuf)
         *secptr = sectable;
     }
 
-    varptr = sg_cvartable_insert(&sg_cvar_section, namebuf);
+    varptr = sg_cvartable_insert(sectable, namebuf);
     if (!varptr)
         goto panic;
 
