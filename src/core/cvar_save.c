@@ -11,8 +11,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <stdio.h>
-
 static int
 sg_cvar_cmpname(const void *x, const void *y)
 {
