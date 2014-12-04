@@ -142,8 +142,9 @@ sdl_init(int argc, char *argv[])
         sdl_error("could not initialize LibSDL");
 
     sg_sys_init(argc - 1, argv + 1);
-    sg_cvar_defbool(NULL, "enable_hidpi", &sg_sdl.enable_hidpi,
-                    1, SG_CVAR_INITONLY);
+    sg_cvar_defbool(
+        "video", "enable_hidpi", "Enable high DPI display support",
+        &sg_sdl.enable_hidpi, 1, SG_CVAR_INITONLY | SG_CVAR_PERSISTENT);
     gameinfo = sg_game_info_defaults;
     sg_sys_getinfo(&gameinfo);
     SDL_SetHint(SDL_HINT_VIDEO_HIGHDPI_DISABLED,
@@ -174,7 +175,7 @@ sdl_init(int argc, char *argv[])
     evt.common.type = SG_EVENT_VIDEO_INIT;
     sg_game_event(&evt);
 
-    sg_cvar_save("config.ini", strlen("config.ini"), 1, NULL);
+    sg_cvar_save("config.ini", strlen("config.ini"), 0, NULL);
 }
 
 static void

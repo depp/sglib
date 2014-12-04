@@ -208,9 +208,9 @@ sg_path_init2(void)
 void
 sg_path_init(void)
 {
-    sg_cvar_defstring(NULL, "userpath", &sg_paths.cvar[0],
+    sg_cvar_defstring(NULL, "userpath", NULL, &sg_paths.cvar[0],
                       NULL, SG_CVAR_INITONLY);
-    sg_cvar_defstring(NULL, "datapath", &sg_paths.cvar[1],
+    sg_cvar_defstring(NULL, "datapath", NULL, &sg_paths.cvar[1],
                       NULL, SG_CVAR_INITONLY);
     sg_path_init2();
 }

@@ -153,12 +153,16 @@ sg_cvar_save(
             assert(cvar != NULL);
             if ((cvar->flags & SG_CVAR_PERSISTENT) == 0 && !save_all)
                 continue;
-            if (state != 2) {
+            if (state < 2) {
                 if (state == 1)
                     sg_textwriter_putc(&wp, '\n');
                 sg_textwriter_putf(&wp, "[%s]\n", secname);
                 state = 2;
+            } else {
+                sg_textwriter_putc(&wp, '\n');
             }
+            if (cvar->doc)
+                sg_textwriter_putf(&wp, "# %s\n", cvar->doc);
             if ((cvar->flags & SG_CVAR_HASPERSISTENT) == 0)
                 sg_textwriter_puts(&wp, "# ");
             switch (cvar->flags >> 16) {

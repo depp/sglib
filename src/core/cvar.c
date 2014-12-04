@@ -318,7 +318,11 @@ sg_cvar_set_impl(const char *fullname, size_t fullnamelen,
 }
 
 static void
-sg_cvar_define(const char *section, const char *name, union sg_cvar *cvar)
+sg_cvar_define(
+    const char *section,
+    const char *name,
+    const char *doc,
+    union sg_cvar *cvar)
 {
     char secbuf[SG_CVAR_NAMELEN + 1], namebuf[SG_CVAR_NAMELEN + 1];
     void **varptr;
@@ -351,13 +355,18 @@ sg_cvar_define(const char *section, const char *name, union sg_cvar *cvar)
             free(prev->cstring.persistent_value);
         free(prev);
     }
+    cvar->chead.doc = doc;
     *varptr = cvar;
 }
 
 void
-sg_cvar_defstring(const char *section, const char *name,
-                  struct sg_cvar_string *cvar,
-                  const char *value, unsigned flags)
+sg_cvar_defstring(
+    const char *section,
+    const char *name,
+    const char *doc,
+    struct sg_cvar_string *cvar,
+    const char *value,
+    unsigned flags)
 {
     char *cvalue;
     if (!value)
@@ -367,14 +376,19 @@ sg_cvar_defstring(const char *section, const char *name,
     cvar->value = cvalue;
     cvar->persistent_value = cvalue;
     cvar->default_value = value;
-    sg_cvar_define(section, name, (union sg_cvar *) cvar);
+    sg_cvar_define(section, name, doc, (union sg_cvar *) cvar);
 }
 
 void
-sg_cvar_defint(const char *section, const char *name,
-               struct sg_cvar_int *cvar,
-               int value, int min_value, int max_value,
-               unsigned flags)
+sg_cvar_defint(
+    const char *section,
+    const char *name,
+    const char *doc,
+    struct sg_cvar_int *cvar,
+    int value,
+    int min_value,
+    int max_value,
+    unsigned flags)
 {
     cvar->flags = (flags & SG_CVAR_PUBMASK) | (SG_CVAR_INT << 16);
     cvar->value = value;
@@ -382,14 +396,19 @@ sg_cvar_defint(const char *section, const char *name,
     cvar->default_value = value;
     cvar->min_value = min_value;
     cvar->max_value = max_value;
-    sg_cvar_define(section, name, (union sg_cvar *) cvar);
+    sg_cvar_define(section, name, doc, (union sg_cvar *) cvar);
 }
 
 void
-sg_cvar_deffloat(const char *section, const char *name,
-                 struct sg_cvar_float *cvar,
-                 double value, double min_value, double max_value,
-                 unsigned flags)
+sg_cvar_deffloat(
+    const char *section,
+    const char *name,
+    const char *doc,
+    struct sg_cvar_float *cvar,
+    double value,
+    double min_value,
+    double max_value,
+    unsigned flags)
 {
     cvar->flags = (flags & SG_CVAR_PUBMASK) | (SG_CVAR_FLOAT << 16);
     cvar->value = value;
@@ -397,19 +416,23 @@ sg_cvar_deffloat(const char *section, const char *name,
     cvar->default_value = value;
     cvar->min_value = min_value;
     cvar->max_value = max_value;
-    sg_cvar_define(section, name, (union sg_cvar *) cvar);
+    sg_cvar_define(section, name, doc, (union sg_cvar *) cvar);
 }
 
 void
-sg_cvar_defbool(const char *section, const char *name,
-                struct sg_cvar_bool *cvar,
-                int value, unsigned flags)
+sg_cvar_defbool(
+    const char *section,
+    const char *name,
+    const char *doc,
+    struct sg_cvar_bool *cvar,
+    int value,
+    unsigned flags)
 {
     cvar->flags = (flags & SG_CVAR_PUBMASK) | (SG_CVAR_BOOL << 16);
     cvar->value = value;
     cvar->persistent_value = value;
     cvar->default_value = value;
-    sg_cvar_define(section, name, (union sg_cvar *) cvar);
+    sg_cvar_define(section, name, doc, (union sg_cvar *) cvar);
 }
 
 void

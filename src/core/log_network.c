@@ -112,8 +112,9 @@ sg_log_network_init(void)
     int r;
     SOCKET sock = NO_SOCKET;
 
-    sg_cvar_defstring("log", "netaddr", &sg_log_netaddr,
-                      NULL, SG_CVAR_INITONLY);
+    sg_cvar_defstring(
+        "log", "netaddr", "Address and port for TCP network logging",
+        &sg_log_netaddr, NULL, SG_CVAR_INITONLY | SG_CVAR_PERSISTENT);
     addrstr = sg_log_netaddr.value;
     if (!*addrstr)
         return;

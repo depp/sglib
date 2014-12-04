@@ -39,6 +39,7 @@ enum {
  * @brief Header for a cvar.
  */
 struct sg_cvar_head {
+    const char *doc;
     unsigned flags;
 };
 
@@ -46,6 +47,7 @@ struct sg_cvar_head {
  * @brief A string cvar.
  */
 struct sg_cvar_string {
+    const char *doc;
     unsigned flags;
     char *value;
     char *persistent_value;
@@ -56,6 +58,7 @@ struct sg_cvar_string {
  * @brief An integer cvar.
  */
 struct sg_cvar_int {
+    const char *doc;
     unsigned flags;
     int value;
     int persistent_value;
@@ -68,6 +71,7 @@ struct sg_cvar_int {
  * @brief A floating-point cvar.
  */
 struct sg_cvar_float {
+    const char *doc;
     unsigned flags;
     double value;
     double persistent_value;
@@ -80,6 +84,7 @@ struct sg_cvar_float {
  * @brief A boolean cvar.
  */
 struct sg_cvar_bool {
+    const char *doc;
     unsigned flags;
     int value;
     int persistent_value;
@@ -104,20 +109,26 @@ union sg_cvar {
  *
  * @param section The cvar section.
  * @param name The cvar name.
+ * @param doc The cvar description.
  * @param cvar The cvar.
  * @param value The initial value.
  * @param flags The cvar's flags.
  */
 void
-sg_cvar_defstring(const char *section, const char *name,
-                  struct sg_cvar_string *cvar,
-                  const char *value, unsigned flags);
+sg_cvar_defstring(
+    const char *section,
+    const char *name,
+    const char *doc,
+    struct sg_cvar_string *cvar,
+    const char *value,
+    unsigned flags);
 
 /**
  * @brief Define an integer cvar.
  *
  * @param section The cvar section.
  * @param name The cvar name.
+ * @param doc The cvar description.
  * @param cvar The cvar.
  * @param value The initial value.
  * @param min_value The minimum value.
@@ -125,39 +136,55 @@ sg_cvar_defstring(const char *section, const char *name,
  * @param flags The cvar's flags.
  */
 void
-sg_cvar_defint(const char *section, const char *name,
-               struct sg_cvar_int *cvar,
-               int value, int min_value, int max_value,
-               unsigned flags);
+sg_cvar_defint(
+    const char *section,
+    const char *name,
+    const char *doc,
+    struct sg_cvar_int *cvar,
+    int value,
+    int min_value,
+    int max_value,
+    unsigned flags);
 
 /**
  * @brief Define a floating-point cvar.
  *
  * @param section The cvar section.
  * @param name The cvar name.
+ * @param doc The cvar description.
  * @param cvar The cvar.
  * @param value The initial value.
  * @param flags The cvar's flags.
  */
 void
-sg_cvar_deffloat(const char *section, const char *name,
-                 struct sg_cvar_float *cvar,
-                 double value, double min_value, double max_value,
-                 unsigned flags);
+sg_cvar_deffloat(
+    const char *section,
+    const char *name,
+    const char *doc,
+    struct sg_cvar_float *cvar,
+    double value,
+    double min_value,
+    double max_value,
+    unsigned flags);
 
 /**
  * @brief Define a boolean cvar.
  *
  * @param section The cvar section.
  * @param name The cvar name.
+ * @param doc The cvar description.
  * @param cvar The cvar.
  * @param value The initial value.
  * @param flags The cvar's flags.
  */
 void
-sg_cvar_defbool(const char *section, const char *name,
-                struct sg_cvar_bool *cvar,
-                int value, unsigned flags);
+sg_cvar_defbool(
+    const char *section,
+    const char *name,
+    const char *doc,
+    struct sg_cvar_bool *cvar,
+    int value,
+    unsigned flags);
 
 /**
  * @brief Set a cvar.
@@ -169,8 +196,11 @@ sg_cvar_defbool(const char *section, const char *name,
  * @return Zero if successful, nonzero if an error occurred.
  */
 int
-sg_cvar_set(const char *fullname, size_t fullnamelen,
-            const char *value, unsigned flags);
+sg_cvar_set(
+    const char *fullname,
+    size_t fullnamelen,
+    const char *value,
+    unsigned flags);
 
 /**
  * @brief Write all cvars to a file.

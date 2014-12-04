@@ -15,12 +15,15 @@ sg_mixer_init(void)
     unsigned count;
 
 #if defined ENABLE_AUDIO_ALSA
-    sg_cvar_defstring("audio", "alsadevice", &sg_mixer.cvar_alsadevice,
+    sg_cvar_defstring("audio", "alsadevice", "ALSA audio device",
+                      &sg_mixer.cvar_alsadevice,
                       NULL, SG_CVAR_PERSISTENT);
 #endif
-    sg_cvar_defint("audio", "rate", &sg_mixer.cvar_rate,
+    sg_cvar_defint("audio", "rate", "Requested mixdown sample rate",
+                   &sg_mixer.cvar_rate,
                    48000, 8000, 192000, SG_CVAR_PERSISTENT);
-    sg_cvar_defint("audio", "bufsize", &sg_mixer.cvar_bufsize,
+    sg_cvar_defint("audio", "bufsize", "Mixdown buffer size",
+                   &sg_mixer.cvar_bufsize,
                    1024, 32, 65536, SG_CVAR_PERSISTENT);
 
     sg_mixer_system_init();

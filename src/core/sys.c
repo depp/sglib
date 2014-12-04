@@ -56,9 +56,12 @@ sg_sys_init(int argc, char **argv)
     sg_record_init();
     sg_game_init();
 
-    sg_cvar_defbool(NULL, "showfps", &sg_sys.showfps, 0, 0);
-    sg_cvar_defint(NULL, "vsync", &sg_sys.vsync, 0, 0, 2, 0);
-    sg_cvar_defint(NULL, "maxfps", &sg_sys.maxfps, 120, 0, 1000, 0);
+    sg_cvar_defbool("video", "showfps", "Enable frame rate logging",
+                    &sg_sys.showfps, 0, SG_CVAR_PERSISTENT);
+    sg_cvar_defint("video", "vsync", "Vertical sync mode (0, 1, or 2)",
+                   &sg_sys.vsync, 0, 0, 2, SG_CVAR_PERSISTENT);
+    sg_cvar_defint("video", "maxfps", "Frame rate cap (0 to disable)",
+                   &sg_sys.maxfps, 120, 0, 1000, SG_CVAR_PERSISTENT);
 }
 
 void
