@@ -23,6 +23,7 @@ struct sg_sdl {
     int window_status;
     int want_capture;
     int have_capture;
+    struct sg_cvar_bool enable_hidpi;
 };
 
 static struct sg_sdl sg_sdl;
@@ -141,8 +142,12 @@ sdl_init(int argc, char *argv[])
         sdl_error("could not initialize LibSDL");
 
     sg_sys_init(argc - 1, argv + 1);
+    sg_cvar_defbool(NULL, "enable_hidpi", &sg_sdl.enable_hidpi,
+                    1, SG_CVAR_INITONLY);
     gameinfo = sg_game_info_defaults;
     sg_sys_getinfo(&gameinfo);
+    SDL_SetHint(SDL_HINT_VIDEO_HIGHDPI_DISABLED,
+                sg_sdl.enable_hidpi.value ? "0" : "1");
 
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
     sg_sdl.window = SDL_CreateWindow(
@@ -151,7 +156,7 @@ sdl_init(int argc, char *argv[])
         SDL_WINDOWPOS_UNDEFINED,
         gameinfo.default_width,
         gameinfo.default_height,
-        SDL_WINDOW_OPENGL);
+        SDL_WINDOW_OPENGL | SDL_WINDOW_ALLOW_HIGHDPI);
     if (!sg_sdl.window)
         sdl_error("could not open window");
 
@@ -350,7 +355,7 @@ sdl_main(void)
             }
         }
 
-        SDL_GetWindowSize(sg_sdl.window, &width, &height);
+        SDL_GL_GetDrawableSize(sg_sdl.window, &width, &height);
         sg_sys_draw(width, height, sg_clock_get());
         SDL_GL_SwapWindow(sg_sdl.window);
 
