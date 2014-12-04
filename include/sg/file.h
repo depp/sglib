@@ -4,6 +4,7 @@
 #ifndef SG_FILE_H
 #define SG_FILE_H
 #include "sg/atomic.h"
+#include <stdarg.h>
 #include <stddef.h>
 #include <stdint.h>
 #ifdef __cplusplus
@@ -316,9 +317,9 @@ sg_writer_write(
 /**
  * @brief Commit changes to the file.
  *
- * Once this function is called, the only valid operation on the file
- * is sg_writer_close().  This will write out all remaining data to
- * disk, and atomically replace the old file with the new data.
+ * This will write out all remaining data to disk, and atomically
+ * replace the old file with the new data.  After this function is
+ * called, the only valid operation on the file is sg_writer_close().
  *
  * @param fp The file.
  * @return Zero if successful, nonzero if an error occurred.
@@ -339,6 +340,128 @@ sg_writer_commit(
 void
 sg_writer_close(
     struct sg_writer *fp);
+
+/**
+ * @brief An output stream for writing text to a file.
+ */
+struct sg_textwriter {
+    struct sg_writer *fp;
+    char *buf;
+    char *ptr;
+    char *end;
+    struct sg_error *err;
+};
+
+/**
+ * @brief Open a file for writing.
+ *
+ * The new data will atomically replace any existing file, once the
+ * new file is complete.
+ *
+ * @param wp The file handle to initialize.
+ * @param path The file's relative path.
+ * @param pathlen The length of the path, in bytes.
+ * @param err On failure, the error.
+ * @return Zero if successful, nonzero if an error occurred.
+ */
+int
+sg_textwriter_open(
+    struct sg_textwriter *wp,
+    const char *path,
+    size_t pathlen,
+    struct sg_error **err);
+
+/**
+ * @brief Commit changes to the file.
+ *
+ * This will write out all remaining data to disk, and atomically
+ * replace the old file with the new data.  After this function is
+ * called, the only valid operation on the file is sg_writer_close().
+ *
+ * @param wp The file.
+ * @return Zero if successful, nonzero if an error occurred.
+ */
+int
+sg_textwriter_commit(
+    struct sg_textwriter *wp,
+    struct sg_error **err);
+
+/**
+ * @brief Close a file.
+ *
+ * If the output has not been committed, then closing the file will
+ * erase the file.
+ *
+ * @param fp The file.
+ */
+void
+sg_textwriter_close(
+    struct sg_textwriter *wp);
+
+/**
+ * @brief Write a single character to a file.
+ *
+ * @param wp The file.
+ * @param c The character to write, a Unicode code point.
+ * @return Zero if successful, nonzero if an error occurred.
+ */
+int
+sg_textwriter_putc(
+    struct sg_textwriter *wp,
+    int c);
+
+/**
+ * @brief Write a NUL-terminated string to a file.
+ *
+ * @param wp The file.
+ * @param str The NUL-terminated string to write, encoded in UTF-8.
+ * @return Zero if successful, nonzero if an error occurred.
+ */
+int
+sg_textwriter_puts(
+    struct sg_textwriter *wp,
+    const char *str);
+
+/**
+ * @brief Write a string to a file.
+ *
+ * @param wp The file.
+ * @param ptr The string to write, encoded in UTF-8.
+ * @param len The length of the string in bytes.
+ * @return Zero if successful, nonzero if an error occurred.
+ */
+int
+sg_textwriter_putmem(
+    struct sg_textwriter *wp,
+    const char *ptr,
+    size_t len);
+
+/**
+ * @brief Write a formatted string to a file.
+ *
+ * @param wp The file.
+ * @param fmt The format string.
+ * @return Zero if successful, nonzero if an error occurred.
+ */
+int
+sg_textwriter_putf(
+    struct sg_textwriter *wp,
+    const char *fmt,
+    ...);
+
+/**
+ * @brief Write a formatted string to a file.
+ *
+ * @param wp The file.
+ * @param fmt The format string.
+ * @param ap The format arguments.
+ * @return Zero if successful, nonzero if an error occurred.
+ */
+int
+sg_textwriter_putv(
+    struct sg_textwriter *wp,
+    const char *fmt,
+    va_list ap);
 
 #ifdef __cplusplus
 }

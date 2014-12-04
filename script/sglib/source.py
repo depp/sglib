@@ -57,12 +57,14 @@ src.add(path='src/core', sources='''
 clock.c maybe_sdl
 clock_impl.h
 cvar.c
-cvartable.c
-cvartable.h
+cvar_private.h
+cvar_save.c
+cvar_table.c
 error.c
 file_impl.h
 file_load.c
 file_posix.c posix
+file_textwriter.c
 file_win.c windows
 keyid.c
 keytable_evdev.c linux

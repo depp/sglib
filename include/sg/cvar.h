@@ -7,6 +7,8 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+struct sg_error;
+
 /**
  * @file sg/cvar.h
  *
@@ -169,6 +171,22 @@ sg_cvar_defbool(const char *section, const char *name,
 int
 sg_cvar_set(const char *fullname, size_t fullnamelen,
             const char *value, unsigned flags);
+
+/**
+ * @brief Write all cvars to a file.
+ *
+ * @param path Path to the output file.
+ * @param pathlen Length of the path, in bytes.
+ * @param save_all Whether to save non-persistent cvars.
+ * @param err On failure, the error.
+ * @return Zero if successful, nonzero if an error occurred.
+ */
+int
+sg_cvar_save(
+    const char *path,
+    size_t pathlen,
+    int save_all,
+    struct sg_error **err);
 
 #ifdef __cplusplus
 }

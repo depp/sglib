@@ -173,6 +173,8 @@ sdl_init(int argc, char *argv[])
     evt.common.time = sg_clock_get();
     evt.common.type = SG_EVENT_VIDEO_INIT;
     sg_game_event(&evt);
+
+    sg_cvar_save("config.ini", strlen("config.ini"), 1, NULL);
 }
 
 static void

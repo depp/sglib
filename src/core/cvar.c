@@ -1,7 +1,7 @@
 /* Copyright 2012-2014 Dietrich Epp.
    This file is part of SGLib.  SGLib is licensed under the terms of the
    2-clause BSD license.  For more information, see LICENSE.txt. */
-#include "cvartable.h"
+#include "cvar_private.h"
 #include "private.h"
 #include "sg/cvar.h"
 #include "sg/entry.h"
@@ -12,34 +12,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-/* The default cvar section.  */
-static const char SG_CVAR_DEFAULTSECTION[] = "general";
+const char SG_CVAR_DEFAULTSECTION[SG_CVAR_NAMELEN] = "general";
 
-/* Maximum length for cvar strings.  */
-#define SG_CVAR_MAXLEN 1023
-
-/* Private cvar flags.  */
-enum {
-    /* The cvar has a value which should be saved to the configuration
-       file in the "persistent_value" slot.  */
-    SG_CVAR_HASPERSISTENT = 020,
-    /* Allow a cvar to be created if it does not exist.  */
-    SG_CVAR_CREATE = 040,
-
-    SG_CVAR_PUBMASK = 017
-};
-
-/* Cvar types.  */
-enum {
-    SG_CVAR_STRING = 1,
-    SG_CVAR_USER = 2,
-    SG_CVAR_INT = 3,
-    SG_CVAR_FLOAT = 4,
-    SG_CVAR_BOOL = 5
-};
-
-/* All cvar sections.  */
-static struct sg_cvartable sg_cvar_section;
+struct sg_cvartable sg_cvar_section;
 
 /* Test whether a string is a member of a set.  The set is a string,
    with each element terminated by a NUL byte, and the set terminated
@@ -136,7 +111,7 @@ sg_cvar_set_obj(const char *secbuf, const char *namebuf, union sg_cvar *cvar,
         char *newstring, *prevstring;
         size_t len;
         len = strlen(value);
-        if (len > SG_CVAR_MAXLEN) {
+        if (len > SG_CVAR_VALUELEN) {
             msg = "value is too long";
             goto fail;
         }
@@ -290,7 +265,7 @@ sg_cvar_set_impl(const char *fullname, size_t fullnamelen,
     const char *p;
     const char *section, *name;
     size_t sectionlen, namelen;
-    char secbuf[SG_CVARLEN + 1], namebuf[SG_CVARLEN + 1];
+    char secbuf[SG_CVAR_NAMELEN + 1], namebuf[SG_CVAR_NAMELEN + 1];
     int r;
     union sg_cvar *cvar;
 
@@ -345,7 +320,7 @@ sg_cvar_set_impl(const char *fullname, size_t fullnamelen,
 static void
 sg_cvar_define(const char *section, const char *name, union sg_cvar *cvar)
 {
-    char secbuf[SG_CVARLEN + 1], namebuf[SG_CVARLEN + 1];
+    char secbuf[SG_CVAR_NAMELEN + 1], namebuf[SG_CVAR_NAMELEN + 1];
     void **varptr;
     unsigned type;
     union sg_cvar *prev;
