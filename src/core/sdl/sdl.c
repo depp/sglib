@@ -144,14 +144,8 @@ sdl_init(int argc, char *argv[])
 
     sg_sys_init(&gameinfo, argc - 1, argv + 1);
 
-    sg_cvar_defbool(
-        "video", "enable_hidpi", "Enable high DPI display support",
-        &sg_sdl.enable_hidpi, 1, SG_CVAR_INITONLY | SG_CVAR_PERSISTENT);
-    SDL_SetHint(SDL_HINT_VIDEO_HIGHDPI_DISABLED,
-                sg_sdl.enable_hidpi.value ? "0" : "1");
-
     flags = SDL_WINDOW_OPENGL;
-    if (sg_sdl.enable_hidpi.value &&
+    if (sg_sys.hidpi.value &&
         (gameinfo.flags & SG_GAME_ALLOW_HIDPI) != 0) {
         flags |= SDL_WINDOW_ALLOW_HIGHDPI;
     }

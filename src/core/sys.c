@@ -195,6 +195,9 @@ sg_sys_init(
     sg_cvar_defstring(
         "video", "size", "Window size, e.g., 1920x1080 or 1080p",
         &sg_sys.vidsize, sg_sys_defaultsize, SG_CVAR_PERSISTENT);
+    sg_cvar_defbool(
+        "video", "hidpi", "Enable high DPI display support",
+        &sg_sys.hidpi, 1, SG_CVAR_INITONLY | SG_CVAR_PERSISTENT);
 }
 
 void

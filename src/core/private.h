@@ -12,6 +12,7 @@ struct sg_sys {
     struct sg_cvar_int vsync;
     struct sg_cvar_int maxfps;
     struct sg_cvar_string vidsize;
+    struct sg_cvar_bool hidpi;
 };
 
 extern struct sg_sys sg_sys;
