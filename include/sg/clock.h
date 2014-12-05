@@ -35,7 +35,7 @@ sg_clock_get(void);
  * @brief Get the current UTC date and time as an ISO-8601 string.
  *
  * @param date A buffer of size ::SG_DATE_LEN to store the result.
- * @param shortfmt Whether to use the short format (whole seconds).
+ * @param shortfmt If true, delimiters will not be used.
  * @return The number of characters written, not counting the NUL
  * terminator.
  */
