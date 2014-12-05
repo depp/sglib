@@ -6,8 +6,6 @@
 struct sg_game_info;
 union sg_event;
 
-extern const struct sg_game_info sg_game_info_defaults;
-
 /* Common globals */
 struct sg_sys {
     struct sg_cvar_bool showfps;
@@ -56,15 +54,13 @@ sg_net_init(void);
 
 /* Initialize all library subsystems and the game.  The arguments
    should not include the executable name, i.e., if called from
-   main(), call sg_sys_init(argc-1, argv+1).  */
+   main(), call sg_sys_init(argc-1, argv+1).  This will fill in the
+   info structure with values from the game.  */
 void
-sg_sys_init(int argc, char **argv);
-
-/* Get information about the game.  Details not provided by the game
-   are filled in with sensible defaults.  This should be called by
-   platform code instead of sg_game_getinfo().  */
-void
-sg_sys_getinfo(struct sg_game_info *info);
+sg_sys_init(
+    struct sg_game_info *info,
+    int argc,
+    char **argv);
 
 /* Draw the current frame.  */
 void

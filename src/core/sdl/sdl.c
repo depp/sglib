@@ -135,21 +135,25 @@ sdl_init(int argc, char *argv[])
     GLenum err;
     union sg_event evt;
     struct sg_game_info gameinfo;
-    int flags;
+    unsigned flags;
 
     flags = SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_EVENTS;
     if (SDL_Init(flags))
         sdl_error("could not initialize LibSDL");
 
-    sg_sys_init(argc - 1, argv + 1);
+    sg_sys_init(&gameinfo, argc - 1, argv + 1);
+
     sg_cvar_defbool(
         "video", "enable_hidpi", "Enable high DPI display support",
         &sg_sdl.enable_hidpi, 1, SG_CVAR_INITONLY | SG_CVAR_PERSISTENT);
-    gameinfo = sg_game_info_defaults;
-    sg_sys_getinfo(&gameinfo);
     SDL_SetHint(SDL_HINT_VIDEO_HIGHDPI_DISABLED,
                 sg_sdl.enable_hidpi.value ? "0" : "1");
 
+    flags = SDL_WINDOW_OPENGL;
+    if (sg_sdl.enable_hidpi.value &&
+        (gameinfo.flags & SG_GAME_ALLOW_HIDPI) != 0) {
+        flags |= SDL_WINDOW_ALLOW_HIGHDPI;
+    }
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
     sg_sdl.window = SDL_CreateWindow(
         gameinfo.name,
@@ -157,7 +161,7 @@ sdl_init(int argc, char *argv[])
         SDL_WINDOWPOS_UNDEFINED,
         gameinfo.default_width,
         gameinfo.default_height,
-        SDL_WINDOW_OPENGL | SDL_WINDOW_ALLOW_HIGHDPI);
+        flags);
     if (!sg_sdl.window)
         sdl_error("could not open window");
 

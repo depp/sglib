@@ -29,15 +29,18 @@ sg_sys_siginit(void)
 
 #endif
 
-const struct sg_game_info sg_game_info_defaults = {
+static const struct sg_game_info SG_GAME_INFO_DEFAULTS = {
     /* minimum width, height */
-    1280 / 4, 720 / 4,
+    320, 180,
 
     /* default width, height */
     1280, 720,
 
     /* min, max aspect ratio */
     1.25, 4.0,
+
+    /* flags */
+    SG_GAME_ALLOW_HIDPI,
 
     /* name */
     "Game"
@@ -65,6 +68,7 @@ sg_sys_parseargs(
 
 void
 sg_sys_init(
+    struct sg_game_info *info,
     int argc,
     char **argv)
 {
@@ -93,30 +97,9 @@ sg_sys_init(
                    &sg_sys.vsync, 0, 0, 2, SG_CVAR_PERSISTENT);
     sg_cvar_defint("video", "maxfps", "Frame rate cap (0 to disable)",
                    &sg_sys.maxfps, 150, 0, 1000, SG_CVAR_PERSISTENT);
-}
 
-void
-sg_sys_getinfo(struct sg_game_info *info)
-{
-    info->min_width = 320;
-    info->min_height = 180;
-    info->default_width = 1280;
-    info->default_height = 720;
-    info->min_aspect = 1.25;
-    info->max_aspect = 2.0;
+    memcpy(info, &SG_GAME_INFO_DEFAULTS, sizeof(*info));
     sg_game_getinfo(info);
-    if (info->min_width < 1)
-        info->min_width = 1;
-    if (info->min_height < 1)
-        info->min_height = 1;
-    if (info->default_width < info->min_width)
-        info->default_width = info->min_width;
-    if (info->default_height < info->min_height)
-        info->default_height = info->min_height;
-    if (info->min_aspect < 0.125)
-        info->min_aspect = 0.125;
-    if (info->max_aspect > 8.0)
-        info->max_aspect = 8.0;
 }
 
 void

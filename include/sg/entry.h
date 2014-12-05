@@ -23,6 +23,16 @@ struct sg_logger;
  */
 
 /**
+ * @brief Game flags, returned in the ::sg_game_info structure.
+ */
+enum {
+    /**
+     * @brief Allow high resolution windows.
+     */
+    SG_GAME_ALLOW_HIDPI = 01
+};
+
+/**
  * @brief Game startup information.
  */
 struct sg_game_info {
@@ -42,6 +52,9 @@ struct sg_game_info {
     /** @brief The maximum window aspect ratio, width divided by
         height.  */
     double max_aspect;
+
+    /** @brief Game flags.  */
+    unsigned flags;
 
     /** @brief The name of the game.  */
     const char *name;
