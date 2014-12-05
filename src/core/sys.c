@@ -212,7 +212,7 @@ sg_sys_draw(int width, int height, double time)
         char buf[SG_SYS_SIZESZ];
         sg_sys_fmtsize(buf, width, height);
         sg_cvar_set_obj("video", "size", (union sg_cvar *) &sg_sys.vidsize,
-                        buf, SG_CVAR_PERSISTENT);
+                        buf, last_width != 0 ? SG_CVAR_PERSISTENT : 0);
         sg_sys.vidsize.flags &= ~SG_CVAR_MODIFIED;
         last_width = width;
         last_height = height;
