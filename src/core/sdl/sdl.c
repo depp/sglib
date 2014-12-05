@@ -176,7 +176,7 @@ sdl_init(int argc, char *argv[])
     sg_game_event(&evt);
 
     sg_cvar_loadfile("config2", strlen("config2"),
-                     SG_CVAR_CREATE, NULL);
+                     SG_CVAR_CREATE | SG_CVAR_PERSISTENT, NULL);
     sg_cvar_save("config.ini", strlen("config.ini"), 0, NULL);
 }
 

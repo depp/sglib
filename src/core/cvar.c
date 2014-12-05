@@ -114,17 +114,24 @@ sg_cvar_set_obj(
         BAD_BOOL[] = "invalid boolean";
     const char *msg;
     unsigned cflags = cvar->chead.flags, type = cflags >> 16;
-    int clamped = 0;
+    int clamped = 0, set_current, set_persistent;
 
     if (cflags & SG_CVAR_READONLY) {
         msg = "cvar is read-only";
         goto fail;
     }
 
-    if ((cflags & SG_CVAR_INITONLY) && sg_cvar_initted &&
-        !(flags & SG_CVAR_DEFINITION)) {
-        msg = "cvar can only be set at startup";
-        goto fail;
+    set_current = ((cflags & SG_CVAR_INITONLY) == 0 ||
+                   sg_cvar_initted == 0 ||
+                   (flags & SG_CVAR_DEFINITION) != 0);
+    set_persistent = (cflags & SG_CVAR_PERSISTENT) != 0;
+    if (!set_current) {
+        sg_logf(
+            set_persistent ? SG_LOG_WARN : SG_LOG_ERROR,
+            "Cvar %s.%s can only be set at startup.",
+            secbuf, namebuf);
+        if (!set_persistent)
+            return -1;
     }
 
     switch (type) {
@@ -144,14 +151,17 @@ sg_cvar_set_obj(
             return -1;
         }
         memcpy(newstring, value, len + 1);
-        prevstring = cvar->cstring.value;
-        if (prevstring != cvar->cstring.persistent_value &&
-            prevstring != cvar->cstring.default_value)
-            free(prevstring);
-        cvar->cstring.value = newstring;
-        if (flags & SG_CVAR_PERSISTENT) {
+        if (set_current) {
+            prevstring = cvar->cstring.value;
+            if (prevstring != cvar->cstring.persistent_value &&
+                prevstring != cvar->cstring.default_value)
+                free(prevstring);
+            cvar->cstring.value = newstring;
+        }
+        if (set_persistent) {
             prevstring = cvar->cstring.persistent_value;
-            if (prevstring != cvar->cstring.default_value)
+            if (prevstring != cvar->cstring.value &&
+                prevstring != cvar->cstring.default_value)
                 free(prevstring);
             cvar->cstring.persistent_value = newstring;
         }
@@ -186,8 +196,9 @@ sg_cvar_set_obj(
         } else {
             newint = (int) newintl;
         }
-        cvar->cint.value = newint;
-        if (flags & SG_CVAR_PERSISTENT)
+        if (set_current)
+            cvar->cint.value = newint;
+        if (set_persistent)
             cvar->cint.persistent_value = newint;
     }
         break;
@@ -217,8 +228,9 @@ sg_cvar_set_obj(
             clamped = 1;
             newfloat = cvar->cfloat.min_value;
         }
-        cvar->cfloat.value = newfloat;
-        if (flags & SG_CVAR_PERSISTENT)
+        if (set_current)
+            cvar->cfloat.value = newfloat;
+        if (set_persistent)
             cvar->cfloat.value = newfloat;
     }
         break;
@@ -234,8 +246,9 @@ sg_cvar_set_obj(
             msg = BAD_BOOL;
             goto fail;
         }
-        cvar->cbool.value = newbool;
-        if (flags & SG_CVAR_PERSISTENT)
+        if (set_current)
+            cvar->cbool.value = newbool;
+        if (set_persistent)
             cvar->cbool.persistent_value = newbool;
     }
         break;
@@ -250,7 +263,11 @@ sg_cvar_set_obj(
                 secbuf, namebuf);
     }
 
-    cvar->chead.flags = cflags | SG_CVAR_MODIFIED;
+    if (set_current)
+        cflags |= SG_CVAR_MODIFIED;
+    if (set_persistent)
+        cflags |= SG_CVAR_HASPERSISTENT;
+    cvar->chead.flags = cflags;
     return 0;
 
 fail:
