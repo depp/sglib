@@ -18,13 +18,18 @@ struct sg_cvartable sg_cvar_section;
 
 enum {
     /* The cvar is being created.  */
-    SG_CVAR_DEFINITION = 0100,
+    SG_CVAR_DEFINITION = 0200,
+
+    /* The cvar has been set at some point.  */
+    SG_CVAR_ISSET = 0400,
 
     /* Mask for flags passed to cvar definition functions.  */
     SG_CVAR_DEFMASK = (SG_CVAR_READONLY | SG_CVAR_INITONLY |
                        SG_CVAR_PERSISTENT),
+
     /* Mask for flags passed to cvar set functions.  */
-    SG_CVAR_SETMASK = SG_CVAR_PERSISTENT | SG_CVAR_CREATE
+    SG_CVAR_SETMASK = (SG_CVAR_PERSISTENT | SG_CVAR_CREATE |
+                       SG_CVAR_IFUNSET)
 };
 
 /* Test whether a string is a member of a set.  The set is a string,
@@ -130,6 +135,12 @@ sg_cvar_set_obj(
             secbuf, namebuf);
         if (!set_persistent)
             return -1;
+    }
+    if ((flags & SG_CVAR_IFUNSET) != 0 &&
+        (cflags & SG_CVAR_ISSET) != 0) {
+        set_current = 0;
+        if (!set_persistent)
+            return 0;
     }
 
     switch (type) {
@@ -262,7 +273,7 @@ sg_cvar_set_obj(
     }
 
     if (set_current)
-        cflags |= SG_CVAR_MODIFIED;
+        cflags |= SG_CVAR_MODIFIED | SG_CVAR_ISSET;
     if (set_persistent)
         cflags |= SG_CVAR_HASPERSISTENT;
     cvar->chead.flags = cflags;

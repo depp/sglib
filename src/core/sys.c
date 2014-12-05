@@ -2,6 +2,7 @@
    This file is part of SGLib.  SGLib is licensed under the terms of the
    2-clause BSD license.  For more information, see LICENSE.txt. */
 #include "sg/entry.h"
+#include "sg/error.h"
 #include "sg/cvar.h"
 #include "sg/log.h"
 #include "sg/rand.h"
@@ -68,6 +69,9 @@ sg_sys_init(
     int argc,
     char **argv)
 {
+    struct sg_error *err = NULL;
+    int r;
+
     sg_sys_siginit();
 
     /* Take the most direct path to loading the config file, so other
@@ -79,8 +83,17 @@ sg_sys_init(
     sg_log_init();
     sg_sys_parseargs(argc, argv);
     sg_path_init();
-    sg_cvar_loadfile("config", strlen("config"),
-                     SG_CVAR_CREATE | SG_CVAR_PERSISTENT, NULL);
+    r = sg_cvar_loadfile(
+        "config", strlen("config"),
+        SG_CVAR_CREATE | SG_CVAR_PERSISTENT | SG_CVAR_IFUNSET,
+        &err);
+    if (r) {
+        if (err->domain != &SG_ERROR_NOTFOUND) {
+            sg_logerrf(SG_LOG_ERROR, err,
+                       "Could not load configuration file.");
+        }
+        sg_error_clear(&err);
+    }
 
     sg_version_print();
     sg_rand_seed(&sg_rand_global, 1);

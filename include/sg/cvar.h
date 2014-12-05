@@ -34,8 +34,10 @@ enum {
     SG_CVAR_INITONLY = 04,
     /** @brief Saved to the user's configuration.  */
     SG_CVAR_PERSISTENT = 010,
-    /* Allow a cvar to be created if it does not exist.  */
-    SG_CVAR_CREATE = 020
+    /* @brief Allow a cvar to be created if it does not exist.  */
+    SG_CVAR_CREATE = 020,
+    /* @brief Don't override the existing value, if it is set.  */
+    SG_CVAR_IFUNSET = 040
 };
 
 /**
@@ -195,7 +197,9 @@ sg_cvar_defbool(
  * The flag ::SG_CVAR_PERSISTENT indicates that the value being set
  * should be saved to the configuration file.  The flag
  * ::SG_CVAR_CREATE indicates that the cvar should be created (as a
- * string variable) if it does not exist.
+ * string variable) if it does not exist.  The flag ::SG_CVAR_IFUNSET
+ * indicates that the cvar's current value should only be changed if
+ * it has not previously been changed.
  *
  * @param fullname The full name of the cvar, including the section.
  * @param fullnamelen The length of the full name.

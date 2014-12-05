@@ -16,7 +16,7 @@ extern const char SG_CVAR_DEFAULTSECTION[SG_CVAR_NAMELEN];
 enum {
     /* The cvar has a value which should be saved to the configuration
        file in the "persistent_value" slot.  */
-    SG_CVAR_HASPERSISTENT = 040
+    SG_CVAR_HASPERSISTENT = 0100
 };
 
 /* Cvar types.  */
