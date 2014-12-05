@@ -40,7 +40,8 @@ sg_game_event(union sg_event *evt)
         return;
 
     case SG_EVENT_KDOWN:
-        if (evt->key.key == KEY_Escape) {
+        switch (evt->key.key) {
+        case KEY_Escape:
             if (!escape_down) {
                 if (st_screen == &ST_MENU) {
                     sg_sys_quit();
@@ -52,8 +53,17 @@ sg_game_event(union sg_event *evt)
                 escape_down = 1;
             }
             return;
-        } else if (evt->key.key == KEY_Backslash) {
+        case KEY_Backslash:
             sg_record_screenshot();
+            return;
+
+        case KEY_F10:
+            sg_record_start(evt->common.time);
+            return;
+
+        case KEY_F11:
+            sg_record_stop();
+            return;
         }
         break;
 

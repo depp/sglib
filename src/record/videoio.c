@@ -60,12 +60,11 @@ sg_videoio_thread(void *arg)
                     continue;
                 failed = 1;
                 if (e == EPIPE) {
-                    sg_logs(iop->log, SG_LOG_ERROR,
-                            "video encoder closed pipe");
+                    sg_logs(SG_LOG_ERROR, "video encoder closed pipe.");
                 } else {
                     sg_error_errno(&err, e);
-                    sg_logerrs(iop->log, SG_LOG_ERROR, err,
-                               "could not write to video encoder");
+                    sg_logerrs(SG_LOG_ERROR, err,
+                               "Could not write to video encoder.");
                     sg_error_clear(&err);
                 }
                 break;
@@ -100,7 +99,6 @@ sg_videoio_init(struct sg_videoio *iop, size_t framebytes,
     pthread_attr_t attr;
     pthread_t thread;
 
-    iop->log = sg_logger_get("video");
     iop->framebytes = framebytes;
     iop->pipe = video_pipe;
     iop->framecount = 0;

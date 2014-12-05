@@ -131,12 +131,8 @@ screenshot.c !video_recording
 screenshot.h !video_recording
 videoio.c
 videoio.h
-videoparam.c
-videoparam.h
 videoproc.c
 videoproc.h
-videotime.c
-videotime.h
 ''')
 
 src.add(path='src/type', tags=['freetype'], sources='''

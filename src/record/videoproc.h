@@ -3,12 +3,9 @@
    2-clause BSD license.  For more information, see LICENSE.txt. */
 #include <sys/types.h>
 struct sg_error;
-struct sg_videoparam;
 
 /* Video encoder process */
 struct sg_videoproc {
-    struct sg_logger *log;
-
     /* Process ID of the video encoder */
     pid_t encoder;
 
@@ -23,7 +20,6 @@ struct sg_videoproc {
    process.  */
 int
 sg_videoproc_init(struct sg_videoproc *pp,
-                  const struct sg_videoparam *param,
                   const char *path, int width, int height,
                   struct sg_error **err);
 

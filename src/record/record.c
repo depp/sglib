@@ -10,17 +10,18 @@
 #include "sg/log.h"
 #include "sg/opengl.h"
 #include "sg/record.h"
+#include "sg/strbuf.h"
 #include "../core/private.h"
-#include <assert.h>
-#include <stdlib.h>
-#include <string.h>
 
 #if defined ENABLE_VIDEO_RECORDING
 # include "videoio.h"
-# include "videoparam.h"
 # include "videoproc.h"
-# include "videotime.h"
+# include "../core/file_impl.h"
 #endif
+
+#include <assert.h>
+#include <stdlib.h>
+#include <string.h>
 
 /* Flags for recording and buffers */
 enum {
@@ -66,13 +67,18 @@ struct sg_record {
 #if defined ENABLE_VIDEO_RECORDING
     int vwidth, vheight;
     size_t framebytes;
-    struct sg_videotime vtime;
+    int vrate, vframe;
+    double vtime;
     struct sg_videoproc vproc;
     struct sg_videoio vio;
 #endif
 };
 
 static struct sg_record sg_record;
+
+#if defined ENABLE_VIDEO_RECORDING
+struct sg_recordcvar sg_recordcvar;
+#endif
 
 static void
 sg_record_buf_read(struct sg_record_buf *buf,
@@ -141,8 +147,8 @@ sg_record_writevideo(void *mptr, int width, int height)
         return;
     }
     if (width != sg_record.vwidth || height != sg_record.vheight) {
-        sg_logs(sg_record.log, SG_LOG_WARN,
-                "framebuffer changed size, stopping video encoding");
+        sg_logs(SG_LOG_WARN,
+                "Framebuffer changed size, stopping video recording.");
         free(mptr);
         r = 0;
     } else {
@@ -213,40 +219,61 @@ sg_record_buf_process(struct sg_record_buf *buf)
     buf->height = 0;
 }
 
-void
-sg_record_init(void)
-{
-    int i;
-    sg_record.flags = 0;
-    for (i = 0; i < 2; i++) {
-        sg_record.buf[i].flags = 0;
-        sg_record.buf[i].buf = 0;
-    }
-}
-
 #if defined ENABLE_VIDEO_RECORDING
 
 void
-sg_record_frame_begin(unsigned *time)
+sg_record_init(void)
 {
-    unsigned curtime = *time, nextframe, flags;
-    int delta;
+    struct sg_recordcvar *r = &sg_recordcvar;
+    sg_cvar_defbool(
+        "recording", "enabled", "Enable video recording",
+        &r->enable, 0, SG_CVAR_PERSISTENT);
+    sg_cvar_defint(
+        "recording", "rate", "Frame rate for recorded videos",
+        &r->rate, 30, 1, 120, SG_CVAR_PERSISTENT);
+    sg_cvar_defstring(
+        "recording", "encoder", "Video encoding program (FFmpeg)",
+        &r->command, "ffmpeg", SG_CVAR_PERSISTENT);
+    sg_cvar_defstring(
+        "recording", "arguments", "Video encoding program arguments",
+        &r->arguments,
+        "-codec:v libx264 -preset fast -crf 18",
+        SG_CVAR_PERSISTENT);
+    sg_cvar_defstring(
+        "recording", "extension", "Video file extension",
+        &r->extension, "mp4", SG_CVAR_PERSISTENT);
+}
+
+void
+sg_record_frame_begin(double *time)
+{
+    double curtime = *time, nextframe;
+    unsigned flags;
 
     flags = sg_record.flags;
     flags |= SG_RECORD_INFRAME;
     if ((flags & SG_RECORD_VIDEO) != 0) {
-        nextframe = sg_videotime_time(&sg_record.vtime);
-        delta = curtime - nextframe;
-        if (delta >= 0) {
+        nextframe = sg_record.vtime +
+            (double) sg_record.vframe / (double) sg_record.vrate;
+        // sg_logf(SG_LOG_DEBUG, "%d %.3f", sg_record.vframe, nextframe);
+        if (nextframe <= curtime) {
             *time = nextframe;
             flags |= SG_RECORD_FRAME_VIDEO;
-            sg_videotime_next(&sg_record.vtime);
+            sg_record.vframe++;
+            if (sg_record.vframe >= sg_record.vrate) {
+                sg_record.vtime += 1.0;
+                sg_record.vframe = 0;
+            }
         }
     }
     sg_record.flags = flags;
 }
 
 #else
+
+void
+sg_record_init(void)
+{ }
 
 void
 sg_record_frame_begin(double *time)
@@ -312,12 +339,14 @@ sg_record_screenshot(void)
 #define MAX_EXTENSION 16
 
 void
-sg_record_start(unsigned timestamp)
+sg_record_start(double time)
 {
-    struct sg_videoparam param;
-    char path[SG_DATE_LEN + 4 + MAX_EXTENSION];
+    struct sg_recordcvar *cvar = &sg_recordcvar;
+    const char *ext;
+    struct sg_strbuf path;
+    char *path2;
     int r, width = sg_record.fwidth, height = sg_record.fheight;
-    size_t framebytes, extlen;
+    size_t framebytes;
     unsigned mask;
     struct sg_error *err = NULL;
 
@@ -329,34 +358,34 @@ sg_record_start(unsigned timestamp)
         return;
     framebytes = (size_t) 4 * width * height;
 
-    sg_videoparam_get(&param);
-
-    memcpy(path, "./", 2);
-    r = sg_clock_getdate(path + 2, 1);
+    sg_strbuf_init(&path, 31);
+    sg_strbuf_puts(&path, "video/");
+    sg_strbuf_reserve(&path, SG_DATE_LEN);
+    r = sg_clock_getdate(path.p, 1);
     assert(r >= 0 && r < SG_DATE_LEN);
-    r += 2;
-    extlen = strlen(param.extension);
-    if (extlen > MAX_EXTENSION) {
-        sg_logs(sg_record.log, SG_LOG_ERROR,
-                "video extension too long");
+    sg_strbuf_forcelen(&path, sg_strbuf_len(&path) + r);
+    ext = cvar->extension.value;
+    if (ext[0] != '.')
+        sg_strbuf_putc(&path, '.');
+    sg_strbuf_puts(&path, ext);
+
+    path2 = sg_file_createpath(path.s, sg_strbuf_len(&path), &err);
+    sg_strbuf_destroy(&path);
+    if (path2 == NULL) {
+        sg_logerrs(SG_LOG_ERROR, err,
+                   "Could not create output file.");
         return;
     }
-    if (param.extension[0] != '.') {
-        path[r] = '.';
-        r++;
-    }
-    memcpy(path + r, param.extension, extlen);
-    r += extlen;
-    path[r] = '\0';
 
-    sg_videotime_init(&sg_record.vtime, timestamp,
-                      param.rate_numer, param.rate_denom);
+    sg_record.vrate = cvar->rate.value;
+    sg_record.vframe = 0;
+    sg_record.vtime = time;
 
-    r = sg_videoproc_init(&sg_record.vproc, &param,
-                          path, width, height, &err);
+    r = sg_videoproc_init(&sg_record.vproc, path2, width, height, &err);
+    free(path2);
     if (r) {
-        sg_logerrs(sg_record.log, SG_LOG_ERROR, err,
-                   "could not start video encoder");
+        sg_logerrs(SG_LOG_ERROR, err,
+                   "Could not start video encoder.");
         sg_error_clear(&err);
         return;
     }
@@ -364,8 +393,8 @@ sg_record_start(unsigned timestamp)
     r = sg_videoio_init(&sg_record.vio, framebytes,
                         sg_record.vproc.pipe, &err);
     if (r) {
-        sg_logerrs(sg_record.log, SG_LOG_ERROR, err,
-                   "could not start video encoder IO thread");
+        sg_logerrs(SG_LOG_ERROR, err,
+                   "Could not start video encoder IO thread.");
         sg_error_clear(&err);
         sg_videoproc_destroy(&sg_record.vproc, 1);
         return;
@@ -386,9 +415,9 @@ sg_record_stop(void)
 #else
 
 void
-sg_record_start(unsigned timestamp)
+sg_record_start(double time)
 {
-    (void) timestamp;
+    (void) time;
 }
 
 void

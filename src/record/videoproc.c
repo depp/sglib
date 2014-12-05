@@ -2,7 +2,7 @@
    This file is part of SGLib.  SGLib is licensed under the terms of the
    2-clause BSD license.  For more information, see LICENSE.txt. */
 #include "cmdargs.h"
-#include "videoparam.h"
+#include "record.h"
 #include "videoproc.h"
 #include "sg/error.h"
 #include "sg/log.h"
@@ -53,10 +53,10 @@ sg_videoproc_child(const char *command,
 
 int
 sg_videoproc_init(struct sg_videoproc *pp,
-                  const struct sg_videoparam *param,
                   const char *path, int width, int height,
                   struct sg_error **err)
 {
+    struct sg_recordcvar *cvar = &sg_recordcvar;
     struct sg_cmdargs cmd;
     int r, fdes[2];
     pid_t pid;
@@ -70,7 +70,7 @@ sg_videoproc_init(struct sg_videoproc *pp,
         goto error;
     }
 
-    r = sg_cmdargs_push1(&cmd, param->command);
+    r = sg_cmdargs_push1(&cmd, cvar->command.value);
     if (r) goto nomem;
     r = sg_cmdargs_pushf(
         &cmd,
@@ -79,9 +79,9 @@ sg_videoproc_init(struct sg_videoproc *pp,
         " -r %d"
         " -s %dx%d"
         " -i pipe:3",
-        param->rate_numer, width, height);
+        cvar->rate.value, width, height);
     if (r) goto nomem;
-    r = sg_cmdargs_pushs(&cmd, param->arguments);
+    r = sg_cmdargs_pushs(&cmd, cvar->arguments.value);
     if (r) goto nomem;
     r = sg_cmdargs_push1(&cmd, path);
     if (r) goto nomem;
@@ -89,7 +89,7 @@ sg_videoproc_init(struct sg_videoproc *pp,
     pid = fork();
     if (pid == 0) {
         close(fdes[1]);
-        sg_videoproc_child(param->command, &cmd, fdes[0]);
+        sg_videoproc_child(cvar->command.value, &cmd, fdes[0]);
         abort();
     }
     if (pid < 0) {
@@ -100,7 +100,6 @@ sg_videoproc_init(struct sg_videoproc *pp,
     close(fdes[0]);
     sg_cmdargs_destroy(&cmd);
 
-    pp->log = sg_logger_get("video");
     pp->encoder = pid;
     pp->pipe = fdes[1];
     return 0;
@@ -135,33 +134,33 @@ sg_videoproc_wait(struct sg_videoproc *pp, int hang)
     pp->encoder = -1;
     if (rpid < 0) {
         sg_error_errno(&err, errno);
-        sg_logerrs(pp->log, SG_LOG_ERROR, err,
-                   "could not wait for encoder");
+        sg_logerrs(SG_LOG_ERROR, err,
+                   "Could not wait for encoder.");
         sg_error_clear(&err);
         pp->failed = 1;
         return 0;
     } else if (WIFEXITED(status)) {
         retcode = WEXITSTATUS(status);
         if (retcode == 0) {
-            sg_logs(pp->log, SG_LOG_INFO,
-                    "video encoder completed successfully");
+            sg_logs(SG_LOG_INFO,
+                    "Video encoder completed successfully.");
             return 0;
         } else {
-            sg_logf(pp->log, SG_LOG_ERROR,
-                    "video encoder failed with return code %d",
+            sg_logf(SG_LOG_ERROR,
+                    "Video encoder failed with return code %d.",
                     retcode);
             pp->failed = 1;
             return 0;
         }
     } else if (WIFSIGNALED(status)) {
-        sg_logf(pp->log, SG_LOG_ERROR,
-                "video encoder received signal %d",
+        sg_logf(SG_LOG_ERROR,
+                "Video encoder received signal %d.",
                 WTERMSIG(status));
         pp->failed = 1;
         return 0;
     } else {
-        sg_logs(pp->log, SG_LOG_ERROR,
-                "unknown exit status");
+        sg_logs(SG_LOG_ERROR,
+                "Unknown exit status.");
         pp->failed = 1;
         return 0;
     }
@@ -182,8 +181,8 @@ sg_videoproc_destroy(struct sg_videoproc *pp, int do_kill)
                 e = errno;
                 if (e != ESRCH) {
                     sg_error_errno(&err, e);
-                    sg_logerrs(pp->log, SG_LOG_ERROR, err,
-                               "could not terminate encoder");
+                    sg_logerrs(SG_LOG_ERROR, err,
+                               "Could not terminate encoder.");
                     sg_error_clear(&err);
                 }
             }
@@ -207,8 +206,8 @@ sg_videoproc_close(struct sg_videoproc *pp)
     if (r < 0) {
         pp->failed = 1;
         sg_error_errno(&err, errno);
-        sg_logerrs(pp->log, SG_LOG_ERROR, err,
-                   "could not close video encoder pipe");
+        sg_logerrs(SG_LOG_ERROR, err,
+                   "Could not close video encoder pipe.");
         sg_error_clear(&err);
     }
 }

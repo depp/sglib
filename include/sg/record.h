@@ -40,12 +40,12 @@ sg_record_screenshot(void);
 /**
  * @brief Start recording video.
  *
- * @param timestamp Timestamp at which video recording starts.
+ * @param time Timestamp at which video recording starts.
  * @param width Width of the video, in pixels.
  * @param height Height of the video, in pixels.
  */
 void
-sg_record_start(unsigned timestamp);
+sg_record_start(double time);
 
 /**
  * @brief Stop recording video.

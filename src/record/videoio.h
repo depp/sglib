@@ -16,8 +16,6 @@ typedef enum {
 
 /* Video I/O handle */
 struct sg_videoio {
-    struct sg_logger *log;
-
     size_t framebytes;
     int pipe;
     pthread_mutex_t mutex;
