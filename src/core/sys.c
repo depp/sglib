@@ -92,7 +92,7 @@ sg_sys_init(
     sg_cvar_defint("video", "vsync", "Vertical sync mode (0, 1, or 2)",
                    &sg_sys.vsync, 0, 0, 2, SG_CVAR_PERSISTENT);
     sg_cvar_defint("video", "maxfps", "Frame rate cap (0 to disable)",
-                   &sg_sys.maxfps, 120, 0, 1000, SG_CVAR_PERSISTENT);
+                   &sg_sys.maxfps, 150, 0, 1000, SG_CVAR_PERSISTENT);
 }
 
 void
