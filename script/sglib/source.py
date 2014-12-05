@@ -87,6 +87,7 @@ private.h
 rand.c
 shader.c
 sys.c
+timer.c
 version.c
 version_const.c
 winutf8.c windows

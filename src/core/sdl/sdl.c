@@ -359,6 +359,7 @@ sdl_main(void)
         SDL_GL_GetDrawableSize(sg_sdl.window, &width, &height);
         sg_sys_draw(width, height, sg_clock_get());
         SDL_GL_SwapWindow(sg_sdl.window);
+        sg_sys_postdraw();
 
         new_time = SDL_GetTicks();
         maxfps = sg_sys.maxfps.value;

@@ -2,7 +2,6 @@
    This file is part of SGLib.  SGLib is licensed under the terms of the
    2-clause BSD license.  For more information, see LICENSE.txt. */
 #include "sg/entry.h"
-#include "sg/error.h"
 #include "sg/cvar.h"
 #include "sg/log.h"
 #include "sg/rand.h"
@@ -69,9 +68,6 @@ sg_sys_init(
     int argc,
     char **argv)
 {
-    struct sg_error *err = NULL;
-    int r;
-
     sg_sys_siginit();
 
     /* Take the most direct path to loading the config file, so other
@@ -83,17 +79,7 @@ sg_sys_init(
     sg_log_init();
     sg_sys_parseargs(argc, argv);
     sg_path_init();
-    r = sg_cvar_loadfile(
-        "config", strlen("config"),
-        SG_CVAR_CREATE | SG_CVAR_PERSISTENT | SG_CVAR_IFUNSET,
-        &err);
-    if (r) {
-        if (err->domain != &SG_ERROR_NOTFOUND) {
-            sg_logerrf(SG_LOG_ERROR, err,
-                       "Could not load configuration file.");
-        }
-        sg_error_clear(&err);
-    }
+    sg_cvar_loadcfg();
 
     sg_version_print();
     sg_rand_seed(&sg_rand_global, 1);
@@ -107,8 +93,6 @@ sg_sys_init(
                    &sg_sys.vsync, 0, 0, 2, SG_CVAR_PERSISTENT);
     sg_cvar_defint("video", "maxfps", "Frame rate cap (0 to disable)",
                    &sg_sys.maxfps, 120, 0, 1000, SG_CVAR_PERSISTENT);
-
-    sg_cvar_save("config.ini", strlen("config.ini"), 0, NULL);
 }
 
 void
@@ -155,6 +139,12 @@ sg_sys_draw(int width, int height, double time)
     sg_record_frame_begin(&adjtime);
     sg_game_draw(width, height, adjtime);
     sg_record_frame_end(0, 0, width, height);
+}
+
+void
+sg_sys_postdraw(void)
+{
+    sg_timer_invoke();
 }
 
 void

@@ -3,8 +3,10 @@
    2-clause BSD license.  For more information, see LICENSE.txt. */
 #include "cvar_private.h"
 #include "private.h"
+#include "sg/clock.h"
 #include "sg/cvar.h"
 #include "sg/entry.h"
+#include "sg/error.h"
 #include "sg/log.h"
 #include <errno.h>
 #include <limits.h>
@@ -31,6 +33,37 @@ enum {
     SG_CVAR_SETMASK = (SG_CVAR_PERSISTENT | SG_CVAR_CREATE |
                        SG_CVAR_IFUNSET)
 };
+
+/* Timer callback for saving the configuration.  */
+static void
+sg_cvar_timercallback(double time, void *cxt)
+{
+    struct sg_error *err = NULL;
+    int r;
+
+    (void) time;
+    (void) cxt;
+
+    r = sg_cvar_save("config.ini", strlen("config.ini"), 0, &err);
+    if (r) {
+        sg_logerrf(SG_LOG_ERROR, err, "Could not save configuration.");
+        sg_error_clear(&err);
+    } else {
+        sg_logf(SG_LOG_INFO, "Configuration saved.");
+    }
+}
+
+/* Mark the configuration as changed, so it will be saved to disk
+   later.  The delay allows us to batch changes.  */
+static void
+sg_cvar_markdirty(void)
+{
+    sg_timer_register(
+        1.0,
+        SG_TIMER_RELTIME | SG_TIMER_KEEP_LAST,
+        sg_cvar_timercallback,
+        NULL);
+}
 
 /* Test whether a string is a member of a set.  The set is a string,
    with each element terminated by a NUL byte, and the set terminated
@@ -272,10 +305,13 @@ sg_cvar_set_obj(
                 secbuf, namebuf);
     }
 
-    if (set_current)
+    if (set_current) {
         cflags |= SG_CVAR_MODIFIED | SG_CVAR_ISSET;
-    if (set_persistent)
+    }
+    if (set_persistent) {
         cflags |= SG_CVAR_HASPERSISTENT;
+        sg_cvar_markdirty();
+    }
     cvar->chead.flags = cflags;
     return 0;
 
@@ -368,6 +404,7 @@ sg_cvar_define(
     }
     cvar->chead.doc = doc;
     *varptr = cvar;
+    sg_cvar_markdirty();
 }
 
 void
@@ -519,4 +556,25 @@ sg_cvar_set2(
 
     return sg_cvar_set_obj(section, name, cvar, value,
                            flags & SG_CVAR_SETMASK);
+}
+
+void
+sg_cvar_loadcfg(void)
+{
+    struct sg_error *err = NULL;
+    int r;
+
+    r = sg_cvar_loadfile(
+        "config", strlen("config"),
+        SG_CVAR_CREATE | SG_CVAR_PERSISTENT | SG_CVAR_IFUNSET,
+        &err);
+    if (r) {
+        if (err->domain != &SG_ERROR_NOTFOUND) {
+            sg_logerrf(SG_LOG_ERROR, err,
+                       "Could not load configuration file.");
+        }
+        sg_error_clear(&err);
+    }
+
+    sg_cvar_markdirty();
 }

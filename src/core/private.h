@@ -70,9 +70,22 @@ sg_sys_getinfo(struct sg_game_info *info);
 void
 sg_sys_draw(int width, int height, double time);
 
+/* Process events between frames.  This should be called after every
+   frame, with the OpenGL context still active.  */
+void
+sg_sys_postdraw(void);
+
+/* Invoke timer callbacks.  */
+void
+sg_timer_invoke(void);
+
 /* Perform any cleanup necessary before the process exits.  */
 void
 sg_sys_destroy(void);
+
+/* Load the main configuration file.  */
+void
+sg_cvar_loadcfg(void);
 
 #if defined(_WIN32)
 
