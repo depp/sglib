@@ -50,6 +50,8 @@ sg_cvar_save_str(struct sg_textwriter *wp, const char *secname,
             if (c == '\\' || c == '"') {
                 needs_quote = 1;
                 *pos++ = '\\';
+            } else if (c == '#' || c == ';') {
+                needs_quote = 1;
             }
             *pos++ = c;
         } else {

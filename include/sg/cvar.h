@@ -8,6 +8,7 @@
 extern "C" {
 #endif
 struct sg_error;
+struct sg_filedata;
 
 /**
  * @file sg/cvar.h
@@ -32,7 +33,9 @@ enum {
     /** @brief Can only be modified with command line arguments.  */
     SG_CVAR_INITONLY = 04,
     /** @brief Saved to the user's configuration.  */
-    SG_CVAR_PERSISTENT = 010
+    SG_CVAR_PERSISTENT = 010,
+    /* Allow a cvar to be created if it does not exist.  */
+    SG_CVAR_CREATE = 020
 };
 
 /**
@@ -189,10 +192,15 @@ sg_cvar_defbool(
 /**
  * @brief Set a cvar.
  *
+ * The flag ::SG_CVAR_PERSISTENT indicates that the value being set
+ * should be saved to the configuration file.  The flag
+ * ::SG_CVAR_CREATE indicates that the cvar should be created (as a
+ * string variable) if it does not exist.
+ *
  * @param fullname The full name of the cvar, including the section.
  * @param fullnamelen The length of the full name.
  * @param value The new cvar value.
- * @param flags Only SG_CVAR_PERSISTENT is recognized.
+ * @param flags Flags affecting how the cvar will be set.
  * @return Zero if successful, nonzero if an error occurred.
  */
 int
@@ -201,6 +209,32 @@ sg_cvar_set(
     size_t fullnamelen,
     const char *value,
     unsigned flags);
+
+/**
+ * @brief Read cvars from a file.
+ *
+ * @param path Path to the input file.
+ * @param pathlen Length of the path, in bytes.
+ * @param err On failure, the error.
+ */
+int
+sg_cvar_loadfile(
+    const char *path,
+    size_t pathlen,
+    unsigned flags,
+    struct sg_error **err);
+
+/**
+ * @brief Read cvars from a buffer.
+ *
+ * @param data The file buffer containing the configuration data.
+ * @param err On failure, the error.
+ */
+int
+sg_cvar_loadbuffer(
+    struct sg_filedata *data,
+    unsigned flags,
+    struct sg_error **err);
 
 /**
  * @brief Write all cvars to a file.

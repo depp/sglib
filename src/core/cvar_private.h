@@ -16,11 +16,7 @@ extern const char SG_CVAR_DEFAULTSECTION[SG_CVAR_NAMELEN];
 enum {
     /* The cvar has a value which should be saved to the configuration
        file in the "persistent_value" slot.  */
-    SG_CVAR_HASPERSISTENT = 020,
-    /* Allow a cvar to be created if it does not exist.  */
-    SG_CVAR_CREATE = 040,
-
-    SG_CVAR_PUBMASK = 017
+    SG_CVAR_HASPERSISTENT = 040
 };
 
 /* Cvar types.  */
@@ -46,18 +42,37 @@ struct sg_cvartable {
 /* Copy the key into a buffer of size SG_CVAR_NAMELEN + 1, return 0 on
    success, nonzero if the key is invalid.  */
 int
-sg_cvartable_getkey(char *keybuf, const char *key, size_t len);
+sg_cvartable_getkey(
+    char *keybuf,
+    const char *key,
+    size_t len);
 
 /* Initialize a CVar table.  */
 void
-sg_cvartable_init(struct sg_cvartable *t);
+sg_cvartable_init(
+    struct sg_cvartable *t);
 
 /* Get the value for a key in a CVar table, or return NULL if the key
    was not found.  */
 void *
-sg_cvartable_get(struct sg_cvartable *t, const char *key);
+sg_cvartable_get(
+    struct sg_cvartable *t,
+    const char *key);
 
 /* Get a pointer to the value for a key in a CVar table, creating it
    if necessary, or return NULL if out of memory.  */
 void **
-sg_cvartable_insert(struct sg_cvartable *t, const char *key);
+sg_cvartable_insert(
+    struct sg_cvartable *t,
+    const char *key);
+
+/* Set a cvar.  The section and name should point to buffers of size
+   SG_CVAR_NAMELEN, and the contents of these buffers should be padded
+   with zeroes to fill the buffers.  The flags are the same as for
+   sg_cvar_set().  */
+int
+sg_cvar_set2(
+    const char *section,
+    const char *name,
+    const char *value,
+    unsigned flags);

@@ -175,6 +175,8 @@ sdl_init(int argc, char *argv[])
     evt.common.type = SG_EVENT_VIDEO_INIT;
     sg_game_event(&evt);
 
+    sg_cvar_loadfile("config2", strlen("config2"),
+                     SG_CVAR_CREATE, NULL);
     sg_cvar_save("config.ini", strlen("config.ini"), 0, NULL);
 }
 

@@ -57,6 +57,7 @@ src.add(path='src/core', sources='''
 clock.c maybe_sdl
 clock_impl.h
 cvar.c
+cvar_load.c
 cvar_private.h
 cvar_save.c
 cvar_table.c
