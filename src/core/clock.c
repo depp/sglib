@@ -163,6 +163,7 @@ sg_clock_fmtdate(char *date, int shortfmt, int year, int month, int day,
 }
 
 #if defined _WIN32
+#include <Windows.h>
 
 int
 sg_clock_getdate(char *date, int shortfmt)

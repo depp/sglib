@@ -23,9 +23,9 @@ struct sg_timer {
 
 static struct sg_timers sg_timers;
 
+SG_ATTR_NORETURN
 static void
-sg_timer_abort(void)
-    SG_ATTR_NORETURN;
+sg_timer_abort(void);
 
 static void
 sg_timer_abort(void)

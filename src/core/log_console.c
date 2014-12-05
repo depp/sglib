@@ -104,8 +104,9 @@ static int
 sg_log_console_create(void)
 {
     BOOL br;
-    sg_cvar_defbool("log", "winconsole", &sg_log_winconsole,
-                    0, SG_CVAR_INITONLY);
+    sg_cvar_defbool(
+        "log", "winconsole", "Create a console window for logging",
+        &sg_log_winconsole, 0, SG_CVAR_INITONLY);
     if (!sg_log_winconsole.value)
         return 0;
     br = AllocConsole();

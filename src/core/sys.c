@@ -95,12 +95,12 @@ sg_sys_fmtsize(
         *se = sp + sizeof(SG_SYS_SIZES) / sizeof(*SG_SYS_SIZES);
     for (; sp != se; sp++) {
         if (width == sp->width && height == sp->height) {
-            strcpy(buf, sp->name);
+            memcpy(buf, sp->name, sizeof(sp->name));
             return;
         }
     }
 #if defined _WIN32
-    _snprinf_s(buf, SG_SYS_SIZESZ, _TRUNCATE, "%dx%d", width, height);
+    _snprintf_s(buf, SG_SYS_SIZESZ, _TRUNCATE, "%dx%d", width, height);
 #else
     snprintf(buf, SG_SYS_SIZESZ, "%dx%d", width, height);
 #endif
