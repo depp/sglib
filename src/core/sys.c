@@ -10,6 +10,7 @@
 #include "../record/record.h"
 #include "private.h"
 #include <stdio.h>
+#include <string.h>
 
 struct sg_sys sg_sys;
 
@@ -42,15 +43,46 @@ const struct sg_game_info sg_game_info_defaults = {
     "Game"
 };
 
+static void
+sg_sys_parseargs(
+    int argc,
+    char **argv)
+{
+    int i;
+    const char *arg, *p;
+    for (i = 0; i < argc; i++) {
+        arg = argv[i];
+        if (!((*arg >= 'a' && *arg <= 'z') ||
+              (*arg >= 'A' && *arg <= 'Z') ||
+              *arg == '_'))
+            continue;
+        p = strchr(arg, '=');
+        if (!p)
+            continue;
+        sg_cvar_set(arg, p - arg, p + 1, SG_CVAR_CREATE);
+    }
+}
+
 void
-sg_sys_init(int argc, char **argv)
+sg_sys_init(
+    int argc,
+    char **argv)
 {
     sg_sys_siginit();
-    sg_cvar_init(argc, argv);
+
+    /* Take the most direct path to loading the config file, so other
+       systems will have their configuration available.  Loading the
+       config file requires the file subsystem, the file subsystem
+       needs command-line arguments, and pretty much everything
+       requires logging, which requires a working clock.  */
     sg_clock_init();
     sg_log_init();
-    sg_version_print();
+    sg_sys_parseargs(argc, argv);
     sg_path_init();
+    sg_cvar_loadfile("config", strlen("config"),
+                     SG_CVAR_CREATE | SG_CVAR_PERSISTENT, NULL);
+
+    sg_version_print();
     sg_rand_seed(&sg_rand_global, 1);
     sg_mixer_init();
     sg_record_init();
@@ -62,6 +94,8 @@ sg_sys_init(int argc, char **argv)
                    &sg_sys.vsync, 0, 0, 2, SG_CVAR_PERSISTENT);
     sg_cvar_defint("video", "maxfps", "Frame rate cap (0 to disable)",
                    &sg_sys.maxfps, 120, 0, 1000, SG_CVAR_PERSISTENT);
+
+    sg_cvar_save("config.ini", strlen("config.ini"), 0, NULL);
 }
 
 void

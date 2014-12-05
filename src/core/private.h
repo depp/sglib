@@ -23,9 +23,9 @@ extern struct sg_sys sg_sys;
    exception of sg_net_init(), which may be called at any time after
    the logging system is initialized.  */
 
-/* Initialize the CVar system.  */
+/* Initialize the timer, setting the current time to zero.  */
 void
-sg_cvar_init(int argc, char **argv);
+sg_clock_init(void);
 
 /* Initialize logging subsystem.  This is called first so other
    subsystems can log errors.  */
@@ -35,10 +35,6 @@ sg_log_init(void);
 /* Initialize the path subsystem.  */
 void
 sg_path_init(void);
-
-/* Initialize the timer, setting the current time to zero.  */
-void
-sg_clock_init(void);
 
 /* Initialize the main audio system.  */
 void

@@ -15,7 +15,6 @@
 const char SG_CVAR_DEFAULTSECTION[SG_CVAR_NAMELEN] = "general";
 
 struct sg_cvartable sg_cvar_section;
-static int sg_cvar_initted = 0;
 
 enum {
     /* The cvar is being created.  */
@@ -122,7 +121,6 @@ sg_cvar_set_obj(
     }
 
     set_current = ((cflags & SG_CVAR_INITONLY) == 0 ||
-                   sg_cvar_initted == 0 ||
                    (flags & SG_CVAR_DEFINITION) != 0);
     set_persistent = (cflags & SG_CVAR_PERSISTENT) != 0;
     if (!set_current) {
@@ -291,12 +289,14 @@ sg_cvar_names(
     }
 
     if (sg_cvartable_getkey(secbuf, section, sectionlen)) {
-        sg_logf(SG_LOG_WARN, "Invalid cvar section name: \"%s\"", section);
+        sg_logf(SG_LOG_WARN, "Invalid cvar section name: \"%.*s\"",
+                (int) sectionlen, section);
         return -1;
     }
 
     if (sg_cvartable_getkey(namebuf, name, namelen)) {
-        sg_logf(SG_LOG_WARN, "Invalid cvar name: \"%s\"", name);
+        sg_logf(SG_LOG_WARN, "Invalid cvar name: \"%.*s\"",
+                (int) namelen, name);
         return -1;
     }
 
@@ -433,27 +433,6 @@ sg_cvar_defbool(
     cvar->persistent_value = value;
     cvar->default_value = value;
     sg_cvar_define(section, name, doc, (union sg_cvar *) cvar);
-}
-
-void
-sg_cvar_init(
-    int argc,
-    char **argv)
-{
-    int i;
-    const char *arg, *p;
-    for (i = 0; i < argc; i++) {
-        arg = argv[i];
-        if (!((*arg >= 'a' && *arg <= 'z') ||
-              (*arg >= 'A' && *arg <= 'Z') ||
-              *arg == '_'))
-            continue;
-        p = strchr(arg, '=');
-        if (!p)
-            continue;
-        sg_cvar_set(arg, p - arg, p + 1, SG_CVAR_CREATE);
-    }
-    sg_cvar_initted = 1;
 }
 
 int
