@@ -125,15 +125,15 @@ sg_sys_getinfo(struct sg_game_info *info)
 void
 sg_sys_draw(int width, int height, double time)
 {
-    static int time_ref, frame_count;
-    int time_delta;
+    static double time_ref;
+    static int frame_count;
+    double time_delta;
 
     frame_count++;
     time_delta = time - time_ref;
-    if (time_delta > 1000) {
+    if (time_delta > 1.0) {
         if (sg_sys.showfps.value) {
-            sg_logf(SG_LOG_INFO, "FPS: %.0f",
-                    1000.0 * frame_count / time_delta);
+            sg_logf(SG_LOG_INFO, "FPS: %.0f", frame_count / time_delta);
         }
         time_ref = time;
         frame_count = 0;
