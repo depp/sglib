@@ -11,6 +11,7 @@ struct sg_sys {
     struct sg_cvar_bool showfps;
     struct sg_cvar_int vsync;
     struct sg_cvar_int maxfps;
+    struct sg_cvar_string vidsize;
 };
 
 extern struct sg_sys sg_sys;
@@ -78,6 +79,12 @@ sg_timer_invoke(void);
 /* Perform any cleanup necessary before the process exits.  */
 void
 sg_sys_destroy(void);
+
+/* Get the video size.  Returns 0 for success, nonzero for failure.  */
+int
+sg_sys_getvidsize(
+    int *width,
+    int *height);
 
 /* Load the main configuration file.  */
 void

@@ -136,6 +136,7 @@ sdl_init(int argc, char *argv[])
     union sg_event evt;
     struct sg_game_info gameinfo;
     unsigned flags;
+    int width, height, r;
 
     flags = SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_EVENTS;
     if (SDL_Init(flags))
@@ -154,14 +155,21 @@ sdl_init(int argc, char *argv[])
         (gameinfo.flags & SG_GAME_ALLOW_HIDPI) != 0) {
         flags |= SDL_WINDOW_ALLOW_HIGHDPI;
     }
+    if ((gameinfo.flags & SG_GAME_ALLOW_RESIZE) != 0) {
+        flags |= SDL_WINDOW_RESIZABLE;
+    }
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+    sg_sys.vidsize.flags &= ~SG_CVAR_MODIFIED;
+    r = sg_sys_getvidsize(&width, &height);
+    if (r) {
+        width = gameinfo.default_width;
+        height = gameinfo.default_height;
+    }
     sg_sdl.window = SDL_CreateWindow(
         gameinfo.name,
         SDL_WINDOWPOS_UNDEFINED,
         SDL_WINDOWPOS_UNDEFINED,
-        gameinfo.default_width,
-        gameinfo.default_height,
-        flags);
+        width, height, flags);
     if (!sg_sdl.window)
         sdl_error("could not open window");
 
@@ -358,6 +366,13 @@ sdl_main(void)
                 // printf("Unknown event: %u\n", e.type);
                 break;
             }
+        }
+
+        if ((sg_sys.vidsize.flags & SG_CVAR_MODIFIED) != 0) {
+            int nwidth, nheight;
+            sg_sys.vidsize.flags &= ~SG_CVAR_MODIFIED;
+            sg_sys_getvidsize(&nwidth, &nheight);
+            SDL_SetWindowSize(sg_sdl.window, nwidth, nheight);
         }
 
         SDL_GL_GetDrawableSize(sg_sdl.window, &width, &height);

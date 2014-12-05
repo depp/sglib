@@ -138,9 +138,9 @@ panic:
 }
 
 static int
-sg_cvar_set_obj(
-    const char *secbuf,
-    const char *namebuf,
+sg_cvar_set_obj2(
+    const char *section,
+    const char *name,
     union sg_cvar *cvar,
     const char *value,
     unsigned flags)
@@ -165,7 +165,7 @@ sg_cvar_set_obj(
         sg_logf(
             set_persistent ? SG_LOG_WARN : SG_LOG_ERROR,
             "Cvar %s.%s can only be set at startup.",
-            secbuf, namebuf);
+            section, name);
         if (!set_persistent)
             return -1;
     }
@@ -302,7 +302,7 @@ sg_cvar_set_obj(
 
     if (clamped) {
         sg_logf(SG_LOG_WARN, "Value out of range for cvar %s.%s",
-                secbuf, namebuf);
+                section, name);
     }
 
     if (set_current) {
@@ -317,7 +317,7 @@ sg_cvar_set_obj(
 
 fail:
     sg_logf(SG_LOG_WARN, "Could not set cvar %s.%s: %s",
-            secbuf, namebuf, msg);
+            section, name, msg);
     return -1;
 }
 
@@ -378,18 +378,18 @@ sg_cvar_define(
             return;
         }
         if ((prev->cstring.flags & SG_CVAR_HASPERSISTENT) != 0) {
-            sg_cvar_set_obj(
+            sg_cvar_set_obj2(
                 secbuf, namebuf, cvar,
                 prev->cstring.persistent_value,
                 SG_CVAR_DEFINITION | SG_CVAR_PERSISTENT);
             if (strcmp(prev->cstring.value, prev->cstring.persistent_value)) {
-                sg_cvar_set_obj(
+                sg_cvar_set_obj2(
                     secbuf, namebuf, cvar,
                     prev->cstring.value,
                     SG_CVAR_DEFINITION);
             }
         } else {
-            sg_cvar_set_obj(
+            sg_cvar_set_obj2(
                 secbuf, namebuf, cvar,
                 prev->cstring.value,
                 SG_CVAR_DEFINITION);
@@ -554,8 +554,19 @@ sg_cvar_set2(
         }
     }
 
-    return sg_cvar_set_obj(section, name, cvar, value,
-                           flags & SG_CVAR_SETMASK);
+    return sg_cvar_set_obj(section, name, cvar, value, flags);
+}
+
+int
+sg_cvar_set_obj(
+    const char *section,
+    const char *name,
+    union sg_cvar *cvar,
+    const char *value,
+    unsigned flags)
+{
+    return sg_cvar_set_obj2(section, name, cvar, value,
+                            flags & SG_CVAR_SETMASK);
 }
 
 void

@@ -215,6 +215,26 @@ sg_cvar_set(
     unsigned flags);
 
 /**
+ * @brief Set a cvar directly.
+ *
+ * The flags have the same meaning as for sg_cvar_set().
+ *
+ * @param section The cvar section name.
+ * @param name The cvar name.
+ * @param cvar The cvar.
+ * @param value The new cvar value.
+ * @param flags Flags affecting how the cvar will be set.
+ * @return Zero if successful, nonzero if an error occurred.
+ */
+int
+sg_cvar_set_obj(
+    const char *section,
+    const char *name,
+    union sg_cvar *cvar,
+    const char *value,
+    unsigned flags);
+
+/**
  * @brief Read cvars from a file.
  *
  * @param path Path to the input file.

@@ -29,7 +29,12 @@ enum {
     /**
      * @brief Allow high resolution windows.
      */
-    SG_GAME_ALLOW_HIDPI = 01
+    SG_GAME_ALLOW_HIDPI = 01,
+
+    /**
+     * @brief Allow the window to be resized.
+     */
+    SG_GAME_ALLOW_RESIZE = 02
 };
 
 /**
