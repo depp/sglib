@@ -160,7 +160,7 @@ sg_cvar_set_obj2(
 
     set_current = ((cflags & SG_CVAR_INITONLY) == 0 ||
                    (flags & SG_CVAR_DEFINITION) != 0);
-    set_persistent = (cflags & SG_CVAR_PERSISTENT) != 0;
+    set_persistent = (flags & SG_CVAR_PERSISTENT) != 0;
     if (!set_current) {
         sg_logf(
             set_persistent ? SG_LOG_WARN : SG_LOG_ERROR,
