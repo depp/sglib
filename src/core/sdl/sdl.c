@@ -269,13 +269,13 @@ sdl_event_wtype_showname(int wtype)
         *te = tp + sizeof(SDL_EVENT_WTYPE) / sizeof(*SDL_EVENT_WTYPE);
     for (; tp != te; tp++) {
         if (tp->type == wtype) {
-            sg_logf(sg_logger_get(NULL), SG_LOG_DEBUG,
-                    "window event: %s", tp->name);
+            sg_logf(SG_LOG_DEBUG,
+                    "Window event: %s", tp->name);
             return;
         }
     }
-    sg_logf(sg_logger_get(NULL), SG_LOG_DEBUG,
-            "window event: unknown (%d)", wtype);
+    sg_logf(SG_LOG_DEBUG,
+            "Window event: unknown (%d)", wtype);
 }
 
 #else

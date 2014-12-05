@@ -10,7 +10,6 @@ extern "C" {
 #endif
 union sg_event;
 struct sg_error;
-struct sg_logger;
 
 /**
  * @file sg/entry.h

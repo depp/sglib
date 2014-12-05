@@ -149,12 +149,6 @@ sg_image_jpeg(struct sg_filedata *data, struct sg_error **err)
     return &im->img;
 }
 
-/*
-sg_error_data(err, "JPEG");
-sg_logf(sg_logger_get("image"), SG_LOG_ERROR,
-"JPEG has unknown color space");
-*/
-
 void
 sg_version_libjpeg(void)
 {
