@@ -180,6 +180,7 @@ sdl_init(int argc, char *argv[])
     err = glewInit();
     if (err)
         sg_sys_abort("could not initialize GLEW");
+    sg_opengl_checkerror("glewInit");
 
     sg_sdl_setvsync();
 
