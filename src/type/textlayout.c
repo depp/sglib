@@ -3,7 +3,7 @@
    2-clause BSD license.  For more information, see LICENSE.txt. */
 #include "private.h"
 #include "sg/error.h"
-#include "sg/opengl.h"
+#include "sg/type.h"
 #include <assert.h>
 #include <limits.h>
 #include <stdlib.h>
@@ -175,44 +175,40 @@ nomem:
     return -1;
 }
 
-struct sg_textlayout *
-sg_textlayout_new(struct sg_textflow *flow, struct sg_error **err)
+int
+sg_textlayout_create(struct sg_textlayout *layout, struct sg_textflow *flow,
+                     struct sg_error **err)
 {
-    short *attr, *apos;
+    struct sg_textvert *vert, *v;
     struct sg_font *font;
     struct sg_font_glyph *fglyph, g;
     struct sg_textflow_run *run;
     struct sg_textflow_glyph *glyph;
-    struct sg_textlayout_batch *batch;
+    struct sg_textbatch *batch;
     struct sg_textpoint *gloc;
     struct sg_textrect *r, bounds;
     unsigned bidx, bcount, ridx, rcount, drawcount, gidx, gend;
     short vx0, vx1, vy0, vy1, tx0, tx1, ty0, ty1;
     short bx0, bx1, by0, by1;
     int baseline;
-    struct sg_textlayout *layout;
 
     if (flow->err) {
         sg_error_move(err, &flow->err);
-        return NULL;
+        return -1;
     }
 
     if (flow->drawcount == 0) {
-        layout = malloc(sizeof(*layout));
-        if (!layout) {
-            sg_error_nomem(err);
-            return NULL;
-        }
         memset(&layout->metrics, 0, sizeof(layout->metrics));
-        layout->buffer = 0;
-        layout->batchcount = 0;
+        layout->vert = NULL;
+        layout->vertcount = 0;
         layout->batch = NULL;
-        return layout;
+        layout->batchcount = 0;
+        return 0;
     }
 
     gloc = NULL;
     batch = NULL;
-    attr = NULL;
+    vert = NULL;
     run = flow->run;
     rcount = flow->runcount;
     glyph = flow->glyph;
@@ -257,10 +253,10 @@ sg_textlayout_new(struct sg_textflow *flow, struct sg_error **err)
     /* Write glyphs to array */
     bx0 = by0 = SHRT_MAX;
     bx1 = by1 = SHRT_MIN;
-    attr = malloc(sizeof(*attr) * 24 * drawcount);
-    if (!attr) {
+    vert = malloc(sizeof(*vert) * 6 * drawcount);
+    if (!vert) {
         sg_error_nomem(err);
-        return NULL;
+        return -1;
     }
     gidx = 0;
     for (ridx = 0; ridx < rcount; ridx++) {
@@ -271,7 +267,7 @@ sg_textlayout_new(struct sg_textflow *flow, struct sg_error **err)
         }
         font = run[ridx].font;
         for (bidx = 0; font != batch[bidx].font; bidx++) { }
-        apos = attr + (batch[bidx].offset + batch[bidx].count) * 24;
+        v = vert + (batch[bidx].offset + batch[bidx].count) * 24;
         batch[bidx].count += run[ridx].drawcount;
         fglyph = font->glyph;
         for (; gidx != gend; gidx++) {
@@ -282,13 +278,13 @@ sg_textlayout_new(struct sg_textflow *flow, struct sg_error **err)
             vy1 = gloc[gidx].y + g.by; vy0 = vy1 - g.h;
             tx0 = g.x; tx1 = tx0 + g.w;
             ty1 = g.y; ty0 = ty1 + g.h;
-            apos[ 0] = vx0; apos[ 1] = vy0; apos[ 2] = tx0; apos[ 3] = ty0;
-            apos[ 4] = vx1; apos[ 5] = vy0; apos[ 6] = tx1; apos[ 7] = ty0;
-            apos[ 8] = vx0; apos[ 9] = vy1; apos[10] = tx0; apos[11] = ty1;
-            apos[12] = vx0; apos[13] = vy1; apos[14] = tx0; apos[15] = ty1;
-            apos[16] = vx1; apos[17] = vy0; apos[18] = tx1; apos[19] = ty0;
-            apos[20] = vx1; apos[21] = vy1; apos[22] = tx1; apos[23] = ty1;
-            apos += 24;
+            v[0].vx = vx0; v[0].vy = vy0; v[0].tx = tx0; v[0].ty = ty0;
+            v[1].vx = vx1; v[1].vy = vy0; v[1].tx = tx1; v[1].ty = ty0;
+            v[2].vx = vx0; v[2].vy = vy1; v[2].tx = tx0; v[2].ty = ty1;
+            v[3].vx = vx0; v[3].vy = vy1; v[3].tx = tx0; v[3].ty = ty1;
+            v[4].vx = vx1; v[4].vy = vy0; v[4].tx = tx1; v[4].ty = ty0;
+            v[5].vx = vx1; v[5].vy = vy1; v[5].tx = tx1; v[5].ty = ty1;
+            v += 6;
             if (vx0 < bx0) bx0 = vx0;
             if (vy0 < by0) by0 = vy0;
             if (vx1 > bx1) bx1 = vx1;
@@ -303,71 +299,29 @@ sg_textlayout_new(struct sg_textflow *flow, struct sg_error **err)
     }
 
     /* Create layout object */
-    layout = malloc(sizeof(*layout) + sizeof(*batch) * bcount);
-    if (!layout)
-        goto nomem;
     layout->metrics.logical = bounds;
     r = &layout->metrics.pixel;
     r->x0 = bx0; r->y0 = by0; r->x1 = bx1; r->y1 = by1;
     layout->metrics.baseline = baseline;
-    glGenBuffers(1, &layout->buffer);
-    glBindBuffer(GL_ARRAY_BUFFER, layout->buffer);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(short) * 24 * drawcount, attr,
-                 GL_STATIC_DRAW);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    layout->vert = vert;
+    layout->vertcount = drawcount * 6;
+    layout->batch = batch;
     layout->batchcount = bcount;
-    layout->batch = (struct sg_textlayout_batch *) (layout + 1);
-    memcpy(layout->batch, batch, sizeof(*batch) * bcount);
-    for (bidx = 0; bidx < bcount; bidx++)
-        sg_font_incref(batch[bidx].font);
-    goto done;
 
-done:
-    free(attr);
-    free(batch);
     free(gloc);
-    return layout;
+    return 0;
 
 nomem:
     sg_error_nomem(err);
-    layout = NULL;
-    goto done;
+    free(vert);
+    free(batch);
+    free(gloc);
+    return -1;
 }
 
 void
-sg_textlayout_free(struct sg_textlayout *layout)
+sg_textlayout_destroy(struct sg_textlayout *layout)
 {
-    struct sg_textlayout_batch *bp, *be;
-    bp = layout->batch;
-    be = bp + layout->batchcount;
-    for (; bp != be; bp++)
-        sg_font_decref(bp->font);
-    glDeleteBuffers(1, &layout->buffer);
-    free(layout);
-}
-
-void
-sg_textlayout_getmetrics(struct sg_textlayout *layout,
-                         struct sg_textmetrics *metrics)
-{
-    memcpy(metrics, &layout->metrics, sizeof(*metrics));
-}
-
-void
-sg_textlayout_draw(struct sg_textlayout *layout,
-                   unsigned attrib, unsigned texture_scale)
-{
-    struct sg_textlayout_batch *bp, *be;
-    struct sg_font *font;
-    bp = layout->batch;
-    be = bp + layout->batchcount;
-    glBindBuffer(GL_ARRAY_BUFFER, layout->buffer);
-    glVertexAttribPointer(attrib, 4, GL_SHORT, GL_FALSE, 0, 0);
-    for (; bp != be; bp++) {
-        font = bp->font;
-        glBindTexture(GL_TEXTURE_2D, font->texture);
-        glUniform2fv(texture_scale, 1, font->texscale);
-        glDrawArrays(GL_TRIANGLES, bp->offset, bp->count);
-    }
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    free(layout->vert);
+    free(layout->batch);
 }

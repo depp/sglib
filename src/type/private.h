@@ -90,19 +90,6 @@ struct sg_textflow_glyph {
     unsigned short flags;
 };
 
-struct sg_textlayout {
-    struct sg_textmetrics metrics;
-    unsigned buffer;
-    unsigned batchcount;
-    struct sg_textlayout_batch *batch;
-};
-
-struct sg_textlayout_batch {
-    struct sg_font *font;
-    int offset;
-    int count;
-};
-
 extern const struct sg_error_domain SG_ERROR_FREETYPE;
 
 void

@@ -191,3 +191,11 @@ error:
     free(grect);
     return NULL;
 }
+
+void
+sg_font_gettexture(struct sg_font *fp, unsigned *texture, float *scale)
+{
+    *texture = fp->texture;
+    scale[0] = fp->texscale[0];
+    scale[1] = fp->texscale[1];
+}

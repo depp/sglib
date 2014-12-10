@@ -139,6 +139,16 @@ sg_font_decref(struct sg_font *fp);
 struct sg_font *
 sg_font_new(struct sg_typeface *tp, float size, struct sg_error **err);
 
+/**
+ * @brief Get the font texture data.
+ *
+ * @param fp The font.
+ * @param texture On return, the texture index.
+ * @param scale On return, an array containing the X and Y scale.
+ */
+void
+sg_font_gettexture(struct sg_font *fp, unsigned *texture, float *scale);
+
 /**********************************************************************/
 
 /**
@@ -199,24 +209,46 @@ sg_textflow_setwidth(struct sg_textflow *flow, float width);
 /**********************************************************************/
 
 /**
+ * @brief Text vertex
+ */
+struct sg_textvert {
+    short vx, vy, tx, ty;
+};
+
+/**
+ * @brief Batch of text layout data.
+ */
+struct sg_textbatch {
+    struct sg_font *font;
+    int offset;
+    int count;
+};
+
+/**
  * @brief Text layout
  *
  * A text layout consists of the graphics data necessary to draw text
  * to the screen.
  */
-struct sg_textlayout;
+struct sg_textlayout {
+    struct sg_textmetrics metrics;
+    struct sg_textvert *vert;
+    int vertcount;
+    struct sg_textbatch *batch;
+    int batchcount;
+};
 
 /**
  * @brief Create a text layout object.
  *
- * The OpenGL context must be active.
- *
+ * @param layout The layout to initialize.
  * @param flow The text flow to use for layout.
  * @param err On failure, the error.
- * @return The text layout, or `NULL` if an error occurred.
+ * @return Zero for success, or nonzero for failure.
  */
-struct sg_textlayout *
-sg_textlayout_new(struct sg_textflow *flow, struct sg_error **err);
+int
+sg_textlayout_create(struct sg_textlayout *layout, struct sg_textflow *flow,
+                     struct sg_error **err);
 
 /**
  * @brief Free a text layout object.
@@ -226,35 +258,7 @@ sg_textlayout_new(struct sg_textflow *flow, struct sg_error **err);
  * @param layout The layout to free.
  */
 void
-sg_textlayout_free(struct sg_textlayout *layout);
-
-/**
- * @brief Get the metrics for a text layout.
- *
- * @brief layout The text layout to query.
- * @brief metrics On return, the text metrics.
- */
-void
-sg_textlayout_getmetrics(struct sg_textlayout *layout,
-                         struct sg_textmetrics *metrics);
-
-/**
- * @brief Draw a text layout to the screen.
- *
- * The program must take a vec4 attribute input at index 0, where the
- * first two components are vertex coordinates and the last two
- * components are texture coordinates.  The texture coordinates are
- * scaled by a vec2 uniform, whose location is given by the
- * texture_scale parameter.  The active texture unit will be used to
- * provide textures for the program.
- *
- * @param layout The text layout to draw.
- * @param array The vertex array attribute.
- * @param texture_scale The `vec2` uniform for the texture scale.
- */
-void
-sg_textlayout_draw(struct sg_textlayout *layout,
-                   unsigned attrib, unsigned texture_scale);
+sg_textlayout_destroy(struct sg_textlayout *layout);
 
 #ifdef __cplusplus
 }
