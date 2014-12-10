@@ -153,6 +153,8 @@ sdl_init(int argc, char *argv[])
         flags |= SDL_WINDOW_RESIZABLE;
     }
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+    SDL_GL_SetAttribute(
+        SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
     sg_sys.vidsize.flags &= ~SG_CVAR_MODIFIED;
     r = sg_sys_getvidsize(&width, &height);
     if (r) {
@@ -171,6 +173,10 @@ sdl_init(int argc, char *argv[])
     if (!sg_sdl.context)
         sdl_error("could not create OpenGL context");
 
+    /* Apparently, GLEW queries extensions with glGetString(GL_EXTENSIONS),
+       which is incorrect for the OpenGL core profile, and glGetStringi
+       should instead be called on each extension.  This is a workaround.  */
+    glewExperimental = GL_TRUE;
     err = glewInit();
     if (err)
         sg_sys_abort("could not initialize GLEW");
