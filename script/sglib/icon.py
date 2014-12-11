@@ -91,6 +91,7 @@ class Icon(object):
         mod.add_generated_source(
             SimpleFile(os.path.join(path, 'Contents.json'),
                        json.dumps(info, indent=2)))
+        mod.add_variables({'ASSETCATALOG_COMPILER_APPICON_NAME': 'AppIcon'})
         mod.add_source(asset_path)
         return 'AppIcon', mod
 
