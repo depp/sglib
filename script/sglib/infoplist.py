@@ -3,32 +3,35 @@
 # 2-clause BSD license.  For more information, see LICENSE.txt.
 from d3build.generatedsource import GeneratedSource
 from d3build.plist.xml import dump
+from . import version
 
 class InfoPropertyList(GeneratedSource):
     __slots__ = [
         'target',
         'copyright', 'identifier', 'apple_category', 'main_nib', 'icon',
+        'app_path',
     ]
 
-    def __init__(self, target, app, main_nib, icon):
+    def __init__(self, target, app, main_nib, icon, app_path):
         self.target = target
         self.copyright = app.copyright
         self.identifier = app.identifier
         self.apple_category = app.apple_category
         self.main_nib = main_nib
         self.icon = icon
+        self.app_path = app_path
 
     @property
     def is_binary(self):
         return True
 
     def get_contents(self):
-        version = '0.0'
+        ver = version.get_info('git', self.app_path)
 
         if self.copyright is not None:
-            getinfo = '{}, {}'.format(version, self.copyright)
+            getinfo = '{}, {}'.format(ver.desc, self.copyright)
         else:
-            getinfo = version
+            getinfo = ver.desc
 
         plist = {
             'CFBundleDevelopmentRegion': 'English',
@@ -39,9 +42,9 @@ class InfoPropertyList(GeneratedSource):
             'CFBundleIdentifier': self.identifier,
             'CFBundleInfoDictionaryVersion': '6.0',
             'CFBundlePackageType': 'APPL',
-            'CFBundleShortVersionString': version,
+            'CFBundleShortVersionString': ver.desc,
             'CFBundleSignature': '????',
-            'CFBundleVersion': version,
+            'CFBundleVersion': '{}.{}.{}'.format(*ver.number),
             'LSApplicationCategoryType': self.apple_category,
             # LSArchicecturePriority
             # LSFileQuarantineEnabled

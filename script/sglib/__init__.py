@@ -145,7 +145,8 @@ class App(object):
                     info_plist,
                     self,
                     main_nib,
-                    icon))
+                    icon,
+                    _base(build.script, '.')))
             build.target.add_application_bundle(
                 name=name,
                 module=mod,
