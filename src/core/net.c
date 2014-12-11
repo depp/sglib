@@ -252,9 +252,10 @@ sg_net_getaddr(struct sg_addr *addr, const char *str,
                     goto haveaddr;
 
                 default:
-                    break;
+                    goto invalid;
                 }
             }
+            goto invalid;
         haveaddr:
             freeaddrinfo(a);
             if (!ap) {
