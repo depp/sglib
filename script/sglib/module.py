@@ -43,10 +43,13 @@ def get_tags(build):
     flags = build.config.flags
 
     tags = {tag: None for tag in TAGS}
+    com = (module()
+        .add_header_path(_base(__file__, '../../include'))
+        .add_define('USE_BUNDLED_GLEW'))
+    if platform == 'osx':
+        com.add_variables({'MACOSX_DEPLOYMENT_TARGET': '10.7.0'})
     tags['public'] = [
-        module()
-            .add_header_path(_base(__file__, '../../include'))
-            .add_define('USE_BUNDLED_GLEW'),
+        com,
         opengl.module(build),
         glew.module(build),
         math.module(build),

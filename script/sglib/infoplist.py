@@ -48,7 +48,7 @@ class InfoPropertyList(GeneratedSource):
             'LSApplicationCategoryType': self.apple_category,
             # LSArchicecturePriority
             # LSFileQuarantineEnabled
-            'LSMinimumSystemVersion': '10.5.0',
+            'LSMinimumSystemVersion': '10.7.0',
             'NSMainNibFile': self.main_nib,
             'NSPrincipalClass': 'GApplication',
             # NSSupportsAutomaticTermination
